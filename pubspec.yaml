@@ -1,0 +1,28 @@
+name: textf
+description: >
+  A lightweight, high-performance Flutter widget for simple inline text formatting
+  with Markdown-like syntax. Supports bold, italic, strikethrough, and code formatting
+  without the overhead of a full Markdown renderer.
+version: 0.1.0
+homepage: https://github.com/philippgerber/textf
+repository: https://github.com/philippgerber/textf
+issue_tracker: https://github.com/philippgerber/textf/issues
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+topics:
+  - text
+  - widgets
+  - markdown
+  - formatting
