@@ -19,6 +19,16 @@ The name "Textf" is inspired by the C standard library function `printf` (print 
 
 Perfect for chat applications, comment sections, UI elements, and any scenario where simple inline formatting is all you need.
 
+## Screenshots
+
+|                 Basic Formatting                 |                 Nested Formatting                  |                  Complex Formatting                  |
+| :----------------------------------------------: | :------------------------------------------------: | :--------------------------------------------------: |
+| ![Basic Formatting](images/basic_formatting.png) | ![Nested Formatting](images/nested_formatting.png) | ![Complex Formatting](images/complex_formatting.png) |
+
+|             Chat Bubble Example             |             Notification Example              |
+| :-----------------------------------------: | :-------------------------------------------: |
+| ![Basic Formatting](images/chat_bubble.png) | ![Nested Formatting](images/notification.png) |
+
 ## Installation
 
 Add Textf to your `pubspec.yaml`:
@@ -62,13 +72,13 @@ class MyWidget extends StatelessWidget {
 
 Textf supports the following formatting syntax:
 
-| Format | Syntax | Result |
-|--------|--------|--------|
-| Bold | `**bold**` or `__bold__` | **bold** |
-| Italic | `*italic*` or `_italic_` | *italic* |
-| Bold+Italic | `***both***` or `___both___` | ***both*** |
-| Strikethrough | `~~strikethrough~~` | ~~strikethrough~~ |
-| Code | `` `code` `` | `code` |
+| Format        | Syntax                       | Result            |
+| ------------- | ---------------------------- | ----------------- |
+| Bold          | `**bold**` or `__bold__`     | **bold**          |
+| Italic        | `*italic*` or `_italic_`     | *italic*          |
+| Bold+Italic   | `***both***` or `___both___` | ***both***        |
+| Strikethrough | `~~strikethrough~~`          | ~~strikethrough~~ |
+| Code          | `` `code` ``                 | `code`            |
 
 To escape formatting characters, use a backslash: `\*not italic\*`
 
@@ -76,8 +86,8 @@ To escape formatting characters, use a backslash: `\*not italic\*`
 
 When nesting formatting, use different marker types (asterisks vs underscores) to ensure proper parsing:
 
-| Format | Correct | Incorrect |
-|--------|---------|-----------|
+| Format            | Correct                  | Incorrect                |
+| ----------------- | ------------------------ | ------------------------ |
 | Nested formatting | `**Bold with _italic_**` | `**Bold with *italic***` |
 
 Using the same marker type for nested formatting may result in unexpected rendering.
