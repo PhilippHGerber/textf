@@ -23,11 +23,11 @@ Perfect for chat applications, comment sections, UI elements, and any scenario w
 
 |                 Basic Formatting                 |                 Nested Formatting                  |                  Complex Formatting                  |
 | :----------------------------------------------: | :------------------------------------------------: | :--------------------------------------------------: |
-| ![Basic Formatting](images/basic_formatting.png) | ![Nested Formatting](images/nested_formatting.png) | ![Complex Formatting](images/complex_formatting.png) |
+| ![Basic Formatting](https://github.com/PhilippHGerber/textf/raw/main/images/basic_formatting.png) | ![Nested Formatting](https://github.com/PhilippHGerber/textf/raw/main/images/nested_formatting.png) | ![Complex Formatting](https://github.com/PhilippHGerber/textf/raw/main/images/complex_formatting.png) |
 
 |             Chat Bubble Example             |             Notification Example              |
 | :-----------------------------------------: | :-------------------------------------------: |
-| ![Basic Formatting](images/chat_bubble.png) | ![Nested Formatting](images/notification.png) |
+| ![Chat Bubble](https://github.com/PhilippHGerber/textf/raw/main/images/chat_bubble.png) | ![Notification](https://github.com/PhilippHGerber/textf/raw/main/images/notification.png) |
 
 ## Installation
 
@@ -66,7 +66,7 @@ class MyWidget extends StatelessWidget {
 }
 ```
 
-![image](images/example.png)
+![image](https://github.com/PhilippHGerber/textf/raw/main/images/example.png)
 
 ## Supported Formatting
 
@@ -102,7 +102,7 @@ Textf(
 )
 ```
 
-![image](images/quick_brown_fox.png)
+![image](https://github.com/PhilippHGerber/textf/raw/main/images/quick_brown_fox.png)
 
 ### Real-world Examples
 
