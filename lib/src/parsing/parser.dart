@@ -412,24 +412,3 @@ TextStyle _applyStyle(TextStyle baseStyle, TokenType markerType) {
       return baseStyle;
   }
 }
-
-/// Converts a token type to a human-readable string for error messages.
-///
-/// @param type The token type to convert
-/// @return A string representation of the token type
-String _tokenTypeToString(TokenType type) {
-  switch (type) {
-    case TokenType.boldItalicMarker:
-      return 'bold+italic';
-    case TokenType.boldMarker:
-      return 'bold';
-    case TokenType.italicMarker:
-      return 'italic';
-    case TokenType.strikeMarker:
-      return 'strikethrough';
-    case TokenType.codeMarker:
-      return 'code';
-    case TokenType.text:
-      return 'text';
-  }
-}
