@@ -149,20 +149,6 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
                   // and use it with _imageBytes
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.save),
-                title: const Text('Save to Gallery'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Save functionality requires additional plugins'),
-                    ),
-                  );
-                  // To implement saving, you would need to add a package like
-                  // image_gallery_saver and use it with _imageBytes
-                },
-              ),
             ],
           ),
         );
