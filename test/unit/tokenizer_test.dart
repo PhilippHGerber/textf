@@ -160,7 +160,8 @@ void main() {
       });
 
       test('Code with internal backticks is correctly tokenized', () {
-        final tokens = tokenizer.tokenize(r'This `code has \` character` inside');
+        final tokens =
+            tokenizer.tokenize(r'This `code has \` character` inside');
         // The tokenizer just identifies the markers, it doesn't validate pairing
         expect(tokens.length, 7);
         expect(tokens[1].type, TokenType.codeMarker);
@@ -273,7 +274,8 @@ void main() {
 
     group('Complex Scenarios', () {
       test('Multiple formats in one text', () {
-        final tokens = tokenizer.tokenize('**Bold** and *italic* and `code` and ~~strike~~');
+        final tokens = tokenizer
+            .tokenize('**Bold** and *italic* and `code` and ~~strike~~');
         expect(tokens.length, 15);
 
         // Check each formatting type appears
@@ -294,11 +296,13 @@ void main() {
       });
 
       test('Mixed markers with whitespace', () {
-        final tokens = tokenizer.tokenize('** Bold** *Italic * ~~Strike ~~ `Code`');
+        final tokens =
+            tokenizer.tokenize('** Bold** *Italic * ~~Strike ~~ `Code`');
         expect(tokens.length, 15);
       });
 
-      test('Potential nested formatting (tokenizer handles without validation)', () {
+      test('Potential nested formatting (tokenizer handles without validation)',
+          () {
         final tokens = tokenizer.tokenize('**Bold with _nested italic_**');
         expect(tokens.length, 6);
         expect(tokens[0].type, TokenType.boldMarker);
@@ -338,7 +342,8 @@ void main() {
       });
 
       test('Line breaks', () {
-        final tokens = tokenizer.tokenize('Line\nbreak with **bold**\nformatting');
+        final tokens =
+            tokenizer.tokenize('Line\nbreak with **bold**\nformatting');
         expect(tokens.length, 5);
       });
 
@@ -348,7 +353,8 @@ void main() {
       });
 
       test('Single asterisk/underscore in text (not formatting)', () {
-        final tokens = tokenizer.tokenize('This * is not formatting and neither is this _ character');
+        final tokens = tokenizer.tokenize(
+            'This * is not formatting and neither is this _ character');
         expect(tokens.length, 5);
         expect(tokens[0].type, TokenType.text);
         expect(tokens[1].type, TokenType.italicMarker);
@@ -379,12 +385,15 @@ void main() {
       test('Many formatting markers', () {
         final manyMarkers = List.generate(100, (i) => '**bold$i**').join(' ');
         final tokens = tokenizer.tokenize(manyMarkers);
-        expect(tokens.length, 399); // 200 (100 pairs) of markers + 100 text segments + 99 spaces
+        expect(tokens.length,
+            399); // 200 (100 pairs) of markers + 100 text segments + 99 spaces
       });
 
       test('Alternating character formatting', () {
         // This is a pathological case: b*o*l*d* (every character has a marker)
-        final text = List.generate(100, (i) => '${String.fromCharCode(97 + i)}*').join('');
+        final text =
+            List.generate(100, (i) => '${String.fromCharCode(97 + i)}*')
+                .join('');
         final tokens = tokenizer.tokenize(text);
         expect(tokens.length > 100, true);
       });
