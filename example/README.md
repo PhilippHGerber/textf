@@ -6,6 +6,7 @@ This example app demonstrates various use cases of the Textf widget, showcasing 
 
 ```bash
 cd example
+flutter create .
 flutter pub get
 flutter run
 ```
