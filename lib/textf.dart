@@ -6,3 +6,4 @@ library;
 
 // Export the widget for public use
 export 'src/widgets/textf.dart';
+export 'src/widgets/textf_options.dart';

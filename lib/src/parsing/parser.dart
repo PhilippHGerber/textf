@@ -1,9 +1,12 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+
 
 import '../core/constants.dart';
 import '../models/token.dart';
+import '../widgets/textf_options.dart';
 import 'tokenizer.dart';
 
 /// Parser for formatted text that converts formatting markers into styled text spans.
@@ -89,11 +92,16 @@ class TextfParser {
       return cachedSpans;
     }
 
+    // At this point, we know we have formatting and need to process it
+    // Early TextfOptions retrieval is a sound optimization that Reduces
+    // computational overhead for formatted text
+    final textfOptions = TextfOptions.maybeOf(context);
+
     // Tokenize the text
     final tokens = _tokenizer.tokenize(text);
 
     // Process tokens and generate spans
-    final spans = _generateSpans(tokens, baseStyle);
+    final spans = _generateSpans(tokens, baseStyle, textfOptions);
 
     // Update cache
     // Uses a simple FIFO concept, as this is sufficient for this application.
@@ -137,8 +145,9 @@ class TextfParser {
   ///
   /// @param tokens The tokens to process
   /// @param baseStyle The base text style to apply
+  /// @param options The TextfOptions to use for styling, or null if not available
   /// @return A list of styled spans
-  List<InlineSpan> _generateSpans(List<Token> tokens, TextStyle baseStyle) {
+  List<InlineSpan> _generateSpans(List<Token> tokens, TextStyle baseStyle, TextfOptions? options) {
     final spans = <InlineSpan>[];
     String textBuffer = '';
 
@@ -155,7 +164,7 @@ class TextfParser {
       // Calculate current style based on format stack
       var style = baseStyle;
       for (final entry in formatStack) {
-        style = _applyStyle(style, entry.type);
+        style = _applyStyle(style, entry.type, options);
       }
 
       spans.add(TextSpan(text: textBuffer, style: style));
@@ -175,8 +184,54 @@ class TextfParser {
       if (token.type == TokenType.text) {
         // Regular text - add to buffer
         textBuffer += token.value;
+      } else if (token.type == TokenType.linkStart) {
+        // Handle link tokens specially
+        final linkTextIndex = i + 1;
+        final linkUrlIndex = i + 3;
+
+        if (linkTextIndex < tokens.length &&
+            linkUrlIndex < tokens.length &&
+            tokens[linkTextIndex].type == TokenType.linkText &&
+            tokens[linkUrlIndex].type == TokenType.linkUrl) {
+          // Flush any existing text
+          flushText();
+
+          final String linkText = tokens[linkTextIndex].value;
+          final String linkUrl = tokens[linkUrlIndex].value;
+
+          // Apply URL styling and make clickable
+          final TextStyle urlStyle =
+              options?.getEffectiveUrlStyle(baseStyle) ?? TextfOptions.defaultUrlStyle.merge(baseStyle);
+
+          // Create tap recognizer if onUrlTap is provided
+          GestureRecognizer? recognizer;
+          if (options?.onUrlTap != null) {
+            recognizer = TapGestureRecognizer()..onTap = () => options!.onUrlTap!(linkUrl, linkText);
+          }
+
+          spans.add(
+            TextSpan(
+              text: linkText,
+              style: urlStyle,
+              recognizer: recognizer,
+              // Mouse cursor would be handled here for desktop platforms
+            ),
+          );
+
+          // Mark all link tokens as processed
+          processedIndices.add(i); // linkStart
+          processedIndices.add(linkTextIndex); // linkText
+          processedIndices.add(linkTextIndex + 1); // linkSeparator
+          processedIndices.add(linkUrlIndex); // linkUrl
+          processedIndices.add(linkUrlIndex + 1); // linkEnd
+
+          i = linkUrlIndex + 1; // Skip to after the link
+        } else {
+          // Malformed link, treat as text
+          textBuffer += token.value;
+        }
       } else {
-        // It's a formatting marker
+        // It's a regular formatting marker
 
         // Check if it's part of a matched pair
         final matchingIndex = matchingPairs[i];
@@ -383,32 +438,30 @@ class _FormatStackEntry {
 
 /// Applies the appropriate style modifications for a formatting marker.
 ///
-/// This function takes a base style and a marker type, and returns
-/// a new style with the appropriate modifications applied.
+/// This function takes a base style, a marker type, and TextfOptions,
+/// and returns a new style with the appropriate modifications applied.
 ///
 /// @param baseStyle The base text style to modify
 /// @param markerType The type of formatting to apply
+/// @param options The TextfOptions to use, or null if not available
 /// @return A new TextStyle with the formatting applied
-TextStyle _applyStyle(TextStyle baseStyle, TokenType markerType) {
+TextStyle _applyStyle(TextStyle baseStyle, TokenType markerType, TextfOptions? options) {
   switch (markerType) {
     case TokenType.boldMarker:
-      return baseStyle.copyWith(fontWeight: FontWeight.bold);
+      return options?.getEffectiveBoldStyle(baseStyle) ?? TextfOptions.defaultBoldStyle(baseStyle);
     case TokenType.italicMarker:
-      return baseStyle.copyWith(fontStyle: FontStyle.italic);
+      return options?.getEffectiveItalicStyle(baseStyle) ?? TextfOptions.defaultItalicStyle(baseStyle);
     case TokenType.boldItalicMarker:
-      return baseStyle.copyWith(
-        fontWeight: FontWeight.bold,
-        fontStyle: FontStyle.italic,
-      );
+      return options?.getEffectiveBoldItalicStyle(baseStyle) ?? TextfOptions.defaultBoldItalicStyle(baseStyle);
     case TokenType.strikeMarker:
-      return baseStyle.copyWith(decoration: TextDecoration.lineThrough);
+      return options?.getEffectiveStrikethroughStyle(baseStyle) ?? TextfOptions.defaultStrikethroughStyle(baseStyle);
     case TokenType.codeMarker:
-      return baseStyle.copyWith(
-        fontFamily: 'monospace',
-        backgroundColor: const Color(0xFFF5F5F5),
-        letterSpacing: 0,
-      );
+      return options?.getEffectiveCodeStyle(baseStyle) ?? TextfOptions.defaultCodeStyle(baseStyle);
+    case TokenType.linkStart: // Should not reach here directly
+      return options?.getEffectiveUrlStyle(baseStyle) ?? TextfOptions.defaultUrlStyle.merge(baseStyle);
     case TokenType.text:
+      return baseStyle;
+    default:
       return baseStyle;
   }
 }

@@ -19,6 +19,21 @@ enum TokenType {
 
   /// Inline code formatting marker: '`'
   codeMarker,
+
+  /// Opening square bracket for link: '['
+  linkStart,
+
+  /// Text content to be displayed for a link
+  linkText,
+
+  /// Closing square bracket followed by opening parenthesis: ']('
+  linkSeparator,
+
+  /// URL content of a link
+  linkUrl,
+
+  /// Closing parenthesis for link: ')'
+  linkEnd,
 }
 
 /// Represents a single token in the parsing process.

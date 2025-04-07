@@ -23,3 +23,23 @@ const int kBacktick = 0x60;
 /// Used to escape formatting characters, preventing them from being interpreted
 /// as formatting markers.
 const int kEscape = 0x5C;
+
+/// Opening square bracket [ (ASCII code 91)
+///
+/// Used at the start of a link to denote the link text.
+const int kOpenBracket = 0x5B;
+
+/// Closing square bracket ] (ASCII code 93)
+///
+/// Used at the end of link text.
+const int kCloseBracket = 0x5D;
+
+/// Opening parenthesis ( (ASCII code 40)
+///
+/// Used at the start of a link URL.
+const int kOpenParen = 0x28;
+
+/// Closing parenthesis ) (ASCII code 41)
+///
+/// Used at the end of a link URL.
+const int kCloseParen = 0x29;
