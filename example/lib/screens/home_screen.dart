@@ -7,6 +7,7 @@ import 'complex_formatting_screen.dart';
 import 'nested_formatting_screen.dart';
 import 'notification_example_screen.dart';
 import 'screenshot_screen.dart';
+import 'url_example_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -48,6 +49,12 @@ class HomeScreen extends StatelessWidget {
             'Notification Example',
             'Example of formatting in a notification',
             const NotificationExampleScreen(),
+          ),
+          _buildExampleTile(
+            context,
+            'URL Examples',
+            'Examples of URL formatting and interaction',
+            const UrlExampleScreen(),
           ),
           _buildExampleTile(
             context,
