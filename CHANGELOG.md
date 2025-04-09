@@ -5,11 +5,13 @@ All notable changes to the `textf` package will be documented in this file.
 ## 0.1.1 - 2025-04-05
 
 ### Changed
+
 - Updated pubspec.yaml with simpler description to meet pub.dev guidelines
 - Added publisher information to pubspec.yaml
 - Removed example directory from .pubignore for better documentation
 
 ### Fixed
+
 - Formatted code for tests to meet Dart style guidelines
 
 ## 0.1.0 - 2025-04-04

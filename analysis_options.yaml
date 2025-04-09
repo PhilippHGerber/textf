@@ -6,5 +6,5 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
 linter:
   rules:
-    require_trailing_commas: true
+    require_trailing_commas: false
     prefer_relative_imports: true
