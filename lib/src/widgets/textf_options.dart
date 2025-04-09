@@ -10,13 +10,17 @@ class TextfOptions extends InheritedWidget {
 
   /// Callback function executed when hovering over a URL.
   /// The parameter [isHovering] is true when entering, false when leaving.
-  final void Function(String url, String displayText, bool isHovering)? onUrlHover;
+  final void Function(String url, String displayText, bool isHovering)?
+      onUrlHover;
 
   /// Styling for URLs in normal state.
   final TextStyle? urlStyle;
 
   /// Styling for URLs in hover state.
   final TextStyle? urlHoverStyle;
+
+  /// The mouse cursor to use when hovering over a URL link.
+  final MouseCursor? urlMouseCursor;
 
   // Formatting styles for text formatting
   /// Styling for bold formatted text.
@@ -40,6 +44,7 @@ class TextfOptions extends InheritedWidget {
     required super.child,
     this.onUrlTap,
     this.onUrlHover,
+    this.urlMouseCursor,
     this.urlStyle,
     this.urlHoverStyle,
     this.boldStyle,
@@ -61,14 +66,20 @@ class TextfOptions extends InheritedWidget {
     decoration: TextDecoration.underline,
   );
 
+  // Add a default cursor for URLs
+  static const MouseCursor defaultUrlMouseCursor = SystemMouseCursors.click;
+
   /// Default styling for bold formatted text.
-  static TextStyle defaultBoldStyle(TextStyle baseStyle) => baseStyle.copyWith(fontWeight: FontWeight.bold);
+  static TextStyle defaultBoldStyle(TextStyle baseStyle) =>
+      baseStyle.copyWith(fontWeight: FontWeight.bold);
 
   /// Default styling for italic formatted text.
-  static TextStyle defaultItalicStyle(TextStyle baseStyle) => baseStyle.copyWith(fontStyle: FontStyle.italic);
+  static TextStyle defaultItalicStyle(TextStyle baseStyle) =>
+      baseStyle.copyWith(fontStyle: FontStyle.italic);
 
   /// Default styling for bold and italic formatted text.
-  static TextStyle defaultBoldItalicStyle(TextStyle baseStyle) => baseStyle.copyWith(
+  static TextStyle defaultBoldItalicStyle(TextStyle baseStyle) =>
+      baseStyle.copyWith(
         fontWeight: FontWeight.bold,
         fontStyle: FontStyle.italic,
       );
@@ -134,12 +145,18 @@ class TextfOptions extends InheritedWidget {
     return (urlHoverStyle ?? defaultUrlHoverStyle).merge(effectiveUrlStyle);
   }
 
+  /// Determines the effective mouse cursor for URLs.
+  MouseCursor getEffectiveUrlMouseCursor() {
+    return urlMouseCursor ?? defaultUrlMouseCursor;
+  }
+
   @override
   bool updateShouldNotify(TextfOptions oldWidget) {
     return onUrlTap != oldWidget.onUrlTap ||
         onUrlHover != oldWidget.onUrlHover ||
         urlStyle != oldWidget.urlStyle ||
         urlHoverStyle != oldWidget.urlHoverStyle ||
+        urlMouseCursor != oldWidget.urlMouseCursor ||
         boldStyle != oldWidget.boldStyle ||
         italicStyle != oldWidget.italicStyle ||
         boldItalicStyle != oldWidget.boldItalicStyle ||

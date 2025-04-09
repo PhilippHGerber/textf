@@ -1,6 +1,9 @@
 import 'dart:collection';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 import '../core/constants.dart';
 import '../models/token.dart';
@@ -219,19 +222,19 @@ class TextfParser {
     );
     final matchingPairs = parser.identifyMatchingPairs();
 
-    print('Input: "$text"');
-    print('Tokens: ${tokens.length}');
+    debugPrint('Input: "$text"');
+    debugPrint('Tokens: ${tokens.length}');
     for (int i = 0; i < tokens.length; i++) {
       final token = tokens[i];
-      print('  $i: ${token.type} - "${token.value}" (${token.position})');
+      debugPrint('  $i: ${token.type} - "${token.value}" (${token.position})');
     }
-    print('Matching Pairs: ${matchingPairs.length ~/ 2}');
+    debugPrint('Matching Pairs: ${matchingPairs.length ~/ 2}');
     matchingPairs.forEach((openIndex, closeIndex) {
       if (openIndex < closeIndex) {
         // Only print once per pair
         final openToken = tokens[openIndex];
         final closeToken = tokens[closeIndex];
-        print(
+        debugPrint(
             '- ${openToken.type} at ${openToken.position} (index: $openIndex) matches ${closeToken.type} at ${closeToken.position} (index: $closeIndex)');
       }
     });
@@ -344,49 +347,67 @@ class _SpanParser {
       final TextStyle urlStyle = options?.getEffectiveUrlStyle(baseStyle) ??
           TextfOptions.defaultUrlStyle.merge(baseStyle);
 
-      // Check if link text contains formatting markers
+      // Get the custom cursor (or default)
+      final MouseCursor cursor =
+          options?.urlMouseCursor ?? TextfOptions.defaultUrlMouseCursor;
+
+      // Create gesture recognizer for tap
+      TapGestureRecognizer? recognizer;
+      if (options?.onUrlTap != null) {
+        recognizer = TapGestureRecognizer()
+          ..onTap = () => options!.onUrlTap!(normalizedUrl, linkText);
+      }
+
+      // Create hover callbacks if needed
+      PointerEnterEventListener? onEnter;
+      PointerExitEventListener? onExit;
+      if (options?.onUrlHover != null) {
+        onEnter = (_) => options!.onUrlHover!(normalizedUrl, linkText, true);
+        onExit = (_) => options!.onUrlHover!(normalizedUrl, linkText, false);
+      }
+
+      // Handle links with or without formatted text
       if (hasFormatting(linkText)) {
         // Handle formatting within link text using a separate parser
         final List<Token> linkTextTokens = tokenizer.tokenize(linkText);
-
-        // Create a separate parser for the link text
         final _SpanParser linkParser = _SpanParser(
           tokens: linkTextTokens,
-          baseStyle: urlStyle, // Use link style as the base style
+          baseStyle: urlStyle,
           options: options,
           tokenizer: tokenizer,
         );
-
-        // Parse the link text
         final List<InlineSpan> formattedLinkSpans = linkParser.parse();
 
-        // Add a UrlLinkSpan with children
         spans.add(
           UrlLinkSpan(
             url: normalizedUrl,
             text: '', // Empty because we're using children
             style: urlStyle,
+            recognizer: recognizer,
+            mouseCursor: cursor, // Set cursor directly on span
+            onEnter: onEnter,
+            onExit: onExit,
             children: formattedLinkSpans,
           ),
         );
       } else {
-        // No formatting in link text, use simple approach
+        // No formatting in link text
         spans.add(
           UrlLinkSpan(
             url: normalizedUrl,
             text: linkText,
             style: urlStyle,
+            recognizer: recognizer,
+            mouseCursor: cursor, // Set cursor directly on span
+            onEnter: onEnter,
+            onExit: onExit,
           ),
         );
       }
 
       // Mark all link tokens as processed
-      processedIndices.add(index);
-      processedIndices.add(index + 1);
-      processedIndices.add(index + 2);
-      processedIndices.add(index + 3);
-      processedIndices.add(index + 4);
-
+      processedIndices
+          .addAll([index, index + 1, index + 2, index + 3, index + 4]);
       return index + 4; // Skip to after the link
     } else {
       // Malformed link, treat as text
