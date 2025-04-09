@@ -17,6 +17,10 @@ import '../parsing/parser.dart';
 /// * `***bold and italic***` or `___bold and italic___` for ***bold and italic*** text
 /// * `~~strikethrough~~` for ~~strikethrough~~ text
 /// * `` `code` `` for `code` text
+/// * `[link text](url)` for [links](https://example.com)
+///
+/// Links support nested formatting such as `[**bold** link](url)`.
+
 ///
 /// ## Usage example
 /// ```dart

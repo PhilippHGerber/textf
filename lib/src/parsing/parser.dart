@@ -1,11 +1,10 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
-
 
 import '../core/constants.dart';
 import '../models/token.dart';
+import '../models/url_link_span.dart';
 import '../widgets/textf_options.dart';
 import 'tokenizer.dart';
 
@@ -36,7 +35,8 @@ class TextfParser {
   ///
   /// The key is a hash of the input text and base style, and the value is
   /// the list of generated spans.
-  final LinkedHashMap<int, List<InlineSpan>> _cache = LinkedHashMap<int, List<InlineSpan>>();
+  final LinkedHashMap<int, List<InlineSpan>> _cache =
+      LinkedHashMap<int, List<InlineSpan>>();
 
   /// TextfTokenizer instance used to break down text into tokens.
   final TextfTokenizer _tokenizer;
@@ -74,7 +74,11 @@ class TextfParser {
   /// @param context The current build context
   /// @param baseStyle The base text style to apply to the text
   /// @return A list of spans with appropriate styling applied
-  List<InlineSpan> parse(String text, BuildContext context, TextStyle baseStyle) {
+  List<InlineSpan> parse(
+    String text,
+    BuildContext context,
+    TextStyle baseStyle,
+  ) {
     // Fast path for empty text
     if (text.isEmpty) {
       return <InlineSpan>[];
@@ -121,7 +125,15 @@ class TextfParser {
   bool _hasFormatting(String text) {
     for (int i = 0; i < text.length; i++) {
       final int char = text.codeUnitAt(i);
-      if (char == kAsterisk || char == kUnderscore || char == kTilde || char == kBacktick || char == kEscape) {
+      if (char == kAsterisk || //
+          char == kUnderscore ||
+          char == kTilde ||
+          char == kBacktick ||
+          char == kEscape ||
+          char == kOpenBracket ||
+          char == kCloseBracket ||
+          char == kOpenParen ||
+          char == kCloseParen) {
         return true;
       }
     }
@@ -147,7 +159,11 @@ class TextfParser {
   /// @param baseStyle The base text style to apply
   /// @param options The TextfOptions to use for styling, or null if not available
   /// @return A list of styled spans
-  List<InlineSpan> _generateSpans(List<Token> tokens, TextStyle baseStyle, TextfOptions? options) {
+  List<InlineSpan> _generateSpans(
+    List<Token> tokens,
+    TextStyle baseStyle,
+    TextfOptions? options,
+  ) {
     final spans = <InlineSpan>[];
     String textBuffer = '';
 
@@ -185,104 +201,116 @@ class TextfParser {
         // Regular text - add to buffer
         textBuffer += token.value;
       } else if (token.type == TokenType.linkStart) {
-        // Handle link tokens specially
-        final linkTextIndex = i + 1;
-        final linkUrlIndex = i + 3;
+        // Flush any existing text
+        flushText();
 
-        if (linkTextIndex < tokens.length &&
-            linkUrlIndex < tokens.length &&
-            tokens[linkTextIndex].type == TokenType.linkText &&
-            tokens[linkUrlIndex].type == TokenType.linkUrl) {
-          // Flush any existing text
-          flushText();
+        // Check if we have a complete link structure
+        if (i + 4 <= tokens.length &&
+            tokens[i + 1].type == TokenType.text &&
+            tokens[i + 2].type == TokenType.linkSeparator &&
+            tokens[i + 3].type == TokenType.text &&
+            tokens[i + 4].type == TokenType.linkEnd) {
+          final String linkText = tokens[i + 1].value;
+          final String linkUrl = tokens[i + 3].value;
 
-          final String linkText = tokens[linkTextIndex].value;
-          final String linkUrl = tokens[linkUrlIndex].value;
+          // Get link style from TextfOptions
+          final TextStyle urlStyle = options?.getEffectiveUrlStyle(baseStyle) ??
+              TextfOptions.defaultUrlStyle.merge(baseStyle);
 
-          // Apply URL styling and make clickable
-          final TextStyle urlStyle =
-              options?.getEffectiveUrlStyle(baseStyle) ?? TextfOptions.defaultUrlStyle.merge(baseStyle);
+          // Check if link text contains formatting markers
+          if (_hasFormatting(linkText)) {
+            // Process formatting within link text
+            final List<Token> linkTextTokens = _tokenizer.tokenize(linkText);
 
-          // Create tap recognizer if onUrlTap is provided
-          GestureRecognizer? recognizer;
-          if (options?.onUrlTap != null) {
-            recognizer = TapGestureRecognizer()..onTap = () => options!.onUrlTap!(linkUrl, linkText);
+            // Create a temporary list to hold the formatted link spans
+            final List<InlineSpan> formattedLinkSpans = _generateSpans(
+              linkTextTokens,
+              urlStyle, // Use link style as the base style
+              options,
+            );
+
+            // Add a UrlLinkSpan with children instead of text
+            spans.add(
+              UrlLinkSpan(
+                url: _normalizeUrl(linkUrl),
+                text: '', // Empty because we're using children
+                style: urlStyle,
+                children: formattedLinkSpans,
+              ),
+            );
+          } else {
+            // No formatting in link text, use simple approach
+            spans.add(
+              UrlLinkSpan(
+                url: _normalizeUrl(linkUrl),
+                text: linkText,
+                style: urlStyle,
+              ),
+            );
           }
 
-          spans.add(
-            TextSpan(
-              text: linkText,
-              style: urlStyle,
-              recognizer: recognizer,
-              // Mouse cursor would be handled here for desktop platforms
-            ),
-          );
-
           // Mark all link tokens as processed
-          processedIndices.add(i); // linkStart
-          processedIndices.add(linkTextIndex); // linkText
-          processedIndices.add(linkTextIndex + 1); // linkSeparator
-          processedIndices.add(linkUrlIndex); // linkUrl
-          processedIndices.add(linkUrlIndex + 1); // linkEnd
+          processedIndices.add(i);
+          processedIndices.add(i + 1);
+          processedIndices.add(i + 2);
+          processedIndices.add(i + 3);
+          processedIndices.add(i + 4);
 
-          i = linkUrlIndex + 1; // Skip to after the link
+          i = i + 4;
         } else {
           // Malformed link, treat as text
           textBuffer += token.value;
         }
       } else {
-        // It's a regular formatting marker
-
-        // Check if it's part of a matched pair
+        // Regular formatting marker logic
         final matchingIndex = matchingPairs[i];
-
         if (matchingIndex != null) {
-          // This is a properly matched marker
-
-          // Determine if opening or closing
-          final bool isOpening = matchingIndex > i;
-
-          if (isOpening) {
-            // Opening marker - apply formatting
+          // This is a formatting marker with a matching pair
+          if (matchingIndex > i) {
+            // This is an opening marker
+            // Add any accumulated text before we start this formatting
             flushText();
 
-            // Only apply if we're not exceeding nesting depth
-            if (formatStack.length < maxDepth) {
-              formatStack.add(_FormatStackEntry(index: i, matchingIndex: matchingIndex, type: token.type));
-            } else {
-              // Exceeded max depth - convert to text
-              // TODO - add a warning: Maximum formatting depth exceeded at position token.position
-              textBuffer += token.value;
+            // Push onto the format stack
+            formatStack.add(
+              _FormatStackEntry(
+                index: i,
+                matchingIndex: matchingIndex,
+                type: token.type,
+              ),
+            );
 
-              // Also mark the matching closing marker as processed and add as text
-              processedIndices.add(matchingIndex);
-              textBuffer += tokens[matchingIndex].value;
-            }
+            // Mark as processed
+            processedIndices.add(i);
           } else {
-            // Closing marker - remove formatting
-            flushText();
+            // This is a closing marker - its opening marker should have been processed
+            // and should be on the format stack
 
-            // Find and remove the matching opening marker from stack
+            // Mark as processed
+            processedIndices.add(i);
+
+            // Find and remove the matching entry from the format stack
             int stackIndex = -1;
             for (int j = formatStack.length - 1; j >= 0; j--) {
-              if (formatStack[j].matchingIndex == i) {
+              if (formatStack[j].index == matchingIndex) {
                 stackIndex = j;
                 break;
               }
             }
 
             if (stackIndex != -1) {
+              // Flush the text WITH the formatting still applied
+              flushText();
+
+              // THEN remove the entry from the stack
               formatStack.removeAt(stackIndex);
             } else {
-              // Shouldn't happen if pairs are correctly identified
-              // TODO - add a warning
+              // No matching format found, just flush normally
+              flushText();
             }
           }
-
-          processedIndices.add(i);
         } else {
-          // Unpaired marker - convert to text
-          // TODO - add a warning: Unpaired marker at position token.position
+          // Unpaired marker, treat as text
           textBuffer += token.value;
         }
       }
@@ -313,6 +341,10 @@ class TextfParser {
       TokenType.boldItalicMarker: [],
       TokenType.strikeMarker: [],
       TokenType.codeMarker: [],
+      // Add link-related tokens
+      TokenType.linkStart: [],
+      TokenType.linkSeparator: [],
+      TokenType.linkEnd: [],
     };
 
     // First pass - pair markers based on type
@@ -320,6 +352,13 @@ class TextfParser {
       final token = tokens[i];
 
       if (token.type == TokenType.text) continue;
+
+      // Skip link-related tokens as they're handled separately in _generateSpans
+      if (token.type == TokenType.linkStart ||
+          token.type == TokenType.linkSeparator ||
+          token.type == TokenType.linkEnd) {
+        continue;
+      }
 
       // Check if we already have an opening marker of this type
       final stack = openingStacks[token.type]!;
@@ -341,6 +380,28 @@ class TextfParser {
     _validateNesting(tokens, matchingPairs);
 
     return matchingPairs;
+  }
+
+  /// Normalizes a URL for consistent handling.
+  ///
+  /// Performs basic normalization like trimming whitespace and
+  /// ensuring proper protocol prefixes for web URLs.
+  String _normalizeUrl(String url) {
+    // Trim whitespace
+    url = url.trim();
+
+    // Handle common URL patterns
+    if (!url.contains(':') &&
+        !url.startsWith('/') &&
+        !url.startsWith('#') &&
+        !url.startsWith('mailto:')) {
+      // Look for domain-like patterns
+      if (url.contains('.') || url.contains('localhost')) {
+        return 'http://$url';
+      }
+    }
+
+    return url;
   }
 
   /// Validates proper nesting of formatting markers and removes invalid pairs.
@@ -412,6 +473,21 @@ class TextfParser {
       matchingPairs.remove(index);
     }
   }
+
+  void debugPairingProcess(
+      String text, BuildContext context, TextStyle baseStyle) {
+    final tokens = _tokenizer.tokenize(text);
+    final matchingPairs = _identifyMatchingPairs(tokens);
+
+    print('Input: "$text"');
+    print('Matching Pairs:');
+    matchingPairs.forEach((openIndex, closeIndex) {
+      final openToken = tokens[openIndex];
+      final closeToken = tokens[closeIndex];
+      print(
+          '- ${openToken.type} at ${openToken.position} matches ${closeToken.type} at ${closeToken.position}');
+    });
+  }
 }
 
 /// Helper class for tracking format stack entries during parsing.
@@ -445,20 +521,30 @@ class _FormatStackEntry {
 /// @param markerType The type of formatting to apply
 /// @param options The TextfOptions to use, or null if not available
 /// @return A new TextStyle with the formatting applied
-TextStyle _applyStyle(TextStyle baseStyle, TokenType markerType, TextfOptions? options) {
+TextStyle _applyStyle(
+  TextStyle baseStyle,
+  TokenType markerType,
+  TextfOptions? options,
+) {
   switch (markerType) {
     case TokenType.boldMarker:
-      return options?.getEffectiveBoldStyle(baseStyle) ?? TextfOptions.defaultBoldStyle(baseStyle);
+      return options?.getEffectiveBoldStyle(baseStyle) ??
+          TextfOptions.defaultBoldStyle(baseStyle);
     case TokenType.italicMarker:
-      return options?.getEffectiveItalicStyle(baseStyle) ?? TextfOptions.defaultItalicStyle(baseStyle);
+      return options?.getEffectiveItalicStyle(baseStyle) ??
+          TextfOptions.defaultItalicStyle(baseStyle);
     case TokenType.boldItalicMarker:
-      return options?.getEffectiveBoldItalicStyle(baseStyle) ?? TextfOptions.defaultBoldItalicStyle(baseStyle);
+      return options?.getEffectiveBoldItalicStyle(baseStyle) ??
+          TextfOptions.defaultBoldItalicStyle(baseStyle);
     case TokenType.strikeMarker:
-      return options?.getEffectiveStrikethroughStyle(baseStyle) ?? TextfOptions.defaultStrikethroughStyle(baseStyle);
+      return options?.getEffectiveStrikethroughStyle(baseStyle) ??
+          TextfOptions.defaultStrikethroughStyle(baseStyle);
     case TokenType.codeMarker:
-      return options?.getEffectiveCodeStyle(baseStyle) ?? TextfOptions.defaultCodeStyle(baseStyle);
+      return options?.getEffectiveCodeStyle(baseStyle) ??
+          TextfOptions.defaultCodeStyle(baseStyle);
     case TokenType.linkStart: // Should not reach here directly
-      return options?.getEffectiveUrlStyle(baseStyle) ?? TextfOptions.defaultUrlStyle.merge(baseStyle);
+      return options?.getEffectiveUrlStyle(baseStyle) ??
+          TextfOptions.defaultUrlStyle.merge(baseStyle);
     case TokenType.text:
       return baseStyle;
     default:

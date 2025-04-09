@@ -44,7 +44,8 @@ class TextfTokenizer {
     // Helper to add accumulated text as a token
     void addTextToken(int start, int end) {
       if (end > start) {
-        tokens.add(Token(TokenType.text, text.substring(start, end), start, end - start));
+        tokens.add(Token(
+            TokenType.text, text.substring(start, end), start, end - start));
       }
     }
 
@@ -58,15 +59,20 @@ class TextfTokenizer {
       // Handle escape character
       if (currentChar == kEscape && pos + 1 < length) {
         final int nextChar = codeUnits[pos + 1];
-        // Check if next char is a formatting character
+        // Check if next char is a formatting character or link-related character
         if (nextChar == kAsterisk ||
             nextChar == kUnderscore ||
             nextChar == kTilde ||
             nextChar == kEscape ||
-            nextChar == kBacktick) {
+            nextChar == kBacktick ||
+            nextChar == kOpenBracket ||
+            nextChar == kCloseBracket ||
+            nextChar == kOpenParen ||
+            nextChar == kCloseParen) {
           addTextToken(textStart, pos);
           // Just add the escaped character as normal text
-          tokens.add(Token(TokenType.text, String.fromCharCode(nextChar), pos + 1, 1));
+          tokens.add(
+              Token(TokenType.text, String.fromCharCode(nextChar), pos + 1, 1));
           pos += 2;
           textStart = pos;
           continue;
@@ -76,7 +82,9 @@ class TextfTokenizer {
       // Identify token patterns without semantic interpretation
       if (currentChar == kAsterisk) {
         // Check for bold+italic (***)
-        if (pos + 2 < length && codeUnits[pos + 1] == kAsterisk && codeUnits[pos + 2] == kAsterisk) {
+        if (pos + 2 < length &&
+            codeUnits[pos + 1] == kAsterisk &&
+            codeUnits[pos + 2] == kAsterisk) {
           addTextToken(textStart, pos);
           tokens.add(Token(TokenType.boldItalicMarker, '***', pos, 3));
           pos += 3;
@@ -98,7 +106,9 @@ class TextfTokenizer {
         }
       } else if (currentChar == kUnderscore) {
         // Check for bold+italic (___)
-        if (pos + 2 < length && codeUnits[pos + 1] == kUnderscore && codeUnits[pos + 2] == kUnderscore) {
+        if (pos + 2 < length &&
+            codeUnits[pos + 1] == kUnderscore &&
+            codeUnits[pos + 2] == kUnderscore) {
           addTextToken(textStart, pos);
           tokens.add(Token(TokenType.boldItalicMarker, '___', pos, 3));
           pos += 3;
@@ -134,7 +144,144 @@ class TextfTokenizer {
         tokens.add(Token(TokenType.codeMarker, '`', pos, 1));
         pos++;
         textStart = pos;
+      } else if (currentChar == kOpenBracket) {
+        // Opening square bracket for link
+        addTextToken(textStart, pos);
+
+        // Start link parsing
+        final int linkStartPos = pos;
+        pos++; // Move past '['
+
+        // Find the end of link text
+        int linkTextStart = pos;
+        int nestLevel = 0;
+        int linkTextEnd = -1;
+
+        while (pos < length) {
+          final int c = codeUnits[pos];
+
+          // Handle escape sequences
+          if (c == kEscape && pos + 1 < length) {
+            pos += 2; // Skip escape and next character
+            continue;
+          }
+
+          // Track nested brackets if we find them
+          if (c == kOpenBracket) {
+            nestLevel++;
+          } else if (c == kCloseBracket) {
+            if (nestLevel > 0) {
+              nestLevel--;
+            } else {
+              // This is the closing bracket for our link
+              linkTextEnd = pos;
+
+              // Check if followed by opening parenthesis for URL
+              if (pos + 1 < length && codeUnits[pos + 1] == kOpenParen) {
+                break;
+              } else {
+                // Not a link, just bracket notation
+                linkTextEnd = -1;
+                pos++;
+                continue;
+              }
+            }
+          }
+
+          pos++;
+        }
+
+        // If we found a proper link structure "[text]("
+        if (linkTextEnd != -1 && pos + 1 < length) {
+          // Add the opening bracket
+          tokens.add(Token(TokenType.linkStart, '[', linkStartPos, 1));
+
+          // Add the link text
+          if (linkTextEnd > linkTextStart) {
+            tokens.add(
+              Token(
+                TokenType.text,
+                text.substring(linkTextStart, linkTextEnd),
+                linkTextStart,
+                linkTextEnd - linkTextStart,
+              ),
+            );
+          } else {
+            // Empty link text
+            tokens.add(Token(TokenType.text, '', linkTextStart, 0));
+          }
+
+          // Add the link separator ")("
+          pos = linkTextEnd; // Position at closing bracket
+          tokens.add(Token(TokenType.linkSeparator, '](', pos, 2));
+          pos += 2; // Move past "]("
+
+          // Now collect the URL
+          int urlStart = pos;
+          int urlEnd = -1;
+          nestLevel = 0;
+
+          while (pos < length) {
+            final int c = codeUnits[pos];
+
+            // Handle escape sequences
+            if (c == kEscape && pos + 1 < length) {
+              pos += 2;
+              continue;
+            }
+
+            // Track nested parentheses
+            if (c == kOpenParen) {
+              nestLevel++;
+            } else if (c == kCloseParen) {
+              if (nestLevel > 0) {
+                nestLevel--;
+              } else {
+                // This is the closing parenthesis for our URL
+                urlEnd = pos;
+                break;
+              }
+            }
+
+            pos++;
+          }
+
+          // If we found a proper URL end
+          if (urlEnd != -1) {
+            // Add the URL
+            if (urlEnd > urlStart) {
+              tokens.add(Token(TokenType.text, text.substring(urlStart, urlEnd),
+                  urlStart, urlEnd - urlStart));
+            } else {
+              // Empty URL
+              tokens.add(Token(TokenType.text, '', urlStart, 0));
+            }
+
+            // Add the closing parenthesis
+            tokens.add(Token(TokenType.linkEnd, ')', urlEnd, 1));
+            pos = urlEnd + 1; // Move past ')'
+
+            // Update text start position
+            textStart = pos;
+          } else {
+            // Malformed URL, revert to treating the whole thing as text
+            pos = linkStartPos + 1;
+            textStart = linkStartPos;
+          }
+        } else {
+          // Not a link, just an opening bracket
+          tokens.add(Token(TokenType.text, '[', linkStartPos, 1));
+          pos = linkStartPos + 1;
+          textStart = pos;
+        }
+      } else if (currentChar == kCloseBracket ||
+          currentChar == kOpenParen ||
+          currentChar == kCloseParen) {
+        // We handle these characters in the link processing block above
+        // Here we just treat them as regular text when encountered outside of link context
+        pos++;
       } else {
+        // Regular text character, just move forward
         pos++;
       }
 
