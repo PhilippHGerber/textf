@@ -34,15 +34,6 @@ class ExampleCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: child,
-            ),
-            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -74,6 +65,15 @@ class ExampleCard extends StatelessWidget {
                   },
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: child,
             ),
           ],
         ),
