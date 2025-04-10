@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:textf/textf.dart';
 
 class SelectableScaffold extends StatelessWidget {
   final PreferredSizeWidget? appBar;
@@ -16,11 +17,17 @@ class SelectableScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: appBar,
-      backgroundColor: backgroundColor,
-      body: SelectionArea(child: body),
-      floatingActionButton: floatingActionButton,
+    return TextfOptions(
+      codeStyle: const TextStyle(
+        fontFamily: 'RobotoMono',
+        fontSize: 12,
+      ),
+      child: Scaffold(
+        appBar: appBar,
+        backgroundColor: backgroundColor,
+        body: SelectionArea(child: body),
+        floatingActionButton: floatingActionButton,
+      ),
     );
   }
 }

@@ -46,7 +46,12 @@ class ExampleCard extends StatelessWidget {
                     child: Text(
                       code,
                       style: const TextStyle(
-                        fontFamily: 'monospace',
+                        fontFamily: 'RobotoMono',
+                        fontFamilyFallback: [
+                          'Menlo',
+                          'Courier New',
+                          'monospace',
+                        ],
                         fontSize: 12,
                       ),
                     ),
