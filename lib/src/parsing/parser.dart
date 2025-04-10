@@ -1,14 +1,14 @@
 import 'dart:collection';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 
-import '../core/constants.dart';
+import '../core/formatting_utils.dart';
+import '../models/parser_state.dart';
 import '../models/token.dart';
-import '../models/url_link_span.dart';
 import '../widgets/textf_options.dart';
+import 'components/format_handler.dart';
+import 'components/link_handler.dart';
+import 'components/pairing_resolver.dart';
 import 'tokenizer.dart';
 
 /// Parser for formatted text that converts formatting markers into styled text spans.
@@ -44,13 +44,6 @@ class TextfParser {
 
   /// TextfTokenizer instance used to break down text into tokens.
   final TextfTokenizer _tokenizer;
-
-  /// Maximum formatting nesting depth allowed by the parser.
-  ///
-  /// This limits how many layers of formatting can be nested (e.g., bold text
-  /// containing italic text would be 2 levels deep). Exceeding this will treat
-  /// additional formatting markers as plain text.
-  static const int maxDepth = 2;
 
   /// Creates a new [TextfParser] instance.
   ///
@@ -89,7 +82,7 @@ class TextfParser {
     }
 
     // Fast path for plain text without formatting
-    if (!_hasFormatting(text)) {
+    if (!FormattingUtils.hasFormatting(text)) {
       return [TextSpan(text: text)];
     }
 
@@ -100,74 +93,74 @@ class TextfParser {
       return cachedSpans;
     }
 
-    // At this point, we know we have formatting and need to process it
-    // Early TextfOptions retrieval is a sound optimization that reduces
-    // computational overhead for formatted text
-    final textfOptions = TextfOptions.maybeOf(context);
-
     // Tokenize the text
     final tokens = _tokenizer.tokenize(text);
 
-    // Process tokens and generate spans using the span parser
-    final spans = _createSpans(tokens, baseStyle, textfOptions);
+    // Create parser state
+    final state = _parseTokens(tokens, context, baseStyle);
 
     // Update cache
-    // Uses a simple FIFO concept, as this is sufficient for this application.
     if (_cache.length >= maxCacheSize) {
       // Remove oldest entry for simple FIFO behavior
       _cache.remove(_cache.keys.first);
     }
-    _cache[cacheKey] = spans;
+    _cache[cacheKey] = state.spans;
 
-    return spans;
+    return state.spans;
   }
 
-  /// Creates spans from tokens using the span parser.
+  /// Parses tokens and returns the resulting parser state with generated spans.
   ///
-  /// This method creates a new SpanParser instance to process the tokens,
-  /// providing proper isolation for parsing operations.
-  ///
-  /// @param tokens The tokens to process
-  /// @param baseStyle The base text style to apply
-  /// @param options The TextfOptions to use for styling, or null if not available
-  /// @return A list of styled spans
-  List<InlineSpan> _createSpans(
+  /// This is the main parsing logic that processes tokens and generates spans.
+  ParserState _parseTokens(
     List<Token> tokens,
+    BuildContext context,
     TextStyle baseStyle,
-    TextfOptions? options,
   ) {
-    // Create a span parser with these tokens and settings
-    final parser = _SpanParser(
+    // Get TextfOptions from context
+    final textfOptions = TextfOptions.maybeOf(context);
+
+    // Identify matching pairs
+    final pairs = PairingResolver.identifyPairs(tokens);
+
+    // Create parser state
+    final state = ParserState(
       tokens: tokens,
       baseStyle: baseStyle,
-      options: options,
+      options: textfOptions,
       tokenizer: _tokenizer,
+      matchingPairs: pairs,
     );
 
-    // Generate the spans
-    return parser.parse();
-  }
+    // Process tokens in sequence
+    for (int i = 0; i < tokens.length; i++) {
+      // Skip tokens we've already processed
+      if (state.processedIndices.contains(i)) continue;
 
-  /// Quickly checks if text contains any potential formatting characters.
-  ///
-  /// This is an optimization to avoid the more expensive tokenization step
-  /// for strings that definitely don't contain any formatting.
-  bool _hasFormatting(String text) {
-    for (int i = 0; i < text.length; i++) {
-      final int char = text.codeUnitAt(i);
-      if (char == kAsterisk || //
-          char == kUnderscore ||
-          char == kTilde ||
-          char == kBacktick ||
-          char == kEscape ||
-          char == kOpenBracket ||
-          char == kCloseBracket ||
-          char == kOpenParen ||
-          char == kCloseParen) {
-        return true;
+      final token = tokens[i];
+
+      if (token.type == TokenType.text) {
+        // Regular text - add to buffer
+        state.textBuffer += token.value;
+      } else if (token.type == TokenType.linkStart) {
+        // Handle link tokens
+        final newIndex = LinkHandler.processLink(state, i);
+        if (newIndex != null) {
+          i = newIndex;
+        }
+      } else {
+        // Handle formatting markers
+        final newIndex = FormatHandler.processFormat(state, i, token);
+        if (newIndex != null) {
+          i = newIndex;
+        }
       }
     }
-    return false;
+
+    // Flush any remaining text
+    state.flushText();
+
+    return state;
   }
 
   /// Generates a cache key for the given text and style.
@@ -177,31 +170,9 @@ class TextfParser {
     return Object.hash(text, style);
   }
 
-  /// Normalizes a URL for consistent handling.
-  ///
-  /// Performs basic normalization like trimming whitespace and
-  /// ensuring proper protocol prefixes for web URLs.
-  String _normalizeUrl(String url) {
-    // Trim whitespace
-    url = url.trim();
-
-    // Handle common URL patterns
-    if (!url.contains(':') &&
-        !url.startsWith('/') &&
-        !url.startsWith('#') &&
-        !url.startsWith('mailto:')) {
-      // Look for domain-like patterns
-      if (url.contains('.') || url.contains('localhost')) {
-        return 'http://$url';
-      }
-    }
-
-    return url;
-  }
-
   /// Debugging utility to view the pairing process for formatted text.
   ///
-  /// This method prints out information about how formatting markers
+  /// This method provides information about how formatting markers
   /// are paired in the text, which can be useful for diagnosing
   /// formatting issues.
   ///
@@ -214,13 +185,7 @@ class TextfParser {
     TextStyle baseStyle,
   ) {
     final tokens = _tokenizer.tokenize(text);
-    final parser = _SpanParser(
-      tokens: tokens,
-      baseStyle: baseStyle,
-      options: TextfOptions.maybeOf(context),
-      tokenizer: _tokenizer,
-    );
-    final matchingPairs = parser.identifyMatchingPairs();
+    final pairs = PairingResolver.identifyPairs(tokens);
 
     debugPrint('Input: "$text"');
     debugPrint('Tokens: ${tokens.length}');
@@ -228,457 +193,20 @@ class TextfParser {
       final token = tokens[i];
       debugPrint('  $i: ${token.type} - "${token.value}" (${token.position})');
     }
-    debugPrint('Matching Pairs: ${matchingPairs.length ~/ 2}');
-    matchingPairs.forEach((openIndex, closeIndex) {
-      if (openIndex < closeIndex) {
-        // Only print once per pair
+    debugPrint('Matching Pairs: ${pairs.length ~/ 2}');
+
+    // Print each pair only once (for the opening marker)
+    final processedPairs = <int>{};
+    pairs.forEach((openIndex, closeIndex) {
+      if (!processedPairs.contains(openIndex) &&
+          !processedPairs.contains(closeIndex)) {
         final openToken = tokens[openIndex];
         final closeToken = tokens[closeIndex];
         debugPrint(
             '- ${openToken.type} at ${openToken.position} (index: $openIndex) matches ${closeToken.type} at ${closeToken.position} (index: $closeIndex)');
+        processedPairs.add(openIndex);
+        processedPairs.add(closeIndex);
       }
     });
   }
-}
-
-/// Internal class that handles the span generation process.
-///
-/// This class encapsulates the state and logic for generating spans from tokens,
-/// providing proper isolation for recursive parsing operations.
-class _SpanParser {
-  /// The tokens to parse
-  final List<Token> tokens;
-
-  /// The base text style to apply
-  final TextStyle baseStyle;
-
-  /// TextfOptions for styling, or null if not available
-  final TextfOptions? options;
-
-  /// Tokenizer for processing nested formatting
-  final TextfTokenizer tokenizer;
-
-  /// The spans generated by the parsing operation
-  final List<InlineSpan> spans = [];
-
-  /// Buffer for accumulating text between formatting markers
-  String textBuffer = '';
-
-  /// Stack of active formatting markers
-  final List<_FormatStackEntry> formatStack = [];
-
-  /// Set of token indices that have been processed
-  final Set<int> processedIndices = {};
-
-  /// Map of opening marker indices to their closing counterparts
-  late final Map<int, int> matchingPairs;
-
-  /// Creates a new span parser with the specified parameters.
-  _SpanParser({
-    required this.tokens,
-    required this.baseStyle,
-    required this.options,
-    required this.tokenizer,
-  }) {
-    // Identify matching pairs of formatting markers
-    matchingPairs = identifyMatchingPairs();
-  }
-
-  /// Parses the tokens and generates a list of spans.
-  ///
-  /// This method processes tokens sequentially, generating spans for
-  /// text content, formatting markers, and links.
-  List<InlineSpan> parse() {
-    // Process tokens in sequence
-    for (int i = 0; i < tokens.length; i++) {
-      // Skip tokens we've already processed
-      if (processedIndices.contains(i)) continue;
-
-      final token = tokens[i];
-
-      if (token.type == TokenType.text) {
-        // Regular text - add to buffer
-        handleTextToken(token);
-      } else if (token.type == TokenType.linkStart) {
-        // Handle link tokens
-        final newIndex = handleLinkToken(i);
-        if (newIndex != null) {
-          i = newIndex;
-        }
-      } else {
-        // Handle formatting markers
-        final newIndex = handleFormattingToken(i, token);
-        if (newIndex != null) {
-          i = newIndex;
-        }
-      }
-    }
-
-    // Flush any remaining text
-    flushText();
-
-    return spans;
-  }
-
-  /// Handles a text token by adding it to the text buffer.
-  void handleTextToken(Token token) {
-    textBuffer += token.value;
-  }
-
-  /// Handles a link token by creating a UrlLinkSpan.
-  ///
-  /// @param index The current token index
-  /// @return The new token index after processing, or null if no index change
-  int? handleLinkToken(int index) {
-    // Flush any existing text
-    flushText();
-
-    // Check if we have a complete link structure
-    if (index + 4 < tokens.length &&
-        tokens[index + 1].type == TokenType.text &&
-        tokens[index + 2].type == TokenType.linkSeparator &&
-        tokens[index + 3].type == TokenType.text &&
-        tokens[index + 4].type == TokenType.linkEnd) {
-      final String linkText = tokens[index + 1].value;
-      final String linkUrl = tokens[index + 3].value;
-      final String normalizedUrl = normalizeUrl(linkUrl);
-
-      // Get link style from TextfOptions
-      final TextStyle urlStyle = options?.getEffectiveUrlStyle(baseStyle) ??
-          TextfOptions.defaultUrlStyle.merge(baseStyle);
-
-      // Get the custom cursor (or default)
-      final MouseCursor cursor =
-          options?.urlMouseCursor ?? TextfOptions.defaultUrlMouseCursor;
-
-      // Create gesture recognizer for tap
-      TapGestureRecognizer? recognizer;
-      if (options?.onUrlTap != null) {
-        recognizer = TapGestureRecognizer()
-          ..onTap = () => options!.onUrlTap!(normalizedUrl, linkText);
-      }
-
-      // Create hover callbacks if needed
-      PointerEnterEventListener? onEnter;
-      PointerExitEventListener? onExit;
-      if (options?.onUrlHover != null) {
-        onEnter = (_) => options!.onUrlHover!(normalizedUrl, linkText, true);
-        onExit = (_) => options!.onUrlHover!(normalizedUrl, linkText, false);
-      }
-
-      // Handle links with or without formatted text
-      if (hasFormatting(linkText)) {
-        // Handle formatting within link text using a separate parser
-        final List<Token> linkTextTokens = tokenizer.tokenize(linkText);
-        final _SpanParser linkParser = _SpanParser(
-          tokens: linkTextTokens,
-          baseStyle: urlStyle,
-          options: options,
-          tokenizer: tokenizer,
-        );
-        final List<InlineSpan> formattedLinkSpans = linkParser.parse();
-
-        spans.add(
-          UrlLinkSpan(
-            url: normalizedUrl,
-            text: '', // Empty because we're using children
-            style: urlStyle,
-            recognizer: recognizer,
-            mouseCursor: cursor, // Set cursor directly on span
-            onEnter: onEnter,
-            onExit: onExit,
-            children: formattedLinkSpans,
-          ),
-        );
-      } else {
-        // No formatting in link text
-        spans.add(
-          UrlLinkSpan(
-            url: normalizedUrl,
-            text: linkText,
-            style: urlStyle,
-            recognizer: recognizer,
-            mouseCursor: cursor, // Set cursor directly on span
-            onEnter: onEnter,
-            onExit: onExit,
-          ),
-        );
-      }
-
-      // Mark all link tokens as processed
-      processedIndices
-          .addAll([index, index + 1, index + 2, index + 3, index + 4]);
-      return index + 4; // Skip to after the link
-    } else {
-      // Malformed link, treat as text
-      textBuffer += tokens[index].value;
-      return null;
-    }
-  }
-
-  /// Handles a formatting token.
-  ///
-  /// @param index The current token index
-  /// @param token The token to process
-  /// @return The new token index after processing, or null if no index change
-  int? handleFormattingToken(int index, Token token) {
-    final matchingIndex = matchingPairs[index];
-    if (matchingIndex != null) {
-      // This is a formatting marker with a matching pair
-      if (matchingIndex > index) {
-        // This is an opening marker
-        // Add any accumulated text before we start this formatting
-        flushText();
-
-        // Push onto the format stack
-        formatStack.add(
-          _FormatStackEntry(
-            index: index,
-            matchingIndex: matchingIndex,
-            type: token.type,
-          ),
-        );
-
-        // Mark as processed
-        processedIndices.add(index);
-      } else {
-        // This is a closing marker - its opening marker should have been processed
-
-        // Mark as processed
-        processedIndices.add(index);
-
-        // Find and remove the matching entry from the format stack
-        int stackIndex = -1;
-        for (int j = formatStack.length - 1; j >= 0; j--) {
-          if (formatStack[j].index == matchingIndex) {
-            stackIndex = j;
-            break;
-          }
-        }
-
-        if (stackIndex != -1) {
-          // First flush the text with formatting still applied
-          flushText();
-
-          // Then remove the entry from the stack
-          formatStack.removeAt(stackIndex);
-        } else {
-          // No matching format found, just flush text
-          flushText();
-        }
-      }
-    } else {
-      // Unpaired marker, treat as text
-      textBuffer += token.value;
-    }
-
-    return null;
-  }
-
-  /// Flushes the accumulated text with the current formatting applied.
-  void flushText() {
-    if (textBuffer.isEmpty) return;
-
-    // Calculate current style based on format stack
-    var style = baseStyle;
-    for (final entry in formatStack) {
-      style = applyStyle(style, entry.type);
-    }
-
-    spans.add(TextSpan(text: textBuffer, style: style));
-    textBuffer = '';
-  }
-
-  /// Applies the appropriate style for a formatting marker.
-  TextStyle applyStyle(TextStyle style, TokenType markerType) {
-    switch (markerType) {
-      case TokenType.boldMarker:
-        return options?.getEffectiveBoldStyle(style) ??
-            TextfOptions.defaultBoldStyle(style);
-      case TokenType.italicMarker:
-        return options?.getEffectiveItalicStyle(style) ??
-            TextfOptions.defaultItalicStyle(style);
-      case TokenType.boldItalicMarker:
-        return options?.getEffectiveBoldItalicStyle(style) ??
-            TextfOptions.defaultBoldItalicStyle(style);
-      case TokenType.strikeMarker:
-        return options?.getEffectiveStrikethroughStyle(style) ??
-            TextfOptions.defaultStrikethroughStyle(style);
-      case TokenType.codeMarker:
-        return options?.getEffectiveCodeStyle(style) ??
-            TextfOptions.defaultCodeStyle(style);
-      case TokenType.linkStart: // Should not reach here directly
-        return options?.getEffectiveUrlStyle(style) ??
-            TextfOptions.defaultUrlStyle.merge(style);
-      case TokenType.text:
-        return style;
-      default:
-        return style;
-    }
-  }
-
-  /// Identifies matching pairs of formatting markers.
-  Map<int, int> identifyMatchingPairs() {
-    final Map<int, int> pairs = {};
-
-    // Stack of opening markers for each type
-    final Map<TokenType, List<int>> openingStacks = {
-      TokenType.boldMarker: [],
-      TokenType.italicMarker: [],
-      TokenType.boldItalicMarker: [],
-      TokenType.strikeMarker: [],
-      TokenType.codeMarker: [],
-      // Add link-related tokens
-      TokenType.linkStart: [],
-      TokenType.linkSeparator: [],
-      TokenType.linkEnd: [],
-    };
-
-    // First pass - pair markers based on type
-    for (int i = 0; i < tokens.length; i++) {
-      final token = tokens[i];
-
-      if (token.type == TokenType.text) continue;
-
-      // Skip link-related tokens as they're handled separately
-      if (token.type == TokenType.linkStart ||
-          token.type == TokenType.linkSeparator ||
-          token.type == TokenType.linkEnd) {
-        continue;
-      }
-
-      // Check if we already have an opening marker of this type
-      final stack = openingStacks[token.type]!;
-
-      if (stack.isEmpty) {
-        // No opening marker yet - treat this as opening
-        stack.add(i);
-      } else {
-        // We have an opening marker - pair it
-        final openingIndex = stack.removeLast();
-
-        // Record the pair
-        pairs[openingIndex] = i;
-        pairs[i] = openingIndex;
-      }
-    }
-
-    // Validate nesting
-    validateNesting(pairs);
-
-    return pairs;
-  }
-
-  /// Validates proper nesting of formatting markers and removes invalid pairs.
-  void validateNesting(Map<int, int> pairs) {
-    // Stack of opening markers in order of appearance
-    final List<int> openingStack = [];
-    final Set<int> invalidPairs = {};
-
-    // Check each token
-    for (int i = 0; i < tokens.length; i++) {
-      final token = tokens[i];
-
-      if (token.type == TokenType.text) continue;
-
-      final matchingIndex = pairs[i];
-      if (matchingIndex == null) continue; // Skip unpaired markers
-
-      if (matchingIndex > i) {
-        // This is an opening marker
-        openingStack.add(i);
-      } else {
-        // This is a closing marker
-        if (openingStack.isNotEmpty && openingStack.last == matchingIndex) {
-          // Proper nesting - remove from stack
-          openingStack.removeLast();
-        } else {
-          // Improper nesting
-          // Find and mark all intervening pairs as invalid
-          int openingPos = -1;
-          for (int j = 0; j < openingStack.length; j++) {
-            if (openingStack[j] == matchingIndex) {
-              openingPos = j;
-              break;
-            }
-          }
-
-          if (openingPos != -1) {
-            // Mark all pairs from openingPos to end as invalid
-            for (int j = openingPos; j < openingStack.length; j++) {
-              final openIndex = openingStack[j];
-              final closeIndex = pairs[openIndex]!;
-
-              invalidPairs.add(openIndex);
-              invalidPairs.add(closeIndex);
-            }
-
-            // Remove processed markers
-            openingStack.removeRange(openingPos, openingStack.length);
-          }
-        }
-      }
-    }
-
-    // Remove invalid pairs
-    for (final index in invalidPairs) {
-      pairs.remove(index);
-    }
-  }
-
-  /// Normalizes a URL for consistent handling.
-  String normalizeUrl(String url) {
-    // Trim whitespace
-    url = url.trim();
-
-    // Handle common URL patterns
-    if (!url.contains(':') &&
-        !url.startsWith('/') &&
-        !url.startsWith('#') &&
-        !url.startsWith('mailto:')) {
-      // Look for domain-like patterns
-      if (url.contains('.') || url.contains('localhost')) {
-        return 'http://$url';
-      }
-    }
-
-    return url;
-  }
-
-  /// Checks if text contains any potential formatting characters.
-  bool hasFormatting(String text) {
-    for (int i = 0; i < text.length; i++) {
-      final int char = text.codeUnitAt(i);
-      if (char == kAsterisk ||
-          char == kUnderscore ||
-          char == kTilde ||
-          char == kBacktick ||
-          char == kEscape) {
-        return true;
-      }
-    }
-    return false;
-  }
-}
-
-/// Helper class for tracking format stack entries during parsing.
-///
-/// Each entry represents a formatting marker that has been opened
-/// but not yet closed during the parsing process.
-class _FormatStackEntry {
-  /// Index of the opening formatting marker in the token list.
-  final int index;
-
-  /// Index of the matching closing marker in the token list.
-  final int matchingIndex;
-
-  /// Type of the formatting marker.
-  final TokenType type;
-
-  /// Creates a new format stack entry.
-  _FormatStackEntry({
-    required this.index,
-    required this.matchingIndex,
-    required this.type,
-  });
 }

@@ -1,15 +1,34 @@
 import 'package:flutter/material.dart';
 
+import '../core/default_styles.dart';
+
 /// Configuration options for Textf widgets in the widget tree.
 ///
 /// Enables centralized configuration of formatting styles and
 /// interaction behavior, especially for URLs.
 class TextfOptions extends InheritedWidget {
   /// Callback function executed when tapping/clicking on a URL.
+  ///
+  /// Provides the resolved [url] (e.g., "https://example.com") and the raw
+  /// [displayText] string exactly as it appeared between the square brackets
+  /// `[...]` in the original input text.
+  ///
+  /// **Note:** The [displayText] includes any formatting markers (like `**`, `*`,
+  /// `~~`, `` ` ``) present in the input source. It is *not* the processed plain
+  /// text content that is visually rendered. Developers using this callback may
+  /// need to strip or handle these markers separately if the plain text content
+  /// is required.
   final void Function(String url, String displayText)? onUrlTap;
 
   /// Callback function executed when hovering over a URL.
-  /// The parameter [isHovering] is true when entering, false when leaving.
+  ///
+  /// Provides the resolved [url], the raw [displayText] string (as found between
+  /// `[...]` in the input), and a boolean [isHovering] which is `true` when
+  /// the pointer enters the link region and `false` when it exits.
+  ///
+  /// **Note:** Similar to [onUrlTap], the [displayText] parameter contains the
+  /// raw string from the input source, including any formatting markers. It is
+  /// *not* the processed plain text content visually rendered.
   final void Function(String url, String displayText, bool isHovering)?
       onUrlHover;
 
@@ -54,48 +73,6 @@ class TextfOptions extends InheritedWidget {
     this.codeStyle,
   });
 
-  /// Default styling for URLs in normal state.
-  static final TextStyle defaultUrlStyle = TextStyle(
-    color: Colors.blue,
-    decoration: TextDecoration.underline,
-  );
-
-  /// Default styling for URLs in hover state.
-  static final TextStyle defaultUrlHoverStyle = TextStyle(
-    color: Colors.blue[700],
-    decoration: TextDecoration.underline,
-  );
-
-  // Add a default cursor for URLs
-  static const MouseCursor defaultUrlMouseCursor = SystemMouseCursors.click;
-
-  /// Default styling for bold formatted text.
-  static TextStyle defaultBoldStyle(TextStyle baseStyle) =>
-      baseStyle.copyWith(fontWeight: FontWeight.bold);
-
-  /// Default styling for italic formatted text.
-  static TextStyle defaultItalicStyle(TextStyle baseStyle) =>
-      baseStyle.copyWith(fontStyle: FontStyle.italic);
-
-  /// Default styling for bold and italic formatted text.
-  static TextStyle defaultBoldItalicStyle(TextStyle baseStyle) =>
-      baseStyle.copyWith(
-        fontWeight: FontWeight.bold,
-        fontStyle: FontStyle.italic,
-      );
-
-  /// Default styling for strikethrough text.
-  static TextStyle defaultStrikethroughStyle(TextStyle baseStyle) =>
-      baseStyle.copyWith(decoration: TextDecoration.lineThrough);
-
-  /// Default styling for inline code text.
-  static TextStyle defaultCodeStyle(TextStyle baseStyle) => baseStyle.copyWith(
-        fontFamily: 'RobotoMono',
-        fontFamilyFallback: ['Menlo', 'Courier New', 'monospace'],
-        backgroundColor: const Color(0xFFF5F5F5),
-        letterSpacing: 0,
-      );
-
   /// Looks for TextfOptions in the widget tree and returns it.
   /// Returns null if no instance was found.
   static TextfOptions? maybeOf(BuildContext context) {
@@ -112,43 +89,50 @@ class TextfOptions extends InheritedWidget {
 
   /// Determines the effective style for bold formatted text.
   TextStyle getEffectiveBoldStyle(TextStyle baseStyle) {
-    return boldStyle ?? defaultBoldStyle(baseStyle);
+    return boldStyle ?? DefaultStyles.boldStyle(baseStyle);
   }
 
   /// Determines the effective style for italic formatted text.
   TextStyle getEffectiveItalicStyle(TextStyle baseStyle) {
-    return italicStyle ?? defaultItalicStyle(baseStyle);
+    return italicStyle ?? DefaultStyles.italicStyle(baseStyle);
   }
 
   /// Determines the effective style for bold and italic formatted text.
   TextStyle getEffectiveBoldItalicStyle(TextStyle baseStyle) {
-    return boldItalicStyle ?? defaultBoldItalicStyle(baseStyle);
+    return boldItalicStyle ?? DefaultStyles.boldItalicStyle(baseStyle);
   }
 
   /// Determines the effective style for strikethrough text.
   TextStyle getEffectiveStrikethroughStyle(TextStyle baseStyle) {
-    return strikethroughStyle ?? defaultStrikethroughStyle(baseStyle);
+    return strikethroughStyle ?? DefaultStyles.strikethroughStyle(baseStyle);
   }
 
   /// Determines the effective style for inline code text.
   TextStyle getEffectiveCodeStyle(TextStyle baseStyle) {
-    return codeStyle ?? defaultCodeStyle(baseStyle);
+    return codeStyle ?? DefaultStyles.codeStyle(baseStyle);
   }
 
   /// Determines the effective style for URLs in normal state.
   TextStyle getEffectiveUrlStyle(TextStyle baseStyle) {
-    return (urlStyle ?? defaultUrlStyle).merge(baseStyle);
+    // Corrected Order: Properties from urlStyle (or default) override baseStyle
+    return baseStyle.merge(urlStyle ?? DefaultStyles.urlStyle);
   }
 
   /// Determines the effective style for URLs in hover state.
   TextStyle getEffectiveUrlHoverStyle(TextStyle baseStyle) {
-    final effectiveUrlStyle = getEffectiveUrlStyle(baseStyle);
-    return (urlHoverStyle ?? defaultUrlHoverStyle).merge(effectiveUrlStyle);
+    final effectiveUrlStyle =
+        getEffectiveUrlStyle(baseStyle); // Uses the corrected merge above
+    // Now merge the base link style with the hover-specific style
+    return effectiveUrlStyle
+        .merge(urlHoverStyle ?? DefaultStyles.urlHoverStyle);
+    // Note: Merging urlHoverStyle directly onto baseStyle might lose intermediate
+    // urlStyle properties if urlHoverStyle doesn't define them. Merging onto
+    // effectiveUrlStyle is safer.
   }
 
   /// Determines the effective mouse cursor for URLs.
   MouseCursor getEffectiveUrlMouseCursor() {
-    return urlMouseCursor ?? defaultUrlMouseCursor;
+    return urlMouseCursor ?? DefaultStyles.urlMouseCursor;
   }
 
   @override
