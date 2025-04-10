@@ -90,7 +90,8 @@ class TextfOptions extends InheritedWidget {
 
   /// Default styling for inline code text.
   static TextStyle defaultCodeStyle(TextStyle baseStyle) => baseStyle.copyWith(
-        fontFamily: 'monospace',
+        fontFamily: 'RobotoMono',
+        fontFamilyFallback: ['Menlo', 'Courier New', 'monospace'],
         backgroundColor: const Color(0xFFF5F5F5),
         letterSpacing: 0,
       );
