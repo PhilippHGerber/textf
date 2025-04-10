@@ -194,7 +194,7 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
             // Formatting options
             ExpansionTile(
               title: const Text('Formatting Options'),
-              initiallyExpanded: true,
+              initiallyExpanded: false,
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
