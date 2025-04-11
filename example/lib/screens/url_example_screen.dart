@@ -1,10 +1,11 @@
 // example/lib/screens/url_example_screen.dart
-import 'package:flutter/material.dart';
-import 'package:textf/textf.dart'; // Main library
-import 'package:url_launcher/url_launcher.dart'
-    as url_launcher; // For launching URLs
+import 'dart:async';
 
-import '../widgets/example_card.dart'; // Reusable card for examples
+import 'package:flutter/material.dart';
+import 'package:textf/textf.dart';
+import 'package:url_launcher/url_launcher.dart' as url_launcher;
+
+import '../widgets/example_card.dart';
 
 class UrlExampleScreen extends StatefulWidget {
   const UrlExampleScreen({super.key});
@@ -14,375 +15,371 @@ class UrlExampleScreen extends StatefulWidget {
 }
 
 class _UrlExampleScreenState extends State<UrlExampleScreen> {
-  // State variables to track interactions
-  String _lastTappedUrl = '';
-  String _lastTappedDisplayText = ''; // Raw display text including formatting
   String _hoveredUrl = '';
-  String _hoveredDisplayText = ''; // Raw display text including formatting
   bool _isHovering = false;
+  OverlayEntry? _overlayEntry;
 
-  // --- Interaction Callbacks ---
+  @override
+  void dispose() {
+    _removeOverlay();
+    super.dispose();
+  }
 
-  void _handleUrlTap(String url, String displayText) {
-    // This function is called ONLY when a link span's recognizer is tapped.
-
-    // Use the current context from the State object.
-    // Ensure the widget is still mounted before proceeding.
+  void _handleUrlTap(String url, String rawDisplayText) {
     if (!mounted) return;
+    _removeOverlay(); // Remove overlay BEFORE showing Snackbar
 
-    // Update the persistent status display at the bottom
-    setState(() {
-      _lastTappedUrl = url;
-      _lastTappedDisplayText = displayText;
-    });
-
-    // --- Show SnackBar ---
-    // Remove any existing snackbar first to prevent overlap if tapped quickly
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
-    // Show the new snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        // Using the raw display text here as requested by TextfOptions contract
-        content: Text('Tapped link: "$displayText" ($url)'),
-        duration: const Duration(seconds: 3), // Slightly longer duration
-        behavior: SnackBarBehavior.floating, // Optional: Make it float
+        content: Row(
+          children: [
+            const Icon(Icons.link, color: Colors.white70, size: 18),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Link Tapped: $rawDisplayText',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    url,
+                    style: const TextStyle(fontSize: 13, color: Colors.white70),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.black87,
+        duration: const Duration(seconds: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        margin: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         action: SnackBarAction(
-          label: 'LAUNCH',
-          onPressed: () => _launchUrl(url), // Launch the tapped URL
+          label: 'OPEN',
+          textColor: Colors.lightBlueAccent,
+          onPressed: () => _launchUrl(url),
         ),
       ),
     );
-    // --- End SnackBar ---
-
-    // Optional: Automatically launch URL on tap (commented out by default)
-    // _launchUrl(url);
+    // _launchUrl(url); // Optional auto-launch
   }
 
-  void _handleUrlHover(String url, String displayText, bool isHovering) {
+  void _handleUrlHover(String url, String rawDisplayText, bool isHovering) {
     if (!mounted) return;
-
-    // Update state for the persistent status display
-    if (isHovering != _isHovering || url != _hoveredUrl) {
+    // Optimization: Only update state/overlay if hover status or URL changes,
+    // or if we are definitely starting to hover over a valid URL.
+    if (isHovering != _isHovering || (isHovering && url != _hoveredUrl)) {
       setState(() {
         _hoveredUrl = isHovering ? url : '';
-        _hoveredDisplayText = isHovering ? displayText : '';
         _isHovering = isHovering;
       });
+
+      if (isHovering && url.isNotEmpty) {
+        _showUrlOverlay(url);
+      } else {
+        _removeOverlay();
+      }
+    } else if (!isHovering && _overlayEntry != null) {
+      // Ensure overlay is removed if hover stops
+      _removeOverlay();
     }
   }
 
-  // --- URL Launching ---
+  void _showUrlOverlay(String url) {
+    _removeOverlay();
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: IgnorePointer(
+          // Wrap with Material for context
+          child: Material(
+            type: MaterialType.transparency, // Don't draw Material background
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              // Use theme colors for better adaptation
+              color: Theme.of(context)
+                  .colorScheme
+                  .surfaceContainerHighest
+                  .withOpacity(0.95),
+              child: Text(
+                url,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  decoration: TextDecoration.none, // Prevent underline here
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _removeOverlay() {
+    if (_overlayEntry != null) {
+      try {
+        _overlayEntry?.remove();
+      } catch (e) {
+        // Might throw if called after dispose or during tree modifications, ignore.
+        // print("Error removing overlay: $e");
+      } finally {
+        _overlayEntry = null;
+        // If we are removing the overlay, reset the hover state too
+        if (_isHovering && mounted) {
+          setState(() {
+            _isHovering = false;
+            _hoveredUrl = '';
+          });
+        }
+      }
+    }
+  }
 
   Future<void> _launchUrl(String url) async {
-    // Use the current context from the State object.
+    // ... (launch URL logic remains the same)
     if (!mounted) return;
 
     final Uri uri = Uri.parse(url);
-    final messenger = ScaffoldMessenger.of(context); // Cache messenger
+    final messenger = ScaffoldMessenger.of(context);
 
-    if (await url_launcher.canLaunchUrl(uri)) {
-      try {
+    try {
+      final bool canLaunch = await url_launcher.canLaunchUrl(uri);
+      if (!mounted) return; // Check mount status after async gap
+
+      if (canLaunch) {
         final bool launched = await url_launcher.launchUrl(uri);
-        if (!mounted) return; // Check again after async gap
-        if (launched) {
-          messenger.showSnackBar(
-            const SnackBar(
-              content: Text('URL Launched Successfully'),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        } else {
-          // Should generally not happen if canLaunchUrl was true, but handle defensively
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text('Could not launch $url (launchUrl returned false)'),
-              backgroundColor: Colors.orange,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      } catch (e) {
         if (!mounted) return;
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('Error launching $url: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+
+        if (!launched) {
+          // Handle case where launchUrl returns false despite canLaunchUrl being true
+          messenger.showSnackBar(_buildUrlSnackBar('Could not open $url',
+              Icons.warning_amber, Colors.orange.shade700));
+        }
+      } else {
+        messenger.showSnackBar(_buildUrlSnackBar(
+            'Cannot open URL: $url', Icons.error_outline, Colors.red.shade700));
       }
-    } else {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('Could not launch $url (canLaunchUrl returned false)'),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(_buildUrlSnackBar(
+          'Error opening URL: $e', Icons.error_outline, Colors.red.shade700));
     }
   }
 
-  // --- Build Method ---
+  SnackBar _buildUrlSnackBar(
+      String message, IconData icon, Color backgroundColor) {
+    // ... (SnackBar builder remains the same)
+    return SnackBar(
+      content: Row(
+        children: [
+          Icon(icon, color: Colors.white70),
+          const SizedBox(width: 12),
+          Expanded(child: Text(message)),
+        ],
+      ),
+      backgroundColor: backgroundColor,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      margin: const EdgeInsets.all(12),
+      duration: const Duration(seconds: 3),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Wrap examples needing options in a single TextfOptions provider
-    return TextfOptions(
-      // Provide the callbacks that will be used by Textf widgets below
-      onUrlTap: _handleUrlTap, // Connects tap gesture to our state handler
-      onUrlHover: _handleUrlHover,
-
-      // Define default link appearance (can be overridden locally)
-      urlStyle: const TextStyle(
-        color: Colors.blue, // Standard blue link color
-        decoration: TextDecoration.underline,
-        decorationColor: Colors.blue, // Match underline color
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('URL Examples'),
       ),
-      urlHoverStyle: const TextStyle(
-        color: Colors.deepPurple, // Change color on hover
-        fontWeight: FontWeight.bold, // Make it bold on hover
-        decoration: TextDecoration.underline, // Keep underline on hover
-      ),
-      urlMouseCursor: SystemMouseCursors.click, // Standard hand cursor
-
-      child: Scaffold(
-        // Provides the Scaffold needed for SnackBar
-        appBar: AppBar(
-          title: const Text('URL Examples'),
+      body: TextfOptions(
+        // Parent options provide callbacks
+        onUrlTap: _handleUrlTap,
+        onUrlHover: _handleUrlHover,
+        urlStyle: TextStyle(
+          color: Theme.of(context).colorScheme.primary,
+          decoration: TextDecoration.underline,
+          decorationColor: Theme.of(context).colorScheme.primary,
         ),
-        body: SelectionArea(
-          child: Column(
+        urlHoverStyle: TextStyle(
+          color: Theme.of(context).colorScheme.secondary,
+          decoration: TextDecoration.underline,
+          decorationColor: Theme.of(context).colorScheme.secondary,
+        ),
+        urlMouseCursor: SystemMouseCursors.click,
+        child: SelectionArea(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    // --- Example Cards ---
-                    // (Keep all the ExampleCard widgets from the previous version here)
-                    // ... (Basic URL, Custom Styled, Hover Effect, Multiple, Formatted, etc.) ...
-
-                    // Example Card: Basic URL
-                    const ExampleCard(
-                      title: 'Basic URL',
-                      description:
-                          'Simple URL using default styling from TextfOptions',
-                      code:
-                          'Textf(\n  \'Visit [Flutter website](https://flutter.dev) for more information\',\n)',
-                      child: Textf(
-                        'Visit [Flutter website](https://flutter.dev) for more information',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Example Card: Custom Styled URL (Override)
-                    ExampleCard(
-                      title: 'Custom Styled URL (Override)',
-                      description:
-                          'URL with specific styling overriding TextfOptions',
-                      code:
-                          'TextfOptions(\n  urlStyle: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),\n  urlHoverStyle: TextStyle(backgroundColor: Colors.yellow),\n  child: Textf(\n    \'Check out [Textf documentation](https://pub.dev/packages/textf)\',\n  ),\n)',
-                      child: TextfOptions(
-                        urlStyle: TextStyle(
-                          color: Colors.teal,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        urlHoverStyle: TextStyle(
-                          backgroundColor: Colors.teal.shade100,
-                          decoration: TextDecoration.none,
-                        ),
-                        // Note: onUrlTap/onUrlHover will still be inherited unless overridden here too
-                        child: const Textf(
-                          'Check out [Textf documentation](https://pub.dev/packages/textf)',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Example Card: URL with Hover Effect
-                    const ExampleCard(
-                      title: 'URL with Hover Effect',
-                      description:
-                          'Demonstrates URL hover interaction (using styles from parent TextfOptions)',
-                      code:
-                          'Textf(\n  \'Hover over [this link](https://example.com) to see the effect\',\n)',
-                      child: Textf(
-                        'Hover over [this link](https://example.com) to see the effect',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Example Card: Multiple URLs
-                    const ExampleCard(
-                      title: 'Multiple URLs',
-                      description: 'Multiple URLs in a single text block',
-                      code:
-                          'Textf(\n  \'Visit [Flutter](https://flutter.dev) or [Dart](https://dart.dev) websites\',\n)',
-                      child: Textf(
-                        'Visit [Flutter](https://flutter.dev) or [Dart](https://dart.dev) websites',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Example Card: Formatted URL Text
-                    const ExampleCard(
-                      title: 'Formatted URL Text',
-                      description:
-                          'URL display text with other formatting applied',
-                      code:
-                          'Textf(\n  \'Check out [**bold link**](https://example.com) and [*italic link*](https://example.org)\',\n)',
-                      child: Textf(
-                        'Check out [**bold link**](https://example.com) and [*italic link*](https://example.org)',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Example Card: Nested Formatting in URL Text
-                    const ExampleCard(
-                      title: 'Nested Formatting in URL Text',
-                      description:
-                          'URL display text with nested formatting (bold > italic)',
-                      code:
-                          'Textf(\n  \'Link with [**nested _italic_ style**](https://example.net)\',\n)',
-                      child: Textf(
-                        'Link with [**nested _italic_ style**](https://example.net)',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Example Card: Email URL
-                    const ExampleCard(
-                      title: 'Email URL',
-                      description: 'URL with mailto: protocol',
-                      code:
-                          'Textf(\n  \'Contact [support](mailto:support@example.com) for assistance\',\n)',
-                      child: Textf(
-                        'Contact [support](mailto:support@example.com) for assistance',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Example Card: URL with Special Characters
-                    const ExampleCard(
-                      title: 'URL with Special Characters',
-                      description:
-                          'URL containing query parameters and fragments',
-                      code:
-                          'Textf(\n  \'Search for [Flutter widgets](https://pub.dev/packages?q=flutter+widgets#results)\',\n)',
-                      child: Textf(
-                        'Search for [Flutter widgets](https://pub.dev/packages?q=flutter+widgets#results)',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Example Card: URL Needing Normalization
-                    const ExampleCard(
-                      title: 'URL Needing Normalization',
-                      description:
-                          'URL without protocol (should get http:// added)',
-                      code: 'Textf(\n  \'Visit [Google](google.com)\',\n)',
-                      child: Textf(
-                        'Visit [Google](google.com)',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    const SizedBox(height: 24), // Spacing before status bar
-                  ],
+              // Use standard list constructor
+              // --- Basic URL Example ---
+              const ExampleCard(
+                title: 'Basic URL',
+                description:
+                    'Simple URL using default styling from TextfOptions',
+                code:
+                    'Textf(\n  \'Visit [Flutter website](https://flutter.dev) for more information\',\n)',
+                child: Textf(
+                  'Visit [Flutter website](https://flutter.dev) for more information',
+                  style: TextStyle(fontSize: 16),
                 ),
               ),
+              const SizedBox(height: 16),
 
-              // --- Interaction Status Display (Bottom Bar) ---
-              _buildInteractionStatus(),
+              // --- Locally Styled URL Example ---
+              ExampleCard(
+                title: 'Locally Styled URL (Override)',
+                description:
+                    'URL with specific styling via a nested TextfOptions',
+                code: '// Parent TextfOptions provides callbacks\n'
+                    'TextfOptions(\n'
+                    '  // Nested options ONLY override styles\n'
+                    '  urlStyle: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, decoration: TextDecoration.none),\n'
+                    '  urlHoverStyle: TextStyle(backgroundColor: Colors.yellow.shade200, decoration: TextDecoration.none),\n'
+                    '  // No callbacks here!\n'
+                    '  child: Textf(\n'
+                    '    \'Check out [Textf documentation](https://pub.dev/packages/textf)\',\n'
+                    '  ),\n'
+                    ')',
+                // Apply local override using a nested TextfOptions
+                child: TextfOptions(
+                  // ONLY specify styles to override. Callbacks are inherited from parent.
+                  urlStyle: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.none),
+                  urlHoverStyle: TextStyle(
+                      backgroundColor: Colors.yellow.shade200,
+                      decoration: TextDecoration.none),
+                  // No onUrlTap or onUrlHover here!
+                  child: const Textf(
+                    // Make Textf const if possible
+                    'Check out [Textf documentation](https://pub.dev/packages/textf)',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // --- URL with Hover Effect Example ---
+              const ExampleCard(
+                title: 'URL with Hover Effect',
+                description:
+                    'Demonstrates URL hover interaction (hover to see URL at bottom)',
+                code:
+                    'Textf(\n  \'Hover over [this link](https://example.com) to see the effect\',\n)',
+                child: Textf(
+                  'Hover over [this link](https://example.com) to see the effect',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // --- Multiple URLs Example ---
+              const ExampleCard(
+                title: 'Multiple URLs',
+                description: 'Multiple URLs in a single text block',
+                code:
+                    'Textf(\n  \'Visit [Flutter](https://flutter.dev) or [Dart](https://dart.dev) websites\',\n)',
+                child: Textf(
+                  'Visit [Flutter](https://flutter.dev) or [Dart](https://dart.dev) websites',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // --- Formatted URL Text Example ---
+              const ExampleCard(
+                // THIS SHOULD NOW WORK FOR CLICK TOO
+                title: 'Formatted URL Text',
+                description: 'URL display text with other formatting applied',
+                code:
+                    'Textf(\n  \'Check out [**bold link**](https://example.com) and [*italic link*](https://example.org)\',\n)',
+                child: Textf(
+                  'Check out [**bold link**](https://example.com) and [*italic link*](https://example.org)',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // --- Nested Formatting Example ---
+              const ExampleCard(
+                // THIS SHOULD NOW WORK FOR CLICK TOO
+                title: 'Nested Formatting in URL Text',
+                description:
+                    'URL display text with nested formatting (bold > italic)',
+                code:
+                    'Textf(\n  \'Link with [**nested _italic_ style**](https://example.net)\',\n)',
+                child: Textf(
+                  'Link with [**nested _italic_ style**](https://example.net)',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // --- Email URL Example ---
+              const ExampleCard(
+                title: 'Email URL',
+                description: 'URL with mailto: protocol',
+                code:
+                    'Textf(\n  \'Contact [support](mailto:support@example.com) for assistance\',\n)',
+                child: Textf(
+                  'Contact [support](mailto:support@example.com) for assistance',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // --- Special Characters Example ---
+              const ExampleCard(
+                title: 'URL with Special Characters',
+                description: 'URL containing query parameters and fragments',
+                code:
+                    'Textf(\n  \'Search for [Package Textf](https://pub.dev/packages?q=textf+markdown#results)\',\n)',
+                child: Textf(
+                  'Search for [Package Textf](https://pub.dev/packages?q=textf+markdown#results)',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // --- Normalization Example ---
+              const ExampleCard(
+                title: 'URL Needing Normalization',
+                description: 'URL without protocol (should get http:// added)',
+                code: 'Textf(\n  \'Visit [Google](google.com)\',\n)',
+                child: Textf(
+                  'Visit [Google](google.com)',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  // --- Helper Widget for Status Display ---
-
-  Widget _buildInteractionStatus() {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLowest, // Use semantic color
-        border: Border(
-          top: BorderSide(color: theme.dividerColor),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Take only needed vertical space
-        children: [
-          Text(
-            'Interaction Status:',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _buildStatusRow(
-            'Last Tapped:',
-            _lastTappedUrl.isEmpty
-                ? 'N/A'
-                : '"$_lastTappedDisplayText" ($_lastTappedUrl)',
-          ),
-          const SizedBox(height: 4),
-          _buildStatusRow(
-            'Hovering:',
-            _isHovering ? '"$_hoveredDisplayText" ($_hoveredUrl)' : 'No',
-          ),
-          if (_lastTappedUrl.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Center(
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8)),
-                onPressed: () => _launchUrl(_lastTappedUrl),
-                icon: const Icon(Icons.open_in_new, size: 16),
-                label: const Text('Launch Last Tapped URL',
-                    style: TextStyle(fontSize: 12)),
-              ),
-            )
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusRow(String label, String value) {
-    final theme = Theme.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style:
-              theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            value,
-            style: theme.textTheme.bodySmall,
-            overflow: TextOverflow
-                .ellipsis, // Prevent long URLs/text from overflowing
-            maxLines: 2, // Allow up to 2 lines for display text + URL
-          ),
-        ),
-      ],
     );
   }
 }
