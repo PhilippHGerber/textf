@@ -70,7 +70,7 @@ class MyWidget extends StatelessWidget {
 
 ## Supported Formatting
 
-Textf supports the following formatting syntax:
+Textf supports the following inline formatting syntax, similar to a subset of Markdown:
 
 | Format        | Syntax                       | Result            |
 | ------------- | ---------------------------- | ----------------- |
@@ -79,8 +79,41 @@ Textf supports the following formatting syntax:
 | Bold+Italic   | `***both***` or `___both___` | ***both***        |
 | Strikethrough | `~~strikethrough~~`          | ~~strikethrough~~ |
 | Code          | `` `code` ``                 | `code`            |
+| Link          | `[text](url)`                | [Example Link](https://example.com) |
 
-To escape formatting characters, use a backslash: `\*not italic\*`
+---
+
+### Links (`[text](url)`)
+
+- **Syntax:** Enclose the display text in square brackets `[]` and the URL in parentheses `()`.
+- **Rendering:** Links are rendered with a distinct style (usually blue and underlined) that can be customized via `TextfOptions`.
+- **Interaction:**
+  - `Textf` renders links as tappable/clickable elements.
+  - To handle taps (e.g., open the URL) or hovers, wrap your `Textf` widget (or a parent widget containing multiple `Textf` widgets) with `TextfOptions` and provide the `onUrlTap` and/or `onUrlHover` callbacks.
+  - `TextfOptions` also allows custom styling for links (`urlStyle`, `urlHoverStyle`) and mouse cursor (`urlMouseCursor`).
+- **Nested Formatting:** The display text within the square brackets `[ ]` can contain other formatting markers (e.g., `[**bold link**](https://example.com)`).
+
+```dart
+// Example using TextfOptions for link interaction and styling
+TextfOptions(
+  // Optional: Customize link styles globally for descendants
+  urlStyle: TextStyle(color: Colors.green),
+  urlHoverStyle: TextStyle(fontWeight: FontWeight.bold),
+  onUrlTap: (url, rawDisplayText) {
+    // Implement URL launching logic (e.g., using url_launcher package)
+    print('Tapped URL: $url (Display Text: $rawDisplayText)');
+  },
+  onUrlHover: (url, rawDisplayText, isHovering) {
+    // Handle hover effects (e.g., change cursor, update UI state)
+    print('Hovering over $url: $isHovering');
+  },
+  child: Textf(
+    'Visit [**Flutter website**](https://flutter.dev) or [this link](https://example.com).',
+    style: TextStyle(fontSize: 16),
+  ),
+)
+
+```
 
 ### Nesting Formatting
 
