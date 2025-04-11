@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:textf/src/core/default_styles.dart';
 import 'package:textf/src/models/url_link_span.dart';
 import 'package:textf/src/parsing/parser.dart';
 import 'package:textf/src/widgets/textf_options.dart';
@@ -17,7 +18,9 @@ void main() {
 
     // Helper to create a test BuildContext
     Widget buildTestWidget(
-        WidgetTester tester, Widget Function(BuildContext) builder) {
+      WidgetTester tester,
+      Widget Function(BuildContext) builder,
+    ) {
       return MaterialApp(
         home: Builder(
           builder: (context) {
@@ -55,7 +58,7 @@ void main() {
         expect(linkSpan.text, 'Flutter website');
 
         // Link should have default URL styling
-        expect(linkSpan.style?.color, Colors.blue);
+        expect(linkSpan.style?.color, DefaultStyles.urlColor);
         expect(linkSpan.style?.decoration, TextDecoration.underline);
       });
 
@@ -278,11 +281,13 @@ void main() {
               builder: (context) {
                 return TextfOptions(
                   urlStyle: TextStyle(color: Colors.red, fontSize: 18),
-                  child: Builder(builder: (innerContext) {
-                    testContext =
-                        innerContext; // Capture the context with TextfOptions
-                    return Container();
-                  }),
+                  child: Builder(
+                    builder: (innerContext) {
+                      testContext =
+                          innerContext; // Capture the context with TextfOptions
+                      return Container();
+                    },
+                  ),
                 );
               },
             ),
@@ -446,8 +451,10 @@ void main() {
         final boldLinkSpan = spans[1] as UrlLinkSpan;
         expect(boldLinkSpan.url, 'https://bold.com');
         expect(boldLinkSpan.children!.length, 1);
-        expect((boldLinkSpan.children![0] as TextSpan).style?.fontWeight,
-            FontWeight.bold);
+        expect(
+          (boldLinkSpan.children![0] as TextSpan).style?.fontWeight,
+          FontWeight.bold,
+        );
 
         // Center span should be plain text
         expect(spans[2], isA<TextSpan>());
@@ -458,8 +465,10 @@ void main() {
         final italicLinkSpan = spans[3] as UrlLinkSpan;
         expect(italicLinkSpan.url, 'https://italic.com');
         expect(italicLinkSpan.children!.length, 1);
-        expect((italicLinkSpan.children![0] as TextSpan).style?.fontStyle,
-            FontStyle.italic);
+        expect(
+          (italicLinkSpan.children![0] as TextSpan).style?.fontStyle,
+          FontStyle.italic,
+        );
       });
 
       testWidgets('links within formatted text', (tester) async {
@@ -510,14 +519,22 @@ void main() {
         expect(linkSpan.children!.length, 9);
 
         // Verify each formatted section
-        expect((linkSpan.children![0] as TextSpan).style?.fontWeight,
-            FontWeight.bold);
-        expect((linkSpan.children![2] as TextSpan).style?.fontStyle,
-            FontStyle.italic);
-        expect((linkSpan.children![4] as TextSpan).style?.decoration,
-            TextDecoration.lineThrough);
         expect(
-            (linkSpan.children![6] as TextSpan).style?.fontFamily, 'monospace');
+          (linkSpan.children![0] as TextSpan).style?.fontWeight,
+          FontWeight.bold,
+        );
+        expect(
+          (linkSpan.children![2] as TextSpan).style?.fontStyle,
+          FontStyle.italic,
+        );
+        expect(
+          (linkSpan.children![4] as TextSpan).style?.decoration,
+          TextDecoration.lineThrough,
+        );
+        expect(
+          (linkSpan.children![6] as TextSpan).style?.fontFamily,
+          'monospace',
+        );
 
         // Verify nested formatting
         final bothSpan = linkSpan.children![8] as TextSpan;
@@ -545,11 +562,13 @@ void main() {
                     tappedUrl = url;
                     tappedText = displayText;
                   },
-                  child: Builder(builder: (innerContext) {
-                    testContext =
-                        innerContext; // Capture the context with TextfOptions
-                    return Container();
-                  }),
+                  child: Builder(
+                    builder: (innerContext) {
+                      testContext =
+                          innerContext; // Capture the context with TextfOptions
+                      return Container();
+                    },
+                  ),
                 );
               },
             ),
@@ -599,11 +618,13 @@ void main() {
                     hoveredText = displayText;
                     isHovering = hovering;
                   },
-                  child: Builder(builder: (innerContext) {
-                    testContext =
-                        innerContext; // Capture the context with TextfOptions
-                    return Container();
-                  }),
+                  child: Builder(
+                    builder: (innerContext) {
+                      testContext =
+                          innerContext; // Capture the context with TextfOptions
+                      return Container();
+                    },
+                  ),
                 );
               },
             ),

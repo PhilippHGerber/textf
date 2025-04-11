@@ -14,7 +14,9 @@ void main() {
 
     // Helper to create a test BuildContext
     Widget buildTestWidget(
-        WidgetTester tester, Widget Function(BuildContext) builder) {
+      WidgetTester tester,
+      Widget Function(BuildContext) builder,
+    ) {
       return MaterialApp(
         home: Builder(
           builder: (context) {
@@ -48,7 +50,10 @@ void main() {
         await tester
             .pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse(
-            'text with * single asterisk', mockContext, const TextStyle());
+          'text with * single asterisk',
+          mockContext,
+          const TextStyle(),
+        );
         expect(spans.length, 1);
         expect((spans[0] as TextSpan).text, 'text with * single asterisk');
       });
@@ -91,8 +96,10 @@ void main() {
         final spans =
             parser.parse('~~strikethrough~~', mockContext, const TextStyle());
         expect(spans.length, 1);
-        expect((spans[0] as TextSpan).style?.decoration,
-            TextDecoration.lineThrough);
+        expect(
+          (spans[0] as TextSpan).style?.decoration,
+          TextDecoration.lineThrough,
+        );
         expect((spans[0] as TextSpan).text, 'strikethrough');
       });
 
@@ -102,8 +109,10 @@ void main() {
         final spans = parser.parse('`code`', mockContext, const TextStyle());
         expect(spans.length, 1);
         expect((spans[0] as TextSpan).style?.fontFamily, 'monospace');
-        expect((spans[0] as TextSpan).style?.backgroundColor,
-            const Color(0xFFF5F5F5));
+        expect(
+          (spans[0] as TextSpan).style?.backgroundColor,
+          const Color(0xFFF5F5F5),
+        );
         expect((spans[0] as TextSpan).text, 'code');
       });
 
@@ -130,10 +139,14 @@ void main() {
 
         final boldItalicSpans =
             parser.parse('___both___', mockContext, const TextStyle());
-        expect((boldItalicSpans[0] as TextSpan).style?.fontWeight,
-            FontWeight.bold);
-        expect((boldItalicSpans[0] as TextSpan).style?.fontStyle,
-            FontStyle.italic);
+        expect(
+          (boldItalicSpans[0] as TextSpan).style?.fontWeight,
+          FontWeight.bold,
+        );
+        expect(
+          (boldItalicSpans[0] as TextSpan).style?.fontStyle,
+          FontStyle.italic,
+        );
       });
     });
 
@@ -143,7 +156,10 @@ void main() {
         await tester
             .pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse(
-            '**bold with _italic_ inside**', mockContext, const TextStyle());
+          '**bold with _italic_ inside**',
+          mockContext,
+          const TextStyle(),
+        );
 
         expect(spans.length, 3);
         expect((spans[0] as TextSpan).style?.fontWeight, FontWeight.bold);
@@ -162,7 +178,10 @@ void main() {
         await tester
             .pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse(
-            '**bold with *italic* inside**', mockContext, const TextStyle());
+          '**bold with *italic* inside**',
+          mockContext,
+          const TextStyle(),
+        );
 
         // The parser should handle this specific case gracefully
         // We verify it doesn't crash and produces reasonable output
@@ -174,8 +193,11 @@ void main() {
         await tester
             .pumpWidget(buildTestWidget(tester, (context) => Container()));
         // 3 levels of nesting (exceeds default maxDepth of 2)
-        final spans = parser.parse('**bold _italic ~~strike~~ text_**',
-            mockContext, const TextStyle());
+        final spans = parser.parse(
+          '**bold _italic ~~strike~~ text_**',
+          mockContext,
+          const TextStyle(),
+        );
 
         // Verify that the third level is not applied
         bool hasStrikethrough = false;
@@ -196,16 +218,24 @@ void main() {
 
         // Bold with code
         final boldWithCode = parser.parse(
-            '**bold with `code`**', mockContext, const TextStyle());
+          '**bold with `code`**',
+          mockContext,
+          const TextStyle(),
+        );
         expect(boldWithCode.length, 2);
         expect((boldWithCode[1] as TextSpan).style?.fontFamily, 'monospace');
 
         // Italic with strike
         final italicWithStrike = parser.parse(
-            '*italic with ~~strike~~*', mockContext, const TextStyle());
+          '*italic with ~~strike~~*',
+          mockContext,
+          const TextStyle(),
+        );
         expect(italicWithStrike.length, 2);
-        expect((italicWithStrike[1] as TextSpan).style?.decoration,
-            TextDecoration.lineThrough);
+        expect(
+          (italicWithStrike[1] as TextSpan).style?.decoration,
+          TextDecoration.lineThrough,
+        );
       });
     });
 
@@ -231,7 +261,10 @@ void main() {
             .pumpWidget(buildTestWidget(tester, (context) => Container()));
         // opening bold, opening italic, closing bold, closing italic
         final spans = parser.parse(
-            '**bold *italic** text*', mockContext, const TextStyle());
+          '**bold *italic** text*',
+          mockContext,
+          const TextStyle(),
+        );
 
         // The result should not crash and should make a reasonable attempt
         expect(spans.isNotEmpty, true);
@@ -241,7 +274,10 @@ void main() {
         await tester
             .pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse(
-            '**bold *both** italic*', mockContext, const TextStyle());
+          '**bold *both** italic*',
+          mockContext,
+          const TextStyle(),
+        );
 
         // Should not crash and handle gracefully
         expect(spans.isNotEmpty, true);
@@ -332,15 +368,20 @@ void main() {
         await tester
             .pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse(
-            '**你好世界** *안녕하세요* ~~Привет~~', mockContext, const TextStyle());
+          '**你好世界** *안녕하세요* ~~Привет~~',
+          mockContext,
+          const TextStyle(),
+        );
         expect(spans.length, 5); // 3 formatted spans + 2 spaces
         expect((spans[0] as TextSpan).text, '你好世界');
         expect((spans[0] as TextSpan).style?.fontWeight, FontWeight.bold);
         expect((spans[2] as TextSpan).text, '안녕하세요');
         expect((spans[2] as TextSpan).style?.fontStyle, FontStyle.italic);
         expect((spans[4] as TextSpan).text, 'Привет');
-        expect((spans[4] as TextSpan).style?.decoration,
-            TextDecoration.lineThrough);
+        expect(
+          (spans[4] as TextSpan).style?.decoration,
+          TextDecoration.lineThrough,
+        );
       });
 
       testWidgets('emoji characters parse correctly', (tester) async {
@@ -357,7 +398,10 @@ void main() {
         await tester
             .pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse(
-            r'This is \*not italic\*', mockContext, const TextStyle());
+          r'This is \*not italic\*',
+          mockContext,
+          const TextStyle(),
+        );
         expect(spans.length, 1);
         expect((spans[0] as TextSpan).text, 'This is *not italic*');
       });
@@ -368,18 +412,23 @@ void main() {
         await tester
             .pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse(
-            '**Bold** and *italic* and ~~strike~~ and `code`',
-            mockContext,
-            const TextStyle());
+          '**Bold** and *italic* and ~~strike~~ and `code`',
+          mockContext,
+          const TextStyle(),
+        );
 
         expect(
-            spans.length, 7); // 4 formatted segments + 3 plain "and " segments
+          spans.length,
+          7,
+        ); // 4 formatted segments + 3 plain "and " segments
 
         // Verify styles
         expect((spans[0] as TextSpan).style?.fontWeight, FontWeight.bold);
         expect((spans[2] as TextSpan).style?.fontStyle, FontStyle.italic);
-        expect((spans[4] as TextSpan).style?.decoration,
-            TextDecoration.lineThrough);
+        expect(
+          (spans[4] as TextSpan).style?.decoration,
+          TextDecoration.lineThrough,
+        );
         expect((spans[6] as TextSpan).style?.fontFamily, 'monospace');
       });
 

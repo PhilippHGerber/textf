@@ -354,7 +354,8 @@ void main() {
 
       test('Single asterisk/underscore in text (not formatting)', () {
         final tokens = tokenizer.tokenize(
-            'This * is not formatting and neither is this _ character');
+          'This * is not formatting and neither is this _ character',
+        );
         expect(tokens.length, 5);
         expect(tokens[0].type, TokenType.text);
         expect(tokens[1].type, TokenType.italicMarker);
@@ -385,8 +386,10 @@ void main() {
       test('Many formatting markers', () {
         final manyMarkers = List.generate(100, (i) => '**bold$i**').join(' ');
         final tokens = tokenizer.tokenize(manyMarkers);
-        expect(tokens.length,
-            399); // 200 (100 pairs) of markers + 100 text segments + 99 spaces
+        expect(
+          tokens.length,
+          399,
+        ); // 200 (100 pairs) of markers + 100 text segments + 99 spaces
       });
 
       test('Alternating character formatting', () {
