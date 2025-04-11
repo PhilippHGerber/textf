@@ -108,7 +108,7 @@ class LinkHandler {
   static UrlLinkSpan _buildLinkSpan(
     ParserState state,
     String url,
-    String linkText,
+    String rawLinkText,
   ) {
     // 1. Calculate the style inherited from the current formatting stack
     TextStyle inheritedStyle = state.baseStyle;
@@ -134,56 +134,83 @@ class LinkHandler {
     //    (like fontWeight from bold) will be preserved if not in linkOptionsStyle.
     final TextStyle finalLinkStyle = inheritedStyle.merge(linkOptionsStyle);
 
-    // Get the custom cursor (or default)
-    final MouseCursor cursor = state.options
-            ?.getEffectiveUrlMouseCursor() ?? // Corrected: Use getEffectiveUrlMouseCursor
+    // Get the link-specific cursor and hover handlers ONCE
+    final MouseCursor cursor = state.options?.getEffectiveUrlMouseCursor() ??
         DefaultStyles.urlMouseCursor;
-
-    // Create gesture recognizer for tap
-    TapGestureRecognizer? recognizer;
-    if (state.options?.onUrlTap != null) {
-      recognizer = TapGestureRecognizer()
-        ..onTap = () => state.options!.onUrlTap!(url, linkText);
-    }
-
-    // Create hover callbacks if needed
     PointerEnterEventListener? onEnter;
     PointerExitEventListener? onExit;
     if (state.options?.onUrlHover != null) {
-      onEnter = (_) => state.options!.onUrlHover!(url, linkText, true);
-      onExit = (_) => state.options!.onUrlHover!(url, linkText, false);
+      // Use rawLinkText for the hover callback as decided
+      onEnter = (_) => state.options!.onUrlHover!(url, rawLinkText, true);
+      onExit = (_) => state.options!.onUrlHover!(url, rawLinkText, false);
     }
 
-    // Handle links with or without formatted text
-    if (FormattingUtils.hasFormattingMarkers(linkText)) {
-      // Handle formatting within link text using a separate parser
-      final List<Token> linkTextTokens = state.tokenizer.tokenize(linkText);
-      // Pass the 'finalLinkStyle' as the base style for parsing inner content
-      final List<InlineSpan> formattedLinkSpans = _parseFormattedLinkText(
-          state, linkTextTokens, finalLinkStyle); // Pass final style
+    // Prepare child spans and determine final structure
+    List<InlineSpan>? finalChildrenSpans;
+    String spanText;
 
-      return UrlLinkSpan(
-        url: url,
-        text: '', // Empty because we're using children
-        style: finalLinkStyle, // Apply the final combined style
-        recognizer: recognizer,
-        mouseCursor: cursor,
-        onEnter: onEnter,
-        onExit: onExit,
-        children: formattedLinkSpans,
-      );
+    if (FormattingUtils.hasFormattingMarkers(rawLinkText)) {
+      final List<Token> linkTextTokens = state.tokenizer.tokenize(rawLinkText);
+      // Parse the inner content using the final combined link style as base
+      final List<InlineSpan> intermediateChildrenSpans =
+          _parseFormattedLinkText(state, linkTextTokens, finalLinkStyle);
+
+      finalChildrenSpans = intermediateChildrenSpans.map((span) {
+        if (span is TextSpan) {
+          // Create a new TextSpan copying original properties BUT adding hover handlers
+          return TextSpan(
+            text: span.text,
+            // Keep potential nested children
+            children: span.children,
+            style: span.style,
+            // Propagate hover effects, but NOT the recognizer
+            mouseCursor: cursor,
+            onEnter: onEnter,
+            onExit: onExit,
+            // Recognizer should stay on the parent UrlLinkSpan
+            recognizer: null, // Explicitly null on children
+            locale: span.locale,
+            semanticsLabel: span.semanticsLabel,
+            spellOut: span.spellOut,
+          );
+        }
+        // If other InlineSpan types could appear (unlikely for basic textf), handle them
+        return span;
+      }).toList();
+
+      // Parent UrlLinkSpan has no direct text when it has children
+      spanText = '';
     } else {
-      // No formatting in link text
-      return UrlLinkSpan(
-        url: url,
-        text: linkText,
-        style: finalLinkStyle, // Apply the final combined style
-        recognizer: recognizer,
-        mouseCursor: cursor,
-        onEnter: onEnter,
-        onExit: onExit,
-      );
+      // No formatting, raw text is plain text
+      spanText = rawLinkText;
+      finalChildrenSpans = null; // No children needed
     }
+
+    // Create gesture recognizer for tap using rawLinkText
+    TapGestureRecognizer? recognizer;
+    if (state.options?.onUrlTap != null) {
+      recognizer = TapGestureRecognizer()
+        ..onTap =
+            () => state.options!.onUrlTap!(url, rawLinkText); // Use raw text
+    }
+
+    // Create the final UrlLinkSpan
+    return UrlLinkSpan(
+      url: url,
+      // Either empty (has children) or rawLinkText (no children)
+      text: spanText,
+      // Apply the final combined style to the parent span as well
+      // This ensures consistent style application if the parent itself had text
+      style: finalLinkStyle,
+      // Recognizer ONLY on the parent
+      recognizer: recognizer,
+      // Set hover properties on the PARENT *as well* (for safety/consistency)
+      mouseCursor: cursor,
+      onEnter: onEnter,
+      onExit: onExit,
+      // Assign the potentially modified children
+      children: finalChildrenSpans,
+    );
   }
 
   /// Parses formatted text within a link.
