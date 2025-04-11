@@ -26,10 +26,12 @@ import '../core/default_styles.dart';
 /// TextfOptions( // Root options
 ///   boldStyle: TextStyle(fontWeight: FontWeight.w900),
 ///   urlStyle: TextStyle(color: Colors.blue),
+///   onUrlTap: (url, text) => print('Root tap: $url'),
 ///   child: ...,
 ///     TextfOptions( // Nested options
 ///       urlStyle: TextStyle(color: Colors.green), // Only override URL style
 ///       // boldStyle will implicitly be inherited from the root options
+///       // onUrlTap will implicitly be inherited from the root options
 ///       child: Textf("This uses green [links](...) and w900 **bold** text."),
 ///     )
 ///   ...,
@@ -88,16 +90,19 @@ class TextfOptions extends InheritedWidget {
   /// Finds the nearest [TextfOptions] ancestor in the widget tree.
   /// Returns null if no ancestor is found.
   static TextfOptions? maybeOf(BuildContext context) {
-    return context
-        .getElementForInheritedWidgetOfExactType<TextfOptions>()
-        ?.widget as TextfOptions?;
+    // Use getElementForInheritedWidgetOfExactType for potentially better performance
+    // as it doesn't establish a dependency.
+    final inheritedElement =
+        context.getElementForInheritedWidgetOfExactType<TextfOptions>();
+    return inheritedElement?.widget as TextfOptions?;
   }
 
   /// Finds the nearest [TextfOptions] ancestor and establishes a dependency.
   static TextfOptions of(BuildContext context) {
     final TextfOptions? result =
         context.dependOnInheritedWidgetOfExactType<TextfOptions>();
-    assert(result != null, 'No TextfOptions found in context');
+    assert(result != null,
+        'No TextfOptions found in context. Wrap your widget with TextfOptions or ensure one exists higher in the tree.');
     return result!;
   }
 
@@ -111,10 +116,13 @@ class TextfOptions extends InheritedWidget {
         context.getElementForInheritedWidgetOfExactType<TextfOptions>();
 
     while (currentElement != null) {
-      final currentOptions = currentElement.widget as TextfOptions;
-      final value = getter(currentOptions);
-      if (value != null) {
-        return value; // Found the first non-null value
+      // Ensure the widget associated with the element is indeed TextfOptions
+      if (currentElement.widget is TextfOptions) {
+        final currentOptions = currentElement.widget as TextfOptions;
+        final value = getter(currentOptions);
+        if (value != null) {
+          return value; // Found the first non-null value
+        }
       }
 
       // Move up to the next ancestor TextfOptions
@@ -133,7 +141,7 @@ class TextfOptions extends InheritedWidget {
   }
 
   /// Calculates the effective style by applying defaults, base, and overrides.
-  /// Priority: Specified Override > Base Style > Default Style Effect
+  /// Priority: Specified Override > Default Style Effect > Base Style
   TextStyle _getEffectiveStyle(
     BuildContext context,
     TextStyle baseStyle,
@@ -151,7 +159,7 @@ class TextfOptions extends InheritedWidget {
 
     // 3. Merge the specified override onto the style that already has the default effect.
     //    This ensures the override takes precedence over both base and default effects.
-    //    If specifiedStyle is null, merge(TextStyle()) does nothing.
+    //    If specifiedStyle is null, merge(null) does nothing.
     return styleWithDefaultApplied.merge(specifiedStyle);
   }
 
@@ -217,13 +225,15 @@ class TextfOptions extends InheritedWidget {
   /// Finds the first non-null [onUrlTap] callback defined up the tree.
   void Function(String url, String displayText)? getEffectiveOnUrlTap(
       BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.onUrlTap);
+    // Pass the getter for onUrlTap to the helper function
+    return _findFirstAncestorValue(context, (options) => options.onUrlTap);
   }
 
   /// Finds the first non-null [onUrlHover] callback defined up the tree.
   void Function(String url, String displayText, bool isHovering)?
       getEffectiveOnUrlHover(BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.onUrlHover);
+    // Pass the getter for onUrlHover to the helper function
+    return _findFirstAncestorValue(context, (options) => options.onUrlHover);
   }
 
   // --- Property Getters using the corrected _getEffectiveStyle ---
