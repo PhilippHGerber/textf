@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../../models/format_stack_entry.dart';
 import '../../models/parser_state.dart';
 import '../../models/token.dart';
@@ -14,20 +16,26 @@ class FormatHandler {
   /// It updates the format stack, flushes text when necessary, and
   /// keeps track of processed tokens.
   ///
+  /// @param context The BuildContext
   /// @param state The current parser state
   /// @param index The index of the token being processed
   /// @param token The token to process
   /// @return The new token index after processing, or null if no index change
-  static int? processFormat(ParserState state, int index, Token token) {
+  static int? processFormat(
+    BuildContext context,
+    ParserState state,
+    int index,
+    Token token,
+  ) {
     final matchingIndex = state.matchingPairs[index];
     if (matchingIndex != null) {
       // This is a formatting marker with a matching pair
       if (matchingIndex > index) {
         // This is an opening marker
-        return _handleOpeningMarker(state, index, token);
+        return _handleOpeningMarker(context, state, index, token);
       } else {
         // This is a closing marker
-        return _handleClosingMarker(state, index, matchingIndex);
+        return _handleClosingMarker(context, state, index, matchingIndex);
       }
     } else {
       // Unpaired marker, treat as text
@@ -41,13 +49,19 @@ class FormatHandler {
   /// This method adds the marker to the format stack and flushes
   /// any accumulated text with the previous formatting.
   ///
+  /// @param context The BuildContext
   /// @param state The current parser state
   /// @param index The index of the token being processed
   /// @param token The opening marker token
   /// @return The new token index after processing, or null if no index change
-  static int? _handleOpeningMarker(ParserState state, int index, Token token) {
+  static int? _handleOpeningMarker(
+    BuildContext context,
+    ParserState state,
+    int index,
+    Token token,
+  ) {
     // Add any accumulated text before we start this formatting
-    state.flushText();
+    state.flushText(context);
 
     // Push onto the format stack
     state.formatStack.add(
@@ -69,12 +83,17 @@ class FormatHandler {
   /// This method removes the corresponding marker from the format stack
   /// and flushes accumulated text with the current formatting.
   ///
+  /// @param context The BuildContext
   /// @param state The current parser state
   /// @param index The index of the token being processed
   /// @param matchingIndex The index of the matching opening marker
   /// @return The new token index after processing, or null if no index change
   static int? _handleClosingMarker(
-      ParserState state, int index, int matchingIndex) {
+    BuildContext context,
+    ParserState state,
+    int index,
+    int matchingIndex,
+  ) {
     // Mark as processed
     state.processedIndices.add(index);
 
@@ -89,13 +108,13 @@ class FormatHandler {
 
     if (stackIndex != -1) {
       // First flush the text with formatting still applied
-      state.flushText();
+      state.flushText(context);
 
       // Then remove the entry from the stack
       state.formatStack.removeAt(stackIndex);
     } else {
       // No matching format found, just flush text
-      state.flushText();
+      state.flushText(context);
     }
 
     return null;

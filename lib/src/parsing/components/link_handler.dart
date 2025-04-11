@@ -20,12 +20,17 @@ class LinkHandler {
   /// This method handles complete link structures ([text](url)) and creates
   /// appropriate UrlLinkSpan objects, with support for formatting within the link text.
   ///
+  /// @param context The build context for styling
   /// @param state The current parser state
   /// @param index The index of the token being processed
   /// @return The new token index after processing, or null if no index change
-  static int? processLink(ParserState state, int index) {
+  static int? processLink(
+    BuildContext context,
+    ParserState state,
+    int index,
+  ) {
     // Flush any existing text
-    state.flushText();
+    state.flushText(context);
 
     final tokens = state.tokens;
 
@@ -36,7 +41,7 @@ class LinkHandler {
       final normalizedUrl = _normalizeUrl(linkUrl);
 
       // Build and add the appropriate span
-      state.spans.add(_buildLinkSpan(state, normalizedUrl, linkText));
+      state.spans.add(_buildLinkSpan(context, state, normalizedUrl, linkText));
 
       // Mark tokens as processed
       _markProcessed(state, index);
@@ -101,11 +106,13 @@ class LinkHandler {
   /// This method creates a UrlLinkSpan with the appropriate styling and behavior,
   /// including support for formatted text within the link text.
   ///
+  /// @param context The build context
   /// @param state The current parser state
   /// @param url The normalized URL for the link
   /// @param linkText The display text for the link
   /// @return A UrlLinkSpan for the link
   static UrlLinkSpan _buildLinkSpan(
+    BuildContext context,
     ParserState state,
     String url,
     String rawLinkText,
@@ -114,6 +121,7 @@ class LinkHandler {
     TextStyle inheritedStyle = state.baseStyle;
     for (final entry in state.formatStack) {
       inheritedStyle = StyleApplicator.applyStyle(
+        context,
         inheritedStyle,
         entry.type,
         state.options,
@@ -125,7 +133,7 @@ class LinkHandler {
     //    intended link color/decoration, avoiding double-merging fontWeight etc.
     //    Alternatively, define linkOptionsStyle independently.
     final TextStyle linkOptionsStyle =
-        state.options?.getEffectiveUrlStyle(state.baseStyle) ??
+        state.options?.getEffectiveUrlStyle(context, state.baseStyle) ??
             DefaultStyles.urlStyle.merge(state.baseStyle);
 
     // 3. Merge the inherited style with the link-specific style.
@@ -135,8 +143,9 @@ class LinkHandler {
     final TextStyle finalLinkStyle = inheritedStyle.merge(linkOptionsStyle);
 
     // Get the link-specific cursor and hover handlers ONCE
-    final MouseCursor cursor = state.options?.getEffectiveUrlMouseCursor() ??
-        DefaultStyles.urlMouseCursor;
+    final MouseCursor cursor =
+        state.options?.getEffectiveUrlMouseCursor(context) ??
+            DefaultStyles.urlMouseCursor;
     PointerEnterEventListener? onEnter;
     PointerExitEventListener? onExit;
     if (state.options?.onUrlHover != null) {
@@ -153,7 +162,12 @@ class LinkHandler {
       final List<Token> linkTextTokens = state.tokenizer.tokenize(rawLinkText);
       // Parse the inner content using the final combined link style as base
       final List<InlineSpan> intermediateChildrenSpans =
-          _parseFormattedLinkText(state, linkTextTokens, finalLinkStyle);
+          _parseFormattedLinkText(
+        context,
+        state,
+        linkTextTokens,
+        finalLinkStyle,
+      );
 
       finalChildrenSpans = intermediateChildrenSpans.map((span) {
         if (span is TextSpan) {
@@ -218,12 +232,17 @@ class LinkHandler {
   /// This method creates a simplified parser for handling
   /// formatting within link text.
   ///
+  /// @param context The build context
   /// @param state The current parser state
   /// @param tokens The tokens for the link text
   /// @param urlStyle The base style for the link
   /// @return A list of spans for the formatted link text
   static List<InlineSpan> _parseFormattedLinkText(
-      ParserState state, List<Token> tokens, TextStyle linkBaseStyle) {
+    BuildContext context,
+    ParserState state,
+    List<Token> tokens,
+    TextStyle linkBaseStyle,
+  ) {
     // Create a simplified parser state just for the link text
     final linkTextState = ParserState(
       tokens: tokens,
@@ -257,12 +276,12 @@ class LinkHandler {
       if (token.type == TokenType.text) {
         linkTextState.textBuffer += token.value;
       } else {
-        FormatHandler.processFormat(linkTextState, i, token);
+        FormatHandler.processFormat(context, linkTextState, i, token);
       }
     }
 
     // Flush any remaining text
-    linkTextState.flushText();
+    linkTextState.flushText(context);
 
     return linkTextState.spans;
   }

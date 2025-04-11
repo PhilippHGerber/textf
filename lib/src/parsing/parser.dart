@@ -144,13 +144,13 @@ class TextfParser {
         state.textBuffer += token.value;
       } else if (token.type == TokenType.linkStart) {
         // Handle link tokens
-        final newIndex = LinkHandler.processLink(state, i);
+        final newIndex = LinkHandler.processLink(context, state, i);
         if (newIndex != null) {
           i = newIndex;
         }
       } else {
         // Handle formatting markers
-        final newIndex = FormatHandler.processFormat(state, i, token);
+        final newIndex = FormatHandler.processFormat(context, state, i, token);
         if (newIndex != null) {
           i = newIndex;
         }
@@ -158,7 +158,7 @@ class TextfParser {
     }
 
     // Flush any remaining text
-    state.flushText();
+    state.flushText(context);
 
     return state;
   }
@@ -203,7 +203,10 @@ class TextfParser {
         final openToken = tokens[openIndex];
         final closeToken = tokens[closeIndex];
         debugPrint(
-            '- ${openToken.type} at ${openToken.position} (index: $openIndex) matches ${closeToken.type} at ${closeToken.position} (index: $closeIndex)');
+          '- ${openToken.type} at ${openToken.position} '
+          '(index: $openIndex) matches ${closeToken.type} '
+          'at ${closeToken.position} (index: $closeIndex)',
+        );
         processedPairs.add(openIndex);
         processedPairs.add(closeIndex);
       }

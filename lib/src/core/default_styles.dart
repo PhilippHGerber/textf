@@ -6,44 +6,62 @@ import 'package:flutter/material.dart';
 /// the Textf widget, ensuring consistent formatting and reducing
 /// dependencies between components.
 class DefaultStyles {
+  /// Defaul
+  static const MaterialColor _blue = Colors.blue;
+  static Color urlColor = _blue.shade500;
+  static Color urlHoverColor = _blue.shade700;
+
   /// Default styling for URLs in normal state.
   static final TextStyle urlStyle = TextStyle(
-    color: Colors.blue,
+    color: urlColor,
     decoration: TextDecoration.underline,
+    decorationColor: urlColor,
   );
 
   /// Default styling for URLs in hover state.
   static final TextStyle urlHoverStyle = TextStyle(
-    color: Colors.blue[700],
+    color: urlHoverColor,
     decoration: TextDecoration.underline,
+    decorationColor: urlHoverColor,
   );
 
   /// Default mouse cursor for URLs.
   static const MouseCursor urlMouseCursor = SystemMouseCursors.click;
 
   /// Default styling for bold formatted text.
-  static TextStyle boldStyle(TextStyle baseStyle) =>
-      baseStyle.copyWith(fontWeight: FontWeight.bold);
+  static TextStyle boldStyle(TextStyle baseStyle) {
+    return baseStyle.copyWith(fontWeight: FontWeight.bold);
+  }
 
   /// Default styling for italic formatted text.
-  static TextStyle italicStyle(TextStyle baseStyle) =>
-      baseStyle.copyWith(fontStyle: FontStyle.italic);
+  static TextStyle italicStyle(TextStyle baseStyle) {
+    return baseStyle.copyWith(fontStyle: FontStyle.italic);
+  }
 
   /// Default styling for bold and italic formatted text.
-  static TextStyle boldItalicStyle(TextStyle baseStyle) => baseStyle.copyWith(
-        fontWeight: FontWeight.bold,
-        fontStyle: FontStyle.italic,
-      );
+  static TextStyle boldItalicStyle(TextStyle baseStyle) {
+    return baseStyle.copyWith(
+      fontWeight: FontWeight.bold,
+      fontStyle: FontStyle.italic,
+    );
+  }
 
   /// Default styling for strikethrough text.
-  static TextStyle strikethroughStyle(TextStyle baseStyle) =>
-      baseStyle.copyWith(decoration: TextDecoration.lineThrough);
+  static TextStyle strikethroughStyle(TextStyle baseStyle) {
+    return baseStyle.copyWith(
+      decoration: TextDecoration.lineThrough,
+      decorationColor: baseStyle.color,
+      decorationThickness: 2,
+    );
+  }
 
   /// Default styling for inline code text.
-  static TextStyle codeStyle(TextStyle baseStyle) => baseStyle.copyWith(
-        fontFamily: 'monospace',
-        fontFamilyFallback: ['RobotoMono', 'Menlo', 'Courier New'],
-        backgroundColor: const Color(0xFFF5F5F5),
-        letterSpacing: 0,
-      );
+  static TextStyle codeStyle(TextStyle baseStyle) {
+    return baseStyle.copyWith(
+      fontFamily: 'monospace',
+      fontFamilyFallback: ['RobotoMono', 'Menlo', 'Courier New'],
+      backgroundColor: const Color(0xFFF5F5F5),
+      letterSpacing: 0,
+    );
+  }
 }

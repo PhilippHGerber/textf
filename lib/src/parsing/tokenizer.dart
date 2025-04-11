@@ -44,8 +44,14 @@ class TextfTokenizer {
     // Helper to add accumulated text as a token
     void addTextToken(int start, int end) {
       if (end > start) {
-        tokens.add(Token(
-            TokenType.text, text.substring(start, end), start, end - start));
+        tokens.add(
+          Token(
+            TokenType.text,
+            text.substring(start, end),
+            start,
+            end - start,
+          ),
+        );
       }
     }
 
@@ -72,7 +78,13 @@ class TextfTokenizer {
           addTextToken(textStart, pos);
           // Just add the escaped character as normal text
           tokens.add(
-              Token(TokenType.text, String.fromCharCode(nextChar), pos + 1, 1));
+            Token(
+              TokenType.text,
+              String.fromCharCode(nextChar),
+              pos + 1,
+              1,
+            ),
+          );
           pos += 2;
           textStart = pos;
           continue;
@@ -250,8 +262,14 @@ class TextfTokenizer {
           if (urlEnd != -1) {
             // Add the URL
             if (urlEnd > urlStart) {
-              tokens.add(Token(TokenType.text, text.substring(urlStart, urlEnd),
-                  urlStart, urlEnd - urlStart));
+              tokens.add(
+                Token(
+                  TokenType.text,
+                  text.substring(urlStart, urlEnd),
+                  urlStart,
+                  urlEnd - urlStart,
+                ),
+              );
             } else {
               // Empty URL
               tokens.add(Token(TokenType.text, '', urlStart, 0));
@@ -287,7 +305,6 @@ class TextfTokenizer {
 
       // Safety check to ensure forward progress
       if (pos == startPos) {
-        // TODO - add warning: no progress made in tokenization, could be an infinite loop
         pos++; // Ensure we always advance
       }
     }

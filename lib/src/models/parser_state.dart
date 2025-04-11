@@ -56,13 +56,13 @@ class ParserState {
   /// 2. Applies all active formatting styles to the text
   /// 3. Adds the formatted text as a span
   /// 4. Clears the text buffer
-  void flushText() {
+  void flushText(BuildContext context) {
     if (textBuffer.isEmpty) return;
 
     // Calculate current style based on format stack
     var style = baseStyle;
     for (final entry in formatStack) {
-      style = StyleApplicator.applyStyle(style, entry.type, options);
+      style = StyleApplicator.applyStyle(context, style, entry.type, options);
     }
 
     spans.add(TextSpan(text: textBuffer, style: style));

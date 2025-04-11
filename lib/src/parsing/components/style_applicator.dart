@@ -16,35 +16,40 @@ class StyleApplicator {
   /// a new style with the appropriate formatting applied. It uses
   /// TextfOptions if available, otherwise falls back to default styles.
   ///
+  /// @param context The BuildContext
   /// @param style The base text style to modify
   /// @param markerType The type of formatting to apply
   /// @param options Optional TextfOptions for custom styling
   /// @return A new TextStyle with the appropriate formatting applied
   static TextStyle applyStyle(
-      TextStyle style, TokenType markerType, TextfOptions? options) {
+    BuildContext context,
+    TextStyle style,
+    TokenType markerType,
+    TextfOptions? options,
+  ) {
     switch (markerType) {
       case TokenType.boldMarker:
-        return options?.getEffectiveBoldStyle(style) ??
+        return options?.getEffectiveBoldStyle(context, style) ??
             DefaultStyles.boldStyle(style);
 
       case TokenType.italicMarker:
-        return options?.getEffectiveItalicStyle(style) ??
+        return options?.getEffectiveItalicStyle(context, style) ??
             DefaultStyles.italicStyle(style);
 
       case TokenType.boldItalicMarker:
-        return options?.getEffectiveBoldItalicStyle(style) ??
+        return options?.getEffectiveBoldItalicStyle(context, style) ??
             DefaultStyles.boldItalicStyle(style);
 
       case TokenType.strikeMarker:
-        return options?.getEffectiveStrikethroughStyle(style) ??
+        return options?.getEffectiveStrikethroughStyle(context, style) ??
             DefaultStyles.strikethroughStyle(style);
 
       case TokenType.codeMarker:
-        return options?.getEffectiveCodeStyle(style) ??
+        return options?.getEffectiveCodeStyle(context, style) ??
             DefaultStyles.codeStyle(style);
 
       case TokenType.linkStart: // Should not reach here directly
-        return options?.getEffectiveUrlStyle(style) ??
+        return options?.getEffectiveUrlStyle(context, style) ??
             DefaultStyles.urlStyle.merge(style);
 
       case TokenType.text:

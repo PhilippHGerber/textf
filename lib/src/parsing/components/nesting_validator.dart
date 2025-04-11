@@ -29,7 +29,9 @@ class NestingValidator {
   /// @param candidatePairs The initial pairs identified by the pairing resolver
   /// @return A map of validated pairs with invalid ones removed
   static Map<int, int> validatePairs(
-      List<Token> tokens, Map<int, int> candidatePairs) {
+    List<Token> tokens,
+    Map<int, int> candidatePairs,
+  ) {
     final Map<int, int> validatedPairs = Map.from(candidatePairs);
     final List<int> openingStack = [];
     final Set<int> invalidPairs = {};
@@ -63,7 +65,11 @@ class NestingValidator {
         } else {
           // Improper nesting
           _handleImproperNesting(
-              openingStack, matchingIndex, invalidPairs, candidatePairs);
+            openingStack,
+            matchingIndex,
+            invalidPairs,
+            candidatePairs,
+          );
         }
       }
     }
@@ -85,8 +91,12 @@ class NestingValidator {
   /// @param matchingIndex The index of the matching opening marker
   /// @param invalidPairs The set of invalid pair indices
   /// @param pairs The complete map of pairs
-  static void _handleImproperNesting(List<int> openingStack, int matchingIndex,
-      Set<int> invalidPairs, Map<int, int> pairs) {
+  static void _handleImproperNesting(
+    List<int> openingStack,
+    int matchingIndex,
+    Set<int> invalidPairs,
+    Map<int, int> pairs,
+  ) {
     // Find position of matching opening marker in stack
     int openingPos = -1;
     for (int j = 0; j < openingStack.length; j++) {
