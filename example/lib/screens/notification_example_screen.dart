@@ -2,111 +2,112 @@ import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 
 import '../widgets/example_card.dart';
-import '../widgets/selectable_scaffold.dart';
 
 class NotificationExampleScreen extends StatelessWidget {
   const NotificationExampleScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SelectableScaffold(
+    return Scaffold(
       appBar: AppBar(
         title: const Text('Notification Example'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const ExampleCard(
-            title: 'Notification',
-            description: 'Formatted text in a notification',
-            code: '''ListTile(
-  leading: Icon(Icons.notifications),
-  title: Text('System Update'),
-  subtitle: Textf(
-    'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
-    style: TextStyle(fontSize: 14),
-  ),
-)''',
-            child: Card(
+      body: SelectionArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const ExampleCard(
+              title: 'Notification',
+              description: 'Formatted text in a notification',
+              code: '''ListTile(
+          leading: Icon(Icons.notifications),
+          title: Text('System Update'),
+          subtitle: Textf(
+            'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
+            style: TextStyle(fontSize: 14),
+          ),
+        )''',
+              child: Card(
+                elevation: 2,
+                child: ListTile(
+                  leading: Icon(Icons.notifications),
+                  title: Text('System Update'),
+                  subtitle: Textf(
+                    'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            Text(
+              'More Notification Examples',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+
+            // More notification examples
+            const Card(
               elevation: 2,
               child: ListTile(
-                leading: Icon(Icons.notifications),
-                title: Text('System Update'),
+                leading: Icon(Icons.warning_amber, color: Colors.orange),
+                title: Text('Battery Low'),
                 subtitle: Textf(
-                  'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
+                  'Your battery is at **15%**. Connect to a charger _soon_ to avoid shutdown.',
                   style: TextStyle(fontSize: 14),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 12),
 
-          Text(
-            'More Notification Examples',
-            style: Theme.of(context).textTheme.titleLarge,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-
-          // More notification examples
-          const Card(
-            elevation: 2,
-            child: ListTile(
-              leading: Icon(Icons.warning_amber, color: Colors.orange),
-              title: Text('Battery Low'),
-              subtitle: Textf(
-                'Your battery is at **15%**. Connect to a charger _soon_ to avoid shutdown.',
-                style: TextStyle(fontSize: 14),
+            const Card(
+              elevation: 2,
+              child: ListTile(
+                leading: Icon(Icons.update, color: Colors.blue),
+                title: Text('App Update Available'),
+                subtitle: Textf(
+                  'Version **2.0.1** is now available with _new features_ and ~~bug~~ `fixes`.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                trailing: Icon(Icons.download),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-          const Card(
-            elevation: 2,
-            child: ListTile(
-              leading: Icon(Icons.update, color: Colors.blue),
-              title: Text('App Update Available'),
-              subtitle: Textf(
-                'Version **2.0.1** is now available with _new features_ and ~~bug~~ `fixes`.',
-                style: TextStyle(fontSize: 14),
-              ),
-              trailing: Icon(Icons.download),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          const Card(
-            elevation: 2,
-            child: ListTile(
-              leading: Icon(Icons.security, color: Colors.green),
-              title: Text('Security Alert'),
-              subtitle: Textf(
-                'Your account was accessed from a **new device** in _New York_. Was this you?',
-                style: TextStyle(fontSize: 14),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Yes'),
-                  SizedBox(width: 8),
-                  Text('No', style: TextStyle(color: Colors.red)),
-                ],
+            const Card(
+              elevation: 2,
+              child: ListTile(
+                leading: Icon(Icons.security, color: Colors.green),
+                title: Text('Security Alert'),
+                subtitle: Textf(
+                  'Your account was accessed from a **new device** in _New York_. Was this you?',
+                  style: TextStyle(fontSize: 14),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Yes'),
+                    SizedBox(width: 8),
+                    Text('No', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // Interactive notification system
-          Text(
-            'Interactive Notification System',
-            style: Theme.of(context).textTheme.titleLarge,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
+            // Interactive notification system
+            Text(
+              'Interactive Notification System',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
 
-          const NotificationSystem(),
-        ],
+            const NotificationSystem(),
+          ],
+        ),
       ),
     );
   }
@@ -124,20 +125,23 @@ class _NotificationSystemState extends State<NotificationSystem> {
     NotificationItem(
       icon: Icons.notifications,
       title: 'System Update',
-      message: 'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
+      message:
+          'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
       time: '10:45 AM',
     ),
     NotificationItem(
       icon: Icons.warning_amber,
       title: 'Battery Low',
-      message: 'Your battery is at **15%**. Connect to a charger _soon_ to avoid shutdown.',
+      message:
+          'Your battery is at **15%**. Connect to a charger _soon_ to avoid shutdown.',
       time: '11:30 AM',
       iconColor: Colors.orange,
     ),
     NotificationItem(
       icon: Icons.update,
       title: 'App Update Available',
-      message: 'Version **2.0.1** is now available with _new features_ and ~~bug~~ `fixes`.',
+      message:
+          'Version **2.0.1** is now available with _new features_ and ~~bug~~ `fixes`.',
       time: '12:15 PM',
       iconColor: Colors.blue,
     ),
@@ -165,7 +169,8 @@ class _NotificationSystemState extends State<NotificationSystem> {
                 ),
                 child: const Row(
                   children: [
-                    Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Notifications',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                     Spacer(),
                     Text('Clear All'),
                   ],
@@ -193,7 +198,8 @@ class _NotificationSystemState extends State<NotificationSystem> {
                       });
                     },
                     child: ListTile(
-                      leading: Icon(notification.icon, color: notification.iconColor),
+                      leading: Icon(notification.icon,
+                          color: notification.iconColor),
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -226,8 +232,10 @@ class _NotificationSystemState extends State<NotificationSystem> {
                 NotificationItem(
                   icon: Icons.security,
                   title: 'Security Alert',
-                  message: 'Your account was accessed from a **new device** in _New York_. Was this you?',
-                  time: '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+                  message:
+                      'Your account was accessed from a **new device** in _New York_. Was this you?',
+                  time:
+                      '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
                   iconColor: Colors.green,
                 ),
               );
