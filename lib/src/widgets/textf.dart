@@ -3,6 +3,7 @@ import 'dart:ui' as ui show TextHeightBehavior;
 import 'package:flutter/material.dart';
 
 import '../parsing/parser.dart';
+import 'internal/textf_renderer.dart';
 
 /// A lightweight text widget for simple inline formatting.
 ///
@@ -75,7 +76,6 @@ class Textf extends StatelessWidget {
     this.textWidthBasis,
     this.textHeightBehavior,
     this.selectionColor,
-    // this.parser,
   });
 
   /// The text to display with formatting
@@ -134,16 +134,10 @@ class Textf extends StatelessWidget {
   /// combined and passed to a Text.rich widget along with the other parameters.
   @override
   Widget build(BuildContext context) {
-    // Parse the formatted text into spans
-    final List<InlineSpan> spans = _defaultParser.parse(
-      data,
-      context,
-      style ?? DefaultTextStyle.of(context).style,
-    );
-
-    // Create the rich text widget with the parsed spans
-    return Text.rich(
-      TextSpan(style: style, children: spans),
+    return TextfRenderer(
+      data: data,
+      style: style,
+      parser: _defaultParser,
       strutStyle: strutStyle,
       textAlign: textAlign,
       textDirection: textDirection,

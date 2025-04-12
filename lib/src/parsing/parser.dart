@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../core/formatting_utils.dart';
@@ -43,6 +44,14 @@ class TextfParser {
 
   /// TextfTokenizer instance used to break down text into tokens.
   final TextfTokenizer _tokenizer;
+
+  /// A static generation counter that increases on every hot reload
+  static int _generation = 0;
+
+  /// Increments the generation counter on hot reload.
+  static void onHotReload() {
+    if (kDebugMode) _generation++;
+  }
 
   /// Creates a new [TextfParser] instance.
   ///
@@ -169,7 +178,7 @@ class TextfParser {
   ///
   /// The key is used to look up previously parsed results in the cache.
   int _cacheKey(String text, TextStyle style) {
-    return Object.hash(text, style);
+    return kDebugMode ? Object.hash(text, style, _generation) : Object.hash(text, style);
   }
 
   /// Debugging utility to view the pairing process for formatted text.
