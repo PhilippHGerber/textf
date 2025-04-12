@@ -226,42 +226,40 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
         onUrlTap: _handleUrlTap,
         onUrlHover: _handleUrlHover,
         urlStyle: TextStyle(
-          color: Theme.of(context).colorScheme.primary,
-          decoration: TextDecoration.underline,
-          decorationColor: Theme.of(context).colorScheme.primary,
+          color: Colors.blue,
+          decoration: TextDecoration.none,
         ),
         urlHoverStyle: TextStyle(
-          color: Theme.of(context).colorScheme.secondary,
+          color: Colors.blue,
           decoration: TextDecoration.underline,
-          decorationColor: Theme.of(context).colorScheme.secondary,
+          decorationColor: Colors.blue,
         ),
         urlMouseCursor: SystemMouseCursors.click,
-        child: SelectionArea(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // Use standard list constructor
-              // --- Basic URL Example ---
-              const ExampleCard(
-                title: 'Basic URL',
-                description: 'Simple URL using default styling from TextfOptions',
-                code: '''
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Use standard list constructor
+            // --- Basic URL Example ---
+            const ExampleCard(
+              title: 'Basic URL',
+              description: 'Simple URL using default styling from TextfOptions',
+              code: '''
 Textf(
   'Visit [Flutter website](https://flutter.dev) '
   'for more information,
 )''',
-                child: Textf(
-                  'Visit [Flutter website](https://flutter.dev) for more information',
-                  style: TextStyle(fontSize: 16),
-                ),
+              child: Textf(
+                'Visit [Flutter website](https://flutter.dev) for more information',
+                style: TextStyle(fontSize: 16),
               ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 16),
 
-              // --- URL with Hover Effect Example ---
-              const ExampleCard(
-                title: 'URL with Hover Effect',
-                description: 'Demonstrates URL hover interaction (hover to see URL at bottom)',
-                code: '''
+            // --- URL with Hover Effect Example ---
+            const ExampleCard(
+              title: 'URL with Hover Effect',
+              description: 'Demonstrates URL hover interaction (hover to see URL at bottom)',
+              code: '''
 TextfOptions(
   urlStyle: TextStyle(
     color: Colors.blue,
@@ -280,120 +278,119 @@ TextfOptions(
   ),
 )
 ''',
-                child: TextfOptions(
-                  urlStyle: TextStyle(
-                    color: Colors.blue,
-                    decoration: TextDecoration.none,
-                  ),
-                  urlHoverStyle: TextStyle(
-                    color: Colors.blue,
-                    decoration: TextDecoration.underline,
-                    decorationColor: Colors.blue,
-                  ),
-                  child: Textf(
-                    'Hover over [this link](https://example.com) '
-                    'to see the effect',
-                    style: TextStyle(fontSize: 16),
-                  ),
+              child: TextfOptions(
+                urlStyle: TextStyle(
+                  color: Colors.blue,
+                  decoration: TextDecoration.none,
+                ),
+                urlHoverStyle: TextStyle(
+                  color: Colors.blue,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Colors.blue,
+                ),
+                child: Textf(
+                  'Hover over [this link](https://example.com) '
+                  'to see the effect',
+                  style: TextStyle(fontSize: 16),
                 ),
               ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 16),
 
-              // --- Multiple URLs Example ---
-              const ExampleCard(
-                title: 'Multiple URLs',
-                description: 'Multiple URLs in a single text block',
-                code: '''
+            // --- Multiple URLs Example ---
+            const ExampleCard(
+              title: 'Multiple URLs',
+              description: 'Multiple URLs in a single text block',
+              code: '''
 Textf(
   'Visit [Flutter](https://flutter.dev) '
   'or [Dart](https://dart.dev) websites,
 )''',
-                child: Textf(
-                  'Visit [Flutter](https://flutter.dev) or [Dart](https://dart.dev) websites',
-                  style: TextStyle(fontSize: 16),
-                ),
+              child: Textf(
+                'Visit [Flutter](https://flutter.dev) or [Dart](https://dart.dev) websites',
+                style: TextStyle(fontSize: 16),
               ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 16),
 
-              // --- Formatted URL Text Example ---
-              const ExampleCard(
-                // THIS SHOULD NOW WORK FOR CLICK TOO
-                title: 'Formatted URL Text',
-                description: 'URL display text with other formatting applied',
-                code: '''
+            // --- Formatted URL Text Example ---
+            const ExampleCard(
+              // THIS SHOULD NOW WORK FOR CLICK TOO
+              title: 'Formatted URL Text',
+              description: 'URL display text with other formatting applied',
+              code: '''
 Textf(
   'Check out [**bold link**](https://example.com) '
   'and [*italic link*](https://example.org)',
 )''',
-                child: Textf(
-                  'Check out [**bold link**](https://example.com) and [*italic link*](https://example.org)',
-                  style: TextStyle(fontSize: 16),
-                ),
+              child: Textf(
+                'Check out [**bold link**](https://example.com) and [*italic link*](https://example.org)',
+                style: TextStyle(fontSize: 16),
               ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 16),
 
-              // --- Nested Formatting Example ---
-              const ExampleCard(
-                // THIS SHOULD NOW WORK FOR CLICK TOO
-                title: 'Nested Formatting in URL Text',
-                description: 'URL display text with nested formatting (bold > italic)',
-                code: '''
+            // --- Nested Formatting Example ---
+            const ExampleCard(
+              // THIS SHOULD NOW WORK FOR CLICK TOO
+              title: 'Nested Formatting in URL Text',
+              description: 'URL display text with nested formatting (bold > italic)',
+              code: '''
 Textf(
   'Link with [**nested _italic_ style**](https://example.net)',
 )''',
-                child: Textf(
-                  'Link with [**nested _italic_ style**](https://example.net)',
-                  style: TextStyle(fontSize: 16),
-                ),
+              child: Textf(
+                'Link with [**nested _italic_ style**](https://example.net)',
+                style: TextStyle(fontSize: 16),
               ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 16),
 
-              // --- Email URL Example ---
-              const ExampleCard(
-                title: 'Email URL',
-                description: 'URL with mailto: protocol',
-                code: '''
+            // --- Email URL Example ---
+            const ExampleCard(
+              title: 'Email URL',
+              description: 'URL with mailto: protocol',
+              code: '''
 Textf(
   'Contact [support](mailto:support@example.com) '
   'for assistance',
 )''',
-                child: Textf(
-                  'Contact [support](mailto:support@example.com) for assistance',
-                  style: TextStyle(fontSize: 16),
-                ),
+              child: Textf(
+                'Contact [support](mailto:support@example.com) for assistance',
+                style: TextStyle(fontSize: 16),
               ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 16),
 
-              // --- Special Characters Example ---
-              const ExampleCard(
-                title: 'URL with Special Characters',
-                description: 'URL containing query parameters and fragments',
-                code: '''
+            // --- Special Characters Example ---
+            const ExampleCard(
+              title: 'URL with Special Characters',
+              description: 'URL containing query parameters and fragments',
+              code: '''
 Textf(
   'Search for [Package Textf]'
   '(https://pub.dev/packages?q=textf+markdown#results)',
 )''',
-                child: Textf(
-                  'Search for [Package Textf]'
-                  '(https://pub.dev/packages?q=textf+markdown#results)',
-                  style: TextStyle(fontSize: 16),
-                ),
+              child: Textf(
+                'Search for [Package Textf]'
+                '(https://pub.dev/packages?q=textf+markdown#results)',
+                style: TextStyle(fontSize: 16),
               ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 16),
 
-              // --- Normalization Example ---
-              const ExampleCard(
-                title: 'URL Needing Normalization',
-                description: 'URL without protocol (should get http:// added)',
-                code: 'Textf(\n  \'Visit [Google](google.com)\',\n)',
-                child: Textf(
-                  'Visit [Google](google.com)',
-                  style: TextStyle(fontSize: 16),
-                ),
+            // --- Normalization Example ---
+            const ExampleCard(
+              title: 'URL Needing Normalization',
+              description: 'URL without protocol (should get http:// added)',
+              code: 'Textf(\n  \'Visit [Google](google.com)\',\n)',
+              child: Textf(
+                'Visit [Google](google.com)',
+                style: TextStyle(fontSize: 16),
               ),
-              const SizedBox(height: 24),
-            ],
-          ),
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
