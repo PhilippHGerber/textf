@@ -46,7 +46,7 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -118,7 +118,7 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
               color: Theme.of(context)
                   .colorScheme
                   .surfaceContainerHighest
-                  .withOpacity(0.95),
+                  .withValues(alpha: 0.95),
               child: Text(
                 url,
                 style: TextStyle(
