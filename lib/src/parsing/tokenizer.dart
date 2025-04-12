@@ -94,7 +94,7 @@ class TextfTokenizer {
       // Identify token patterns without semantic interpretation
       if (currentChar == kAsterisk) {
         // Check for bold+italic (***)
-        if (pos + 2 < length &&
+        if (pos + 2 < length && //
             codeUnits[pos + 1] == kAsterisk &&
             codeUnits[pos + 2] == kAsterisk) {
           addTextToken(textStart, pos);
@@ -118,7 +118,7 @@ class TextfTokenizer {
         }
       } else if (currentChar == kUnderscore) {
         // Check for bold+italic (___)
-        if (pos + 2 < length &&
+        if (pos + 2 < length && //
             codeUnits[pos + 1] == kUnderscore &&
             codeUnits[pos + 2] == kUnderscore) {
           addTextToken(textStart, pos);
@@ -292,7 +292,7 @@ class TextfTokenizer {
           pos = linkStartPos + 1;
           textStart = pos;
         }
-      } else if (currentChar == kCloseBracket ||
+      } else if (currentChar == kCloseBracket || //
           currentChar == kOpenParen ||
           currentChar == kCloseParen) {
         // We handle these characters in the link processing block above

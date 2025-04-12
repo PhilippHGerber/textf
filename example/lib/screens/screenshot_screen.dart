@@ -44,15 +44,15 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
       await Future.delayed(const Duration(milliseconds: 100));
 
       // Find the RenderRepaintBoundary
-      RenderRepaintBoundary boundary = _screenshotKey.currentContext!
-          .findRenderObject() as RenderRepaintBoundary;
+      RenderRepaintBoundary boundary = _screenshotKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
 
       // Capture the image
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
 
       // Convert to bytes
-      ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
       _imageBytes = byteData?.buffer.asUint8List();
 
       setState(() {
@@ -144,8 +144,7 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text(
-                          'Share functionality requires additional plugins'),
+                      content: Text('Share functionality requires additional plugins'),
                     ),
                   );
                   // To implement sharing, you would need to add a package like share_plus
@@ -181,8 +180,7 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: 'Enter text with **bold**, *italic*, etc.',
-                helperText:
-                    'Supports **bold**, *italic*, ~~strikethrough~~, `code`',
+                helperText: 'Supports **bold**, *italic*, ~~strikethrough~~, `code`',
               ),
               maxLines: 3,
               onChanged: (value) {
@@ -312,8 +310,7 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
               child: ElevatedButton.icon(
                 onPressed: _isCapturing ? null : _captureScreenshot,
                 icon: const Icon(Icons.camera),
-                label:
-                    Text(_isCapturing ? 'Capturing...' : 'Capture Screenshot'),
+                label: Text(_isCapturing ? 'Capturing...' : 'Capture Screenshot'),
               ),
             ),
 

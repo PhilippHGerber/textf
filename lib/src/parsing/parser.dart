@@ -39,8 +39,7 @@ class TextfParser {
   ///
   /// The key is a hash of the input text and base style, and the value is
   /// the list of generated spans.
-  final LinkedHashMap<int, List<InlineSpan>> _cache =
-      LinkedHashMap<int, List<InlineSpan>>();
+  final LinkedHashMap<int, List<InlineSpan>> _cache = LinkedHashMap<int, List<InlineSpan>>();
 
   /// TextfTokenizer instance used to break down text into tokens.
   final TextfTokenizer _tokenizer;
@@ -198,7 +197,7 @@ class TextfParser {
     // Print each pair only once (for the opening marker)
     final processedPairs = <int>{};
     pairs.forEach((openIndex, closeIndex) {
-      if (!processedPairs.contains(openIndex) &&
+      if (!processedPairs.contains(openIndex) && //
           !processedPairs.contains(closeIndex)) {
         final openToken = tokens[openIndex];
         final closeToken = tokens[closeIndex];

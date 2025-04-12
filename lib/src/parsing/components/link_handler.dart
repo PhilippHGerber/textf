@@ -61,8 +61,7 @@ class LinkHandler {
 
       // Return the index *after* the closing parenthesis ')' of the link
       // (index + 4 is the closing paren, so next index is index + 5)
-      return index +
-          4; // Corrected: return the index *of* the last token processed
+      return index + 4;
     } else {
       // Malformed link or just an opening bracket, treat '[' as plain text
       state.textBuffer += tokens[index].value; // Add '[' to buffer
@@ -90,7 +89,7 @@ class LinkHandler {
   static String _normalizeUrl(String url) {
     url = url.trim();
     // Add http:// scheme if missing for common web URLs
-    if (!url.contains(':') &&
+    if (!url.contains(':') && //
         !url.startsWith('/') &&
         !url.startsWith('#') &&
         url.contains('.')) {
@@ -130,24 +129,20 @@ class LinkHandler {
 
     // 2. Get effective normal and hover styles (remains the same)
     final TextStyle finalLinkStyle =
-        state.options?.getEffectiveUrlStyle(context, inheritedStyle) ??
-            DefaultStyles.urlStyle.merge(inheritedStyle);
-    final TextStyle finalLinkHoverStyle =
-        state.options?.getEffectiveUrlHoverStyle(context, inheritedStyle) ??
-            DefaultStyles.urlHoverStyle.merge(finalLinkStyle);
+        state.options?.getEffectiveUrlStyle(context, inheritedStyle) ?? DefaultStyles.urlStyle.merge(inheritedStyle);
+    final TextStyle finalLinkHoverStyle = state.options?.getEffectiveUrlHoverStyle(context, inheritedStyle) ??
+        DefaultStyles.urlHoverStyle.merge(finalLinkStyle);
 
     // 3. Get effective interaction callbacks and cursor (remains the same)
     final effectiveOnTap = state.options?.getEffectiveOnUrlTap(context);
     final effectiveOnHover = state.options?.getEffectiveOnUrlHover(context);
     final MouseCursor effectiveCursor =
-        state.options?.getEffectiveUrlMouseCursor(context) ??
-            DefaultStyles.urlMouseCursor;
+        state.options?.getEffectiveUrlMouseCursor(context) ?? DefaultStyles.urlMouseCursor;
 
     // 4. Prepare tap recognizer (remains the same)
     TapGestureRecognizer? recognizer;
     if (effectiveOnTap != null) {
-      recognizer = TapGestureRecognizer()
-        ..onTap = () => effectiveOnTap(url, rawLinkText);
+      recognizer = TapGestureRecognizer()..onTap = () => effectiveOnTap(url, rawLinkText);
     }
 
     // 5. PARSE childrenSpans or get plainText HERE again!
@@ -190,8 +185,10 @@ class LinkHandler {
     // 7. Create and return the WidgetSpan (remains the same)
     return WidgetSpan(
       child: hoverableWidget,
+      // Use baseline alignment to match surrounding text.
+      alignment: PlaceholderAlignment.baseline,
+      // Specify the alphabetic baseline, which is standard for text.
       baseline: TextBaseline.alphabetic,
-      alignment: PlaceholderAlignment.middle,
     );
   }
 }

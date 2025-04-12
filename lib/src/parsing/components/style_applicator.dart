@@ -29,28 +29,22 @@ class StyleApplicator {
   ) {
     switch (markerType) {
       case TokenType.boldMarker:
-        return options?.getEffectiveBoldStyle(context, style) ??
-            DefaultStyles.boldStyle(style);
+        return options?.getEffectiveBoldStyle(context, style) ?? DefaultStyles.boldStyle(style);
 
       case TokenType.italicMarker:
-        return options?.getEffectiveItalicStyle(context, style) ??
-            DefaultStyles.italicStyle(style);
+        return options?.getEffectiveItalicStyle(context, style) ?? DefaultStyles.italicStyle(style);
 
       case TokenType.boldItalicMarker:
-        return options?.getEffectiveBoldItalicStyle(context, style) ??
-            DefaultStyles.boldItalicStyle(style);
+        return options?.getEffectiveBoldItalicStyle(context, style) ?? DefaultStyles.boldItalicStyle(style);
 
       case TokenType.strikeMarker:
-        return options?.getEffectiveStrikethroughStyle(context, style) ??
-            DefaultStyles.strikethroughStyle(style);
+        return options?.getEffectiveStrikethroughStyle(context, style) ?? DefaultStyles.strikethroughStyle(style);
 
       case TokenType.codeMarker:
-        return options?.getEffectiveCodeStyle(context, style) ??
-            DefaultStyles.codeStyle(style);
+        return options?.getEffectiveCodeStyle(context, style) ?? DefaultStyles.codeStyle(style);
 
       case TokenType.linkStart: // Should not reach here directly
-        return options?.getEffectiveUrlStyle(context, style) ??
-            DefaultStyles.urlStyle.merge(style);
+        return options?.getEffectiveUrlStyle(context, style) ?? DefaultStyles.urlStyle.merge(style);
 
       case TokenType.text:
       case TokenType.linkText:

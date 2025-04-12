@@ -42,8 +42,7 @@ class HoverableLinkSpan extends StatefulWidget {
 
   /// An optional callback function triggered when the hover state changes.
   /// Provides the URL, the raw display text, and the new hover state.
-  final Function(String url, String rawDisplayText, bool isHovering)?
-      onHoverCallback;
+  final Function(String url, String rawDisplayText, bool isHovering)? onHoverCallback;
 
   /// Creates an internal widget to manage hover state for a link.
   const HoverableLinkSpan({
@@ -86,11 +85,8 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
     if (span is TextSpan) {
       // Determine the effective style for this span based on hover state
       final TextStyle effectiveStyle = _isHovering
-          ? (span.style ?? widget.normalStyle)
-              .merge(widget.hoverStyle) // Merge hover onto existing span style
-          : (span.style ??
-              widget
-                  .normalStyle); // Use existing span style or normal as fallback
+          ? (span.style ?? widget.normalStyle).merge(widget.hoverStyle) // Merge hover onto existing span style
+          : (span.style ?? widget.normalStyle); // Use existing span style or normal as fallback
 
       return TextSpan(
         text: span.text,
@@ -115,8 +111,7 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
     // 1. Get the initial list of spans to render.
     //    If initialPlainText is provided, wrap it in a TextSpan.
     //    Use the normalStyle as the base style for the plain text case.
-    final List<InlineSpan> spansToRender = widget
-            .initialChildrenSpans.isNotEmpty
+    final List<InlineSpan> spansToRender = widget.initialChildrenSpans.isNotEmpty
         ? widget.initialChildrenSpans
         : [TextSpan(text: widget.initialPlainText, style: widget.normalStyle)];
 

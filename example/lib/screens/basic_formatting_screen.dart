@@ -20,10 +20,10 @@ class BasicFormattingScreen extends StatelessWidget {
               title: 'Bold',
               description: 'Use ** or __ to make text bold',
               code: '''
-        Textf(
-          'This is **bold** text',
-          style: TextStyle(fontSize: 16),
-        )
+  Textf(
+    'This is **bold** text',
+    style: TextStyle(fontSize: 16),
+  )
         ''',
               child: Textf(
                 'This is **bold** text',
@@ -35,10 +35,10 @@ class BasicFormattingScreen extends StatelessWidget {
               title: 'Italic',
               description: 'Use * or _ to make text italic',
               code: '''
-        Textf(
-          'This is *italic* text',
-          style: TextStyle(fontSize: 16),
-        )
+  Textf(
+    'This is *italic* text',
+    style: TextStyle(fontSize: 16),
+  )
         ''',
               child: Textf(
                 'This is *italic* text',
@@ -49,8 +49,7 @@ class BasicFormattingScreen extends StatelessWidget {
             ExampleCard(
               title: 'Bold and Italic',
               description: 'Use *** or ___ for both bold and italic',
-              code:
-                  'Textf(\n  \'This is ***bold and italic*** text\',\n  style: TextStyle(fontSize: 16),\n)',
+              code: 'Textf(\n  \'This is ***bold and italic*** text\',\n  style: TextStyle(fontSize: 16),\n)',
               child: Textf(
                 'This is ***bold and italic*** text',
                 style: TextStyle(fontSize: 16),
@@ -60,8 +59,7 @@ class BasicFormattingScreen extends StatelessWidget {
             ExampleCard(
               title: 'Strikethrough',
               description: 'Use ~~ for strikethrough text',
-              code:
-                  'Textf(\n  \'This is ~~strikethrough~~ text\',\n  style: TextStyle(fontSize: 16),\n)',
+              code: 'Textf(\n  \'This is ~~strikethrough~~ text\',\n  style: TextStyle(fontSize: 16),\n)',
               child: Textf(
                 'This is ~~strikethrough~~ text',
                 style: TextStyle(fontSize: 16),
@@ -71,8 +69,7 @@ class BasicFormattingScreen extends StatelessWidget {
             ExampleCard(
               title: 'Code',
               description: 'Use backticks for inline code',
-              code:
-                  'Textf(\n  \'This is `code` text\',\n  style: TextStyle(fontSize: 16),\n)',
+              code: 'Textf(\n  \'This is `code` text\',\n  style: TextStyle(fontSize: 16),\n)',
               child: Textf(
                 'This is `code` text',
                 style: TextStyle(fontSize: 16),

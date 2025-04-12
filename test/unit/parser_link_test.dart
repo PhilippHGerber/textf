@@ -33,8 +33,7 @@ void main() {
 
     group('Basic Link Parsing', () {
       testWidgets('simple link without formatting', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [Flutter website](https://flutter.dev)',
@@ -63,8 +62,7 @@ void main() {
       });
 
       testWidgets('link with URL normalization', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [Google](google.com)',
@@ -82,8 +80,7 @@ void main() {
       });
 
       testWidgets('multiple links in text', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [Flutter](https://flutter.dev) or [Dart](https://dart.dev)',
@@ -115,8 +112,7 @@ void main() {
 
     group('Formatted Link Text', () {
       testWidgets('bold text in link', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [**Bold Link**](https://example.com)',
@@ -143,8 +139,7 @@ void main() {
       });
 
       testWidgets('italic text in link', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [*Italic Link*](https://example.com)',
@@ -163,8 +158,7 @@ void main() {
       });
 
       testWidgets('strikethrough text in link', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [~~Strikethrough Link~~](https://example.com)',
@@ -183,8 +177,7 @@ void main() {
       });
 
       testWidgets('code text in link', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [`Code Link`](https://example.com)',
@@ -205,8 +198,7 @@ void main() {
 
     group('Mixed Formatting in Link Text', () {
       testWidgets('multiple formatting styles in link', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [**Bold** and *italic* text](https://example.com)',
@@ -241,8 +233,7 @@ void main() {
       });
 
       testWidgets('nested formatting in link text', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [**Bold _and italic_**](https://example.com)',
@@ -271,8 +262,7 @@ void main() {
     });
 
     group('Style Inheritance', () {
-      testWidgets('link style is properly applied to formatted text',
-          (tester) async {
+      testWidgets('link style is properly applied to formatted text', (tester) async {
         // Create a properly nested TextfOptions that will be available in the context
         late BuildContext testContext;
         await tester.pumpWidget(
@@ -283,8 +273,7 @@ void main() {
                   urlStyle: TextStyle(color: Colors.red, fontSize: 18),
                   child: Builder(
                     builder: (innerContext) {
-                      testContext =
-                          innerContext; // Capture the context with TextfOptions
+                      testContext = innerContext; // Capture the context with TextfOptions
                       return Container();
                     },
                   ),
@@ -316,8 +305,7 @@ void main() {
       });
 
       testWidgets('base style is properly inherited by links', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final baseStyle = TextStyle(
           fontFamily: 'Roboto',
@@ -350,8 +338,7 @@ void main() {
 
     group('Edge Cases', () {
       testWidgets('escaped formatting characters in link text', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           r'Visit [This is \*not formatted\*](https://example.com)',
@@ -371,8 +358,7 @@ void main() {
       });
 
       testWidgets('Unicode characters in link text', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [**你好世界**](https://example.com)',
@@ -392,8 +378,7 @@ void main() {
       });
 
       testWidgets('empty link text', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [](https://example.com)',
@@ -410,8 +395,7 @@ void main() {
       });
 
       testWidgets('very long link text', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final longText = 'A' * 1000;
         final spans = parser.parse(
@@ -434,8 +418,7 @@ void main() {
 
     group('Complex Scenarios', () {
       testWidgets('multiple links with different formatting', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [**Bold**](https://bold.com) or [*Italic*](https://italic.com)',
@@ -472,8 +455,7 @@ void main() {
       });
 
       testWidgets('links within formatted text', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           '**Bold text with [a link](https://example.com) inside**',
@@ -502,8 +484,7 @@ void main() {
       });
 
       testWidgets('link text with mixed and nested formatting', (tester) async {
-        await tester
-            .pumpWidget(buildTestWidget(tester, (context) => Container()));
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
 
         final spans = parser.parse(
           'Visit [**Bold** *Italic* ~~Strike~~ `Code` **_Both_**](https://example.com)',
@@ -564,8 +545,7 @@ void main() {
                   },
                   child: Builder(
                     builder: (innerContext) {
-                      testContext =
-                          innerContext; // Capture the context with TextfOptions
+                      testContext = innerContext; // Capture the context with TextfOptions
                       return Container();
                     },
                   ),
@@ -620,8 +600,7 @@ void main() {
                   },
                   child: Builder(
                     builder: (innerContext) {
-                      testContext =
-                          innerContext; // Capture the context with TextfOptions
+                      testContext = innerContext; // Capture the context with TextfOptions
                       return Container();
                     },
                   ),

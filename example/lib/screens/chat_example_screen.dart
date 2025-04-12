@@ -20,16 +20,17 @@ class ChatExampleScreen extends StatelessWidget {
               title: 'Chat Bubble',
               description: 'Formatted text in a chat bubble',
               code: '''Container(
-          padding: EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.blue.shade100,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Textf(
-            'Hey! Did you read that **important** article I sent you about _Flutter performance_?',
-            style: TextStyle(fontSize: 16),
-          ),
-        )''',
+  padding: EdgeInsets.all(12),
+  decoration: BoxDecoration(
+    color: Colors.blue.shade100,
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Textf(
+    'Hey! Did you read that **important** article '
+    'I sent you about _Flutter performance_?',
+    style: TextStyle(fontSize: 16),
+  ),
+)''',
               child: SizedBox(
                 width: double.infinity,
                 child: Align(
@@ -38,8 +39,7 @@ class ChatExampleScreen extends StatelessWidget {
                     constraints: BoxConstraints(maxWidth: 250),
                     child: ChatBubble(
                       isMe: true,
-                      message:
-                          'Hey! Did you read that **important** article I sent you about _Flutter performance_?',
+                      message: 'Hey! Did you read that **important** article I sent you about _Flutter performance_?',
                     ),
                   ),
                 ),
@@ -116,13 +116,11 @@ class ChatExample extends StatefulWidget {
 class _ChatExampleState extends State<ChatExample> {
   final List<ChatMessage> _messages = [
     ChatMessage(
-      message:
-          'Hey! Did you read that **important** article I sent you about _Flutter performance_?',
+      message: 'Hey! Did you read that **important** article I sent you about _Flutter performance_?',
       isMe: true,
     ),
     ChatMessage(
-      message:
-          'Yes! I found the section about **widget rebuilds** particularly _insightful_.',
+      message: 'Yes! I found the section about **widget rebuilds** particularly _insightful_.',
       isMe: false,
     ),
     ChatMessage(
@@ -175,7 +173,7 @@ class _ChatExampleState extends State<ChatExample> {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4.0),
                 child: Align(
-                  alignment: message.isMe
+                  alignment: message.isMe //
                       ? Alignment.centerRight
                       : Alignment.centerLeft,
                   child: ConstrainedBox(
@@ -202,8 +200,10 @@ class _ChatExampleState extends State<ChatExample> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                   ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                 ),
                 onSubmitted: _handleSubmitted,
               ),

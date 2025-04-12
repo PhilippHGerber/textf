@@ -99,42 +99,32 @@ void main() {
       await pumpTextfWidget(tester, data: text);
 
       // --- Basic Checks ---
-      expect(
-          find.text(text), findsOneWidget); // Verify the text exists visually
+      expect(find.text(text), findsOneWidget); // Verify the text exists visually
       expect(findRichText(), findsOneWidget); // Verify RichText is used
 
       // --- Inspecting the Span Tree ---
-      final rootSpan =
-          getRootTextSpan(tester); // This is the span passed to Text.rich
+      final rootSpan = getRootTextSpan(tester); // This is the span passed to Text.rich
 
       // Expectation 1: The root span itself usually has no direct text
-      expect(rootSpan.text, isNull,
-          reason: 'Root span from Text.rich usually has null text');
+      expect(rootSpan.text, isNull, reason: 'Root span from Text.rich usually has null text');
 
       // Expectation 2: The root span's children list contains the spans from the parser
-      expect(rootSpan.children, isNotNull,
-          reason: 'Root span should have children from parser');
-      expect(rootSpan.children!.length, 1,
-          reason: 'Parser fast-path should return one primary span');
+      expect(rootSpan.children, isNotNull, reason: 'Root span should have children from parser');
+      expect(rootSpan.children!.length, 1, reason: 'Parser fast-path should return one primary span');
 
       // Get the first span returned by the parser
       final parserSpan = rootSpan.children![0];
-      expect(parserSpan, isA<TextSpan>(),
-          reason: 'Parser result should be a TextSpan');
+      expect(parserSpan, isA<TextSpan>(), reason: 'Parser result should be a TextSpan');
 
       // --- Accommodation for the observed deeper nesting ---
       // Based on your feedback, we check if this parserSpan *also* nests the text
       final actualTextSpan = parserSpan as TextSpan;
 
-      expect(actualTextSpan.children!.length, 1,
-          reason: 'Nested structure should contain one text span');
+      expect(actualTextSpan.children!.length, 1, reason: 'Nested structure should contain one text span');
       final innermostSpan = actualTextSpan.children![0];
-      expect(innermostSpan, isA<TextSpan>(),
-          reason: 'Innermost element should be a TextSpan');
-      expect((innermostSpan as TextSpan).text, text,
-          reason: 'Innermost span should contain the text');
-      expect((innermostSpan).children, isNull,
-          reason: 'Innermost span should not have further children');
+      expect(innermostSpan, isA<TextSpan>(), reason: 'Innermost element should be a TextSpan');
+      expect((innermostSpan as TextSpan).text, text, reason: 'Innermost span should contain the text');
+      expect((innermostSpan).children, isNull, reason: 'Innermost span should not have further children');
     });
 
     testWidgets('Renders basic bold formatting', (tester) async {
@@ -147,16 +137,13 @@ void main() {
       expect(rootSpan.text, isNull);
       expect(rootSpan.children, isNotNull);
 
-      expect(rootSpan.children!.length, 1,
-          reason: "Test failure indicates only one direct child");
+      expect(rootSpan.children!.length, 1, reason: "Test failure indicates only one direct child");
       final containerSpan = rootSpan.children![0] as TextSpan;
-      expect(containerSpan.children, isNotNull,
-          reason: "The container span should hold the actual segments");
+      expect(containerSpan.children, isNotNull, reason: "The container span should hold the actual segments");
       final actualSpans = containerSpan.children!;
 
       // Now assert the length and content of the *actual* spans
-      expect(actualSpans.length, 3,
-          reason: "Expected 3 segments: 'Some ', bold, ' text'");
+      expect(actualSpans.length, 3, reason: "Expected 3 segments: 'Some ', bold, ' text'");
 
       expect((actualSpans[0] as TextSpan).text, 'Some ');
       expect((actualSpans[1] as TextSpan).text, 'bold');
@@ -171,13 +158,11 @@ void main() {
       final rootSpan = getRootTextSpan(tester);
       expect(rootSpan.children, isNotNull);
 
-      expect(rootSpan.children!.length, 1,
-          reason: "Test failure indicates only one direct child");
+      expect(rootSpan.children!.length, 1, reason: "Test failure indicates only one direct child");
       final containerSpan = rootSpan.children![0] as TextSpan;
       expect(containerSpan.children, isNotNull);
       final actualSpans = containerSpan.children!;
-      expect(actualSpans.length, 3,
-          reason: "Expected 3 segments: 'Some ', italic, ' text'");
+      expect(actualSpans.length, 3, reason: "Expected 3 segments: 'Some ', italic, ' text'");
 
       expect((actualSpans[0] as TextSpan).text, 'Some ');
       expect((actualSpans[1] as TextSpan).text, 'italic');
@@ -193,13 +178,11 @@ void main() {
       final rootSpan = getRootTextSpan(tester);
       expect(rootSpan.children, isNotNull);
 
-      expect(rootSpan.children!.length, 1,
-          reason: "Test failure indicates only one direct child");
+      expect(rootSpan.children!.length, 1, reason: "Test failure indicates only one direct child");
       final containerSpan = rootSpan.children![0] as TextSpan;
       expect(containerSpan.children, isNotNull);
       final actualSpans = containerSpan.children!;
-      expect(actualSpans.length, 4,
-          reason: "Expected 4 segments: bold, ' and ', italic, '.'");
+      expect(actualSpans.length, 4, reason: "Expected 4 segments: bold, ' and ', italic, '.'");
 
       final boldSpan = actualSpans[0] as TextSpan;
       expect(boldSpan.style?.fontWeight, FontWeight.bold);
@@ -261,8 +244,7 @@ void main() {
 
     testWidgets('Applies textDirection correctly', (tester) async {
       const text = '**RTL** text example';
-      await pumpTextfWidget(tester,
-          data: text, textDirection: TextDirection.rtl);
+      await pumpTextfWidget(tester, data: text, textDirection: TextDirection.rtl);
 
       final richText = tester.widget<RichText>(findRichText());
       expect(richText.textDirection, TextDirection.rtl);
@@ -275,8 +257,7 @@ void main() {
       await pumpTextfWidget(
         tester,
         data: text,
-        defaultTextStyle:
-            const DefaultTextStyle(style: defaultStyle, child: SizedBox()),
+        defaultTextStyle: const DefaultTextStyle(style: defaultStyle, child: SizedBox()),
       );
 
       final rootSpan = getRootTextSpan(tester);
@@ -288,13 +269,11 @@ void main() {
       expect(rootSpan.children, isNotNull);
 
       // --- Apply Nesting ---
-      expect(rootSpan.children!.length, 1,
-          reason: "Structure has container span");
+      expect(rootSpan.children!.length, 1, reason: "Structure has container span");
       final containerSpan = rootSpan.children![0] as TextSpan;
       expect(containerSpan.children, isNotNull);
       final actualSpans = containerSpan.children!;
-      expect(actualSpans.length, 2,
-          reason: "Expected 2 segments: 'Inherited ', style");
+      expect(actualSpans.length, 2, reason: "Expected 2 segments: 'Inherited ', style");
 
       // --- Check Inherited Span ---
       final plainSpan = actualSpans[0] as TextSpan;
@@ -305,8 +284,7 @@ void main() {
 
       // --- Check Bold Span ---
       // Find the bold span within the *actual* segments
-      final boldSpan =
-          actualSpans[1] as TextSpan; // We know it's the second one
+      final boldSpan = actualSpans[1] as TextSpan; // We know it's the second one
       expect(boldSpan.text, 'style');
       // Verify it inherited default style properties
       expect(boldSpan.style?.color, defaultStyle.color);
@@ -324,8 +302,7 @@ void main() {
         tester,
         data: text,
         style: explicitStyle, // Explicit style provided to Textf
-        defaultTextStyle:
-            const DefaultTextStyle(style: defaultStyle, child: SizedBox()),
+        defaultTextStyle: const DefaultTextStyle(style: defaultStyle, child: SizedBox()),
       );
 
       final rootSpan = getRootTextSpan(tester);
@@ -341,8 +318,7 @@ void main() {
       expect(containerSpan.children, isNotNull);
       final actualSpans = containerSpan.children!;
 
-      expect(actualSpans.length, 3,
-          reason: "Expected 3 segments: 'Explicit ', style (bold), ' wins'");
+      expect(actualSpans.length, 3, reason: "Expected 3 segments: 'Explicit ', style (bold), ' wins'");
 
       // --- Check Inner Spans ---
       final plainSpan1 = actualSpans[0] as TextSpan;
@@ -351,26 +327,19 @@ void main() {
 
       // Check Segment 1: "Explicit "
       expect(plainSpan1.text, 'Explicit ');
-      expect(plainSpan1.style?.color,
-          explicitStyle.color); // Parsed with explicitStyle
-      expect(plainSpan1.style?.fontSize,
-          explicitStyle.fontSize); // Parsed with explicitStyle
+      expect(plainSpan1.style?.color, explicitStyle.color); // Parsed with explicitStyle
+      expect(plainSpan1.style?.fontSize, explicitStyle.fontSize); // Parsed with explicitStyle
 
       // Check Segment 2: "style" (bold)
       expect(boldSpan.text, 'style');
-      expect(boldSpan.style?.color,
-          explicitStyle.color); // Inherited from explicitStyle base
-      expect(boldSpan.style?.fontSize,
-          explicitStyle.fontSize); // Inherited from explicitStyle base
-      expect(
-          boldSpan.style?.fontWeight, FontWeight.bold); // Added by formatting
+      expect(boldSpan.style?.color, explicitStyle.color); // Inherited from explicitStyle base
+      expect(boldSpan.style?.fontSize, explicitStyle.fontSize); // Inherited from explicitStyle base
+      expect(boldSpan.style?.fontWeight, FontWeight.bold); // Added by formatting
 
       // Check Segment 3: " wins"
       expect(plainSpan2.text, ' wins');
-      expect(plainSpan2.style?.color,
-          explicitStyle.color); // Parsed with explicitStyle
-      expect(plainSpan2.style?.fontSize,
-          explicitStyle.fontSize); // Parsed with explicitStyle
+      expect(plainSpan2.style?.color, explicitStyle.color); // Parsed with explicitStyle
+      expect(plainSpan2.style?.fontSize, explicitStyle.fontSize); // Parsed with explicitStyle
     });
 
     testWidgets('Renders links correctly (structure check)', (tester) async {
@@ -414,8 +383,7 @@ void main() {
       final linkParentSpan = actualSpans[1];
       expect(linkParentSpan, isA<TextSpan>());
       final recognizer = (linkParentSpan as TextSpan).recognizer;
-      expect(recognizer, isNotNull,
-          reason: "Link span should have a non-null recognizer");
+      expect(recognizer, isNotNull, reason: "Link span should have a non-null recognizer");
       expect(recognizer, isA<TapGestureRecognizer>());
 
       // Check Nested Formatting within Link
@@ -429,9 +397,7 @@ void main() {
       (recognizer as TapGestureRecognizer).onTap!();
       await tester.pumpAndSettle();
 
-      expect(tapCalled, isTrue,
-          reason:
-              "onUrlTap callback should have been triggered via direct invocation");
+      expect(tapCalled, isTrue, reason: "onUrlTap callback should have been triggered via direct invocation");
       expect(capturedUrl, 'https://flutter.dev');
       expect(capturedText, 'the **Flutter** site');
     });
@@ -446,13 +412,11 @@ void main() {
       );
 
       // Verify the core widgets are present
-      expect(find.byType(SelectionArea),
-          findsOneWidget); // <<< THIS SHOULD PASS NOW
+      expect(find.byType(SelectionArea), findsOneWidget); // <<< THIS SHOULD PASS NOW
       expect(findRichText(), findsOneWidget);
 
       // Verify the text content is rendered somewhere within the RichText
-      expect(find.textContaining('Select this text', findRichText: true),
-          findsOneWidget);
+      expect(find.textContaining('Select this text', findRichText: true), findsOneWidget);
 
       // Check if RichText got a selection color from the SelectionArea context
       final richText = tester.widget<RichText>(findRichText());

@@ -116,13 +116,18 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               // Use theme colors for better adaptation
               color: Theme.of(context)
-                  .colorScheme
+                  . //
+                  colorScheme
                   .surfaceContainerHighest
-                  .withValues(alpha: 0.95),
+                  .withValues(
+                    alpha: 0.95,
+                  ),
               child: Text(
                 url,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: Theme.of(context) //
+                      .colorScheme
+                      .onSurfaceVariant,
                   fontSize: 12,
                   decoration: TextDecoration.none, // Prevent underline here
                 ),
@@ -175,22 +180,24 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
 
         if (!launched) {
           // Handle case where launchUrl returns false despite canLaunchUrl being true
-          messenger.showSnackBar(_buildUrlSnackBar('Could not open $url',
-              Icons.warning_amber, Colors.orange.shade700));
+          messenger.showSnackBar(
+            _buildUrlSnackBar('Could not open $url', Icons.warning_amber, Colors.orange.shade700),
+          );
         }
       } else {
-        messenger.showSnackBar(_buildUrlSnackBar(
-            'Cannot open URL: $url', Icons.error_outline, Colors.red.shade700));
+        messenger.showSnackBar(
+          _buildUrlSnackBar('Cannot open URL: $url', Icons.error_outline, Colors.red.shade700),
+        );
       }
     } catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(_buildUrlSnackBar(
-          'Error opening URL: $e', Icons.error_outline, Colors.red.shade700));
+      messenger.showSnackBar(
+        _buildUrlSnackBar('Error opening URL: $e', Icons.error_outline, Colors.red.shade700),
+      );
     }
   }
 
-  SnackBar _buildUrlSnackBar(
-      String message, IconData icon, Color backgroundColor) {
+  SnackBar _buildUrlSnackBar(String message, IconData icon, Color backgroundColor) {
     // ... (SnackBar builder remains the same)
     return SnackBar(
       content: Row(
@@ -237,10 +244,12 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
               // --- Basic URL Example ---
               const ExampleCard(
                 title: 'Basic URL',
-                description:
-                    'Simple URL using default styling from TextfOptions',
-                code:
-                    'Textf(\n  \'Visit [Flutter website](https://flutter.dev) for more information\',\n)',
+                description: 'Simple URL using default styling from TextfOptions',
+                code: '''
+Textf(
+  'Visit [Flutter website](https://flutter.dev) '
+  'for more information,
+)''',
                 child: Textf(
                   'Visit [Flutter website](https://flutter.dev) for more information',
                   style: TextStyle(fontSize: 16),
@@ -248,51 +257,44 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
               ),
               const SizedBox(height: 16),
 
-              // --- Locally Styled URL Example ---
-              ExampleCard(
-                title: 'Locally Styled URL (Override)',
-                description:
-                    'URL with specific styling via a nested TextfOptions',
-                code: '// Parent TextfOptions provides callbacks\n'
-                    'TextfOptions(\n'
-                    '  // Nested options ONLY override styles\n'
-                    '  urlStyle: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, decoration: TextDecoration.none),\n'
-                    '  urlHoverStyle: TextStyle(backgroundColor: Colors.yellow.shade200, decoration: TextDecoration.none),\n'
-                    '  // No callbacks here!\n'
-                    '  child: Textf(\n'
-                    '    \'Check out [Textf documentation](https://pub.dev/packages/textf)\',\n'
-                    '  ),\n'
-                    ')',
-                // Apply local override using a nested TextfOptions
-                child: TextfOptions(
-                  // ONLY specify styles to override. Callbacks are inherited from parent.
-                  urlStyle: const TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                      decoration: TextDecoration.none),
-                  urlHoverStyle: TextStyle(
-                      backgroundColor: Colors.yellow.shade200,
-                      decoration: TextDecoration.none),
-                  // No onUrlTap or onUrlHover here!
-                  child: const Textf(
-                    // Make Textf const if possible
-                    'Check out [Textf documentation](https://pub.dev/packages/textf)',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
               // --- URL with Hover Effect Example ---
               const ExampleCard(
                 title: 'URL with Hover Effect',
-                description:
-                    'Demonstrates URL hover interaction (hover to see URL at bottom)',
-                code:
-                    'Textf(\n  \'Hover over [this link](https://example.com) to see the effect\',\n)',
-                child: Textf(
-                  'Hover over [this link](https://example.com) to see the effect',
-                  style: TextStyle(fontSize: 16),
+                description: 'Demonstrates URL hover interaction (hover to see URL at bottom)',
+                code: '''
+TextfOptions(
+  urlStyle: TextStyle(
+    color: Colors.blue,
+    fontWeight: FontWeight.bold,
+    decoration: TextDecoration.none,
+  ),
+  urlHoverStyle: TextStyle(
+    color: Colors.blue,
+    decoration: TextDecoration.underline,
+    decorationColor: Colors.blue,
+  ),
+  child: Textf(
+    'Hover over [this link](https://example.com) '
+    'to see the effect',
+    style: TextStyle(fontSize: 16),
+  ),
+)
+''',
+                child: TextfOptions(
+                  urlStyle: TextStyle(
+                    color: Colors.blue,
+                    decoration: TextDecoration.none,
+                  ),
+                  urlHoverStyle: TextStyle(
+                    color: Colors.blue,
+                    decoration: TextDecoration.underline,
+                    decorationColor: Colors.blue,
+                  ),
+                  child: Textf(
+                    'Hover over [this link](https://example.com) '
+                    'to see the effect',
+                    style: TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -301,8 +303,11 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
               const ExampleCard(
                 title: 'Multiple URLs',
                 description: 'Multiple URLs in a single text block',
-                code:
-                    'Textf(\n  \'Visit [Flutter](https://flutter.dev) or [Dart](https://dart.dev) websites\',\n)',
+                code: '''
+Textf(
+  'Visit [Flutter](https://flutter.dev) '
+  'or [Dart](https://dart.dev) websites,
+)''',
                 child: Textf(
                   'Visit [Flutter](https://flutter.dev) or [Dart](https://dart.dev) websites',
                   style: TextStyle(fontSize: 16),
@@ -315,8 +320,11 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
                 // THIS SHOULD NOW WORK FOR CLICK TOO
                 title: 'Formatted URL Text',
                 description: 'URL display text with other formatting applied',
-                code:
-                    'Textf(\n  \'Check out [**bold link**](https://example.com) and [*italic link*](https://example.org)\',\n)',
+                code: '''
+Textf(
+  'Check out [**bold link**](https://example.com) '
+  'and [*italic link*](https://example.org)',
+)''',
                 child: Textf(
                   'Check out [**bold link**](https://example.com) and [*italic link*](https://example.org)',
                   style: TextStyle(fontSize: 16),
@@ -328,10 +336,11 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
               const ExampleCard(
                 // THIS SHOULD NOW WORK FOR CLICK TOO
                 title: 'Nested Formatting in URL Text',
-                description:
-                    'URL display text with nested formatting (bold > italic)',
-                code:
-                    'Textf(\n  \'Link with [**nested _italic_ style**](https://example.net)\',\n)',
+                description: 'URL display text with nested formatting (bold > italic)',
+                code: '''
+Textf(
+  'Link with [**nested _italic_ style**](https://example.net)',
+)''',
                 child: Textf(
                   'Link with [**nested _italic_ style**](https://example.net)',
                   style: TextStyle(fontSize: 16),
@@ -343,8 +352,11 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
               const ExampleCard(
                 title: 'Email URL',
                 description: 'URL with mailto: protocol',
-                code:
-                    'Textf(\n  \'Contact [support](mailto:support@example.com) for assistance\',\n)',
+                code: '''
+Textf(
+  'Contact [support](mailto:support@example.com) '
+  'for assistance',
+)''',
                 child: Textf(
                   'Contact [support](mailto:support@example.com) for assistance',
                   style: TextStyle(fontSize: 16),
@@ -356,10 +368,14 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
               const ExampleCard(
                 title: 'URL with Special Characters',
                 description: 'URL containing query parameters and fragments',
-                code:
-                    'Textf(\n  \'Search for [Package Textf](https://pub.dev/packages?q=textf+markdown#results)\',\n)',
+                code: '''
+Textf(
+  'Search for [Package Textf]'
+  '(https://pub.dev/packages?q=textf+markdown#results)',
+)''',
                 child: Textf(
-                  'Search for [Package Textf](https://pub.dev/packages?q=textf+markdown#results)',
+                  'Search for [Package Textf]'
+                  '(https://pub.dev/packages?q=textf+markdown#results)',
                   style: TextStyle(fontSize: 16),
                 ),
               ),

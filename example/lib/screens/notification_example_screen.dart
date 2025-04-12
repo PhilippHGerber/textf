@@ -19,14 +19,16 @@ class NotificationExampleScreen extends StatelessWidget {
             const ExampleCard(
               title: 'Notification',
               description: 'Formatted text in a notification',
-              code: '''ListTile(
-          leading: Icon(Icons.notifications),
-          title: Text('System Update'),
-          subtitle: Textf(
-            'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
-            style: TextStyle(fontSize: 14),
-          ),
-        )''',
+              code: '''
+ListTile(
+  leading: Icon(Icons.notifications),
+  title: Text('System Update'),
+  subtitle: Textf(
+    'Your device will restart in **5 minutes**.'
+    'Save your work ~~or else~~!',
+    style: TextStyle(fontSize: 14),
+  ),
+)''',
               child: Card(
                 elevation: 2,
                 child: ListTile(
@@ -125,23 +127,20 @@ class _NotificationSystemState extends State<NotificationSystem> {
     NotificationItem(
       icon: Icons.notifications,
       title: 'System Update',
-      message:
-          'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
+      message: 'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
       time: '10:45 AM',
     ),
     NotificationItem(
       icon: Icons.warning_amber,
       title: 'Battery Low',
-      message:
-          'Your battery is at **15%**. Connect to a charger _soon_ to avoid shutdown.',
+      message: 'Your battery is at **15%**. Connect to a charger _soon_ to avoid shutdown.',
       time: '11:30 AM',
       iconColor: Colors.orange,
     ),
     NotificationItem(
       icon: Icons.update,
       title: 'App Update Available',
-      message:
-          'Version **2.0.1** is now available with _new features_ and ~~bug~~ `fixes`.',
+      message: 'Version **2.0.1** is now available with _new features_ and ~~bug~~ `fixes`.',
       time: '12:15 PM',
       iconColor: Colors.blue,
     ),
@@ -169,8 +168,10 @@ class _NotificationSystemState extends State<NotificationSystem> {
                 ),
                 child: const Row(
                   children: [
-                    Text('Notifications',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      'Notifications',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     Spacer(),
                     Text('Clear All'),
                   ],
@@ -198,8 +199,7 @@ class _NotificationSystemState extends State<NotificationSystem> {
                       });
                     },
                     child: ListTile(
-                      leading: Icon(notification.icon,
-                          color: notification.iconColor),
+                      leading: Icon(notification.icon, color: notification.iconColor),
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -232,10 +232,8 @@ class _NotificationSystemState extends State<NotificationSystem> {
                 NotificationItem(
                   icon: Icons.security,
                   title: 'Security Alert',
-                  message:
-                      'Your account was accessed from a **new device** in _New York_. Was this you?',
-                  time:
-                      '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+                  message: 'Your account was accessed from a **new device** in _New York_. Was this you?',
+                  time: '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
                   iconColor: Colors.green,
                 ),
               );

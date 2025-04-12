@@ -44,8 +44,7 @@ class TextfOptions extends InheritedWidget {
 
   /// Callback function executed when hovering over a URL.
   /// Provides the resolved [url], raw [displayText], and hover state [isHovering].
-  final void Function(String url, String displayText, bool isHovering)?
-      onUrlHover;
+  final void Function(String url, String displayText, bool isHovering)? onUrlHover;
 
   /// Styling for URLs in normal state. Merged with the base text style.
   final TextStyle? urlStyle;
@@ -92,17 +91,19 @@ class TextfOptions extends InheritedWidget {
   static TextfOptions? maybeOf(BuildContext context) {
     // Use getElementForInheritedWidgetOfExactType for potentially better performance
     // as it doesn't establish a dependency.
-    final inheritedElement =
-        context.getElementForInheritedWidgetOfExactType<TextfOptions>();
+    final inheritedElement = context.getElementForInheritedWidgetOfExactType<TextfOptions>();
     return inheritedElement?.widget as TextfOptions?;
   }
 
   /// Finds the nearest [TextfOptions] ancestor and establishes a dependency.
   static TextfOptions of(BuildContext context) {
-    final TextfOptions? result =
-        context.dependOnInheritedWidgetOfExactType<TextfOptions>();
-    assert(result != null,
-        'No TextfOptions found in context. Wrap your widget with TextfOptions or ensure one exists higher in the tree.');
+    final TextfOptions? result = context.dependOnInheritedWidgetOfExactType<TextfOptions>();
+    assert(
+      result != null,
+      'No TextfOptions found in context.'
+      'Wrap your widget with TextfOptions '
+      'or ensure one exists higher in the tree.',
+    );
     return result!;
   }
 
@@ -112,8 +113,7 @@ class TextfOptions extends InheritedWidget {
     T? Function(TextfOptions options) getter,
   ) {
     // Start search from the element associated with the context used to find 'this'
-    Element? currentElement =
-        context.getElementForInheritedWidgetOfExactType<TextfOptions>();
+    Element? currentElement = context.getElementForInheritedWidgetOfExactType<TextfOptions>();
 
     while (currentElement != null) {
       // Ensure the widget associated with the element is indeed TextfOptions
@@ -145,10 +145,8 @@ class TextfOptions extends InheritedWidget {
   TextStyle _getEffectiveStyle(
     BuildContext context,
     TextStyle baseStyle,
-    TextStyle? Function(TextfOptions options)
-        getter, // Function to get the specified override style
-    TextStyle Function(TextStyle base)
-        defaultApplier, // Function to apply the default effect (e.g., add bold)
+    TextStyle? Function(TextfOptions options) getter, // Function to get the specified override style
+    TextStyle Function(TextStyle base) defaultApplier, // Function to apply the default effect (e.g., add bold)
   ) {
     // 1. Apply the default styling effect to the base style.
     //    e.g., for bold, this adds fontWeight: FontWeight.bold to baseStyle
@@ -191,8 +189,7 @@ class TextfOptions extends InheritedWidget {
 
   /// Calculates the effective URL hover style.
   /// Precedence: Specified Hover Override > Default Hover Effect > Effective Normal URL Style
-  TextStyle getEffectiveUrlHoverStyle(
-      BuildContext context, TextStyle baseStyle) {
+  TextStyle getEffectiveUrlHoverStyle(BuildContext context, TextStyle baseStyle) {
     // 1. Get the fully resolved normal URL style using the corrected logic above.
     final effectiveNormalStyle = getEffectiveUrlStyle(context, baseStyle);
 
@@ -201,14 +198,12 @@ class TextfOptions extends InheritedWidget {
 
     // 3. Apply the default HOVER effect (changes color/etc.) ON TOP of the normal style.
     //    This merges the default hover changes (e.g., darker blue) onto the calculated normal style.
-    effectiveHoverStyle =
-        effectiveHoverStyle.merge(DefaultStyles.urlHoverStyle);
+    effectiveHoverStyle = effectiveHoverStyle.merge(DefaultStyles.urlHoverStyle);
     // e.g., if normal style was {color:green, deco:none, size:16},
     // and default hover is {color:darkerBlue}, style is now {color:darkerBlue, deco:none, size:16}
 
     // 4. Find the specific hover override style up the ancestor chain.
-    final specifiedHoverStyle =
-        _findFirstAncestorValue(context, (o) => o.urlHoverStyle);
+    final specifiedHoverStyle = _findFirstAncestorValue(context, (o) => o.urlHoverStyle);
 
     // 5. Merge the specified hover override ON TOP. Override takes final precedence for hover state.
     if (specifiedHoverStyle != null) {
@@ -223,15 +218,13 @@ class TextfOptions extends InheritedWidget {
   // --- Effective Callback Getters with Ancestor Lookup ---
 
   /// Finds the first non-null [onUrlTap] callback defined up the tree.
-  void Function(String url, String displayText)? getEffectiveOnUrlTap(
-      BuildContext context) {
+  void Function(String url, String displayText)? getEffectiveOnUrlTap(BuildContext context) {
     // Pass the getter for onUrlTap to the helper function
     return _findFirstAncestorValue(context, (options) => options.onUrlTap);
   }
 
   /// Finds the first non-null [onUrlHover] callback defined up the tree.
-  void Function(String url, String displayText, bool isHovering)?
-      getEffectiveOnUrlHover(BuildContext context) {
+  void Function(String url, String displayText, bool isHovering)? getEffectiveOnUrlHover(BuildContext context) {
     // Pass the getter for onUrlHover to the helper function
     return _findFirstAncestorValue(context, (options) => options.onUrlHover);
   }
@@ -240,35 +233,27 @@ class TextfOptions extends InheritedWidget {
 
   /// Finds the first non-null [urlMouseCursor] defined up the tree, falling back to default.
   MouseCursor getEffectiveUrlMouseCursor(BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.urlMouseCursor) ??
-        DefaultStyles.urlMouseCursor;
+    return _findFirstAncestorValue(context, (o) => o.urlMouseCursor) ?? DefaultStyles.urlMouseCursor;
   }
 
   TextStyle getEffectiveBoldStyle(BuildContext context, TextStyle baseStyle) {
-    return _getEffectiveStyle(
-        context, baseStyle, (o) => o.boldStyle, DefaultStyles.boldStyle);
+    return _getEffectiveStyle(context, baseStyle, (o) => o.boldStyle, DefaultStyles.boldStyle);
   }
 
   TextStyle getEffectiveItalicStyle(BuildContext context, TextStyle baseStyle) {
-    return _getEffectiveStyle(
-        context, baseStyle, (o) => o.italicStyle, DefaultStyles.italicStyle);
+    return _getEffectiveStyle(context, baseStyle, (o) => o.italicStyle, DefaultStyles.italicStyle);
   }
 
-  TextStyle getEffectiveBoldItalicStyle(
-      BuildContext context, TextStyle baseStyle) {
-    return _getEffectiveStyle(context, baseStyle, (o) => o.boldItalicStyle,
-        DefaultStyles.boldItalicStyle);
+  TextStyle getEffectiveBoldItalicStyle(BuildContext context, TextStyle baseStyle) {
+    return _getEffectiveStyle(context, baseStyle, (o) => o.boldItalicStyle, DefaultStyles.boldItalicStyle);
   }
 
-  TextStyle getEffectiveStrikethroughStyle(
-      BuildContext context, TextStyle baseStyle) {
-    return _getEffectiveStyle(context, baseStyle, (o) => o.strikethroughStyle,
-        DefaultStyles.strikethroughStyle);
+  TextStyle getEffectiveStrikethroughStyle(BuildContext context, TextStyle baseStyle) {
+    return _getEffectiveStyle(context, baseStyle, (o) => o.strikethroughStyle, DefaultStyles.strikethroughStyle);
   }
 
   TextStyle getEffectiveCodeStyle(BuildContext context, TextStyle baseStyle) {
-    return _getEffectiveStyle(
-        context, baseStyle, (o) => o.codeStyle, DefaultStyles.codeStyle);
+    return _getEffectiveStyle(context, baseStyle, (o) => o.codeStyle, DefaultStyles.codeStyle);
   }
 
   /// Determines if the widget tree should be rebuilt when options change.

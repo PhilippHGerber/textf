@@ -69,7 +69,11 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildExampleTile(
-      BuildContext context, String title, String subtitle, Widget destination) {
+    BuildContext context,
+    String title,
+    String subtitle,
+    Widget destination,
+  ) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
