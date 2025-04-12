@@ -16,6 +16,7 @@ The name "Textf" is inspired by the C standard library function `printf` (print 
 - **Performance-focused** - Optimized for speed and memory efficiency
 - **Flutter-friendly** - Familiar API that mirrors Flutter's standard Text widget
 - **Minimal dependencies** - No external packages required
+- **Link support** - Interactive links with customizable styling and hover effects
 
 Perfect for chat applications, comment sections, UI elements, and any scenario where simple inline formatting is all you need.
 
@@ -25,9 +26,9 @@ Perfect for chat applications, comment sections, UI elements, and any scenario w
 | :----------------------------------------------: | :------------------------------------------------: | :--------------------------------------------------: |
 | ![Basic Formatting](https://github.com/PhilippHGerber/textf/raw/main/images/basic_formatting.png) | ![Nested Formatting](https://github.com/PhilippHGerber/textf/raw/main/images/nested_formatting.png) | ![Complex Formatting](https://github.com/PhilippHGerber/textf/raw/main/images/complex_formatting.png) |
 
-|             Chat Bubble Example             |             Notification Example              |
-| :-----------------------------------------: | :-------------------------------------------: |
-| ![Chat Bubble](https://github.com/PhilippHGerber/textf/raw/main/images/chat_bubble.png) | ![Notification](https://github.com/PhilippHGerber/textf/raw/main/images/notification.png) |
+|             Chat Bubble Example             |             Notification Example              |             Links Example              |
+| :-----------------------------------------: | :-------------------------------------------: | :-------------------------------------------: |
+| ![Chat Bubble](https://github.com/PhilippHGerber/textf/raw/main/images/chat_bubble.png) | ![Notification](https://github.com/PhilippHGerber/textf/raw/main/images/notification.png) | ![Links](https://github.com/PhilippHGerber/textf/raw/main/images/links.png) |
 
 ## Installation
 
@@ -35,7 +36,7 @@ Add Textf to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  textf: ^0.1.0
+  textf: ^0.2.0
 ```
 
 Then run:
@@ -59,7 +60,7 @@ class MyWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Textf(
-      'Hello **bold** *italic* ~~strikethrough~~ `code`',
+      'Hello **bold** *italic* ~~strikethrough~~ `code` [link](https://flutter.dev)',
       style: TextStyle(fontSize: 16),
     );
   }
@@ -84,6 +85,8 @@ Textf supports the following inline formatting syntax, similar to a subset of Ma
 ---
 
 ### Links (`[text](url)`)
+
+![image](https://github.com/PhilippHGerber/textf/raw/main/images/link-hover.gif)
 
 - **Syntax:** Enclose the display text in square brackets `[]` and the URL in parentheses `()`.
 - **Rendering:** Links are rendered with a distinct style (usually blue and underlined) that can be customized via `TextfOptions`.
@@ -129,7 +132,8 @@ Using the same marker type for nested formatting may result in unexpected render
 
 ```dart
 Textf(
-  'The **quick** _brown_ fox jumps over the ~~lazy~~ `dog`. \*Escaped asterisks\*',
+  'The **quick** _brown_ fox jumps over '
+  'the ~~lazy~~ `dog`. \*Escaped asterisks\*',
   style: TextStyle(fontSize: 18),
   textAlign: TextAlign.center,
 )
@@ -137,33 +141,61 @@ Textf(
 
 ![image](https://github.com/PhilippHGerber/textf/raw/main/images/quick_brown_fox.png)
 
-### Real-world Examples
+## Customizing with TextfOptions
 
-#### Chat Bubble
+The `TextfOptions` widget allows you to customize the appearance and behavior of formatted text throughout your app. It uses the InheritedWidget pattern to make configuration available to all descendant `Textf` widgets.
+
+### Basic Usage
 
 ```dart
-Container(
-  padding: EdgeInsets.all(12),
-  decoration: BoxDecoration(
-    color: Colors.blue.shade100,
-    borderRadius: BorderRadius.circular(12),
-  ),
+TextfOptions(
+  // Styling options
+  boldStyle: TextStyle(fontWeight: FontWeight.w900, color: Colors.red),
+  italicStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.blue),
+  codeStyle: TextStyle(fontFamily: 'RobotoMono', backgroundColor: Colors.grey.shade200),
+
+  // Link options
+  urlStyle: TextStyle(color: Colors.green),
+  urlHoverStyle: TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.bold),
+  urlMouseCursor: SystemMouseCursors.click,
+
+  // Link callbacks
+  onUrlTap: (url, displayText) {
+    launchUrl(Uri.parse(url));
+  },
+  onUrlHover: (url, displayText, isHovering) {
+    print('Hover state changed for $url: $isHovering');
+  },
+
   child: Textf(
-    'Hey! Did you read that **important** article I sent you about _Flutter performance_?',
+    'This text has **bold**, *italic*, `code`, and [links](https://example.com).',
     style: TextStyle(fontSize: 16),
   ),
 )
 ```
 
-#### Notification
+### Inheritance
+
+When multiple `TextfOptions` are nested in the widget tree, options are inherited through the hierarchy. If a specific property (e.g., `boldStyle`) is `null` on the nearest ancestor, Textf will automatically look up the widget tree for the next ancestor that defines that property.
 
 ```dart
-ListTile(
-  leading: Icon(Icons.notifications),
-  title: Text('System Update'),
-  subtitle: Textf(
-    'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
-    style: TextStyle(fontSize: 14),
+TextfOptions(
+  // Root level options (global defaults)
+  boldStyle: TextStyle(fontWeight: FontWeight.w900),
+  urlStyle: TextStyle(color: Colors.blue),
+  onUrlTap: (url, text) => print('Root tap: $url'),
+  child: Column(
+    children: [
+      Textf('This uses blue links and w900 bold.'),
+
+      TextfOptions(
+        // Override only URL style for this subtree
+        urlStyle: TextStyle(color: Colors.green),
+        // boldStyle is inherited from the root
+        // onUrlTap is inherited from the root
+        child: Textf('This uses green links and w900 bold.'),
+      ),
+    ],
   ),
 )
 ```
@@ -205,8 +237,8 @@ Textf is intentionally focused on inline formatting only:
 
 - Maximum nesting depth of 2 formatting levels
 - No support for block elements (headings, lists, quotes, etc.)
-- No support for links or images
-- Designed for inline formatting only, not full Markdown rendering
+- No support for images
+- Designed for inline formatting and links only, not full Markdown rendering
 
 If you need more comprehensive Markdown features, consider a full Markdown package.
 
@@ -214,45 +246,36 @@ If you need more comprehensive Markdown features, consider a full Markdown packa
 
 ### Implemented Features
 
-- [x] Bold formatting with `**text**` or `__text__`
-- [x] Italic formatting with `*text*` or `_text_`
-- [x] Combined bold+italic with `***text***` or `___text___`
-- [x] Strikethrough with `~~text~~`
-- [x] Inline code with `` `code` ``
-- [x] Nested formatting (up to 2 levels deep)
-- [x] Escaped characters with backslash
-- [x] Performance optimization with caching
-- [x] Fast paths for plain text
+- ✅ Bold formatting with `**text**` or `__text__`
+- ✅ Italic formatting with `*text*` or `_text_`
+- ✅ Combined bold+italic with `***text***` or `___text___`
+- ✅ Strikethrough with `~~text~~`
+- ✅ Inline code with `` `code` ``
+- ✅ Nested formatting (up to 2 levels deep)
+- ✅ Escaped characters with backslash
+- ✅ Performance optimization with caching
+- ✅ Fast paths for plain text
+- ✅ Link support with `[text](url)`
+- ✅ Custom styles for each formatting type
 
 ### Planned Features
 
-- [ ] Full support for Flutter text properties
-- [ ] Link support with `[text](url)`
-- [ ] Custom styles for each formatting type
-- [ ] Superscript and subscript with `^text^` and `~text~`
-- [ ] Highlighting/background color
-- [ ] Color text formatting
-- [ ] Custom tokenizer/parser support
-- [ ] RTL language optimization
-- [ ] Improved accessibility features
+- 🔲 Full support for Flutter text properties
+- 🔲 Superscript and subscript with `^text^` and `~text~`
+- 🔲 Custom tokenizer/parser support
+- 🔲 RTL language optimization
+- 🔲 Improved accessibility features
 
 ## When to Use Textf
 
-✅ When you need simple inline text formatting
-
-✅ When performance is critical
-
-✅ When you want a familiar Flutter Text-like API
-
-✅ For chat messages, comments, captions, or UI labels
-
-✅ For internationalized text with formatting
-
-❌ When you need full Markdown with blocks, links, images
-
-❌ When you need HTML rendering
-
-❌ For complex document rendering
+- ✅ When you need simple inline text formatting
+- ✅ When performance is critical
+- ✅ When you want a familiar Flutter Text-like API
+- ✅ For chat messages, comments, captions, or UI labels
+- ✅ For internationalized text with formatting
+- ❌ When you need full Markdown with blocks, links, images
+- ❌ When you need HTML rendering
+- ❌ For complex document rendering
 
 ## Internationalization (i18n)
 

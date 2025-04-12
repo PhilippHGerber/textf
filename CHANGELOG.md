@@ -2,6 +2,30 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 0.2.0 - 2025-04-12
+
+### Added
+
+- **Link Support**: Implemented full support for Markdown-style links with `[text](url)` syntax
+  - Added interactive link styling with customizable colors and decorations
+  - Created hover effects for links with mouse cursor changes
+  - Enabled nested formatting within link text (e.g., `[**bold** link](url)`)
+  - Added `onUrlTap` and `onUrlHover` callbacks for link interaction
+
+- **TextfOptions**: Introduced a new widget to customize text formatting styles
+  - Global styling options for all formatting types (bold, italic, code, etc.)
+  - Configurable link appearance and behavior
+  - Inheritance-based configuration through the widget tree
+
+- **Enhanced Styling**: Added support for more detailed text styling
+  - Font family customization for code blocks
+  - Expanded default styles for each formatting type
+
+### Fixed
+
+- Updated default font family for inline code text to RobotoMono for better readability
+- Enabled trailing commas in analysis options for code consistency
+
 ## 0.1.1 - 2025-04-05
 
 ### Changed
