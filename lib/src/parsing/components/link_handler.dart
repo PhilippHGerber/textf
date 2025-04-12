@@ -4,11 +4,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/default_styles.dart';
-import '../../core/formatting_utils.dart';
 import '../../models/parser_state.dart';
 import '../../models/token.dart';
 import '../../widgets/internal/hoverable_link_span.dart';
 import '../parser.dart';
+import '../tokenizer.dart';
 import 'style_applicator.dart';
 
 /// Handles the processing of link tokens during parsing.
@@ -127,11 +127,47 @@ class LinkHandler {
       );
     }
 
-    // 2. Get effective normal and hover styles (remains the same)
-    final TextStyle finalLinkStyle =
-        state.options?.getEffectiveUrlStyle(context, inheritedStyle) ?? DefaultStyles.urlStyle.merge(inheritedStyle);
-    final TextStyle finalLinkHoverStyle = state.options?.getEffectiveUrlHoverStyle(context, inheritedStyle) ??
-        DefaultStyles.urlHoverStyle.merge(finalLinkStyle);
+    // Calculate effective normal and hover styles
+    TextStyle finalLinkStyle;
+    TextStyle finalLinkHoverStyle;
+
+    if (state.options != null) {
+      // Use the getters from TextfOptions if available (they handle inheritance)
+      finalLinkStyle = state.options!.getEffectiveUrlStyle(context, inheritedStyle);
+      finalLinkHoverStyle = state.options!.getEffectiveUrlHoverStyle(context, inheritedStyle);
+    } else {
+      // --- FALLBACK LOGIC WHEN NO TextfOptions ---
+      // Start with the default link visual properties (color, decoration)
+      // then copy specific typographical properties from the inherited style.
+      // This ensures default link color/decoration override the base style's color/decoration.
+      finalLinkStyle = DefaultStyles.urlStyle.copyWith(
+        // Inherit typographical properties from the base/inherited style
+        fontSize: inheritedStyle.fontSize,
+        fontFamily: inheritedStyle.fontFamily,
+        fontFamilyFallback: inheritedStyle.fontFamilyFallback,
+        fontWeight: inheritedStyle.fontWeight,
+        fontStyle: inheritedStyle.fontStyle,
+        letterSpacing: inheritedStyle.letterSpacing,
+        wordSpacing: inheritedStyle.wordSpacing,
+        textBaseline: inheritedStyle.textBaseline,
+        height: inheritedStyle.height,
+        locale: inheritedStyle.locale,
+        foreground: inheritedStyle.foreground,
+        background: inheritedStyle.background,
+        shadows: inheritedStyle.shadows,
+        fontFeatures: inheritedStyle.fontFeatures,
+        fontVariations: inheritedStyle.fontVariations,
+        // We explicitly *keep* the color and decoration from DefaultStyles.urlStyle
+        // unless the user *really* wants complex inherited decorations.
+        // decoration: inheritedStyle.decoration ?? DefaultStyles.urlStyle.decoration,
+        // decorationColor: inheritedStyle.decorationColor ?? DefaultStyles.urlStyle.decorationColor,
+        // decorationStyle: inheritedStyle.decorationStyle ?? DefaultStyles.urlStyle.decorationStyle,
+        // decorationThickness: inheritedStyle.decorationThickness ?? DefaultStyles.urlStyle.decorationThickness,
+      );
+
+      // Calculate hover style by merging default hover changes onto the final normal style
+      finalLinkHoverStyle = finalLinkStyle.merge(DefaultStyles.urlHoverStyle);
+    }
 
     // 3. Get effective interaction callbacks and cursor (remains the same)
     final effectiveOnTap = state.options?.getEffectiveOnUrlTap(context);
@@ -149,22 +185,32 @@ class LinkHandler {
     List<InlineSpan> childrenSpans = [];
     String? spanText;
 
-    if (FormattingUtils.hasFormattingMarkers(rawLinkText)) {
-      // Parse the inner content using finalLinkStyle as the base
-      final innerParser = TextfParser(maxCacheSize: 10);
+    // Use the tokenizer to determine if the rawLinkText contains *actual* formatting
+    // after handling escapes.
+    final tokenizerForLinkText = TextfTokenizer(); // Use the existing tokenizer logic
+    final linkTextTokens = tokenizerForLinkText.tokenize(rawLinkText);
+    // Check if *all* resulting tokens are simple text tokens.
+    final bool containsOnlyTextTokens = linkTextTokens.every((token) => token.type == TokenType.text);
+
+    if (!containsOnlyTextTokens) {
+      // If there's any formatting marker token, parse into children spans.
+      // Use a parser with a small/no cache for this internal parse.
+      final innerParser = TextfParser(maxCacheSize: 0);
       childrenSpans = innerParser.parse(
         rawLinkText,
         context,
-        finalLinkStyle, // Apply the final NORMAL link style as base for parsing
+        finalLinkStyle, // Apply the calculated normal link style as the base for inner parsing
       );
-      spanText = null;
+      spanText = null; // No plain text if we have children spans
     } else {
-      // Link text is plain
-      spanText = rawLinkText;
-      childrenSpans = [];
+      // The link text is effectively plain (might have had escaped markers).
+      // Remove the escape backslashes for the final display text.
+      spanText = rawLinkText.replaceAllMapped(
+        RegExp(r'\\([*_~`\[\]()\\])'), // Match a backslash followed by a special character
+        (match) => match.group(1)!, // Replace with only the captured character (group 1)
+      );
+      childrenSpans = []; // No children spans if it's plain text
     }
-    // Now childrenSpans contains spans with combined styles (e.g., bold+linkStyle)
-    // or spanText contains the plain text.
 
     // 6. Create the _HoverableLinkSpan widget instance
     final hoverableWidget = HoverableLinkSpan(
