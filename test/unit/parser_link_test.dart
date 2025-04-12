@@ -559,7 +559,6 @@ void main() {
         // Verify the normal style passed to HoverableLinkSpan (Base + Default Link)
         // Base props (font, size, height) should be kept.
         // Default link props (color, decoration) should OVERRIDE base props.
-        final expectedNormalStyle = baseStyle.merge(DefaultStyles.urlStyle); // Correct merge order
         expect(hoverableWidget.normalStyle.fontFamily, baseStyle.fontFamily);
         expect(hoverableWidget.normalStyle.fontSize, baseStyle.fontSize);
         expect(hoverableWidget.normalStyle.height, baseStyle.height);
@@ -828,10 +827,6 @@ void main() {
         // Check plain text handling because inner link text has no formatting
         expect(hoverableWidget.initialPlainText, 'a link', reason: "Link text is plain, should be in initialPlainText");
         expect(hoverableWidget.initialChildrenSpans, isEmpty, reason: "Plain link text should have no children spans");
-
-        // Verify the style passed to HoverableLinkSpan correctly inherited the surrounding bold
-        final expectedInheritedStyle = DefaultStyles.boldStyle(baseStyle); // Apply bold to base
-        final expectedLinkNormalStyle = expectedInheritedStyle.merge(DefaultStyles.urlStyle); // Merge default link look
 
         expect(
           hoverableWidget.normalStyle.fontWeight,
