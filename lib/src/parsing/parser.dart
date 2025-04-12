@@ -99,11 +99,14 @@ class TextfParser {
     final state = _parseTokens(tokens, context, baseStyle);
 
     // Update cache
-    if (_cache.length >= maxCacheSize) {
-      // Remove oldest entry for simple FIFO behavior
-      _cache.remove(_cache.keys.first);
+    // Add to cache only if caching is enabled
+    if (maxCacheSize > 0) {
+      // Only remove if the cache is actually full AND not empty
+      if (_cache.length >= maxCacheSize) {
+        _cache.remove(_cache.keys.first);
+      }
+      _cache[cacheKey] = state.spans;
     }
-    _cache[cacheKey] = state.spans;
 
     return state.spans;
   }
