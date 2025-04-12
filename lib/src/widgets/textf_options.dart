@@ -39,11 +39,11 @@ import '../core/default_styles.dart';
 /// ```
 class TextfOptions extends InheritedWidget {
   /// Callback function executed when tapping/clicking on a URL.
-  /// Provides the resolved [url] and the raw [displayText] including formatting markers.
+  /// Provides the resolved `url` and the raw `displayText` including formatting markers.
   final void Function(String url, String displayText)? onUrlTap;
 
   /// Callback function executed when hovering over a URL.
-  /// Provides the resolved [url], raw [displayText], and hover state [isHovering].
+  /// Provides the resolved `url`, raw `displayText`, and hover state `isHovering`.
   final void Function(String url, String displayText, bool isHovering)? onUrlHover;
 
   /// Styling for URLs in normal state. Merged with the base text style.
