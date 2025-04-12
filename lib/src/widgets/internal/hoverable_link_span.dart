@@ -3,8 +3,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../parsing/parser.dart';
-
 /// An internal StatefulWidget used by Textf to render interactive links
 /// that can visually change style on hover.
 ///
@@ -68,9 +66,6 @@ class HoverableLinkSpan extends StatefulWidget {
 class HoverableLinkSpanState extends State<HoverableLinkSpan> {
   /// Tracks whether the mouse cursor is currently over this link span.
   bool _isHovering = false;
-  // Cache the parser instance - can be static or instance variable
-  // Creating a new one each build might be okay for small link texts
-  final TextfParser _linkContentParser = TextfParser(maxCacheSize: 5);
 
   void _onEnter(PointerEnterEvent event) {
     if (mounted) {

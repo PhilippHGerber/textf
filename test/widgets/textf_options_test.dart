@@ -102,14 +102,13 @@ void main() {
       color: Colors.blue, decoration: TextDecoration.none); // Default blue
   const rootCursor = SystemMouseCursors.text;
   final rootOnTap = dummyTap1;
-  final rootOnHover = dummyHover1;
 
   const childUrlStyle = TextStyle(
       color: Colors.green, fontSize: 18); // Overrides color, adds size
   const childItalicStyle = TextStyle(
       fontStyle: FontStyle.normal,
       backgroundColor: Colors.yellow); // Override italic!
-  const childCursor = SystemMouseCursors.click; // Override cursor
+
   final childOnTap = dummyTap2; // Override tap
   // ----------------------------------------------------
 
