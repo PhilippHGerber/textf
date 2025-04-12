@@ -2,6 +2,12 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 0.2.1 - 2025-04-12
+
+### Fixed
+
+- **Hot Reload Reliability:** Fixed an issue where changes made to `TextfOptions` (e.g., custom colors, styles) or internal formatting logic might not render correctly immediately after using hot reload during development. The internal parser cache is now properly invalidated only in debug mode during `reassemble`, ensuring UI consistency and improving the development workflow without affecting release build performance.
+
 ## 0.2.0 - 2025-04-12
 
 ### Added
