@@ -1,42 +1,35 @@
 import 'package:flutter/material.dart';
 
-import '../core/default_styles.dart';
-
 /// Configuration options for Textf widgets within a specific scope.
 ///
 /// This widget uses the `InheritedWidget` pattern to make configuration
 /// available to descendant `Textf` widgets. Options include styling for different
 /// formatting types (bold, italic, code, links) and callbacks for link interactions.
 ///
-/// ## Implicit Inheritance
+/// ## Implicit Inheritance and Style Resolution
 ///
-/// When multiple `TextfOptions` are nested in the widget tree, a `Textf` widget
-/// will use the configuration from the nearest ancestor `TextfOptions`. However,
-/// if a specific property (e.g., `boldStyle`) is `null` on the nearest ancestor,
-/// `TextfOptions` will automatically look up the widget tree for the *next*
-/// ancestor `TextfOptions` that *does* define that property. If no ancestor
-/// defines the property, the package's built-in default (from `DefaultStyles`)
-/// will be used.
+/// When resolving a style (e.g., for bold text), the system (specifically
+/// `TextfStyleResolver` interacting with these methods) follows this process:
 ///
-/// This allows you to set global defaults high up in the tree and override only
-/// specific properties in nested `TextfOptions` widgets without needing to
-/// manually copy all other properties.
+/// 1. **Check Ancestor Options:** It calls the relevant `getEffective...Style`
+///    method on the nearest `TextfOptions` ancestor (e.g., `getEffectiveBoldStyle`).
+///    This method looks up the widget tree for the *first* ancestor `TextfOptions`
+///    that defines that specific style property (e.g., `boldStyle`).
+/// 2. **Apply Option Style:** If an ancestor option is found, it's merged with the
+///    current segment's `baseStyle` and returned. This result is used directly.
+/// 3. **Return Null:** If *no* ancestor `TextfOptions` defines the specific style
+///    property, the `getEffective...Style` method returns `null`.
+/// 4. **Resolver Fallback:** When `TextfStyleResolver` receives `null`, it knows
+///    no explicit option was provided. It then applies its own fallback logic:
+///    - For code/links: It derives a style from the current `ThemeData`.
+///    - For bold/italic/strike: It applies the relative default effect (e.g.,
+///      `FontWeight.bold`) from `DefaultStyles` to the `baseStyle`.
 ///
-/// ```dart
-/// TextfOptions( // Root options
-///   boldStyle: TextStyle(fontWeight: FontWeight.w900),
-///   urlStyle: TextStyle(color: Colors.blue),
-///   onUrlTap: (url, text) => print('Root tap: $url'),
-///   child: ...,
-///     TextfOptions( // Nested options
-///       urlStyle: TextStyle(color: Colors.green), // Only override URL style
-///       // boldStyle will implicitly be inherited from the root options
-///       // onUrlTap will implicitly be inherited from the root options
-///       child: Textf("This uses green [links](...) and w900 **bold** text."),
-///     )
-///   ...,
-/// )
-/// ```
+/// This ensures explicit options always win, followed by theme defaults (where applicable),
+/// and finally package defaults.
+///
+/// Callbacks (`onUrlTap`, `onUrlHover`) and `urlMouseCursor` also search up the tree
+/// for the first non-null value.
 class TextfOptions extends InheritedWidget {
   /// Callback function executed when tapping/clicking on a URL.
   /// Provides the resolved `url` and the raw `displayText` including formatting markers.
@@ -46,28 +39,28 @@ class TextfOptions extends InheritedWidget {
   /// Provides the resolved `url`, raw `displayText`, and hover state `isHovering`.
   final void Function(String url, String displayText, bool isHovering)? onUrlHover;
 
-  /// Styling for URLs in normal state. Merged with the base text style.
+  /// Styling for URLs in normal state. Merged **onto** the base text style if provided.
   final TextStyle? urlStyle;
 
-  /// Styling for URLs in hover state. Merged with the effective normal URL style.
+  /// Styling for URLs in hover state. Merged **onto** the final *normal* URL style if provided.
   final TextStyle? urlHoverStyle;
 
-  /// The mouse cursor to use when hovering over a URL link.
+  /// The mouse cursor to use when hovering over a URL link. Inherits up the tree.
   final MouseCursor? urlMouseCursor;
 
-  /// Styling for bold formatted text. Merged with the base text style.
+  /// Styling for bold formatted text. Merged **onto** the base text style if provided.
   final TextStyle? boldStyle;
 
-  /// Styling for italic formatted text. Merged with the base text style.
+  /// Styling for italic formatted text. Merged **onto** the base text style if provided.
   final TextStyle? italicStyle;
 
-  /// Styling for bold and italic formatted text. Merged with the base text style.
+  /// Styling for bold and italic formatted text. Merged **onto** the base text style if provided.
   final TextStyle? boldItalicStyle;
 
-  /// Styling for strikethrough text. Merged with the base text style.
+  /// Styling for strikethrough text. Merged **onto** the base text style if provided.
   final TextStyle? strikethroughStyle;
 
-  /// Styling for inline code text. Merged with the base text style.
+  /// Styling for inline code text. Merged **onto** the base text style if provided.
   final TextStyle? codeStyle;
 
   /// Creates a new TextfOptions instance to provide configuration down the tree.
@@ -87,32 +80,32 @@ class TextfOptions extends InheritedWidget {
   });
 
   /// Finds the nearest [TextfOptions] ancestor in the widget tree.
-  /// Returns null if no ancestor is found.
+  /// Returns null if no ancestor is found. Does not establish a dependency.
   static TextfOptions? maybeOf(BuildContext context) {
-    // Use getElementForInheritedWidgetOfExactType for potentially better performance
-    // as it doesn't establish a dependency.
     final inheritedElement = context.getElementForInheritedWidgetOfExactType<TextfOptions>();
     return inheritedElement?.widget as TextfOptions?;
   }
 
   /// Finds the nearest [TextfOptions] ancestor and establishes a dependency.
+  /// Throws if no ancestor is found.
   static TextfOptions of(BuildContext context) {
     final TextfOptions? result = context.dependOnInheritedWidgetOfExactType<TextfOptions>();
     assert(
       result != null,
-      'No TextfOptions found in context.'
-      'Wrap your widget with TextfOptions '
+      'No TextfOptions found in context. Wrap your widget with TextfOptions '
       'or ensure one exists higher in the tree.',
     );
     return result!;
   }
 
-  // Helper function to iteratively search ancestors for a non-null value
+  // Helper function to iteratively search ancestors for the first non-null value
+  // of a specific property getter.
   T? _findFirstAncestorValue<T>(
     BuildContext context,
     T? Function(TextfOptions options) getter,
   ) {
-    // Start search from the element associated with the context used to find 'this'
+    // Start search from the element associated with the context used to find 'this' instance
+    // or the nearest ancestor if 'this' wasn't found directly via context.
     Element? currentElement = context.getElementForInheritedWidgetOfExactType<TextfOptions>();
 
     while (currentElement != null) {
@@ -124,7 +117,6 @@ class TextfOptions extends InheritedWidget {
           return value; // Found the first non-null value
         }
       }
-
       // Move up to the next ancestor TextfOptions
       Element? parentElement;
       currentElement.visitAncestorElements((Element ancestor) {
@@ -136,130 +128,113 @@ class TextfOptions extends InheritedWidget {
       });
       currentElement = parentElement; // Prepare for the next loop iteration
     }
-
     return null; // Not found anywhere up the tree
   }
 
-  /// Calculates the effective style by applying defaults, base, and overrides.
-  /// Priority: Specified Override > Default Style Effect > Base Style
-  TextStyle _getEffectiveStyle(
-    BuildContext context,
-    TextStyle baseStyle,
-    TextStyle? Function(TextfOptions options) getter, // Function to get the specified override style
-    TextStyle Function(TextStyle base) defaultApplier, // Function to apply the default effect (e.g., add bold)
-  ) {
-    // 1. Apply the default styling effect to the base style.
-    //    e.g., for bold, this adds fontWeight: FontWeight.bold to baseStyle
-    final styleWithDefaultApplied = defaultApplier(baseStyle);
+  // --- Effective Style Getters ---
+  // These methods find the first defined style in the ancestor chain
+  // and merge it with the baseStyle. They return NULL if no ancestor defines the style.
 
-    // 2. Find the first specified override style up the ancestor chain.
-    final specifiedStyle = _findFirstAncestorValue(context, getter);
-
-    // 3. Merge the specified override onto the style that already has the default effect.
-    //    This ensures the override takes precedence over both base and default effects.
-    //    If specifiedStyle is null, merge(null) does nothing.
-    return styleWithDefaultApplied.merge(specifiedStyle);
+  /// Finds the first defined `boldStyle` up the tree and merges it with `baseStyle`.
+  /// Returns `null` if no ancestor defines `boldStyle`.
+  TextStyle? getEffectiveBoldStyle(BuildContext context, TextStyle baseStyle) {
+    final optionsStyle = _findFirstAncestorValue(context, (o) => o.boldStyle);
+    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
   }
 
-  /// Calculates the effective URL style.
-  /// Precedence: Specified Override > Default Link Style (color/deco) > Base Style
-  TextStyle getEffectiveUrlStyle(BuildContext context, TextStyle baseStyle) {
-    // 1. Start with the base style properties (fontSize, fontFamily, etc.)
-    TextStyle effectiveStyle = baseStyle;
+  /// Finds the first defined `italicStyle` up the tree and merges it with `baseStyle`.
+  /// Returns `null` if no ancestor defines `italicStyle`.
+  TextStyle? getEffectiveItalicStyle(BuildContext context, TextStyle baseStyle) {
+    final optionsStyle = _findFirstAncestorValue(context, (o) => o.italicStyle);
+    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+  }
 
-    // 2. Apply the default URL look (color, decoration) ON TOP of the base.
-    //    This ensures we get the default blue/underline unless overridden later.
-    effectiveStyle = effectiveStyle.merge(DefaultStyles.urlStyle);
-    // Now effectiveStyle has base props + default url color/decoration.
-    // e.g., if base={color:black, size:16}, style is now {color:blue, deco:underline, size:16}
+  /// Finds the first defined `boldItalicStyle` up the tree and merges it with `baseStyle`.
+  /// Returns `null` if no ancestor defines `boldItalicStyle`.
+  TextStyle? getEffectiveBoldItalicStyle(BuildContext context, TextStyle baseStyle) {
+    final optionsStyle = _findFirstAncestorValue(context, (o) => o.boldItalicStyle);
+    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+  }
 
-    // 3. Find the specific override from TextfOptions ancestors.
-    final specifiedStyle = _findFirstAncestorValue(context, (o) => o.urlStyle);
+  /// Finds the first defined `strikethroughStyle` up the tree and merges it with `baseStyle`.
+  /// Returns `null` if no ancestor defines `strikethroughStyle`.
+  TextStyle? getEffectiveStrikethroughStyle(BuildContext context, TextStyle baseStyle) {
+    final optionsStyle = _findFirstAncestorValue(context, (o) => o.strikethroughStyle);
+    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+  }
 
-    // 4. Merge the override ON TOP of the current style.
-    //    If specifiedStyle has color or decoration, it will overwrite the defaults.
-    //    If it has other properties (like fontSize), it will overwrite the base.
-    if (specifiedStyle != null) {
-      effectiveStyle = effectiveStyle.merge(specifiedStyle);
-      // e.g., if specified={color:green, deco:none}, style becomes {color:green, deco:none, size:16}
+  /// Finds the first defined `codeStyle` up the tree and merges it with `baseStyle`.
+  /// Returns `null` if no ancestor defines `codeStyle`.
+  TextStyle? getEffectiveCodeStyle(BuildContext context, TextStyle baseStyle) {
+    final optionsStyle = _findFirstAncestorValue(context, (o) => o.codeStyle);
+    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+  }
+
+  /// Finds the first defined `urlStyle` up the tree and merges it with `baseStyle`.
+  /// Returns `null` if no ancestor defines `urlStyle`.
+  TextStyle? getEffectiveUrlStyle(BuildContext context, TextStyle baseStyle) {
+    final optionsStyle = _findFirstAncestorValue(context, (o) => o.urlStyle);
+    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+  }
+
+  /// Finds the first defined `urlHoverStyle` up the tree and merges it onto
+  /// the resolved *normal* URL style (which itself considers options and base style).
+  /// Returns `null` if no ancestor defines `urlHoverStyle`.
+  TextStyle? getEffectiveUrlHoverStyle(BuildContext context, TextStyle baseStyle) {
+    final optionsHoverStyle = _findFirstAncestorValue(context, (o) => o.urlHoverStyle);
+    if (optionsHoverStyle == null) {
+      return null; // No specific hover style defined in options hierarchy
     }
 
-    return effectiveStyle;
-  }
-
-  /// Calculates the effective URL hover style.
-  /// Precedence: Specified Hover Override > Default Hover Effect > Effective Normal URL Style
-  TextStyle getEffectiveUrlHoverStyle(BuildContext context, TextStyle baseStyle) {
-    // 1. Get the fully resolved normal URL style using the corrected logic above.
-    final effectiveNormalStyle = getEffectiveUrlStyle(context, baseStyle);
-
-    // 2. Start with the effective NORMAL style as the base for hover.
-    TextStyle effectiveHoverStyle = effectiveNormalStyle;
-
-    // 3. Apply the default HOVER effect (changes color/etc.) ON TOP of the normal style.
-    //    This merges the default hover changes (e.g., darker blue) onto the calculated normal style.
-    effectiveHoverStyle = effectiveHoverStyle.merge(DefaultStyles.urlHoverStyle);
-    // e.g., if normal style was {color:green, deco:none, size:16},
-    // and default hover is {color:darkerBlue}, style is now {color:darkerBlue, deco:none, size:16}
-
-    // 4. Find the specific hover override style up the ancestor chain.
-    final specifiedHoverStyle = _findFirstAncestorValue(context, (o) => o.urlHoverStyle);
-
-    // 5. Merge the specified hover override ON TOP. Override takes final precedence for hover state.
-    if (specifiedHoverStyle != null) {
-      effectiveHoverStyle = effectiveHoverStyle.merge(specifiedHoverStyle);
-      // e.g., if specified hover is {background:yellow}, style becomes
-      // {color:darkerBlue, deco:none, size:16, background:yellow}
+    // Revert to original corrected plan: Find option, if found, merge onto base. Resolver uses this result.
+    final optionsStyle = _findFirstAncestorValue(context, (o) => o.urlHoverStyle);
+    if (optionsStyle == null) {
+      return null;
     }
 
-    return effectiveHoverStyle;
+    // --- Final Attempt at Clean Logic ---
+    // 1. Find the specific hover style defined in options.
+    final hoverOption = _findFirstAncestorValue(context, (o) => o.urlHoverStyle);
+    if (hoverOption == null) {
+      return null; // No hover option specified, resolver handles fallback.
+    }
+
+    // 2. Find the normal style *as defined by options only*.
+    final normalOption = _findFirstAncestorValue(context, (o) => o.urlStyle);
+
+    // 3. Determine the base for merging the hover option:
+    //    - If a normal option exists, merge hover onto (base merged with normal option).
+    //    - If no normal option exists, merge hover onto base directly.
+    final TextStyle baseForHover = normalOption == null ? baseStyle : baseStyle.merge(normalOption);
+
+    // 4. Merge the specific hover option onto the calculated base.
+    return baseForHover.merge(hoverOption);
   }
 
-  // --- Effective Callback Getters with Ancestor Lookup ---
+  // --- Effective Callback & Cursor Getters ---
 
   /// Finds the first non-null [onUrlTap] callback defined up the tree.
   void Function(String url, String displayText)? getEffectiveOnUrlTap(BuildContext context) {
-    // Pass the getter for onUrlTap to the helper function
     return _findFirstAncestorValue(context, (options) => options.onUrlTap);
   }
 
   /// Finds the first non-null [onUrlHover] callback defined up the tree.
   void Function(String url, String displayText, bool isHovering)? getEffectiveOnUrlHover(BuildContext context) {
-    // Pass the getter for onUrlHover to the helper function
     return _findFirstAncestorValue(context, (options) => options.onUrlHover);
   }
 
-  // --- Property Getters using the corrected _getEffectiveStyle ---
-
   /// Finds the first non-null [urlMouseCursor] defined up the tree, falling back to default.
-  MouseCursor getEffectiveUrlMouseCursor(BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.urlMouseCursor) ?? DefaultStyles.urlMouseCursor;
-  }
-
-  TextStyle getEffectiveBoldStyle(BuildContext context, TextStyle baseStyle) {
-    return _getEffectiveStyle(context, baseStyle, (o) => o.boldStyle, DefaultStyles.boldStyle);
-  }
-
-  TextStyle getEffectiveItalicStyle(BuildContext context, TextStyle baseStyle) {
-    return _getEffectiveStyle(context, baseStyle, (o) => o.italicStyle, DefaultStyles.italicStyle);
-  }
-
-  TextStyle getEffectiveBoldItalicStyle(BuildContext context, TextStyle baseStyle) {
-    return _getEffectiveStyle(context, baseStyle, (o) => o.boldItalicStyle, DefaultStyles.boldItalicStyle);
-  }
-
-  TextStyle getEffectiveStrikethroughStyle(BuildContext context, TextStyle baseStyle) {
-    return _getEffectiveStyle(context, baseStyle, (o) => o.strikethroughStyle, DefaultStyles.strikethroughStyle);
-  }
-
-  TextStyle getEffectiveCodeStyle(BuildContext context, TextStyle baseStyle) {
-    return _getEffectiveStyle(context, baseStyle, (o) => o.codeStyle, DefaultStyles.codeStyle);
+  MouseCursor? getEffectiveUrlMouseCursor(BuildContext context) {
+    // Return type is nullable because _findFirstAncestorValue returns nullable
+    return _findFirstAncestorValue(context, (o) => o.urlMouseCursor);
+    // The resolver will apply the final DefaultStyles.urlMouseCursor fallback if this returns null.
   }
 
   /// Determines if the widget tree should be rebuilt when options change.
   /// Compares only the properties of this specific instance.
   @override
   bool updateShouldNotify(TextfOptions oldWidget) {
+    // Compare all properties directly held by this widget instance.
     return onUrlTap != oldWidget.onUrlTap ||
         onUrlHover != oldWidget.onUrlHover ||
         urlStyle != oldWidget.urlStyle ||

@@ -1,15 +1,13 @@
-// This is an internal widget used by the Textf package.
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-/// An internal StatefulWidget used by Textf to render interactive links
+/// An internal StatefulWidget used by Textf's LinkHandler to render interactive links
 /// that can visually change style on hover.
 ///
 /// This widget manages its own hover state (`_isHovering`) and switches
 /// between the provided `normalStyle` and `hoverStyle`. It renders a
 /// single `Text.rich` containing the link's content (either plain text
-/// or pre-parsed child spans).
+/// or pre-parsed child spans passed via `initialChildrenSpans` or `initialPlainText`).
 ///
 /// It's intended to be wrapped within a `WidgetSpan` by the `LinkHandler`.
 class HoverableLinkSpan extends StatefulWidget {
@@ -22,37 +20,39 @@ class HoverableLinkSpan extends StatefulWidget {
 
   /// Pre-parsed list of `InlineSpan` children if the link's display
   /// text itself contained formatting (e.g., `[**bold** link](url)`).
-  /// Should be empty if `plainText` is provided.
+  /// Should be empty if `initialPlainText` is provided.
   final List<InlineSpan> initialChildrenSpans;
 
-  /// The plain display text of the link, used if `childrenSpans` is empty.
+  /// The plain display text of the link, used if `initialChildrenSpans` is empty.
   final String? initialPlainText;
 
-  /// The style to apply when the link is not hovered.
+  /// The style to apply when the link is not hovered. Resolved by TextfStyleResolver.
   final TextStyle normalStyle;
 
-  /// The style to apply when the link is hovered.
+  /// The style to apply when the link is hovered. Resolved by TextfStyleResolver.
   final TextStyle hoverStyle;
 
   /// An optional pre-configured `TapGestureRecognizer` for handling taps.
+  /// Created by LinkHandler if an `onUrlTap` callback is available.
   final TapGestureRecognizer? tapRecognizer;
 
-  /// The mouse cursor to display when hovering over the link.
+  /// The mouse cursor to display when hovering over the link. Resolved by TextfStyleResolver.
   final MouseCursor mouseCursor;
 
   /// An optional callback function triggered when the hover state changes.
-  /// Provides the URL, the raw display text, and the new hover state.
+  /// Resolved by TextfStyleResolver. Provides the URL, the raw display text,
+  /// and the new hover state (`true` for enter, `false` for exit).
   final Function(String url, String rawDisplayText, bool isHovering)? onHoverCallback;
 
-  /// Creates an internal widget to manage hover state for a link.
+  /// Creates an internal widget to manage hover state and interaction for a link.
   const HoverableLinkSpan({
     super.key,
     required this.url,
     required this.rawDisplayText,
     required this.initialChildrenSpans,
     this.initialPlainText,
-    required this.normalStyle, // Pass the base style
-    required this.hoverStyle, // Pass hover *changes*
+    required this.normalStyle,
+    required this.hoverStyle,
     required this.tapRecognizer,
     required this.mouseCursor,
     this.onHoverCallback,
@@ -63,69 +63,94 @@ class HoverableLinkSpan extends StatefulWidget {
 }
 
 class HoverableLinkSpanState extends State<HoverableLinkSpan> {
-  /// Tracks whether the mouse cursor is currently over this link span.
+  /// Tracks whether the mouse cursor is currently over this specific link instance.
   bool _isHovering = false;
 
+  @override
+  void dispose() {
+    // If a TapGestureRecognizer was created and passed in,
+    // it must be disposed when the widget is removed to prevent memory leaks.
+    widget.tapRecognizer?.dispose();
+    super.dispose();
+  }
+
+  /// Handles the pointer entering the bounds of the link.
   void _onEnter(PointerEnterEvent event) {
     if (mounted) {
       setState(() => _isHovering = true);
+      // Notify listener about hover start, passing URL and raw text
       widget.onHoverCallback?.call(widget.url, widget.rawDisplayText, true);
     }
   }
 
+  /// Handles the pointer exiting the bounds of the link.
   void _onExit(PointerExitEvent event) {
     if (mounted) {
       setState(() => _isHovering = false);
+      // Notify listener about hover end
       widget.onHoverCallback?.call(widget.url, widget.rawDisplayText, false);
     }
   }
 
-  /// Helper to apply interaction handlers and hover style to a single span.
+  /// Recursively applies interaction handlers (tap recognizer, hover callbacks, cursor)
+  /// and the correct style (normal or hover) to a given InlineSpan and its children.
+  /// This ensures that the entire clickable/hoverable area of the link reacts appropriately.
   InlineSpan _applyInteraction(InlineSpan span) {
     if (span is TextSpan) {
-      // Determine the effective style for this span based on hover state
+      // Determine the effective style for this specific TextSpan part
       final TextStyle effectiveStyle = _isHovering
-          ? (span.style ?? widget.normalStyle).merge(widget.hoverStyle) // Merge hover onto existing span style
-          : (span.style ?? widget.normalStyle); // Use existing span style or normal as fallback
+          ? widget.hoverStyle // Always apply the full resolved hover style when hovering
+          : widget.normalStyle; // Always apply the full resolved normal style otherwise
+
+      // Merge the effective style (normal or hover) ON TOP of the span's original style.
+      // The span's original style might contain formatting applied *within* the link text
+      // (e.g., bold). We want to preserve that inner formatting while applying the
+      // overall link style (color, decoration) and hover changes.
+      final TextStyle finalSpanStyle = (span.style ?? const TextStyle()).merge(effectiveStyle);
 
       return TextSpan(
         text: span.text,
-        // Recursively apply interaction to children as well!
+        // Recursively apply interaction and styling to children
         children: span.children?.map(_applyInteraction).toList(),
-        style: effectiveStyle, // Apply the calculated style
-        recognizer: widget.tapRecognizer,
-        mouseCursor: widget.mouseCursor,
-        onEnter: _onEnter,
-        onExit: _onExit,
+        style: finalSpanStyle, // Apply the merged style
+        recognizer: widget.tapRecognizer, // Attach the single recognizer
+        mouseCursor: widget.mouseCursor, // Apply the link cursor
+        onEnter: _onEnter, // Attach hover enter handler
+        onExit: _onExit, // Attach hover exit handler
         semanticsLabel: span.semanticsLabel,
         locale: span.locale,
         spellOut: span.spellOut,
       );
     }
-    // Return other span types (like WidgetSpan) unmodified for now
+    // Return other span types (like WidgetSpan, although unlikely inside a link) unmodified.
     return span;
   }
 
   @override
   Widget build(BuildContext context) {
-    // 1. Get the initial list of spans to render.
-    //    If initialPlainText is provided, wrap it in a TextSpan.
-    //    Use the normalStyle as the base style for the plain text case.
-    final List<InlineSpan> spansToRender = widget.initialChildrenSpans.isNotEmpty
+    // Determine the initial content spans: either the pre-parsed children
+    // or a single TextSpan containing the plain text.
+    // Note: The initial spans/text don't yet have the interaction handlers attached.
+    final List<InlineSpan> initialContentSpans = widget.initialChildrenSpans.isNotEmpty
         ? widget.initialChildrenSpans
+        // If plain text, wrap it in a TextSpan. Use normalStyle as the base here,
+        // though _applyInteraction will merge the final normal/hover style again.
         : [TextSpan(text: widget.initialPlainText, style: widget.normalStyle)];
 
-    // 2. Apply interaction handlers and hover styling recursively to all spans.
-    final List<InlineSpan> interactiveSpans = spansToRender
-        .map(_applyInteraction) // Use the recursive helper
+    // Apply interaction handlers and correct styling (normal/hover) recursively
+    // to the initial content spans.
+    final List<InlineSpan> interactiveSpans = initialContentSpans
+        .map(_applyInteraction) // Apply handlers and styles
         .toList();
 
-    // 3. Render the modified spans.
+    // Render the resulting interactive spans within a Text.rich widget.
+    // The outer TextSpan has no text or style itself, just acts as a container.
     return Text.rich(
       TextSpan(
-        // Outer span has no style/text, just holds interactive children
         children: interactiveSpans,
       ),
+      // Ensure Text.rich doesn't apply its own scaling if the spans already account for it.
+      // textScaler: TextScaler.noScaling, // Consider if needed, depends on context
     );
   }
 }

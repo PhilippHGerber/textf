@@ -1,19 +1,19 @@
-// lib/src/widgets/internal/_textf_renderer.dart
 import 'dart:ui' as ui show TextHeightBehavior;
 
 import 'package:flutter/material.dart';
 
 import '../../parsing/parser.dart';
 
-/// Internal StatefulWidget that handles parsing and hot reload.
+/// Internal StatefulWidget that handles parsing, styling resolution via the parser,
+/// and hot reload notification. It bridges the Textf widget parameters with
+/// the parsing and rendering logic provided by the TextfParser.
 class TextfRenderer extends StatefulWidget {
-  // Nimm alle Parameter von Textf entgegen
+  // Parameters mirror those of the public Textf widget.
   const TextfRenderer({
     super.key,
-    // key wird automatisch behandelt
     required this.data,
     required this.style,
-    required this.parser, // Benötigt den Parser
+    required this.parser,
     required this.strutStyle,
     required this.textAlign,
     required this.textDirection,
@@ -28,49 +28,51 @@ class TextfRenderer extends StatefulWidget {
     required this.selectionColor,
   });
 
-  /// The text to display with formatting
+  /// The text data containing potential formatting markers.
   final String data;
 
-  /// The base text style to apply to the text
+  /// The explicit base text style provided to the Textf widget.
+  /// If null, DefaultTextStyle will be used.
   final TextStyle? style;
 
-  /// The parser to use for formatting the text
+  /// The parser instance responsible for converting the data string
+  /// into a list of InlineSpans, using its internal style resolver.
   final TextfParser parser;
 
-  /// The strut style to use for vertical layout
+  /// {@macro flutter.widgets.basic.strutStyle}
   final StrutStyle? strutStyle;
 
-  /// How the text should be aligned horizontally
+  /// {@macro flutter.widgets.basic.textAlign}
   final TextAlign? textAlign;
 
-  /// The directionality of the text
+  /// {@macro flutter.widgets.basic.textDirection}
   final TextDirection? textDirection;
 
-  /// The locale to use for the text
+  /// {@macro flutter.widgets.basic.locale}
   final Locale? locale;
 
-  /// Whether the text should break at soft line breaks
+  /// {@macro flutter.widgets.basic.softWrap}
   final bool? softWrap;
 
-  /// How visual overflow should be handled
+  /// {@macro flutter.widgets.basic.overflow}
   final TextOverflow? overflow;
 
-  /// The text scaling factor to apply
+  /// {@macro flutter.widgets.basic.textScaler}
   final TextScaler? textScaler;
 
-  /// The maximum number of lines for the text to span
+  /// {@macro flutter.widgets.basic.maxLines}
   final int? maxLines;
 
-  /// An alternative semantics label for the text
+  /// {@macro flutter.widgets.basic.semanticsLabel}
   final String? semanticsLabel;
 
-  /// Defines how the paragraph width is determined
+  /// {@macro flutter.widgets.basic.textWidthBasis}
   final TextWidthBasis? textWidthBasis;
 
-  /// Defines how the paragraph will position lines vertically
+  /// {@macro flutter.widgets.basic.textHeightBehavior}
   final ui.TextHeightBehavior? textHeightBehavior;
 
-  /// The color to use when painting the selection
+  /// {@macro flutter.widgets.basic.selectionColor}
   final Color? selectionColor;
 
   @override
@@ -81,26 +83,35 @@ class TextfRendererState extends State<TextfRenderer> {
   @override
   void reassemble() {
     super.reassemble();
-    // Invalidate future cache keys.
+    // Notify the parser's cache system about a hot reload.
+    // This helps ensure style changes (especially theme-related)
+    // are reflected without needing a full restart in debug mode.
     TextfParser.onHotReload();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Determine the base text style to use for parsing.
-    // This respects the DefaultTextStyle potentially higher up the tree.
+    // Determine the effective base text style for parsing.
+    // It considers the widget's explicit style and the ambient DefaultTextStyle.
     final DefaultTextStyle defaultTextStyle = DefaultTextStyle.of(context);
     final TextStyle currentBaseStyle = widget.style ?? defaultTextStyle.style;
 
+    // Invoke the parser. The parser instance (widget.parser) is expected
+    // to handle the creation and usage of TextfStyleResolver internally
+    // using the provided context.
     final List<InlineSpan> spans = widget.parser.parse(
       widget.data,
-      context, // Pass the current, up-to-date BuildContext
+      context, // Pass the current BuildContext, needed by the style resolver within the parser.
       currentBaseStyle,
     );
 
-    // Build the Text.rich widget using the result of the parse.
+    // Render the parsed spans using Text.rich.
+    // Pass all the standard Text properties through.
     return Text.rich(
       TextSpan(
+        // The root TextSpan's style is taken from the explicit widget style.
+        // If widget.style is null, Text.rich implicitly uses DefaultTextStyle.
+        // The `currentBaseStyle` was used by the parser for *calculating* child styles.
         style: widget.style,
         children: spans,
       ),
