@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:textf/src/core/default_styles.dart'; // Adjust path
-import 'package:textf/src/widgets/textf_options.dart'; // Adjust path
+import 'package:textf/src/core/default_styles.dart';
+import 'package:textf/src/widgets/textf_options.dart';
 
-// ----- Helper Class and Callbacks (Keep as before) -----
+// ----- Helper Class and Callbacks -----
 class ResolvedOptions {
   final TextStyle? urlStyle;
   final TextStyle? urlHoverStyle;
@@ -32,56 +32,83 @@ class ResolvedOptions {
   // Factory to create from context
   factory ResolvedOptions.fromContext(BuildContext context, TextStyle baseStyle) {
     final TextfOptions? nearestOptions = TextfOptions.maybeOf(context);
+    final ThemeData theme = Theme.of(context); // Get theme for fallbacks
 
-    if (nearestOptions == null) {
-      // ---- CASE 1: No TextfOptions ancestor ----
-      // Resolve using DefaultStyles directly, applying the correct precedence
-
-      // Start with base style properties (size, family, etc.)
-      TextStyle calculatedUrlStyle = baseStyle;
-      // Merge the default URL appearance (color, decoration) ON TOP of the base.
-      // This ensures default link color/deco override base color/deco.
-      calculatedUrlStyle = calculatedUrlStyle.merge(DefaultStyles.urlStyle);
-
-      // Start with the calculated normal URL style.
-      TextStyle calculatedUrlHoverStyle = calculatedUrlStyle;
-      // Merge the default HOVER effect ON TOP.
-      calculatedUrlHoverStyle = calculatedUrlHoverStyle.merge(DefaultStyles.urlHoverStyle);
-
-      return ResolvedOptions(
-        // Use the correctly calculated styles
-        urlStyle: calculatedUrlStyle,
-        urlHoverStyle: calculatedUrlHoverStyle,
-        urlMouseCursor: DefaultStyles.urlMouseCursor,
-        // Other styles are calculated by applying the default *effect* to the base style
-        boldStyle: DefaultStyles.boldStyle(baseStyle),
-        italicStyle: DefaultStyles.italicStyle(baseStyle),
-        boldItalicStyle: DefaultStyles.boldItalicStyle(baseStyle),
-        strikethroughStyle: DefaultStyles.strikethroughStyle(baseStyle),
-        codeStyle: DefaultStyles.codeStyle(baseStyle),
-        onUrlTap: null,
-        onUrlHover: null,
-      );
-    } else {
-      // ---- CASE 2: Found a TextfOptions ancestor ----
-      // LET THE NEAREST OPTIONS' GETTERS HANDLE THE INHERITANCE LOGIC.
-      // This part should now be correct because the getters in TextfOptions were fixed.
-      return ResolvedOptions(
-        urlStyle: nearestOptions.getEffectiveUrlStyle(context, baseStyle),
-        urlHoverStyle: nearestOptions.getEffectiveUrlHoverStyle(context, baseStyle),
-        urlMouseCursor: nearestOptions.getEffectiveUrlMouseCursor(context),
-        boldStyle: nearestOptions.getEffectiveBoldStyle(context, baseStyle),
-        italicStyle: nearestOptions.getEffectiveItalicStyle(context, baseStyle),
-        boldItalicStyle: nearestOptions.getEffectiveBoldItalicStyle(context, baseStyle),
-        strikethroughStyle: nearestOptions.getEffectiveStrikethroughStyle(context, baseStyle),
-        codeStyle: nearestOptions.getEffectiveCodeStyle(context, baseStyle),
-        onUrlTap: nearestOptions.getEffectiveOnUrlTap(context),
-        onUrlHover: nearestOptions.getEffectiveOnUrlHover(context),
+    // Helper to get theme-based link style merged with base
+    TextStyle getThemeLinkStyle(TextStyle currentBase) {
+      final Color themeLinkColor = theme.colorScheme.primary;
+      // Default link style merged onto the current base
+      return currentBase.merge(
+        TextStyle(
+          color: themeLinkColor,
+          decoration: TextDecoration.underline,
+          decorationColor: themeLinkColor,
+        ),
       );
     }
+
+    // Helper to get theme-based code style merged with base
+    TextStyle getThemeCodeStyle(TextStyle currentBase) {
+      final Color codeBackgroundColor = theme.colorScheme.surfaceContainer;
+      final Color codeForegroundColor = theme.colorScheme.onSurfaceVariant;
+      const String codeFontFamily = 'monospace';
+      final List<String> codeFontFamilyFallback =
+          DefaultStyles.codeStyle(currentBase).fontFamilyFallback ?? ['RobotoMono', 'Menlo', 'Courier New'];
+
+      return currentBase.copyWith(
+        fontFamily: codeFontFamily,
+        fontFamilyFallback: codeFontFamilyFallback,
+        backgroundColor: codeBackgroundColor,
+        color: codeForegroundColor,
+        letterSpacing: currentBase.letterSpacing ?? 0,
+      );
+    }
+
+    // Resolve each property individually, applying fallbacks if options are null
+    final resolvedBold = nearestOptions?.getEffectiveBoldStyle(context, baseStyle) ??
+        DefaultStyles.boldStyle(baseStyle); // Default fallback
+
+    final resolvedItalic = nearestOptions?.getEffectiveItalicStyle(context, baseStyle) ??
+        DefaultStyles.italicStyle(baseStyle); // Default fallback
+
+    final resolvedBoldItalic = nearestOptions?.getEffectiveBoldItalicStyle(context, baseStyle) ??
+        DefaultStyles.boldItalicStyle(baseStyle); // Default fallback
+
+    final resolvedStrike = nearestOptions?.getEffectiveStrikethroughStyle(context, baseStyle) ??
+        DefaultStyles.strikethroughStyle(baseStyle); // Default fallback
+
+    final resolvedCode = nearestOptions?.getEffectiveCodeStyle(context, baseStyle) ??
+        getThemeCodeStyle(baseStyle); // Theme fallback for code
+
+    final resolvedUrl = nearestOptions?.getEffectiveUrlStyle(context, baseStyle) ??
+        getThemeLinkStyle(baseStyle); // Theme fallback for links
+
+    // Hover style depends on the resolved *normal* style
+    final resolvedUrlHover = nearestOptions?.getEffectiveUrlHoverStyle(context, baseStyle) ??
+        resolvedUrl; // Default hover is same as normal if no option
+
+    final resolvedCursor =
+        nearestOptions?.getEffectiveUrlMouseCursor(context) ?? DefaultStyles.urlMouseCursor; // Default fallback
+
+    final resolvedTap = nearestOptions?.getEffectiveOnUrlTap(context); // Null if not found
+    final resolvedHoverCb = nearestOptions?.getEffectiveOnUrlHover(context); // Null if not found
+
+    return ResolvedOptions(
+      urlStyle: resolvedUrl,
+      urlHoverStyle: resolvedUrlHover,
+      urlMouseCursor: resolvedCursor,
+      boldStyle: resolvedBold,
+      italicStyle: resolvedItalic,
+      boldItalicStyle: resolvedBoldItalic,
+      strikethroughStyle: resolvedStrike,
+      codeStyle: resolvedCode,
+      onUrlTap: resolvedTap,
+      onUrlHover: resolvedHoverCb,
+    );
   }
 }
 
+// Dummy callbacks
 void dummyTap1(String u, String d) {}
 void dummyTap2(String u, String d) {}
 void dummyHover1(String u, String d, bool h) {}
@@ -90,41 +117,112 @@ void dummyHover2(String u, String d, bool h) {}
 
 void main() {
   // --- Test Styles & Callbacks (Keep as before) ---
+  // Note: baseStyle here is only used when *no* DefaultTextStyle is in context,
+  // which isn't the case in these tests due to MaterialApp.
   const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
   const rootBoldStyle = TextStyle(fontWeight: FontWeight.w900, color: Colors.red);
-  const rootUrlStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none); // Default blue
+  const rootUrlStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
   const rootCursor = SystemMouseCursors.text;
   final rootOnTap = dummyTap1;
 
-  const childUrlStyle = TextStyle(color: Colors.green, fontSize: 18); // Overrides color, adds size
-  const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow); // Override italic!
+  const childUrlStyle = TextStyle(color: Colors.green, fontSize: 18);
+  const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
 
-  final childOnTap = dummyTap2; // Override tap
+  final childOnTap = dummyTap2;
   // ----------------------------------------------------
 
   group('TextfOptions Inheritance Tests', () {
     testWidgets('Falls back to defaults when no TextfOptions is present', (tester) async {
       ResolvedOptions? resolved;
+      final theme = ThemeData.light(); // Use a specific theme
+      TextStyle? capturedDefaultStyle; // To capture the style from context
 
       await tester.pumpWidget(
         MaterialApp(
+          theme: theme, // Provide theme
           home: Builder(
             builder: (context) {
-              resolved = ResolvedOptions.fromContext(context, baseStyle);
+              // Capture the actual DefaultTextStyle from the context where resolved is calculated
+              capturedDefaultStyle = DefaultTextStyle.of(context).style;
+              // Ensure we captured something sensible before proceeding
+              expect(capturedDefaultStyle, isNotNull, reason: "Failed to capture DefaultTextStyle");
+              expect(
+                capturedDefaultStyle!.fontSize,
+                isNotNull,
+                reason: "Captured DefaultTextStyle must have a fontSize",
+              );
+              // Pass the captured style explicitly as the base style
+              resolved = ResolvedOptions.fromContext(context, capturedDefaultStyle!);
               return const SizedBox();
             },
           ),
         ),
       );
 
-      expect(resolved, isNotNull);
-      // Verify resolved options match defaults merged with baseStyle
-      expect(resolved!.boldStyle?.fontWeight, DefaultStyles.boldStyle(baseStyle).fontWeight);
-      expect(resolved!.italicStyle?.fontStyle, DefaultStyles.italicStyle(baseStyle).fontStyle);
-      // URL Style: Check final merged properties
-      expect(resolved!.urlStyle?.color, DefaultStyles.urlStyle.color); // Should be default blue
-      expect(resolved!.urlStyle?.decoration, DefaultStyles.urlStyle.decoration); // Should have underline
-      expect(resolved!.urlStyle?.fontSize, baseStyle.fontSize); // Should have base font size
+      // Ensure resolution happened
+      expect(resolved, isNotNull, reason: "ResolvedOptions should not be null after pump");
+
+      // Ensure the captured style is still valid before using it in expectations
+      expect(capturedDefaultStyle, isNotNull, reason: "DefaultTextStyle should be available after pump");
+      expect(capturedDefaultStyle!.fontSize, isNotNull, reason: "DefaultTextStyle must have a fontSize after pump");
+
+      // Verify resolved options match defaults merged with the capturedDefaultStyle
+
+      // --- Check URL Style ---
+      // Check inherited properties first
+      expect(
+        resolved!.urlStyle?.fontSize,
+        capturedDefaultStyle!.fontSize, // Compare against the captured default size
+        reason: "URL style font size should match the DefaultTextStyle font size",
+      );
+      expect(
+        resolved!.urlStyle?.fontFamily,
+        capturedDefaultStyle!.fontFamily,
+        reason: "URL style font family should match the DefaultTextStyle font family",
+      );
+      // Check properties overridden by theme link style
+      expect(
+        resolved!.urlStyle?.color,
+        theme.colorScheme.primary,
+        reason: "URL style color should be theme primary color",
+      );
+      expect(
+        resolved!.urlStyle?.decoration,
+        TextDecoration.underline,
+        reason: "URL style decoration should be underline",
+      );
+      expect(
+        resolved!.urlStyle?.decorationColor,
+        theme.colorScheme.primary,
+        reason: "URL style decoration color should be theme primary color",
+      );
+
+      // --- Check other styles (ensure they also use the correct base) ---
+      expect(
+        resolved!.boldStyle?.fontSize,
+        capturedDefaultStyle!.fontSize,
+        reason: "Bold style font size should match default",
+      );
+      expect(resolved!.boldStyle?.fontWeight, DefaultStyles.boldStyle(capturedDefaultStyle!).fontWeight);
+
+      expect(
+        resolved!.italicStyle?.fontSize,
+        capturedDefaultStyle!.fontSize,
+        reason: "Italic style font size should match default",
+      );
+      expect(resolved!.italicStyle?.fontStyle, DefaultStyles.italicStyle(capturedDefaultStyle!).fontStyle);
+
+      // Code Style: Check against theme defaults merged with base
+      expect(
+        resolved!.codeStyle?.fontSize,
+        capturedDefaultStyle!.fontSize,
+        reason: "Code style font size should match default",
+      );
+      expect(resolved!.codeStyle?.fontFamily, 'monospace');
+      expect(resolved!.codeStyle?.color, theme.colorScheme.onSurfaceVariant);
+      expect(resolved!.codeStyle?.backgroundColor, theme.colorScheme.surfaceContainer);
+
+      // --- Check non-style properties ---
       expect(resolved!.urlMouseCursor, DefaultStyles.urlMouseCursor);
       expect(resolved!.onUrlTap, isNull);
       expect(resolved!.onUrlHover, isNull);
@@ -132,12 +230,14 @@ void main() {
 
     testWidgets('Uses values from single ancestor', (tester) async {
       ResolvedOptions? resolved;
+      final theme = ThemeData.light();
 
       await tester.pumpWidget(
         MaterialApp(
+          theme: theme,
           home: TextfOptions(
             boldStyle: rootBoldStyle,
-            urlStyle: rootUrlStyle, // Default blue, no decoration
+            urlStyle: rootUrlStyle, // blue, no decoration
             urlMouseCursor: rootCursor,
             onUrlTap: rootOnTap,
             // italicStyle left null
@@ -155,24 +255,26 @@ void main() {
       // Check specified values (merged with base)
       expect(resolved!.boldStyle?.fontWeight, rootBoldStyle.fontWeight);
       expect(resolved!.boldStyle?.color, rootBoldStyle.color);
-      expect(resolved!.boldStyle?.fontSize, baseStyle.fontSize);
+      expect(resolved!.boldStyle?.fontSize, baseStyle.fontSize); // Merged from base
       expect(resolved!.urlStyle?.color, rootUrlStyle.color); // Should be root blue
-      expect(resolved!.urlStyle?.decoration, rootUrlStyle.decoration);
-      expect(resolved!.urlStyle?.fontSize, baseStyle.fontSize);
+      expect(resolved!.urlStyle?.decoration, rootUrlStyle.decoration); // none from root
+      expect(resolved!.urlStyle?.fontSize, baseStyle.fontSize); // Merged from base
       expect(resolved!.urlMouseCursor, rootCursor);
       expect(resolved!.onUrlTap, same(rootOnTap));
       // Check unspecified (falls back to default effect on base)
-      expect(resolved!.italicStyle?.fontStyle, DefaultStyles.italicStyle(baseStyle).fontStyle);
-      expect(resolved!.italicStyle?.color, baseStyle.color);
+      expect(resolved!.italicStyle?.fontStyle, DefaultStyles.italicStyle(baseStyle).fontStyle); // Default italic
+      expect(resolved!.italicStyle?.color, baseStyle.color); // Base color
       // Check unspecified callback
       expect(resolved!.onUrlHover, isNull);
     });
 
     testWidgets('Nested options override ancestor values', (tester) async {
       ResolvedOptions? resolved;
+      final theme = ThemeData.light();
 
       await tester.pumpWidget(
         MaterialApp(
+          theme: theme,
           home: TextfOptions(
             // Root
             urlStyle: rootUrlStyle, // blue, no decoration
@@ -180,7 +282,7 @@ void main() {
             italicStyle: const TextStyle(fontStyle: FontStyle.italic, color: Colors.purple), // purple italic
             child: TextfOptions(
               // Child override
-              urlStyle: childUrlStyle, // green, size 18
+              urlStyle: childUrlStyle, // green, size 18 (no decoration specified)
               onUrlTap: childOnTap, // dummyTap2
               // Italic style NOT specified here
               child: Builder(
@@ -195,13 +297,14 @@ void main() {
       );
 
       expect(resolved, isNotNull);
-      // Check overridden values (come from child, merged with base, merged with default for missing props)
+      // Check overridden values (come from child, merged with base)
       expect(resolved!.urlStyle?.color, childUrlStyle.color); // green from child
       expect(resolved!.urlStyle?.fontSize, childUrlStyle.fontSize); // 18 from child
       expect(
         resolved!.urlStyle?.decoration,
-        DefaultStyles.urlStyle.decoration,
-      ); // default underline (neither root nor child specified it)
+        isNull, // Expect no decoration
+        reason: "Decoration should be null as child option didn't specify it",
+      );
       expect(resolved!.onUrlTap, same(childOnTap)); // dummyTap2 from child
 
       // Check non-overridden value (comes from root)
@@ -211,10 +314,12 @@ void main() {
     });
 
     testWidgets('Nested options inherit unspecified values from ancestor', (tester) async {
-      // Identical to the previous test case with the same name, should pass now
       ResolvedOptions? resolved;
+      final theme = ThemeData.light();
+
       await tester.pumpWidget(
         MaterialApp(
+          theme: theme,
           home: TextfOptions(
             // Root (provides bold, tap, rootUrl)
             boldStyle: rootBoldStyle, // w900, red
@@ -222,7 +327,7 @@ void main() {
             urlStyle: rootUrlStyle, // blue, no decoration
             child: TextfOptions(
               // Child (provides childUrl, italic, hover)
-              urlStyle: childUrlStyle, // green, 18
+              urlStyle: childUrlStyle, // green, 18 (no decoration)
               italicStyle: childItalicStyle, // normal, yellow bg
               onUrlHover: dummyHover2,
               // boldStyle is null here
@@ -248,7 +353,11 @@ void main() {
       // Value specified in Child (overriding Root for url)
       expect(resolved!.urlStyle?.color, childUrlStyle.color); // green
       expect(resolved!.urlStyle?.fontSize, childUrlStyle.fontSize); // 18
-      expect(resolved!.urlStyle?.decoration, DefaultStyles.urlStyle.decoration); // default underline
+      expect(
+        resolved!.urlStyle?.decoration,
+        isNull, // Expect no decoration
+        reason: "Decoration should be null as child option didn't specify it",
+      );
 
       // Value NOT specified in Child (inherited from Root)
       expect(resolved!.boldStyle?.fontWeight, rootBoldStyle.fontWeight); // w900
@@ -258,10 +367,12 @@ void main() {
     });
 
     testWidgets('Inheritance works across multiple levels', (tester) async {
-      // Identical to the previous test case with the same name, should pass now
       ResolvedOptions? resolved;
+      final theme = ThemeData.light();
+
       await tester.pumpWidget(
         MaterialApp(
+          theme: theme,
           home: TextfOptions(
             // Level 1 (Root: bold, tap)
             boldStyle: rootBoldStyle, // w900, red
@@ -273,6 +384,7 @@ void main() {
                 // Level 3 (Leaf: url, hover)
                 urlStyle: childUrlStyle, // green, 18
                 onUrlHover: dummyHover2,
+                // codeStyle not specified anywhere
                 child: Builder(
                   builder: (context) {
                     resolved = ResolvedOptions.fromContext(context, baseStyle); // black, 16
@@ -297,25 +409,33 @@ void main() {
       expect(resolved!.boldStyle?.fontWeight, rootBoldStyle.fontWeight); // w900
       expect(resolved!.boldStyle?.color, rootBoldStyle.color); // red
       expect(resolved!.onUrlTap, same(rootOnTap));
-      // Comes from Default (Not specified anywhere)
-      expect(resolved!.codeStyle?.fontFamily, DefaultStyles.codeStyle(baseStyle).fontFamily);
-      expect(resolved!.urlMouseCursor, DefaultStyles.urlMouseCursor);
+      // Comes from Default (Not specified anywhere) - Check Code style default
+      expect(
+        resolved!.codeStyle?.fontFamily,
+        'monospace', // Expect default monospace
+        reason: "Code style fallback should use monospace font",
+      );
+      expect(resolved!.codeStyle?.color, theme.colorScheme.onSurfaceVariant); // Theme color
+      expect(resolved!.urlMouseCursor, DefaultStyles.urlMouseCursor); // Default cursor
     });
 
     testWidgets('Correctly merges styles with baseStyle', (tester) async {
-      // Identical to the previous test case with the same name, should pass now
       ResolvedOptions? resolved;
+      final theme = ThemeData.light();
+      // Use a distinct base style
       const specificBaseStyle = TextStyle(fontSize: 10, fontFamily: 'Arial', color: Colors.grey);
 
       await tester.pumpWidget(
         MaterialApp(
+          theme: theme,
           home: TextfOptions(
             boldStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red), // Override weight and color
             italicStyle: const TextStyle(fontStyle: FontStyle.italic), // Only specify italic effect
             urlStyle: const TextStyle(
+              // Specify only decoration properties
               decoration: TextDecoration.lineThrough,
               decorationColor: Colors.orange,
-            ), // Override decoration+color
+            ),
             child: Builder(
               builder: (context) {
                 resolved = ResolvedOptions.fromContext(context, specificBaseStyle); // grey, 10, Arial
@@ -338,11 +458,16 @@ void main() {
       expect(resolved!.italicStyle?.color, specificBaseStyle.color); // from base
       expect(resolved!.italicStyle?.fontSize, specificBaseStyle.fontSize); // from base
 
-      // URL: Should have base props + override props + default color (as override didn't specify color)
+      // URL: Should have base props + override props. Color comes from base as option didn't specify it.
       expect(resolved!.urlStyle?.decoration, TextDecoration.lineThrough); // from override
       expect(resolved!.urlStyle?.decorationColor, Colors.orange); // from override
-      expect(resolved!.urlStyle?.color, DefaultStyles.urlStyle.color); // default blue (override didn't specify)
+      expect(
+        resolved!.urlStyle?.color,
+        specificBaseStyle.color, // Should be grey from base
+        reason: "URL color should be from baseStyle as option didn't specify it",
+      );
       expect(resolved!.urlStyle?.fontSize, specificBaseStyle.fontSize); // from base
+      expect(resolved!.urlStyle?.fontFamily, specificBaseStyle.fontFamily); // from base
     });
   });
 }

@@ -92,15 +92,39 @@ void main() {
       });
 
       testWidgets('code text applies monospace and background', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+        late BuildContext mockContext;
+        final lightTheme = ThemeData.light();
+
+        // Setup context
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: lightTheme,
+            home: Builder(
+              builder: (context) {
+                mockContext = context;
+                return Container();
+              },
+            ),
+          ),
+        );
+        final parser = TextfParser();
+
         final spans = parser.parse('`code`', mockContext, const TextStyle());
         expect(spans.length, 1);
         expect((spans[0] as TextSpan).style?.fontFamily, 'monospace');
         expect(
           (spans[0] as TextSpan).style?.backgroundColor,
-          const Color(0xFFF5F5F5),
+          // Expect theme surfaceContainer instead of old hardcoded grey
+          lightTheme.colorScheme.surfaceContainer,
+          reason: "Code background should come from theme",
         );
         expect((spans[0] as TextSpan).text, 'code');
+        expect(
+          (spans[0] as TextSpan).style?.color,
+          // Expect theme text color for code
+          lightTheme.colorScheme.onSurfaceVariant,
+          reason: "Code text color should come from theme",
+        );
       });
 
       testWidgets('base style is preserved and extended', (tester) async {
