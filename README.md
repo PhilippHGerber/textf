@@ -20,16 +20,6 @@ The name "Textf" is inspired by the C standard library function `printf` (print 
 
 Perfect for chat applications, comment sections, UI elements, and any scenario where simple inline formatting is all you need.
 
-## Screenshots
-
-|                 Basic Formatting                 |                 Nested Formatting                  |                  Complex Formatting                  |
-| :----------------------------------------------: | :------------------------------------------------: | :--------------------------------------------------: |
-| ![Basic Formatting](https://github.com/PhilippHGerber/textf/raw/main/images/basic_formatting.png) | ![Nested Formatting](https://github.com/PhilippHGerber/textf/raw/main/images/nested_formatting.png) | ![Complex Formatting](https://github.com/PhilippHGerber/textf/raw/main/images/complex_formatting.png) |
-
-|             Chat Bubble Example             |             Notification Example              |             Links Example              |
-| :-----------------------------------------: | :-------------------------------------------: | :-------------------------------------------: |
-| ![Chat Bubble](https://github.com/PhilippHGerber/textf/raw/main/images/chat_bubble.png) | ![Notification](https://github.com/PhilippHGerber/textf/raw/main/images/notification.png) | ![Links](https://github.com/PhilippHGerber/textf/raw/main/images/links.png) |
-
 ## Installation
 
 Add Textf to your `pubspec.yaml`:
