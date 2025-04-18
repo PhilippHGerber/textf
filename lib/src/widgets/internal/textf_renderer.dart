@@ -86,6 +86,7 @@ class TextfRendererState extends State<TextfRenderer> {
     // It considers the widget's explicit style and the ambient DefaultTextStyle.
     final DefaultTextStyle defaultTextStyle = DefaultTextStyle.of(context);
     final TextStyle currentBaseStyle = widget.style ?? defaultTextStyle.style;
+    final TextScaler effectiveScaler = widget.textScaler ?? MediaQuery.textScalerOf(context);
 
     // Invoke the parser. The parser instance (widget.parser) is expected
     // to handle the creation and usage of TextfStyleResolver internally
@@ -94,6 +95,7 @@ class TextfRendererState extends State<TextfRenderer> {
       widget.data,
       context, // Pass the current BuildContext, needed by the style resolver within the parser.
       currentBaseStyle,
+      textScaler: effectiveScaler,
     );
 
     // Render the parsed spans using Text.rich.
@@ -112,7 +114,7 @@ class TextfRendererState extends State<TextfRenderer> {
       locale: widget.locale,
       softWrap: widget.softWrap,
       overflow: widget.overflow,
-      textScaler: widget.textScaler,
+      textScaler: effectiveScaler,
       maxLines: widget.maxLines,
       semanticsLabel: widget.semanticsLabel,
       textWidthBasis: widget.textWidthBasis,

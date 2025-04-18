@@ -43,6 +43,9 @@ class ParserState {
   /// Used to prevent double processing.
   final Set<int> processedIndices = {};
 
+  /// An optional `TextScaler` for scaling the text.
+  final TextScaler? textScaler;
+
   /// Creates a new parser state.
   ///
   /// Requires the token list, the base text style, the map of valid
@@ -51,7 +54,8 @@ class ParserState {
     required this.tokens,
     required this.baseStyle,
     required this.matchingPairs,
-    required this.styleResolver, // Resolver is now passed in
+    required this.styleResolver,
+    this.textScaler,
   });
 
   /// Flushes the accumulated `textBuffer` as a `TextSpan` with the current formatting applied.

@@ -70,8 +70,9 @@ class TextfParser {
   List<InlineSpan> parse(
     String text,
     BuildContext context,
-    TextStyle baseStyle,
-  ) {
+    TextStyle baseStyle, {
+    TextScaler? textScaler,
+  }) {
     // Fast path for empty text
     if (text.isEmpty) {
       return <InlineSpan>[];
@@ -102,6 +103,7 @@ class TextfParser {
       baseStyle: baseStyle,
       matchingPairs: validPairs, // Use the validated pairs
       styleResolver: resolver,
+      textScaler: textScaler,
     );
 
     // 5. Process tokens sequentially
@@ -197,13 +199,14 @@ class TextfParser {
     validPairs.forEach((openIndex, closeIndex) {
       // Ensure we only print each pair once, starting from the opening marker
       if (!processedPairs.contains(openIndex) && !processedPairs.contains(closeIndex)) {
-         if (openIndex < closeIndex) { // Basic check to assume lower index is opener
-            final openToken = tokens[openIndex];
-            final closeToken = tokens[closeIndex];
-            debugPrint('  - ${openToken.type} ($openIndex:"${openToken.value}") <-> ($closeIndex:"${closeToken.value}")');
-            processedPairs.add(openIndex);
-            processedPairs.add(closeIndex);
-         }
+        if (openIndex < closeIndex) {
+          // Basic check to assume lower index is opener
+          final openToken = tokens[openIndex];
+          final closeToken = tokens[closeIndex];
+          debugPrint('  - ${openToken.type} ($openIndex:"${openToken.value}") <-> ($closeIndex:"${closeToken.value}")');
+          processedPairs.add(openIndex);
+          processedPairs.add(closeIndex);
+        }
       }
     });
     debugPrint('------------------------');
