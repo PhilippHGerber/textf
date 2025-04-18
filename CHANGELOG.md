@@ -2,6 +2,27 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 0.3.0 - 2025-04-18
+
+### Added
+
+- **Theme-Aware Default Styling:** Implemented theme-aware default styling for inline code (`` `code` ``) and links (`[text](url)`). Their appearance now automatically adapts to the application's `ThemeData` (e.g., using `colorScheme.primary` for links, theme-appropriate background/text for code) unless overridden by `TextfOptions`.
+- **`strikethroughThickness` Option:** Added the `strikethroughThickness` property to `TextfOptions` to allow customizing the line thickness for `~~strikethrough~~` text when not providing a full `strikethroughStyle`.
+- **`TextScaler` Support:** Added support for the `textScaler` property, allowing `Textf` to respect system font scaling settings and custom `TextScaler` instances, similar to the standard `Text` widget.
+
+### Changed
+
+- **Documentation:** Significantly enhanced `README.md` with detailed explanations of all `TextfOptions` properties, their inheritance behavior, and added styling recommendations.
+- **Code Font Defaults:** Improved default font family fallbacks for inline code (`code`) for better cross-platform rendering when a specific `codeStyle` is not provided (uses `RobotoMono`, `Menlo`, `Courier New`, `monospace`).
+
+### Removed
+
+- **Internal Caching:** Removed the internal caching mechanism for parsed results to simplify the parsing logic and resolve potential inconsistencies during hot reload. Performance remains optimized through efficient algorithms.
+
+### Fixed
+
+- **Internal:** Updated internal tests to correctly account for the new theme-aware default styles.
+
 ## 0.2.1 - 2025-04-12
 
 ### Fixed
