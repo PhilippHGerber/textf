@@ -51,7 +51,7 @@ class PairingResolver {
       if (token.type == TokenType.text) continue;
 
       // Skip link-related tokens as they're handled separately
-      if (_isLinkToken(token.type)) {
+      if (token.type.isLinkToken) {
         continue;
       }
 
@@ -73,17 +73,4 @@ class PairingResolver {
     }
   }
 
-  /// Checks if a token type is link-related.
-  ///
-  /// Link tokens are handled differently from formatting tokens.
-  ///
-  /// @param type The token type to check
-  /// @return True if the token is link-related, false otherwise
-  static bool _isLinkToken(TokenType type) {
-    return type == TokenType.linkStart ||
-        type == TokenType.linkText ||
-        type == TokenType.linkSeparator ||
-        type == TokenType.linkUrl ||
-        type == TokenType.linkEnd;
-  }
 }

@@ -21,19 +21,25 @@ enum TokenType {
   codeMarker,
 
   /// Opening square bracket for link: '['
-  linkStart,
+  linkStart(isLinkToken:true),
 
   /// Text content to be displayed for a link
-  linkText,
+  linkText(isLinkToken:true),
 
   /// Closing square bracket followed by opening parenthesis: ']('
-  linkSeparator,
+  linkSeparator(isLinkToken:true),
 
   /// URL content of a link
-  linkUrl,
+  linkUrl(isLinkToken:true),
 
   /// Closing parenthesis for link: ')'
-  linkEnd,
+  linkEnd(isLinkToken:true),
+  ;
+
+  const TokenType( {this.isLinkToken=false} );
+
+  /// Indicates whether this token type is part of a link.
+  final bool isLinkToken;
 }
 
 /// Represents a single token in the parsing process.
