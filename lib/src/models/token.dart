@@ -6,19 +6,19 @@ enum TokenType {
   text,
 
   /// Bold and italic formatting marker: '***' or '___'
-  boldItalicMarker,
+  boldItalicMarker(isFormattingMarker:true),
 
   /// Bold formatting marker: '**' or '__'
-  boldMarker,
+  boldMarker(isFormattingMarker:true),
 
   /// Italic formatting marker: '*' or '_'
-  italicMarker,
+  italicMarker(isFormattingMarker:true),
 
   /// Strikethrough formatting marker: '~~'
-  strikeMarker,
+  strikeMarker(isFormattingMarker: true),
 
   /// Inline code formatting marker: '`'
-  codeMarker,
+  codeMarker(isFormattingMarker:true),
 
   /// Opening square bracket for link: '['
   linkStart(isLinkToken:true),
@@ -36,7 +36,10 @@ enum TokenType {
   linkEnd(isLinkToken:true),
   ;
 
-  const TokenType( {this.isLinkToken=false} );
+  const TokenType( {this.isFormattingMarker=false, this.isLinkToken=false} );
+
+  /// Indicates whether this token type is standard formatting marker.
+  final bool isFormattingMarker;
 
   /// Indicates whether this token type is part of a link.
   final bool isLinkToken;
