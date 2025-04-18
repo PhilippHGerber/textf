@@ -8,7 +8,14 @@ import 'package:url_launcher/url_launcher.dart' as url_launcher;
 import '../widgets/example_card.dart';
 
 class UrlExampleScreen extends StatefulWidget {
-  const UrlExampleScreen({super.key});
+  final ThemeMode currentThemeMode;
+  final VoidCallback toggleThemeMode;
+
+  const UrlExampleScreen({
+    super.key,
+    required this.currentThemeMode,
+    required this.toggleThemeMode,
+  });
 
   @override
   State<UrlExampleScreen> createState() => _UrlExampleScreenState();
@@ -217,9 +224,20 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine the icon based on the current theme mode
+    final Brightness currentBrightness = Theme.of(context).brightness;
+    final IconData themeIcon =
+        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
     return Scaffold(
       appBar: AppBar(
         title: const Text('URL Examples'),
+        actions: [
+          IconButton(
+            icon: Icon(themeIcon),
+            tooltip: 'Toggle Theme',
+            onPressed: widget.toggleThemeMode,
+          ),
+        ],
       ),
       body: TextfOptions(
         // Parent options provide callbacks
@@ -250,7 +268,6 @@ Textf(
 )''',
               child: Textf(
                 'Visit [Flutter website](https://flutter.dev) for more information',
-                style: TextStyle(fontSize: 16),
               ),
             ),
             const SizedBox(height: 16),
@@ -274,7 +291,7 @@ TextfOptions(
   child: Textf(
     'Hover over [this link](https://example.com) '
     'to see the effect',
-    style: TextStyle(fontSize: 16),
+
   ),
 )
 ''',
@@ -291,7 +308,6 @@ TextfOptions(
                 child: Textf(
                   'Hover over [this link](https://example.com) '
                   'to see the effect',
-                  style: TextStyle(fontSize: 16),
                 ),
               ),
             ),
@@ -308,7 +324,6 @@ Textf(
 )''',
               child: Textf(
                 'Visit [Flutter](https://flutter.dev) or [Dart](https://dart.dev) websites',
-                style: TextStyle(fontSize: 16),
               ),
             ),
             const SizedBox(height: 16),
@@ -325,7 +340,6 @@ Textf(
 )''',
               child: Textf(
                 'Check out [**bold link**](https://example.com) and [*italic link*](https://example.org)',
-                style: TextStyle(fontSize: 16),
               ),
             ),
             const SizedBox(height: 16),
@@ -341,7 +355,6 @@ Textf(
 )''',
               child: Textf(
                 'Link with [**nested _italic_ style**](https://example.net)',
-                style: TextStyle(fontSize: 16),
               ),
             ),
             const SizedBox(height: 16),
@@ -357,7 +370,6 @@ Textf(
 )''',
               child: Textf(
                 'Contact [support](mailto:support@example.com) for assistance',
-                style: TextStyle(fontSize: 16),
               ),
             ),
             const SizedBox(height: 16),
@@ -374,7 +386,6 @@ Textf(
               child: Textf(
                 'Search for [Package Textf]'
                 '(https://pub.dev/packages?q=textf+markdown#results)',
-                style: TextStyle(fontSize: 16),
               ),
             ),
             const SizedBox(height: 16),
@@ -386,7 +397,6 @@ Textf(
               code: 'Textf(\n  \'Visit [Google](google.com)\',\n)',
               child: Textf(
                 'Visit [Google](google.com)',
-                style: TextStyle(fontSize: 16),
               ),
             ),
             const SizedBox(height: 24),

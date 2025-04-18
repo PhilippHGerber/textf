@@ -4,13 +4,31 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class ComplexFormattingScreen extends StatelessWidget {
-  const ComplexFormattingScreen({super.key});
+  final ThemeMode currentThemeMode;
+  final VoidCallback toggleThemeMode;
+
+  const ComplexFormattingScreen({
+    super.key,
+    required this.currentThemeMode,
+    required this.toggleThemeMode,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Determine the icon based on the current theme mode
+    final Brightness currentBrightness = Theme.of(context).brightness;
+    final IconData themeIcon =
+        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Complex Formatting'),
+        actions: [
+          IconButton(
+            icon: Icon(themeIcon),
+            tooltip: 'Toggle Theme',
+            onPressed: toggleThemeMode,
+          ),
+        ],
       ),
       body: SelectionArea(
         child: ListView(
@@ -23,11 +41,10 @@ class ComplexFormattingScreen extends StatelessWidget {
 Textf(
   'The **quick** _brown_ fox '
   'jumps over the ~~lazy~~ `dog`.',
-  style: TextStyle(fontSize: 16),
+
 )''',
               child: Textf(
                 'The **quick** _brown_ fox jumps over the ~~lazy~~ `dog`.',
-                style: TextStyle(fontSize: 16),
               ),
             ),
             SizedBox(height: 16),
@@ -58,10 +75,9 @@ Textf(
             ExampleCard(
               title: 'Unicode and Emoji Support',
               description: 'Formatting with non-Latin scripts and emoji',
-              code: 'Textf(\n  \'**你好世界** *안녕하세요* ~~Привет~~ `🌍`\',\n  style: TextStyle(fontSize: 16),\n)',
+              code: 'Textf(\n  \'**你好世界** *안녕하세요* ~~Привет~~ `🌍`\',\n  \n)',
               child: Textf(
                 '**你好世界** *안녕하세요* ~~Привет~~ `🌍`',
-                style: TextStyle(fontSize: 16),
               ),
             ),
             SizedBox(height: 16),
@@ -74,13 +90,12 @@ Textf(
   'formatting styles that will ~~likely~~ '
   'overflow and `demonstrate` how ellipsis works '
   'with formatted text.,
-  style: TextStyle(fontSize: 16),
+
   maxLines: 2,
   overflow: TextOverflow.ellipsis,
 )''',
               child: Textf(
                 'This is a **very long** text with _multiple_ formatting styles that will ~~likely~~ overflow and `demonstrate` how ellipsis works with formatted text.',
-                style: TextStyle(fontSize: 16),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
