@@ -1,6 +1,3 @@
-import 'dart:collection';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../core/formatting_utils.dart';
@@ -19,65 +16,57 @@ import 'tokenizer.dart';
 /// theme, and defaults), and generates properly styled [InlineSpan] objects for rendering.
 ///
 /// Key features:
-/// - Result caching for performance optimization.
 /// - Style resolution aware of TextfOptions and application Theme.
-/// - Fast paths for plain unformatted text.
-/// - Proper handling of nesting formatting (up to 2 levels deep).
-/// - Robust error handling for malformed formatting.
-/// - Escaped character support.
+/// - Fast paths for empty or plain unformatted text.
+/// - Handles nested formatting.
+/// - Handles malformed formatting by treating unpaired markers as plain text.
+/// - Escaped character support (handled by the tokenizer).
 /// - Support for [link text](url) with nested formatting inside links.
 class TextfParser {
-  /// Maximum number of parsed results to cache for performance optimization.
-  final int maxCacheSize;
-
-  /// Cache for previously parsed text results to avoid redundant parsing.
-  /// The key is a hash of the input text, base style, and generation counter (debug).
-  final LinkedHashMap<int, List<InlineSpan>> _cache = LinkedHashMap<int, List<InlineSpan>>();
-
   /// TextfTokenizer instance used to break down text into tokens.
   final TextfTokenizer _tokenizer;
 
-  /// A static generation counter that increases on every hot reload in debug mode.
-  /// Used to invalidate the cache correctly when styles (especially theme) might change.
-  static int _generation = 0;
-
-  /// Increments the generation counter on hot reload.
-  /// Called by `TextfRenderer.reassemble`.
-  static void onHotReload() {
-    if (kDebugMode) _generation++;
-  }
-
   /// Creates a new [TextfParser] instance.
   ///
-  /// - [maxCacheSize]: Controls how many parsed results are cached.
-  /// - [tokenizer]: An optional custom tokenizer instance.
+  /// - [tokenizer]: An optional custom tokenizer instance. If not provided,
+  ///   a default [TextfTokenizer] is created.
   TextfParser({
-    this.maxCacheSize = 100,
     TextfTokenizer? tokenizer,
   }) : _tokenizer = tokenizer ?? TextfTokenizer();
 
   /// Parses formatted text into a list of styled [InlineSpan] objects.
   ///
   /// This method orchestrates the parsing process:
-  /// 1. Checks for cached results.
-  /// 2. Handles fast paths for empty or plain text.
-  /// 3. Tokenizes the input text.
-  /// 4. Creates a `TextfStyleResolver` using the provided `context`.
-  /// 5. Identifies matching marker pairs using `PairingResolver`.
-  /// 6. Creates a `ParserState` containing tokens, valid pairs, and the resolver.
-  /// 7. Iterates through tokens:
-  ///    - Appends plain text to buffer.
-  ///    - Delegates valid link structures to `LinkHandler`.
-  ///    - Delegates valid, paired formatting markers to `FormatHandler`.
-  ///    - **Treats unpaired formatting markers as plain text.**
-  /// 8. Flushes any remaining text using the resolver via `ParserState`.
-  /// 9. Caches the resulting spans.
+  /// 1. Handles fast paths for empty or plain text (text without any potential markers).
+  /// 2. Tokenizes the input text using the configured [TextfTokenizer].
+  /// 3. Creates a `TextfStyleResolver` using the provided `context` to handle style lookups.
+  /// 4. Identifies matching, valid pairs of formatting markers (e.g., `*...*`) using `PairingResolver`.
+  ///    This step ensures only correctly paired markers are considered for formatting.
+  /// 5. Creates a `ParserState` to manage the parsing progress, including tokens, valid pairs,
+  ///    the style resolver, the current text buffer, active style stack, and processed token indices.
+  /// 6. Iterates through the tokens:
+  ///    - Skips tokens that have already been processed (e.g., as part of a link or format pair).
+  ///    - Appends plain text tokens (`TokenType.text`) to the `ParserState`'s text buffer.
+  ///    - If a `TokenType.linkStart` (`[`) is encountered, delegates processing to `LinkHandler`
+  ///      to attempt parsing a complete `[link text](url)` structure. The handler manages
+  ///      nested formatting within the link text and marks processed tokens.
+  ///    - If a formatting marker token (`*`, `_`, `**`, `__`, `***`, `___`, `~`, `` ` ``) is found:
+  ///        - Checks if this specific token instance is part of a *valid pair* identified in step 4.
+  ///        - If **paired**, delegates processing to `FormatHandler`. This handler manages the
+  ///          style stack (pushing/popping styles), flushes the text buffer with the previous style,
+  ///          and marks both the opening and closing marker tokens as processed.
+  ///        - If **unpaired**, treats the marker's literal value (e.g., "*") as plain text and
+  ///          appends it to the `ParserState`'s text buffer. Marks the unpaired marker token as processed.
+  ///    - Treats any other unexpected token types encountered during the loop as plain text.
+  /// 7. After iterating through all tokens, flushes any remaining text in the `ParserState`'s
+  ///    buffer using the current style context via `state.flushText()`.
+  /// 8. Returns the final list of generated [InlineSpan] objects from the `ParserState`.
   ///
-  /// - [text]: The input text with formatting markers.
-  /// - [context]: The current build context, required for theme and options lookup by the resolver.
-  /// - [baseStyle]: The base text style to apply to the text segments.
+  /// - [text]: The input string potentially containing formatting markers.
+  /// - [context]: The current build context, required for theme and options lookup by the `TextfStyleResolver`.
+  /// - [baseStyle]: The base text style to apply to unformatted text segments and as the foundation for styled segments.
   ///
-  /// Returns a list of [InlineSpan] objects with appropriate styling applied.
+  /// Returns a list of [InlineSpan] objects representing the styled text.
   List<InlineSpan> parse(
     String text,
     BuildContext context,
@@ -90,17 +79,10 @@ class TextfParser {
 
     // Fast path for plain text without formatting markers
     // Note: FormattingUtils.hasFormatting checks for *any* potential marker,
-    // including unpaired ones or link syntax.
+    // including unpaired ones or link syntax characters.
     if (!FormattingUtils.hasFormatting(text)) {
       // No potential formatting, return simple TextSpan list
       return <InlineSpan>[TextSpan(text: text, style: baseStyle)];
-    }
-
-    // Cache lookup
-    final cacheKey = _cacheKey(text, baseStyle);
-    final cachedSpans = _cache[cacheKey];
-    if (cachedSpans != null) {
-      return cachedSpans;
     }
 
     // --- Main Parsing Logic ---
@@ -124,7 +106,7 @@ class TextfParser {
 
     // 5. Process tokens sequentially
     for (int i = 0; i < tokens.length; i++) {
-      // Skip tokens already processed by handlers (e.g., inside a link or a valid pair)
+      // Skip tokens already processed by handlers (e.g., inside a link or a valid format pair)
       if (state.processedIndices.contains(i)) continue;
 
       final token = tokens[i];
@@ -133,45 +115,40 @@ class TextfParser {
       if (token.type == TokenType.text) {
         // It's plain text, just append to the buffer
         state.textBuffer += token.value;
-        // Mark as processed? Technically not needed as it doesn't affect stack,
-        // but good practice if logic changes later.
-        // state.processedIndices.add(i); // Optional for plain text
+        // No need to mark plain text as processed unless state management requires it
       } else if (token.type == TokenType.linkStart) {
-        // It's a potential link start '['
-        // Delegate link processing to LinkHandler
+        // Potential link start '['. Delegate to LinkHandler.
         final int? nextIndex = LinkHandler.processLink(context, state, i);
         if (nextIndex != null) {
-          // LinkHandler successfully processed a full link `[...](...)`
-          // It already marked all 5 tokens as processed.
+          // LinkHandler processed a full link `[...](...)`.
+          // It marked all involved tokens as processed.
           // Advance loop counter past the processed link.
-          i = nextIndex - 1; // nextIndex is after ')', loop needs index of ')'
+          i = nextIndex - 1; // nextIndex is the index *after* ')', loop needs index of ')'
         } else {
           // LinkHandler determined it wasn't a valid link starting at 'i'.
           // It added '[' to the buffer and marked index 'i' as processed.
-          // Loop continues normally to the next token.
+          // Loop continues normally.
         }
       }
-      // Is it a formatting marker (bold, italic, code, strike)?
+      // Is it a formatting marker (bold, italic, code, strike, etc.)?
       else if (_isFormattingMarker(token.type)) {
-        // Check if this specific marker instance is part of a *valid* pair
+        // Check if this specific marker instance is part of a *valid* pair.
         if (state.matchingPairs.containsKey(i)) {
           // Yes, it's part of a valid pair (either opening or closing).
-          // Delegate to FormatHandler to manage the stack and flush buffer.
+          // Delegate to FormatHandler to manage the stack and buffer.
           // FormatHandler will mark both this token and its pair as processed.
           FormatHandler.processFormat(context, state, i, token);
         } else {
-          // No, this marker instance is *not* part of a valid pair (e.g., "**abc").
+          // No, this marker instance is *not* part of a valid pair (e.g., "**abc" or "*abc").
           // Treat its literal value as plain text.
           state.textBuffer += token.value;
           // Mark this specific token as processed so it doesn't get reconsidered.
           state.processedIndices.add(i);
         }
       }
-      // Handle other potential token types (e.g., link components outside LinkHandler's scope,
-      // although the current LinkHandler should handle all parts of a valid link).
-      // If a token is not text, not linkStart, and not a formatting marker, what is it?
-      // Potentially linkSeparator, linkUrl, linkEnd if LinkHandler logic failed,
-      // or future token types. For now, treat unexpected types as text.
+      // Handle other token types (like linkSeparator, linkUrl, linkEnd) that might
+      // be encountered if not part of a structure successfully processed by LinkHandler.
+      // Treat them as plain text.
       else {
         // Fallback: Treat any other unexpected token type as plain text.
         state.textBuffer += token.value;
@@ -183,20 +160,10 @@ class TextfParser {
     // 6. Flush any remaining text in the buffer after the loop finishes
     state.flushText(context);
 
-    // 7. Cache the result
-    final resultSpans = state.spans;
-    if (maxCacheSize > 0) {
-      if (_cache.length >= maxCacheSize) {
-        // Maintain cache size limit
-        _cache.remove(_cache.keys.first);
-      }
-      _cache[cacheKey] = resultSpans;
-    }
-
-    return resultSpans;
+    return state.spans;
   }
 
-  /// Helper to check if a token type is a standard formatting marker.
+  /// Helper to check if a token type corresponds to a standard formatting marker.
   bool _isFormattingMarker(TokenType type) {
     return type == TokenType.boldMarker ||
         type == TokenType.italicMarker ||
@@ -205,16 +172,14 @@ class TextfParser {
         type == TokenType.codeMarker;
   }
 
-  /// Generates a cache key based on text, style, and debug generation counter.
-  int _cacheKey(String text, TextStyle style) {
-    // Include generation counter in debug mode to handle hot reload style changes
-    return kDebugMode ? Object.hash(text, style, _generation) : Object.hash(text, style);
-  }
-
   /// Debugging utility to view the tokenization and pairing process.
+  ///
+  /// Prints the input text, the list of tokens generated by the tokenizer,
+  /// and the map of valid, matching pairs identified by the `PairingResolver`.
+  /// This helps in understanding how the parser interprets the input string.
   void debugPairingProcess(String text, BuildContext context, TextStyle baseStyle) {
     final tokens = _tokenizer.tokenize(text);
-    // Get the *validated* pairs for debugging consistency
+    // Get the *validated* pairs, consistent with the main parse logic.
     final validPairs = PairingResolver.identifyPairs(tokens);
 
     debugPrint('--- TextfParser Debug ---');
@@ -223,22 +188,22 @@ class TextfParser {
     for (int i = 0; i < tokens.length; i++) {
       final token = tokens[i];
       // Indicate if the token is part of a valid pair
-      final isPaired = validPairs.containsKey(i);
-      final pairIndicator = isPaired ? " (Paired -> ${validPairs[i]})" : " (Unpaired)";
+      final pairTarget = validPairs[i];
+      final pairIndicator = pairTarget != null ? " (Paired -> $pairTarget)" : " (Unpaired)";
       debugPrint('  $i: ${token.type} (${token.position}, ${token.length}) $pairIndicator - "${token.value}"');
     }
     debugPrint('Valid Matching Pairs (${validPairs.length ~/ 2}):');
-    final processedPairs = <int>{};
+    final processedPairs = <int>{}; // Avoid printing pairs twice (once for open, once for close)
     validPairs.forEach((openIndex, closeIndex) {
+      // Ensure we only print each pair once, starting from the opening marker
       if (!processedPairs.contains(openIndex) && !processedPairs.contains(closeIndex)) {
-        if (openIndex < closeIndex) {
-          // Print only from the opening side
-          final openToken = tokens[openIndex];
-          final closeToken = tokens[closeIndex];
-          debugPrint('  - ${openToken.type} ($openIndex:"${openToken.value}") -> ($closeIndex:"${closeToken.value}")');
-          processedPairs.add(openIndex);
-          processedPairs.add(closeIndex);
-        }
+         if (openIndex < closeIndex) { // Basic check to assume lower index is opener
+            final openToken = tokens[openIndex];
+            final closeToken = tokens[closeIndex];
+            debugPrint('  - ${openToken.type} ($openIndex:"${openToken.value}") <-> ($closeIndex:"${closeToken.value}")');
+            processedPairs.add(openIndex);
+            processedPairs.add(closeIndex);
+         }
       }
     });
     debugPrint('------------------------');

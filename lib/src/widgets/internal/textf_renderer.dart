@@ -81,15 +81,6 @@ class TextfRenderer extends StatefulWidget {
 
 class TextfRendererState extends State<TextfRenderer> {
   @override
-  void reassemble() {
-    super.reassemble();
-    // Notify the parser's cache system about a hot reload.
-    // This helps ensure style changes (especially theme-related)
-    // are reflected without needing a full restart in debug mode.
-    TextfParser.onHotReload();
-  }
-
-  @override
   Widget build(BuildContext context) {
     // Determine the effective base text style for parsing.
     // It considers the widget's explicit style and the ambient DefaultTextStyle.

@@ -91,7 +91,7 @@ class LinkHandler {
 
       if (containsFormattingMarkers) {
         // Parse inner content, using the *resolved normal link style* as the base
-        final innerParser = TextfParser(maxCacheSize: 0); // Use a separate parser instance
+        final innerParser = TextfParser(); // Use a separate parser instance
         childrenSpans = innerParser.parse(
           rawLinkText,
           context, // Pass context for the inner parse

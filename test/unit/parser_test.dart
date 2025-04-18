@@ -278,21 +278,6 @@ void main() {
     });
 
     group('Cache Tests', () {
-      testWidgets('cache hit returns same spans', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final text = 'Cache **test**';
-        final style = TextStyle(fontSize: 16);
-
-        // Prime the cache
-        final firstParse = parser.parse(text, mockContext, style);
-
-        // Second parse should hit cache
-        final secondParse = parser.parse(text, mockContext, style);
-
-        // Verify same instance returned
-        expect(identical(firstParse, secondParse), true);
-      });
-
       testWidgets('different styles use different cache entries', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         final text = 'Cache **test**';
@@ -304,35 +289,6 @@ void main() {
 
         // Verify different instances returned
         expect(identical(firstParse, secondParse), false);
-      });
-
-      testWidgets('cache respects maxCacheSize', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-
-        // Create parser with small cache
-        final smallCacheParser = TextfParser(maxCacheSize: 2);
-
-        // Fill cache
-        final firstParse1 = smallCacheParser.parse('first **bold**', mockContext, TextStyle());
-        smallCacheParser.parse('second _italic_', mockContext, TextStyle());
-
-        // Parse first again, should be a cache hit
-        final firstParse2 = smallCacheParser.parse('first **bold**', mockContext, TextStyle());
-        // Verify same instance returned
-        expect(identical(firstParse1, firstParse2), true);
-
-        // Add one more to evict the first
-        smallCacheParser.parse('third `code`', mockContext, TextStyle());
-
-        // Parse first again, should be a cache miss
-        final firstParse3 = smallCacheParser.parse('first **bold**', mockContext, TextStyle());
-        // If it was a cache hit, they would be identical
-        expect(identical(firstParse1, firstParse3), false);
-
-        // Verify third is still in cache
-        final thirdParse1 = smallCacheParser.parse('third `code`', mockContext, TextStyle());
-        final thirdParse2 = smallCacheParser.parse('third `code`', mockContext, TextStyle());
-        expect(identical(thirdParse1, thirdParse2), true);
       });
     });
 
