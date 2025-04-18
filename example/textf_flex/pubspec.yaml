@@ -1,0 +1,34 @@
+name: textf_flex
+description: A new Flutter project to showcase Textf library with flex_color_scheme
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.0.0"
+
+dependencies:
+  cupertino_icons: ^1.0.2
+  flex_color_scheme: ^8.2.0
+  flutter:
+    sdk: flutter
+  textf:
+    path: ../../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/fonts/
+
+  fonts:
+    - family: RobotoMono
+      fonts:
+        - asset: assets/fonts/RobotoMono-VariableFont_wght.ttf
+        - asset: assets/fonts/RobotoMono-Italic-VariableFont_wght.ttf
+          style: italic
