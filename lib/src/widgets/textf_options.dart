@@ -63,6 +63,12 @@ class TextfOptions extends InheritedWidget {
   /// Styling for inline code text. Merged **onto** the base text style if provided.
   final TextStyle? codeStyle;
 
+  /// Optional thickness for the default strikethrough decoration line.
+  /// This value is only used if `strikethroughStyle` is *not* provided.
+  /// If null, `DefaultStyles.defaultStrikethroughThickness` is used.
+  /// Inherits up the tree.
+  final double? strikethroughThickness;
+
   /// Creates a new TextfOptions instance to provide configuration down the tree.
   const TextfOptions({
     super.key,
@@ -77,6 +83,7 @@ class TextfOptions extends InheritedWidget {
     this.boldItalicStyle,
     this.strikethroughStyle,
     this.codeStyle,
+    this.strikethroughThickness,
   });
 
   /// Finds the nearest [TextfOptions] ancestor in the widget tree.
@@ -225,9 +232,13 @@ class TextfOptions extends InheritedWidget {
 
   /// Finds the first non-null [urlMouseCursor] defined up the tree, falling back to default.
   MouseCursor? getEffectiveUrlMouseCursor(BuildContext context) {
-    // Return type is nullable because _findFirstAncestorValue returns nullable
     return _findFirstAncestorValue(context, (o) => o.urlMouseCursor);
-    // The resolver will apply the final DefaultStyles.urlMouseCursor fallback if this returns null.
+  }
+
+  /// Finds the first non-null [strikethroughThickness] defined up the tree.
+  /// Returns null if none is found (resolver applies final default).
+  double? getEffectiveStrikethroughThickness(BuildContext context) {
+    return _findFirstAncestorValue(context, (o) => o.strikethroughThickness);
   }
 
   /// Determines if the widget tree should be rebuilt when options change.
@@ -244,6 +255,7 @@ class TextfOptions extends InheritedWidget {
         italicStyle != oldWidget.italicStyle ||
         boldItalicStyle != oldWidget.boldItalicStyle ||
         strikethroughStyle != oldWidget.strikethroughStyle ||
-        codeStyle != oldWidget.codeStyle;
+        codeStyle != oldWidget.codeStyle ||
+        strikethroughThickness != oldWidget.strikethroughThickness;
   }
 }

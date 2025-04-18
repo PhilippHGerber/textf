@@ -52,15 +52,16 @@ class ResolvedOptions {
       final Color codeBackgroundColor = theme.colorScheme.surfaceContainer;
       final Color codeForegroundColor = theme.colorScheme.onSurfaceVariant;
       const String codeFontFamily = 'monospace';
-      final List<String> codeFontFamilyFallback =
-          DefaultStyles.codeStyle(currentBase).fontFamilyFallback ?? ['RobotoMono', 'Menlo', 'Courier New'];
+      // FIX: Use the constant directly from DefaultStyles
+      final List<String> codeFontFamilyFallback = DefaultStyles.defaultCodeFontFamilyFallback;
 
       return currentBase.copyWith(
         fontFamily: codeFontFamily,
-        fontFamilyFallback: codeFontFamilyFallback,
+        fontFamilyFallback: codeFontFamilyFallback, // Use the constant list
         backgroundColor: codeBackgroundColor,
-        color: codeForegroundColor,
+        color: codeForegroundColor, // Theme color overrides base color
         letterSpacing: currentBase.letterSpacing ?? 0,
+        // Other properties like fontSize, height are inherited from currentBase
       );
     }
 

@@ -53,7 +53,16 @@ class TextfStyleResolver {
         case TokenType.boldItalicMarker:
           return DefaultStyles.boldItalicStyle(baseStyle); // Relative default
         case TokenType.strikeMarker:
-          return DefaultStyles.strikethroughStyle(baseStyle); // Relative default
+          // No full style override from options, use default effect.
+          // Check if a specific thickness is provided via options.
+          final double? thicknessOption = _nearestOptions?.getEffectiveStrikethroughThickness(context);
+          // Use the option thickness if provided, otherwise use the default thickness.
+          final double finalThickness = thicknessOption ?? DefaultStyles.defaultStrikethroughThickness;
+          // Apply the default strikethrough effect with the resolved thickness.
+          return DefaultStyles.strikethroughStyle(
+            baseStyle,
+            thickness: finalThickness,
+          );
         case TokenType.codeMarker:
           return _getThemeBasedCodeStyle(baseStyle); // Theme-based default
         // Link styles are handled separately by resolveLinkStyle/resolveLinkHoverStyle
@@ -172,17 +181,16 @@ class TextfStyleResolver {
 
     // Use monospace font family
     const String codeFontFamily = 'monospace';
-    final List<String> codeFontFamilyFallback =
-        DefaultStyles.codeStyle(baseStyle).fontFamilyFallback ?? // Keep original fallbacks
-            ['RobotoMono', 'Menlo', 'Courier New'];
+    // Use the constant list directly from DefaultStyles
+    final List<String> codeFontFamilyFallback = DefaultStyles.defaultCodeFontFamilyFallback;
 
     // Merge theme defaults with the base style
     return baseStyle.copyWith(
       fontFamily: codeFontFamily,
       fontFamilyFallback: codeFontFamilyFallback,
       backgroundColor: codeBackgroundColor,
-      color: codeForegroundColor, // Override base color for code
-      letterSpacing: baseStyle.letterSpacing ?? 0, // Keep or reset letter spacing
+      color: codeForegroundColor,
+      letterSpacing: baseStyle.letterSpacing ?? 0,
     );
   }
 
