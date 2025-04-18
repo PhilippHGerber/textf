@@ -145,14 +145,23 @@ Textf(
 
 The `TextfOptions` widget allows you to customize the appearance and behavior of formatted text throughout your app. It uses the InheritedWidget pattern to make configuration available to all descendant `Textf` widgets.
 
+When resolving styles or callbacks, Textf searches up the widget tree for the nearest `TextfOptions` ancestor that defines the specific property (e.g., `boldStyle`, `onUrlTap`). If no ancestor defines it, theme-based defaults (for code/links) or package defaults (for bold, italic, strikethrough) are used.
+
 ### Basic Usage
 
 ```dart
+// Import url_launcher if you need it for the tap callback
+// import 'package:url_launcher/url_launcher.dart';
+
 TextfOptions(
-  // Styling options
+  // Styling options (merged onto the base style)
   boldStyle: TextStyle(fontWeight: FontWeight.w900, color: Colors.red),
   italicStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.blue),
   codeStyle: TextStyle(fontFamily: 'RobotoMono', backgroundColor: Colors.grey.shade200),
+
+  strikethroughStyle: TextStyle(decorationColor: Colors.orange, decorationThickness: 3.0),
+  // -- OR -- Use thickness only if not providing a full strikethroughStyle:
+  // strikethroughThickness: 1.5, // Only applies if strikethroughStyle is null
 
   // Link options
   urlStyle: TextStyle(color: Colors.green),
@@ -161,44 +170,144 @@ TextfOptions(
 
   // Link callbacks
   onUrlTap: (url, displayText) {
-    launchUrl(Uri.parse(url));
+    // Example using url_launcher:
+    // final uri = Uri.tryParse(url);
+    // if (uri != null) {
+    //   launchUrl(uri);
+    // }
+    print('Tapped URL: $url (Display Text: $displayText)');
   },
   onUrlHover: (url, displayText, isHovering) {
     print('Hover state changed for $url: $isHovering');
   },
 
   child: Textf(
-    'This text has **bold**, *italic*, `code`, and [links](https://example.com).',
+    'This text has **bold**, *italic*, ~~strikethrough~~, `code`, and [links](https://example.com).',
     style: TextStyle(fontSize: 16),
   ),
 )
 ```
 
+**Available `TextfOptions` Properties:**
+
+- **`boldStyle`**: `TextStyle?` for bold text (`**bold**` or `__bold__`).
+  - Merged **onto** the base text style if provided.
+  - If `null`, `DefaultStyles.boldStyle` (adds `FontWeight.bold`) is used as a fallback.
+- **`italicStyle`**: `TextStyle?` for italic text (`*italic*` or `_italic_`).
+  - Merged **onto** the base text style if provided.
+  - If `null`, `DefaultStyles.italicStyle` (adds `FontStyle.italic`) is used as a fallback.
+- **`boldItalicStyle`**: `TextStyle?` for bold and italic text (`***both***` or `___both___`).
+  - Merged **onto** the base text style if provided.
+  - If `null`, `DefaultStyles.boldItalicStyle` (adds `FontWeight.bold` and `FontStyle.italic`) is used as a fallback.
+- **`strikethroughStyle`**: `TextStyle?` for strikethrough text (`~~strike~~`).
+  - Merged **onto** the base text style if provided.
+  - If `null`, the default strikethrough effect is applied using the resolved `strikethroughThickness`. Providing this overrides `strikethroughThickness`.
+- **`strikethroughThickness`**: `double?` Specifies the thickness of the strikethrough line.
+  - This property is **only used if `strikethroughStyle` is `null`**.
+  - If both `strikethroughStyle` and `strikethroughThickness` are `null` in the entire ancestor chain, `DefaultStyles.defaultStrikethroughThickness` (`1.5`) is used.
+- **`codeStyle`**: `TextStyle?` for inline code text (`` `code` ``).
+  - Merged **onto** the base text style if provided.
+  - Overrides the default theme-based styling for code if specified.
+- **`urlStyle`**: `TextStyle?` for link text (`[text](url)`) in its normal (non-hovered) state.
+  - Merged **onto** the base text style if provided.
+  - Overrides the default theme-based styling for links if specified.
+- **`urlHoverStyle`**: `TextStyle?` for link text when hovered.
+  - Merged **onto** the final *normal* link style (which includes base style and `urlStyle` if provided).
+  - Allows defining specific hover appearances.
+- **`urlMouseCursor`**: `MouseCursor?` The cursor to display when hovering over links.
+  - Searches up the widget tree for the first non-null value.
+  - If none found, defaults to `DefaultStyles.urlMouseCursor` (`SystemMouseCursors.click`).
+- **`onUrlTap`**: Callback `Function(String url, String rawDisplayText)?` triggered when a link is tapped or clicked.
+  - Searches up the widget tree for the first non-null callback.
+  - Provides the resolved URL and the original, unparsed display text (e.g., `**bold** link`).
+- **`onUrlHover`**: Callback `Function(String url, String rawDisplayText, bool isHovering)?` triggered when the mouse pointer enters or exits the bounds of a link.
+  - Searches up the widget tree for the first non-null callback.
+  - Provides the resolved URL, the raw display text, and the current hover state (`true` on enter, `false` on exit).
+
 ### Inheritance
 
-When multiple `TextfOptions` are nested in the widget tree, options are inherited through the hierarchy. If a specific property (e.g., `boldStyle`) is `null` on the nearest ancestor, Textf will automatically look up the widget tree for the next ancestor that defines that property.
+When multiple `TextfOptions` are nested in the widget tree, options are inherited through the hierarchy. If a specific property (e.g., `boldStyle`, `strikethroughThickness`, `onUrlTap`) is `null` on the nearest ancestor `TextfOptions` widget, Textf automatically searches further up the widget tree for the first ancestor that *does* define that property. This allows for global defaults with specific overrides in subtrees.
 
 ```dart
 TextfOptions(
   // Root level options (global defaults)
   boldStyle: TextStyle(fontWeight: FontWeight.w900),
+  strikethroughThickness: 2.0, // Use thickness here, applies if style is null below
   urlStyle: TextStyle(color: Colors.blue),
   onUrlTap: (url, text) => print('Root tap: $url'),
   child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // Align text left for readability
     children: [
-      Textf('This uses blue links and w900 bold.'),
+      Textf('This uses **blue links**, w900 bold, and ~~thickness 2.0~~.'),
+
+      SizedBox(height: 16), // Add some spacing
 
       TextfOptions(
-        // Override only URL style for this subtree
+        // Override only URL style and strikethrough appearance for this subtree
         urlStyle: TextStyle(color: Colors.green),
+        strikethroughStyle: TextStyle(decoration: TextDecoration.lineThrough, color: Colors.red, decorationThickness: 1.0), // Use full style here
+
         // boldStyle is inherited from the root
         // onUrlTap is inherited from the root
-        child: Textf('This uses green links and w900 bold.'),
+        // strikethroughThickness from root is IGNORED because strikethroughStyle is set here
+        child: Textf('This uses **green links**, w900 bold, and ~~red line thickness 1.0~~.'),
+      ),
+
+      SizedBox(height: 16),
+
+      TextfOptions(
+         // Override only thickness, inherit bold/url/tap from root
+         strikethroughThickness: 0.5,
+         child: Textf('This uses **blue links**, w900 bold, and ~~very thin thickness 0.5~~.'),
       ),
     ],
   ),
 )
 ```
+
+## Styling Recommendations
+
+To effectively style your `Textf` widgets and leverage the theme-aware defaults and customization options, follow these recommendations:
+
+1. **Use `DefaultTextStyle` for Base Styles:**
+    - **What:** Apply base styling like font size, default text color, or font family by wrapping `Textf` (or a common ancestor) with `DefaultTextStyle`.
+    - **Why:** This is the standard Flutter approach for inherited text styles. It ensures that `Textf`'s theme-aware defaults (for code and links) and relative format styles (bold, italic) are correctly merged onto a consistent base style provided by your app's theme or your explicit `DefaultTextStyle`.
+
+    ```dart
+    // Good: Set base style via DefaultTextStyle
+    DefaultTextStyle(
+      style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.deepPurple),
+      child: Textf(
+        'This text uses the default style. **Bold** inherits it, and `code` uses theme colors based on it.',
+      ),
+    )
+    ```
+
+2. **Use `TextfOptions` for Format-Specific Styles:**
+    - **What:** Use `TextfOptions` to customize the appearance of specific formatting types (e.g., making bold text blue, changing link underlines, setting a custom code background).
+    - **Why:** `TextfOptions` provides targeted overrides for how formatted segments look, taking precedence over theme and package defaults for those specific formats. See the "Customizing with TextfOptions" section for details.
+
+3. **Use `Textf`'s `style` Parameter Cautiously:**
+    - **What:** The `style` parameter directly on the `Textf` widget.
+    - **Why:** Use this primarily for one-off style overrides on a specific `Textf` instance *where you don't want it to inherit from `DefaultTextStyle`*. Be aware that providing an explicit `style` here **replaces** the `DefaultTextStyle` when the parser calculates its internal base style. If this explicit `style` is incomplete (e.g., only sets `fontSize`), it can interfere with the correct application of theme-based defaults (like code background/color) for that specific instance. Prefer `DefaultTextStyle` for setting the base.
+
+    ```dart
+    // Use with caution: Might interfere with theme defaults for code/links within this Textf
+    Textf(
+      'Specific override `code`.',
+      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic), // Overrides DefaultTextStyle here
+    )
+    ```
+
+4. **Understand Styling Precedence:**
+    - `Textf` resolves styles in this order (highest priority first):
+        1. **`TextfOptions`:** Specific style defined for the format type (e.g., `boldStyle`, `urlStyle`) found in the nearest ancestor `TextfOptions`.
+        2. **Theme/Package Defaults (if no Option):**
+            - For `code` and links: Theme-aware defaults derived from `ThemeData` (e.g., `colorScheme.primary` for links).
+            - For `bold`, `italic`, `strikethrough`: Relative styles applied to the base style (e.g., adding `FontWeight.bold`).
+        3. **Base Style:** The style inherited from `DefaultTextStyle` or provided directly via `Textf`'s `style` parameter.
+
+By following these guidelines, you can ensure predictable styling that integrates well with your application's theme while retaining full control over specific formatting appearances via `TextfOptions`.
 
 ## Properties
 
