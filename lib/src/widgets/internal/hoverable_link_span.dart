@@ -44,7 +44,6 @@ class HoverableLinkSpan extends StatefulWidget {
   /// and the new hover state (`true` for enter, `false` for exit).
   final Function(String url, String rawDisplayText, bool isHovering)? onHoverCallback;
 
-
   /// Creates an internal widget to manage hover state and interaction for a link.
   const HoverableLinkSpan({
     super.key,

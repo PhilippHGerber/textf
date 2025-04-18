@@ -25,7 +25,7 @@ class DefaultStyles {
   /// Default thickness for the strikethrough line decoration (`~~strikethrough~~`).
   /// Used by TextfStyleResolver when applying the default strikethrough effect
   /// if no specific `strikethroughThickness` is provided via TextfOptions.
-  static const double defaultStrikethroughThickness = 1.5; 
+  static const double defaultStrikethroughThickness = 1.5;
 
   /// Applies default bold formatting (`**bold**` or `__bold__`) to a base style.
   /// Used as a fallback by TextfStyleResolver if no `boldStyle` is found via TextfOptions.
