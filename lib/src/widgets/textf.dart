@@ -120,9 +120,6 @@ class Textf extends StatelessWidget {
   /// The color to use when painting the selection
   final Color? selectionColor;
 
-  // [TODO] A custom parser for the text formatting
-  // final TextfParser? parser;
-
   // Private static instance for default usage
   static final TextfParser _defaultParser = TextfParser();
 
