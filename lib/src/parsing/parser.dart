@@ -133,7 +133,7 @@ class TextfParser {
         }
       }
       // Is it a formatting marker (bold, italic, code, strike, etc.)?
-      else if (_isFormattingMarker(token.type)) {
+      else if (token.type.isFormattingMarker) {
         // Check if this specific marker instance is part of a *valid* pair.
         if (state.matchingPairs.containsKey(i)) {
           // Yes, it's part of a valid pair (either opening or closing).
@@ -163,15 +163,6 @@ class TextfParser {
     state.flushText(context);
 
     return state.spans;
-  }
-
-  /// Helper to check if a token type corresponds to a standard formatting marker.
-  bool _isFormattingMarker(TokenType type) {
-    return type == TokenType.boldMarker ||
-        type == TokenType.italicMarker ||
-        type == TokenType.boldItalicMarker ||
-        type == TokenType.strikeMarker ||
-        type == TokenType.codeMarker;
   }
 
   /// Debugging utility to view the tokenization and pairing process.
