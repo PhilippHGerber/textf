@@ -360,8 +360,8 @@ If you need more comprehensive Markdown features, consider a full Markdown packa
 ### Planned Features
 
 - 🔲 Full support for Flutter text properties
-- 🔲 Superscript and subscript with `^text^` and `~text~`
-- 🔲 Custom tokenizer/parser support
+- 🔲 Superscript and subscript with `^text^` and `~text~`: Textf('E = mc^2^ and H~2~O')
+- 🔲 Highlight/Mark Text: Textf('This is ==highlighted== text')
 - 🔲 RTL language optimization
 - 🔲 Improved accessibility features
 
