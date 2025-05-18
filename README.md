@@ -1,4 +1,4 @@
-# Textf
+# Textf • [![pub package](https://img.shields.io/pub/v/textf.svg)](https://pub.dev/packages/llmifier) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A lightweight, high-performance Flutter widget for simple inline text formatting.
 
@@ -26,7 +26,7 @@ Add Textf to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  textf: ^0.2.0
+  textf: ^0.4.0
 ```
 
 Then run:
@@ -50,7 +50,9 @@ class MyWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Textf(
-      'Hello **bold** *italic* ~~strikethrough~~ `code` [link](https://flutter.dev)',
+      'Hello **bold** *italic* ~~strikethrough~~ `code` '
+      '++underline++ ==highlight== '
+      '[link](https://flutter.dev)',
       style: TextStyle(fontSize: 16),
     );
   }
@@ -69,6 +71,8 @@ Textf supports the following inline formatting syntax, similar to a subset of Ma
 | Italic        | `*italic*` or `_italic_`     | *italic*          |
 | Bold+Italic   | `***both***` or `___both___` | ***both***        |
 | Strikethrough | `~~strikethrough~~`          | ~~strikethrough~~ |
+| Underline     | `++underline++`              | ++underline++     |
+| Highlight     | `==highlight==`              | ==highlight==     |
 | Code          | `` `code` ``                 | `code`            |
 | Link          | `[text](url)`                | [Example Link](https://example.com) |
 
@@ -122,8 +126,8 @@ Using the same marker type for nested formatting may result in unexpected render
 
 ```dart
 Textf(
-  'The **quick** _brown_ fox jumps over '
-  'the ~~lazy~~ `dog`. \*Escaped asterisks\*',
+  'The **quick** _brown_ fox jumps over \n'
+  'the ~~lazy~~ ++wily++ ==alert== `dog`. \*Escaped asterisks\*',
   style: TextStyle(fontSize: 18),
   textAlign: TextAlign.center,
 )
@@ -150,8 +154,9 @@ TextfOptions(
   codeStyle: TextStyle(fontFamily: 'RobotoMono', backgroundColor: Colors.grey.shade200),
 
   strikethroughStyle: TextStyle(decorationColor: Colors.orange, decorationThickness: 3.0),
-  // -- OR -- Use thickness only if not providing a full strikethroughStyle:
-  // strikethroughThickness: 1.5, // Only applies if strikethroughStyle is null
+
+  underlineStyle: TextStyle(decoration: TextDecoration.underline, decorationColor: Colors.purple, decorationStyle: TextDecorationStyle.wavy),
+  highlightStyle: TextStyle(backgroundColor: Colors.greenAccent.withOpacity(0.5), color: Colors.black),
 
   // Link options
   urlStyle: TextStyle(color: Colors.green),
@@ -172,7 +177,9 @@ TextfOptions(
   },
 
   child: Textf(
-    'This text has **bold**, *italic*, ~~strikethrough~~, `code`, and [links](https://example.com).',
+    'This text has **bold**, *italic*, ~~strikethrough~~, `code`, '
+    '++underline++, ==highlight==, '
+    'and [links](https://example.com).',
     style: TextStyle(fontSize: 16),
   ),
 )
@@ -195,6 +202,12 @@ TextfOptions(
 - **`strikethroughThickness`**: `double?` Specifies the thickness of the strikethrough line.
   - This property is **only used if `strikethroughStyle` is `null`**.
   - If both `strikethroughStyle` and `strikethroughThickness` are `null` in the entire ancestor chain, `DefaultStyles.defaultStrikethroughThickness` (`1.5`) is used.
+- **`underlineStyle`**: `TextStyle?` for underlined text (`++underline++`).
+  - Merged **onto** the base text style if provided.
+  - If `null`, `DefaultStyles.underlineStyle` (adds `TextDecoration.underline`) is used as a fallback. The decoration color and thickness are derived from the base style or package defaults.
+- **`highlightStyle`**: `TextStyle?` for highlighted text (`==highlight==`).
+  - Merged **onto** the base text style if provided.
+  - If `null`, a theme-aware default highlight style (e.g., using `Theme.of(context).colorScheme.tertiaryContainer` as background) is applied.
 - **`codeStyle`**: `TextStyle?` for inline code text (`` `code` ``).
   - Merged **onto** the base text style if provided.
   - Overrides the default theme-based styling for code if specified.
@@ -293,8 +306,8 @@ To effectively style your `Textf` widgets and leverage the theme-aware defaults 
     - `Textf` resolves styles in this order (highest priority first):
         1. **`TextfOptions`:** Specific style defined for the format type (e.g., `boldStyle`, `urlStyle`) found in the nearest ancestor `TextfOptions`.
         2. **Theme/Package Defaults (if no Option):**
-            - For `code` and links: Theme-aware defaults derived from `ThemeData` (e.g., `colorScheme.primary` for links).
-            - For `bold`, `italic`, `strikethrough`: Relative styles applied to the base style (e.g., adding `FontWeight.bold`).
+            - For `code`, links, and `highlight`: Theme-aware defaults derived from `ThemeData` (e.g., `colorScheme.primary` for links).
+            - For `bold`, `italic`, `strikethrough`, `underline`: Relative styles applied to the base style (e.g., adding `FontWeight.bold`).
         3. **Base Style:** The style inherited from `DefaultTextStyle` or provided directly via `Textf`'s `style` parameter.
 
 By following these guidelines, you can ensure predictable styling that integrates well with your application's theme while retaining full control over specific formatting appearances via `TextfOptions`.
@@ -334,7 +347,7 @@ Performance benchmarks show Textf maintains smooth rendering (60+ FPS) even with
 
 Textf is intentionally focused on inline formatting only:
 
-- Maximum nesting depth of 2 formatting levels
+- **Maximum nesting depth of 2 formatting levels**
 - No support for block elements (headings, lists, quotes, etc.)
 - No support for images
 - Designed for inline formatting and links only, not full Markdown rendering
@@ -350,6 +363,8 @@ If you need more comprehensive Markdown features, consider a full Markdown packa
 - ✅ Combined bold+italic with `***text***` or `___text___`
 - ✅ Strikethrough with `~~text~~`
 - ✅ Inline code with `` `code` ``
+- ✅ Underline with `++underline++`
+- ✅ Highlight with `==highlight==`
 - ✅ Nested formatting (up to 2 levels deep)
 - ✅ Escaped characters with backslash
 - ✅ Performance optimization with caching
@@ -361,7 +376,6 @@ If you need more comprehensive Markdown features, consider a full Markdown packa
 
 - 🔲 Full support for Flutter text properties
 - 🔲 Superscript and subscript with `^text^` and `~text~`: Textf('E = mc^2^ and H~2~O')
-- 🔲 Highlight/Mark Text: Textf('This is ==highlighted== text')
 - 🔲 RTL language optimization
 - 🔲 Improved accessibility features
 

@@ -86,7 +86,7 @@ class ScreenshotScreen extends StatefulWidget {
 
 class _ScreenshotScreenState extends State<ScreenshotScreen> {
   final TextEditingController _textController = TextEditingController(
-    text: 'Hello **bold** *italic* ~~strike~~ ++underline++ ==highlight== `code` [link](https://example.com)',
+    text: 'Hello **bold** *italic* ~~strikethrought~~ ++underline++ ==highlight== `code` [link](https://example.com)',
   );
   final GlobalKey _screenshotKey = GlobalKey();
 

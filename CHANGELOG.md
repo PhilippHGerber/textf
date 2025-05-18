@@ -2,7 +2,29 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
-## 0.3.0 - 2025-04-18
+## 0.4.0
+
+2025-05-18
+
+### Added
+
+- **Underline Formatting:** Implemented support for underline formatting with `++text++` syntax.
+
+- **Highlight Formatting:** Implemented support for highlight formatting with `==text==` syntax.
+
+- **Improved Decoration Handling:** Default styles for strikethrough and underline now attempt to combine with existing decorations on the base style, allowing for concurrent `++~~underline and strikethrough~~++`. `decorationColor` and `decorationThickness` from the most recently applied default decoration or `TextfOptions` will take precedence for the combined decoration.
+
+### Changed
+
+- **TextfOptions:** Extended with `underlineStyle` and `highlightStyle` properties.
+- **Link Formatting:**
+  - Nested text decorations within link display text (e.g., `[~~strikethrough~~](url)`) are now correctly combined with the link's own decoration (e.g., underline), ensuring both are visually applied.
+  - Improved application of `TextfOptions.urlHoverStyle`, ensuring hover-specific styles correctly merge with the link's resolved normal appearance, preserving properties like color and font size unless explicitly overridden by the hover style.
+- **Internal Refactoring:** Enhanced `TokenType` enum to directly indicate if a token is for links or formatting. This improves internal parsing logic in `PairingResolver` and `TextfParser` for minor performance gains and better code clarity. (Thanks @timmaffett!)
+
+## 0.3.0
+
+2025-04-18
 
 ### Added
 
@@ -23,13 +45,17 @@ All notable changes to the `textf` package will be documented in this file.
 
 - **Internal:** Updated internal tests to correctly account for the new theme-aware default styles.
 
-## 0.2.1 - 2025-04-12
+## 0.2.1
+
+2025-04-12
 
 ### Fixed
 
 - **Hot Reload Reliability:** Fixed an issue where changes made to `TextfOptions` (e.g., custom colors, styles) or internal formatting logic might not render correctly immediately after using hot reload during development. The internal parser cache is now properly invalidated only in debug mode during `reassemble`, ensuring UI consistency and improving the development workflow without affecting release build performance.
 
-## 0.2.0 - 2025-04-12
+## 0.2.0
+
+2025-04-12
 
 ### Added
 
@@ -53,7 +79,9 @@ All notable changes to the `textf` package will be documented in this file.
 - Updated default font family for inline code text to RobotoMono for better readability
 - Enabled trailing commas in analysis options for code consistency
 
-## 0.1.1 - 2025-04-05
+## 0.1.1
+
+2025-04-05
 
 ### Changed
 
@@ -65,7 +93,9 @@ All notable changes to the `textf` package will be documented in this file.
 
 - Formatted code for tests to meet Dart style guidelines
 
-## 0.1.0 - 2025-04-04
+## 0.1.0
+
+2025-04-04
 
 ### Added
 
