@@ -114,15 +114,17 @@ class TextfStyleResolver {
   ///
   /// Returns the final hover `TextStyle` for the link.
   TextStyle resolveLinkHoverStyle(TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _nearestOptions?.getEffectiveUrlHoverStyle(context, baseStyle);
+    // 1. Resolve the normal link style first
+    final TextStyle normalLinkStyle = resolveLinkStyle(baseStyle);
+    // 2. Try to get a hover-specific style from options, merging it onto the normalLinkStyle
+    final TextStyle? optionsStyle = _nearestOptions?.getEffectiveUrlHoverStyle(context, normalLinkStyle);
 
     if (optionsStyle != null) {
       return optionsStyle; // Use style from TextfOptions hierarchy
     } else {
-      // Fallback to theme-based default (which might be same as normal if not themed differently)
-      // For simplicity, the default hover style without options is the same as the normal link style.
-      // Specific hover effects require TextfOptions.
-      return _getThemeBasedLinkStyle(baseStyle);
+      // Fallback: No specific hover option.
+      // Default hover is same as normalLinkStyle.
+      return normalLinkStyle;
     }
   }
 

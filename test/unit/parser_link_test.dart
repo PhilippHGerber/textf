@@ -312,8 +312,11 @@ void main() {
         // Verify the inner span's style
         final innerSpan = hoverableWidget.initialChildrenSpans[0] as TextSpan;
         expect(innerSpan.text, 'Strikethrough Link');
-        expect(innerSpan.style?.decoration, TextDecoration.lineThrough, reason: "Inner span should have strikethrough");
-        // Check decoration color is inherited from base link style's color
+        expect(
+          innerSpan.style?.decoration,
+          TextDecoration.combine([TextDecoration.underline, TextDecoration.lineThrough]),
+          reason: "Inner span should combine link's underline with strikethrough",
+        ); // Check decoration color is inherited from base link style's color
         expect(innerSpan.style?.decorationColor, hoverableWidget.normalStyle.color);
 
         // Verify inheritance of base link style color
@@ -976,7 +979,10 @@ void main() {
 
         expect(innerSpans[4], isA<TextSpan>());
         expect((innerSpans[4] as TextSpan).text, 'Strike');
-        expect((innerSpans[4] as TextSpan).style?.decoration, TextDecoration.lineThrough);
+        expect(
+          (innerSpans[4] as TextSpan).style?.decoration,
+          TextDecoration.combine([TextDecoration.underline, TextDecoration.lineThrough]),
+        );
         expect((innerSpans[4] as TextSpan).style?.color, linkNormalColor);
 
         expect(innerSpans[5], isA<TextSpan>());

@@ -85,11 +85,11 @@ class TextfTokenizer {
             Token(
               TokenType.text,
               String.fromCharCode(nextChar),
-              pos + 1,
-              1,
+              pos + 1, // Position of the character itself
+              1, // Length of the character itself
             ),
           );
-          pos += 2;
+          pos += 2; // Skip escape character and the escaped character
           textStart = pos;
           continue;
         }
@@ -152,6 +152,7 @@ class TextfTokenizer {
           pos += 2;
           textStart = pos;
         } else {
+          // Single tilde treated as plain text, handled by falling through
           pos++;
         }
       } else if (currentChar == kBacktick) {
@@ -197,27 +198,28 @@ class TextfTokenizer {
         int linkTextEnd = -1;
 
         while (pos < length) {
+          // Inner loop for link text
           final int c = codeUnits[pos];
 
-          // Handle escape sequences
+          // Handle escape sequences (original simple version)
           if (c == kEscape && pos + 1 < length) {
-            pos += 2; // Skip escape and next character
+            pos += 2;
             continue;
           }
 
-          // Track nested brackets if we find them
+          // Track nested brackets
           if (c == kOpenBracket) {
             nestLevel++;
           } else if (c == kCloseBracket) {
             if (nestLevel > 0) {
               nestLevel--;
             } else {
-              // This is the closing bracket for our link
+              // This is the closing bracket for our link text
               linkTextEnd = pos;
 
               // Check if followed by opening parenthesis for URL
               if (pos + 1 < length && codeUnits[pos + 1] == kOpenParen) {
-                break;
+                break; // Found '](', proceed to URL parsing
               } else {
                 // Not a valid link separator ']( )'.
                 // The ']' found was not part of a valid link structure here.
@@ -251,18 +253,18 @@ class TextfTokenizer {
           // Valid '[text](' structure found.
           tokens.add(Token(TokenType.linkStart, '[', linkStartPos, 1));
 
-          // Add the link text
           if (linkTextEnd > linkTextStart) {
+            // If there's actual text between [ and ]
             tokens.add(
               Token(
-                TokenType.text,
+                TokenType.text, // It's just text at this stage
                 text.substring(linkTextStart, linkTextEnd),
                 linkTextStart,
                 linkTextEnd - linkTextStart,
               ),
             );
           } else {
-            // Empty link text
+            // Empty link text, e.g. [](url)
             tokens.add(Token(TokenType.text, '', linkTextStart, 0));
           }
 
@@ -272,56 +274,47 @@ class TextfTokenizer {
           // Now collect the URL
           int urlStart = pos;
           int urlEnd = -1;
-          nestLevel = 0;
+          nestLevel = 0; // For nested parentheses within URL
 
           while (pos < length) {
+            // Inner loop for URL
             final int c = codeUnits[pos];
-
-            // Handle escape sequences
             if (c == kEscape && pos + 1 < length) {
-              pos += 2;
+              pos += 2; // Original simple escape skipping
               continue;
             }
-
-            // Track nested parentheses
             if (c == kOpenParen) {
               nestLevel++;
             } else if (c == kCloseParen) {
               if (nestLevel > 0) {
                 nestLevel--;
               } else {
-                // This is the closing parenthesis for our URL
-                urlEnd = pos;
-                break;
+                urlEnd = pos; // Position of ')'
+                break; // Found ')'
               }
             }
-
             pos++;
-          }
+          } // End of inner loop for URL
 
-          // If we found a proper URL end
           if (urlEnd != -1) {
-            // Add the URL
+            // Valid URL found
             if (urlEnd > urlStart) {
+              // If there's actual text for URL
               tokens.add(
                 Token(
-                  TokenType.text,
+                  TokenType.text, // URL is also just text at this stage
                   text.substring(urlStart, urlEnd),
                   urlStart,
                   urlEnd - urlStart,
                 ),
               );
             } else {
-              // Empty URL
+              // Empty URL, e.g. [text]()
               tokens.add(Token(TokenType.text, '', urlStart, 0));
             }
-
-            // Add the closing parenthesis
             tokens.add(Token(TokenType.linkEnd, ')', urlEnd, 1));
-            pos = urlEnd + 1; // Move past ')'
-
-            // Update text start position
-            textStart = pos;
+            pos = urlEnd + 1; // Move main `pos` past ')'
+            textStart = pos; // Reset textStart for the next segment of plain text.
           } else {
             // Malformed URL (e.g., [text](url without closing paren).
             // The original fallback: treat the initial `[` at `linkStartPos` as plain text
@@ -348,13 +341,18 @@ class TextfTokenizer {
       // Fallback for other characters that are not part of other rules
       // (e.g. single `]`, `(`, `)` not consumed by link logic, or any other char)
       else {
-        // Regular text character, just move forward
         pos++;
       }
 
-      // Safety check to ensure forward progress
+      // Safety check to ensure forward progress if no specific token was matched
+      // and pos wasn't advanced by one of the specific rules.
       if (pos == startPosInLoop && pos < length) {
-        pos++; // Ensure we always advance
+        // This means the character at `startPosInLoop` was not handled by any
+        // of the if/else if blocks that would advance `pos`.
+        // This typically means it's a plain text character.
+        // The `pos++` in the final `else` block above should handle most plain chars.
+        // This is an ultimate fallback.
+        pos++;
       }
     }
 
