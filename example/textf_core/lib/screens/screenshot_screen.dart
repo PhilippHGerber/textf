@@ -86,7 +86,7 @@ class ScreenshotScreen extends StatefulWidget {
 
 class _ScreenshotScreenState extends State<ScreenshotScreen> {
   final TextEditingController _textController = TextEditingController(
-    text: 'Hello **bold** *italic* ~~strike~~ `code` [link](https://example.com)',
+    text: 'Hello **bold** *italic* ~~strike~~ ++underline++ ==highlight== `code` [link](https://example.com)',
   );
   final GlobalKey _screenshotKey = GlobalKey();
 
@@ -106,6 +106,8 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
   TextStyle? _urlStyle;
   TextStyle? _urlHoverStyle;
   MouseCursor? _urlMouseCursor;
+  TextStyle? _underlineStyle;
+  TextStyle? _highlightStyle;
 
   // --- Capture State ---
   bool _isCapturing = false;
@@ -295,8 +297,10 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
               controller: _textController,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                hintText: 'Enter text with **bold**, *italic*, `code`, [link](url)...',
-                helperText: 'Supports **bold**, *italic*, ~~strike~~, `code`, [link](url)',
+                hintText: 'Enter text with **bold**, *italic*, `code`, '
+                    '++underline++, ==highlight==, [link](url)...',
+                helperText: 'Supports **bold**, *italic*, ~~strike~~, `code`, '
+                    '++underline++, ==highlight==, [link](url)',
                 isDense: true,
               ),
               maxLines: 3,
@@ -382,6 +386,8 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
                           urlStyle: _urlStyle,
                           urlHoverStyle: _urlHoverStyle,
                           urlMouseCursor: _urlMouseCursor,
+                          underlineStyle: _underlineStyle,
+                          highlightStyle: _highlightStyle,
                           // Important: Textf widget *without* the explicit style parameter
                           child: Textf(
                             _textController.text,

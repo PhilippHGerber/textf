@@ -1,3 +1,4 @@
+// example/textf_core/lib/screens/complex_formatting_screen.dart
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 
@@ -33,72 +34,107 @@ class ComplexFormattingScreen extends StatelessWidget {
       body: SelectionArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
-          children: const [
+          children: [
             ExampleCard(
               title: 'Mixed Formatting',
               description: 'Combining multiple formatting styles in one text',
               code: '''
 Textf(
-  'The **quick** _brown_ fox '
-  'jumps over the ~~lazy~~ `dog`.',
-
+  'The **quick** _brown_ fox jumps over '
+  'the ~~lazy~~ ++wily++ ==alert== `dog`.'
 )''',
               child: Textf(
-                'The **quick** _brown_ fox jumps over the ~~lazy~~ `dog`.',
+                'The **quick** _brown_ fox jumps over '
+                'the ~~lazy~~ ++wily++ ==alert== `dog`.',
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ExampleCard(
-              title: 'Style Customization',
-              description: 'Using custom text style properties',
+              title: 'Style Customization with TextfOptions',
+              description: 'Using custom text style properties via TextfOptions for new formats',
               code: '''
-Textf(
-  '**Styled** _text_ with ~~formatting~~',
-  style: TextStyle(
-    fontSize: 18,
-    color: Colors.blue,
-    height: 1.5,
+TextfOptions(
+  underlineStyle: TextStyle(
+    decorationColor: Colors.deepOrange,
+    decorationStyle: TextDecorationStyle.dotted,
+    decorationThickness: 2,
   ),
-  textAlign: TextAlign.center,
+  highlightStyle: TextStyle(
+    backgroundColor: Colors.tealAccent.withOpacity(0.4),
+    color: Colors.black,
+    fontStyle: FontStyle.italic,
+  ),
+  child: Textf(
+    '**Styled** _text_ with ~~formatting~~, '
+    '++custom underline++, and ==custom highlight==.',
+    style: TextStyle(
+      fontSize: 18,
+      height: 1.5,
+    ),
+    textAlign: TextAlign.center,
+  ),
 )''',
-              child: Textf(
-                '**Styled** _text_ with ~~formatting~~',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.blue,
-                  height: 1.5,
+              child: TextfOptions(
+                underlineStyle: const TextStyle(
+                  decorationColor: Colors.deepOrange,
+                  decorationStyle: TextDecorationStyle.dotted,
+                  decorationThickness: 2,
                 ),
-                textAlign: TextAlign.center,
+                highlightStyle: TextStyle(
+                  backgroundColor: Colors.tealAccent.withValues(alpha: .4),
+                  color: Colors.black, // Text color for highlight
+                  fontStyle: FontStyle.italic,
+                ),
+                child: Textf(
+                  '**Styled** _text_ with ~~formatting~~, '
+                  '++custom underline++, and ==custom highlight==.',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
-            SizedBox(height: 16),
-            ExampleCard(
+            const SizedBox(height: 16),
+            const ExampleCard(
               title: 'Unicode and Emoji Support',
-              description: 'Formatting with non-Latin scripts and emoji',
-              code: 'Textf(\n  \'**你好世界** *안녕하세요* ~~Привет~~ `🌍`\',\n  \n)',
+              description: 'Formatting with non-Latin scripts and emoji, including new formats',
+              code: "Textf('**你好世界** *안녕하세요* ~~Привет~~ `🌍` ++🤯++ ==👀==')",
               child: Textf(
-                '**你好世界** *안녕하세요* ~~Привет~~ `🌍`',
+                '**你好世界** *안녕하세요* ~~Привет~~ `🌍` ++🤯++ ==👀==',
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ExampleCard(
               title: 'Long Text with Overflow',
-              description: 'Handling long text with ellipsis',
+              description: 'Handling long text with ellipsis, including new formats',
               code: '''
 Textf(
   'This is a **very long** text with _multiple_ '
   'formatting styles that will ~~likely~~ '
-  'overflow and `demonstrate` how ellipsis works '
-  'with formatted text.,
-
+  'overflow, ++be underlined++, ==get highlighted==, '
+  'and `demonstrate` how ellipsis works '
+  'with formatted text.',
   maxLines: 2,
   overflow: TextOverflow.ellipsis,
 )''',
               child: Textf(
-                'This is a **very long** text with _multiple_ formatting styles that will ~~likely~~ overflow and `demonstrate` how ellipsis works with formatted text.',
+                'This is a **very long** text with _multiple_ '
+                'formatting styles that will ~~likely~~ '
+                'overflow, ++be underlined++, ==get highlighted==, '
+                'and `demonstrate` how ellipsis works '
+                'with formatted text.',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+            ),
+            const SizedBox(height: 16),
+            const ExampleCard(
+              title: 'Combined Decorations',
+              description: 'Demonstrating combined strikethrough and underline',
+              code: "Textf('This text is ++~~both underlined and strikethrough~~++. And also ~~++vice versa++~~.')",
+              child: Textf('This text is ++~~both underlined and strikethrough~~++. And also ~~++vice versa++~~.'),
             ),
           ],
         ),

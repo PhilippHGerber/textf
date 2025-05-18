@@ -41,7 +41,18 @@ class ChatExampleScreen extends StatelessWidget {
               // No need to pass theme info to ExampleCard directly
               title: 'Chat Bubble',
               description: 'Formatted text in a chat bubble using theme colors', // Updated description
-              code: '''Container( // ... (code remains same) ''',
+              code: '''Container(
+  padding: EdgeInsets.all(12),
+  decoration: BoxDecoration(
+    color: Colors.blue.shade100,
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Textf(
+    'Hey! Did you read that **important** article '
+    'I sent you about _Flutter performance_?',
+    style: TextStyle(fontSize: 16),
+  ),
+)''',
               child: SizedBox(
                 width: double.infinity,
                 child: Align(
@@ -146,11 +157,12 @@ class _ChatExampleState extends State<ChatExample> {
       isMe: false,
     ),
     ChatMessage(
-      message: 'We should apply those techniques to our ~~slow~~ `app`!',
+      message: 'We should apply those techniques to our ~~slow~~ `app`! ++Remember to check the docs++.',
       isMe: false,
     ),
     ChatMessage(
-      message: 'Also check out the default [link](https://flutter.dev) and `code` styling.',
+      message:
+          'Also check out the default [link](https://flutter.dev) and `code` styling, ++underline++ and ==highlighting==.',
       isMe: true,
     ),
   ];
