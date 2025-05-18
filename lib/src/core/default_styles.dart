@@ -55,7 +55,7 @@ class DefaultStyles {
   /// or the default) is passed in here.
   static TextStyle strikethroughStyle(
     final TextStyle baseStyle, {
-    final double thickness = defaultStrikethroughThickness, 
+    final double thickness = defaultStrikethroughThickness,
   }) {
     TextDecoration newDecoration = TextDecoration.lineThrough;
     // Combine with existing decoration if present
