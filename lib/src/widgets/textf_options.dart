@@ -1,10 +1,87 @@
 import 'package:flutter/material.dart';
 
+// TODO: [Decoration Combining on Options Level]
+// The current `getEffective...Style` methods (e.g., getEffectiveUnderlineStyle,
+// getEffectiveStrikethroughStyle) use `baseStyle.merge(optionsStyle)`.
+// If `optionsStyle` defines a `decoration`, it will override any `decoration`
+// present in `baseStyle` (which might have been applied by an outer TextfOptions
+// or a DefaultStyles fallback for a different format).
+//
+// This is standard TextStyle.merge behavior and is predictable.
+// However, for scenarios where a user might want an `optionsStyle` (e.g., for strikethrough)
+// to *combine* its decoration with a decoration already present in `baseStyle`
+// (e.g., an underline from a parent TextfOptions or a DefaultStyles.underlineStyle call),
+// the current merge logic is insufficient for automatic combination.
+//
+// The `DefaultStyles.underlineStyle` and `DefaultStyles.strikethroughStyle` methods
+// *do* implement logic to combine decorations if called sequentially by the resolver
+// when no options are overriding them.
+//
+// Potential Solution for Options-Level Combining:
+// Each `getEffective...Style` method that deals with decorations could be made more
+// intelligent. If `optionsStyle.decoration` is not null and `baseStyle.decoration` is also
+// not null (and they are different and neither is TextDecoration.none),
+// it could explicitly use `TextDecoration.combine([baseStyle.decoration!, optionsStyle.decoration!])`.
+//
+// This would involve:
+// 1. Checking if both `baseStyle` and `optionsStyle` have non-null, different,
+//    and non-`TextDecoration.none` decorations.
+// 2. If so, creating a new `TextStyle` that includes the combined decoration.
+// 3. Carefully considering which `decorationColor` and `decorationThickness`
+//    should apply to the combined decoration (likely those from `optionsStyle`
+//    would take precedence for the part of the decoration it's contributing).
+//    This is a limitation of TextStyle, which only allows one color/thickness
+//    for all combined decorations.
+//
+// Example for getEffectiveStrikethroughStyle:
+/*
+TextStyle? getEffectiveStrikethroughStyle(BuildContext context, TextStyle baseStyle) {
+  final optionsSpecificStyle = _findFirstAncestorValue(context, (o) => o.strikethroughStyle);
+  if (optionsSpecificStyle == null) {
+    return null; // No option defined
+  }
+
+  TextStyle mergedStyle = baseStyle.merge(optionsSpecificStyle); // Initial merge
+
+  // Intelligent decoration combination
+  final baseDecoration = baseStyle.decoration;
+  final optionDecoration = optionsSpecificStyle.decoration;
+
+  if (optionDecoration != null && optionDecoration != TextDecoration.none &&
+      baseDecoration != null && baseDecoration != TextDecoration.none &&
+      !baseDecoration.contains(optionDecoration) // Avoid re-adding same decoration
+  ) {
+    // Both have distinct, active decorations, so combine them.
+    // The optionsSpecificStyle's color/thickness for its part of the decoration
+    // would implicitly win due to the initial merge order if not further specified.
+    mergedStyle = mergedStyle.copyWith(
+      decoration: TextDecoration.combine([baseDecoration, optionDecoration]),
+      // decorationColor and decorationThickness from optionsSpecificStyle are preferred.
+      // If baseStyle had a decorationColor and optionsSpecificStyle doesn't,
+      // merge might clear it or keep base's. Explicit handling might be needed
+      // if optionsSpecificStyle should only contribute its decoration type but not color/thickness.
+      // For now, optionsSpecificStyle's decoration-related properties (if any) take precedence for the combined effect.
+      decorationColor: optionsSpecificStyle.decorationColor ?? mergedStyle.decorationColor, // Prefer option's color
+      decorationThickness: optionsSpecificStyle.decorationThickness ?? mergedStyle.decorationThickness, // Prefer option's thickness
+    );
+  }
+  // If optionDecoration is TextDecoration.none, merge already handled clearing it.
+  // If only one has a decoration, merge already handled it.
+
+  return mergedStyle;
+}
+*/
+// This enhanced logic would make TextfOptions more powerful for fine-grained
+// control over combined decorations originating from different levels of the options tree,
+// but increases the complexity of these getter methods.
+// For now, the simpler override behavior is in place for options.
+
 /// Configuration options for Textf widgets within a specific scope.
 ///
 /// This widget uses the `InheritedWidget` pattern to make configuration
 /// available to descendant `Textf` widgets. Options include styling for different
-/// formatting types (bold, italic, code, links) and callbacks for link interactions.
+/// formatting types (bold, italic, code, links, underline, highlight)
+/// and callbacks for link interactions.
 ///
 /// ## Implicit Inheritance and Style Resolution
 ///
@@ -21,9 +98,9 @@ import 'package:flutter/material.dart';
 ///    property, the `getEffective...Style` method returns `null`.
 /// 4. **Resolver Fallback:** When `TextfStyleResolver` receives `null`, it knows
 ///    no explicit option was provided. It then applies its own fallback logic:
-///    - For code/links: It derives a style from the current `ThemeData`.
-///    - For bold/italic/strike: It applies the relative default effect (e.g.,
-///      `FontWeight.bold`) from `DefaultStyles` to the `baseStyle`.
+///    - For code/links/highlight: It derives a style from the current `ThemeData`.
+///    - For bold/italic/strike/underline: It applies the relative default effect
+///      from `DefaultStyles` to the `baseStyle`.
 ///
 /// This ensures explicit options always win, followed by theme defaults (where applicable),
 /// and finally package defaults.
@@ -69,6 +146,14 @@ class TextfOptions extends InheritedWidget {
   /// Inherits up the tree.
   final double? strikethroughThickness;
 
+  /// Styling for underlined text (`++underline++`).
+  /// Merged **onto** the base text style if provided.
+  final TextStyle? underlineStyle;
+
+  /// Styling for highlighted text (`==highlight==`).
+  /// Merged **onto** the base text style if provided.
+  final TextStyle? highlightStyle;
+
   /// Creates a new TextfOptions instance to provide configuration down the tree.
   const TextfOptions({
     super.key,
@@ -84,6 +169,8 @@ class TextfOptions extends InheritedWidget {
     this.strikethroughStyle,
     this.codeStyle,
     this.strikethroughThickness,
+    this.underlineStyle,
+    this.highlightStyle,
   });
 
   /// Finds the nearest [TextfOptions] ancestor in the widget tree.
@@ -165,6 +252,8 @@ class TextfOptions extends InheritedWidget {
 
   /// Finds the first defined `strikethroughStyle` up the tree and merges it with `baseStyle`.
   /// Returns `null` if no ancestor defines `strikethroughStyle`.
+  /// Note: This does *not* handle `strikethroughThickness` directly here. The resolver
+  /// uses `getEffectiveStrikethroughThickness` if this method returns null.
   TextStyle? getEffectiveStrikethroughStyle(BuildContext context, TextStyle baseStyle) {
     final optionsStyle = _findFirstAncestorValue(context, (o) => o.strikethroughStyle);
     return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
@@ -188,34 +277,40 @@ class TextfOptions extends InheritedWidget {
   /// the resolved *normal* URL style (which itself considers options and base style).
   /// Returns `null` if no ancestor defines `urlHoverStyle`.
   TextStyle? getEffectiveUrlHoverStyle(BuildContext context, TextStyle baseStyle) {
-    final optionsHoverStyle = _findFirstAncestorValue(context, (o) => o.urlHoverStyle);
-    if (optionsHoverStyle == null) {
-      return null; // No specific hover style defined in options hierarchy
-    }
+    // This logic for hover needs to merge onto the *final normal link style*.
+    // The TextfStyleResolver handles this by first getting the normal link style
+    // (which might be from options or theme), and then if this method returns a
+    // hover-specific option, it merges that onto the already resolved normal style.
+    // So, this method just needs to find the hover option and merge it with the
+    // *incoming baseStyle* (which, for hover, is the resolved normal link style).
 
-    // Revert to original corrected plan: Find option, if found, merge onto base. Resolver uses this result.
-    final optionsStyle = _findFirstAncestorValue(context, (o) => o.urlHoverStyle);
-    if (optionsStyle == null) {
-      return null;
-    }
-
-    // --- Final Attempt at Clean Logic ---
-    // 1. Find the specific hover style defined in options.
     final hoverOption = _findFirstAncestorValue(context, (o) => o.urlHoverStyle);
     if (hoverOption == null) {
       return null; // No hover option specified, resolver handles fallback.
     }
+    // Merge the found hover option onto the provided baseStyle (which is the normal link style)
+    return baseStyle.merge(hoverOption);
+  }
 
-    // 2. Find the normal style *as defined by options only*.
-    final normalOption = _findFirstAncestorValue(context, (o) => o.urlStyle);
+  /// Finds the first defined `underlineStyle` up the tree and merges it with `baseStyle`.
+  /// Returns `null` if no ancestor defines `underlineStyle`.
+  TextStyle? getEffectiveUnderlineStyle(BuildContext context, TextStyle baseStyle) {
+    final optionsStyle = _findFirstAncestorValue(context, (o) => o.underlineStyle);
+    // If an option style is found, merge it. Otherwise, return null.
+    // The intelligent combination of decorations (if any in baseStyle)
+    // would ideally happen here if the optionsStyle also has a decoration.
+    // For simplicity now, we use standard merge. If DefaultStyles has already
+    // combined decorations, and optionsStyle also defines one, option wins.
+    // If we want Option to combine with what DefaultStyles did, this needs more logic.
+    // Current approach: Option style takes precedence for decoration.
+    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+  }
 
-    // 3. Determine the base for merging the hover option:
-    //    - If a normal option exists, merge hover onto (base merged with normal option).
-    //    - If no normal option exists, merge hover onto base directly.
-    final TextStyle baseForHover = normalOption == null ? baseStyle : baseStyle.merge(normalOption);
-
-    // 4. Merge the specific hover option onto the calculated base.
-    return baseForHover.merge(hoverOption);
+  /// Finds the first defined `highlightStyle` up the tree and merges it with `baseStyle`.
+  /// Returns `null` if no ancestor defines `highlightStyle`.
+  TextStyle? getEffectiveHighlightStyle(BuildContext context, TextStyle baseStyle) {
+    final optionsStyle = _findFirstAncestorValue(context, (o) => o.highlightStyle);
+    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
   }
 
   // --- Effective Callback & Cursor Getters ---
@@ -233,10 +328,11 @@ class TextfOptions extends InheritedWidget {
   /// Finds the first non-null [urlMouseCursor] defined up the tree, falling back to default.
   MouseCursor? getEffectiveUrlMouseCursor(BuildContext context) {
     return _findFirstAncestorValue(context, (o) => o.urlMouseCursor);
+    // Fallback to DefaultStyles.urlMouseCursor happens in the resolver if this returns null.
   }
 
   /// Finds the first non-null [strikethroughThickness] defined up the tree.
-  /// Returns null if none is found (resolver applies final default).
+  /// Returns null if none is found (resolver applies final default from DefaultStyles).
   double? getEffectiveStrikethroughThickness(BuildContext context) {
     return _findFirstAncestorValue(context, (o) => o.strikethroughThickness);
   }
@@ -256,6 +352,8 @@ class TextfOptions extends InheritedWidget {
         boldItalicStyle != oldWidget.boldItalicStyle ||
         strikethroughStyle != oldWidget.strikethroughStyle ||
         codeStyle != oldWidget.codeStyle ||
-        strikethroughThickness != oldWidget.strikethroughThickness;
+        strikethroughThickness != oldWidget.strikethroughThickness ||
+        underlineStyle != oldWidget.underlineStyle ||
+        highlightStyle != oldWidget.highlightStyle;
   }
 }

@@ -9,8 +9,10 @@ import '../widgets/textf_options.dart'; // Needed for options lookup
 /// It orchestrates the application of styles based on the following precedence:
 /// 1. Explicit styles defined in the nearest ancestor `TextfOptions`.
 /// 2. Styles inherited from higher `TextfOptions` ancestors.
-/// 3. Theme-based default styles derived from the application's `ThemeData` (for code, links).
-/// 4. Relative default styles from `DefaultStyles` (for bold, italic, strikethrough).
+/// 3. Theme-based default styles derived from the application's `ThemeData`
+///    (for code, links, highlight).
+/// 4. Relative default styles from `DefaultStyles`
+///    (for bold, italic, strikethrough, underline).
 ///
 /// The resolved style is always merged with the provided `baseStyle`.
 class TextfStyleResolver {
@@ -27,7 +29,8 @@ class TextfStyleResolver {
 
   /// Resolves the final TextStyle for a given token type and base style.
   ///
-  /// Use this for standard formatting types like bold, italic, code, strikethrough.
+  /// Use this for standard formatting types like bold, italic, code, strikethrough,
+  /// underline, highlight.
   /// For links, use `resolveLinkStyle` and `resolveLinkHoverStyle`.
   ///
   /// - [type]: The type of formatting marker (e.g., `TokenType.boldMarker`).
@@ -65,6 +68,10 @@ class TextfStyleResolver {
           );
         case TokenType.codeMarker:
           return _getThemeBasedCodeStyle(baseStyle); // Theme-based default
+        case TokenType.underlineMarker:
+          return DefaultStyles.underlineStyle(baseStyle); // Relative default
+        case TokenType.highlightMarker:
+          return _getThemeBasedHighlightStyle(baseStyle); // Theme-based default
         // Link styles are handled separately by resolveLinkStyle/resolveLinkHoverStyle
         case TokenType.linkStart:
         case TokenType.linkText:
@@ -160,6 +167,10 @@ class TextfStyleResolver {
         return _nearestOptions!.getEffectiveStrikethroughStyle(context, baseStyle);
       case TokenType.codeMarker:
         return _nearestOptions!.getEffectiveCodeStyle(context, baseStyle);
+      case TokenType.underlineMarker:
+        return _nearestOptions!.getEffectiveUnderlineStyle(context, baseStyle);
+      case TokenType.highlightMarker:
+        return _nearestOptions!.getEffectiveHighlightStyle(context, baseStyle);
       // Link styles are handled by resolveLinkStyle/resolveLinkHoverStyle directly
       case TokenType.linkStart:
       case TokenType.linkText:
@@ -207,9 +218,34 @@ class TextfStyleResolver {
       ),
     );
   }
-}
 
-// Helper extension for cleaner null checks (optional)
-extension ScopeFunctions<T extends Object> on T {
-  R let<R>(R Function(T self) op) => op(this);
+  /// Internal helper to create the default highlight style based on the current theme.
+  TextStyle _getThemeBasedHighlightStyle(TextStyle baseStyle) {
+    final ColorScheme colorScheme = _theme.colorScheme;
+
+    Color highlightBgColor = colorScheme.tertiaryContainer;
+    Color highlightTextColor = colorScheme.onTertiaryContainer;
+
+    // Fallback if tertiaryContainer is too similar to surface or not distinct enough.
+    // This logic can be made more sophisticated.
+    if (highlightBgColor == colorScheme.surface || highlightBgColor == colorScheme.surface) {
+      // A more generic fallback, trying a slightly opaque primary or a fixed color.
+      highlightBgColor = colorScheme.primary.withValues(alpha: .2); // Lightly tint with primary
+      highlightTextColor = baseStyle.color ?? colorScheme.onSurface; // Try to keep original or use onSurface
+    }
+    // A common "highlighter yellow" as an alternative if no theme color feels right:
+    if (true) {
+      // force yellow for now to see it clearly
+      highlightBgColor = colorScheme.brightness == Brightness.light
+          ? Colors.yellow.withValues(alpha: .4)
+          : Colors.yellow.shade700.withValues(alpha: .5);
+      highlightTextColor =
+          baseStyle.color ?? (colorScheme.brightness == Brightness.light ? Colors.black87 : Colors.white);
+    }
+
+    return baseStyle.copyWith(
+      backgroundColor: highlightBgColor,
+      color: highlightTextColor, // Adjust text color for contrast if needed, otherwise keep baseStyle.color
+    );
+  }
 }

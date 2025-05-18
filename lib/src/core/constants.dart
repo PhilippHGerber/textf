@@ -18,6 +18,14 @@ const int kTilde = 0x7E;
 /// Used for inline code formatting.
 const int kBacktick = 0x60;
 
+/// Equals character = (ASCII code 61)
+/// Used for highlight formatting (==).
+const int kEquals = 0x3D;
+
+/// Plus character + (ASCII code 43)
+/// Used for underline formatting (++).
+const int kPlus = 0x2B;
+
 /// Escape character \ (ASCII code 92)
 ///
 /// Used to escape formatting characters, preventing them from being interpreted

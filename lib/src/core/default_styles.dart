@@ -55,15 +55,74 @@ class DefaultStyles {
   /// or the default) is passed in here.
   static TextStyle strikethroughStyle(
     final TextStyle baseStyle, {
-    // Default value here is mainly for direct calls, resolver provides the actual value.
-    final double thickness = defaultStrikethroughThickness,
+    final double thickness = defaultStrikethroughThickness, 
   }) {
-    // Use the base color for the line, if available and appropriate.
+    TextDecoration newDecoration = TextDecoration.lineThrough;
+    // Combine with existing decoration if present
+    if (baseStyle.decoration != null) {
+      // Prevent combining with itself if somehow applied twice (defensive)
+      if (baseStyle.decoration!.contains(TextDecoration.lineThrough)) {
+        newDecoration = baseStyle.decoration!;
+      } else {
+        newDecoration = TextDecoration.combine([baseStyle.decoration!, TextDecoration.lineThrough]);
+      }
+    }
+
+    // Use the base color for the line if available, otherwise let Flutter decide.
+    // If combining decorations, the original decorationColor might be for a different part.
+    // It's safer to let Flutter pick or for the user to specify a combined decorationColor via TextfOptions.
+    // For simplicity here, we might just use baseStyle.color if no decorationColor is set.
+    Color? decorationColorToApply = baseStyle.decorationColor ?? baseStyle.color;
+
     return baseStyle.copyWith(
-      decoration: TextDecoration.lineThrough,
-      // Only apply decorationColor if baseStyle has a color, otherwise let it be default
-      decorationColor: baseStyle.color,
-      decorationThickness: thickness, // Use the resolved thickness
+      decoration: newDecoration,
+      decorationColor: decorationColorToApply,
+      decorationThickness: thickness, // This thickness applies to the new lineThrough part
+    );
+  }
+
+  /// Applies default underline formatting (`++underline++`) to a base style.
+  /// Used as a fallback by TextfStyleResolver if no `underlineStyle` is found via TextfOptions.
+  static TextStyle underlineStyle(final TextStyle baseStyle) {
+    TextDecoration newDecoration = TextDecoration.underline;
+    // Combine with existing decoration if present
+    if (baseStyle.decoration != null) {
+      // Prevent combining with itself (defensive)
+      if (baseStyle.decoration!.contains(TextDecoration.underline)) {
+        newDecoration = baseStyle.decoration!;
+      } else {
+        newDecoration = TextDecoration.combine([baseStyle.decoration!, TextDecoration.underline]);
+      }
+    }
+
+    Color? decorationColorToApply = baseStyle.decorationColor ?? baseStyle.color;
+
+    return baseStyle.copyWith(
+      decoration: newDecoration,
+      decorationColor: decorationColorToApply,
+      // Use baseStyle.decorationThickness if available, otherwise a sensible default or null.
+      // This thickness applies to the new underline part.
+      decorationThickness: baseStyle.decorationThickness ?? 1.0,
+    );
+  }
+
+  /// Applies a simple default highlight formatting (`==highlight==`) to a base style.
+  /// This is a very basic fallback. A theme-aware highlight style is generally preferred
+  /// and would be implemented in `TextfStyleResolver`.
+  /// Used as a fallback by TextfStyleResolver if no `highlightStyle` is found via TextfOptions
+  /// AND no theme-based default is implemented or chosen in the resolver.
+  static TextStyle highlightStyle(final TextStyle baseStyle) {
+    // A common, though not necessarily theme-adaptive, highlight color.
+    // Brightness check could make it slightly more adaptive if used as a true last resort.
+    final bool isDark = baseStyle.color != null //
+        ? ThemeData.estimateBrightnessForColor(baseStyle.color!) == Brightness.dark
+        : false;
+    return baseStyle.copyWith(
+      backgroundColor: isDark //
+          ? Colors.yellow.withValues(alpha: .4)
+          : Colors.yellow.withValues(alpha: .5),
+      // Retain the original text color unless a specific contrast logic is needed.
+      // color: baseStyle.color, // Text color usually remains the same for highlight
     );
   }
 }

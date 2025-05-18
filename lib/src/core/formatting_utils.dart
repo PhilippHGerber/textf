@@ -18,6 +18,8 @@ class FormattingUtils {
           char == kUnderscore ||
           char == kTilde ||
           char == kBacktick ||
+          char == kEquals ||
+          char == kPlus ||
           char == kEscape ||
           char == kOpenBracket ||
           char == kCloseBracket ||
@@ -42,6 +44,8 @@ class FormattingUtils {
           char == kUnderscore || // _
           char == kTilde || // ~
           char == kBacktick || // `
+          char == kEquals || // =
+          char == kPlus || // +
           char == kEscape) {
         // \
         return true;

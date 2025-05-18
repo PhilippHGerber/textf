@@ -20,6 +20,12 @@ enum TokenType {
   /// Inline code formatting marker: '`'
   codeMarker(isFormattingMarker: true),
 
+  /// Highlight formatting marker: '=='
+  highlightMarker(isFormattingMarker: true),
+
+  /// Underline formatting marker: '++'
+  underlineMarker(isFormattingMarker: true),
+
   /// Opening square bracket for link: '['
   linkStart(isLinkToken: true),
 

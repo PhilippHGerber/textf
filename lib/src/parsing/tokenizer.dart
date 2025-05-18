@@ -26,7 +26,9 @@ class TextfTokenizer {
   /// - Bold+Italic markers: *** or ___
   /// - Strikethrough markers: ~~
   /// - Code markers: `
-  /// - Escaped characters: \* \_ \~ \` \\
+  /// - Underline markers: ++
+  /// - Highlight markers: ==
+  /// - Escaped characters: \* \_ \~ \` \\ \+ \= \[ \] \( \)
   ///
   /// The method is optimized for performance by:
   /// - Pre-processing text into code units
@@ -59,7 +61,7 @@ class TextfTokenizer {
     final List<int> codeUnits = text.codeUnits;
 
     while (pos < length) {
-      final int startPos = pos;
+      final int startPosInLoop = pos;
       final int currentChar = codeUnits[pos];
 
       // Handle escape character
@@ -69,8 +71,10 @@ class TextfTokenizer {
         if (nextChar == kAsterisk ||
             nextChar == kUnderscore ||
             nextChar == kTilde ||
-            nextChar == kEscape ||
             nextChar == kBacktick ||
+            nextChar == kPlus ||
+            nextChar == kEquals ||
+            nextChar == kEscape ||
             nextChar == kOpenBracket ||
             nextChar == kCloseBracket ||
             nextChar == kOpenParen ||
@@ -156,7 +160,30 @@ class TextfTokenizer {
         tokens.add(Token(TokenType.codeMarker, '`', pos, 1));
         pos++;
         textStart = pos;
-      } else if (currentChar == kOpenBracket) {
+      } else if (currentChar == kPlus) {
+        // Check for underline (++)
+        if (pos + 1 < length && codeUnits[pos + 1] == kPlus) {
+          addTextToken(textStart, pos);
+          tokens.add(Token(TokenType.underlineMarker, '++', pos, 2));
+          pos += 2;
+          textStart = pos;
+        } else {
+          // Single plus treated as plain text, will be handled by final pos increment
+          pos++;
+        }
+      } else if (currentChar == kEquals) {
+        // Check for highlight (==)
+        if (pos + 1 < length && codeUnits[pos + 1] == kEquals) {
+          addTextToken(textStart, pos);
+          tokens.add(Token(TokenType.highlightMarker, '==', pos, 2));
+          pos += 2;
+          textStart = pos;
+        } else {
+          // Single equals treated as plain text, will be handled by final pos increment
+          pos++;
+        }
+      } //
+      else if (currentChar == kOpenBracket) {
         // Opening square bracket for link
         addTextToken(textStart, pos);
 
@@ -192,20 +219,36 @@ class TextfTokenizer {
               if (pos + 1 < length && codeUnits[pos + 1] == kOpenParen) {
                 break;
               } else {
-                // Not a link, just bracket notation
-                linkTextEnd = -1;
-                pos++;
-                continue;
+                // Not a valid link separator ']( )'.
+                // The ']' found was not part of a valid link structure here.
+                linkTextEnd = -1; // Mark that we didn't find a valid end for a link text segment
+                // that leads to a URL.
+                // The original code from llms.txt effectively did:
+                // pos++; continue;
+                // This means it continues scanning the inner loop.
+                // If the loop finishes and linkTextEnd is still -1,
+                // the outer 'if (linkTextEnd != -1 && ...)' will fail,
+                // and the 'else' branch (treating '[' as text) will be taken.
+                // We need to ensure this loop continues or breaks correctly.
+                // To match original llms.txt behavior if `](` is not found after `]`:
+                // it means the `[` was not a start of a link that completes with `](...)`.
+                // The code would try to find another `]` if `pos++` happens here,
+                // or if `break` happens, the outer `if(linkTextEnd != -1 ...)` fails.
+                // Let's ensure the `break` happens so outer `if` fails.
+                break; // Exit this inner loop. `linkTextEnd` is set, but `(` check failed.
+                // The outer `if` will then determine if it's a full link.
               }
             }
           }
-
           pos++;
         }
 
-        // If we found a proper link structure "[text]("
-        if (linkTextEnd != -1 && pos + 1 < length) {
-          // Add the opening bracket
+        // Check if we found a proper link structure "[text]("
+        // `pos` is currently at `linkTextEnd` (']') or at `length` if `]` wasn't found.
+        // If `break` happened from `if (pos + 1 < length && codeUnits[pos + 1] == kOpenParen)`,
+        // then `pos` points to `]`.
+        if (linkTextEnd != -1 && (linkTextEnd + 1) < length && codeUnits[linkTextEnd + 1] == kOpenParen) {
+          // Valid '[text](' structure found.
           tokens.add(Token(TokenType.linkStart, '[', linkStartPos, 1));
 
           // Add the link text
@@ -223,10 +266,8 @@ class TextfTokenizer {
             tokens.add(Token(TokenType.text, '', linkTextStart, 0));
           }
 
-          // Add the link separator ")("
-          pos = linkTextEnd; // Position at closing bracket
-          tokens.add(Token(TokenType.linkSeparator, '](', pos, 2));
-          pos += 2; // Move past "]("
+          tokens.add(Token(TokenType.linkSeparator, '](', linkTextEnd, 2));
+          pos = linkTextEnd + 2; // Move main `pos` past ']('
 
           // Now collect the URL
           int urlStart = pos;
@@ -282,29 +323,37 @@ class TextfTokenizer {
             // Update text start position
             textStart = pos;
           } else {
-            // Malformed URL, revert to treating the whole thing as text
-            pos = linkStartPos + 1;
-            textStart = linkStartPos;
+            // Malformed URL (e.g., [text](url without closing paren).
+            // The original fallback: treat the initial `[` at `linkStartPos` as plain text
+            // and let subsequent characters be re-evaluated by the main loop.
+            // To achieve this, we must discard any link tokens already added for this attempt
+            // and reset `pos` and `textStart` correctly.
+            tokens.removeLast(); // Remove linkSeparator
+            tokens.removeLast(); // Remove linkText (or empty linkText token)
+            tokens.removeLast(); // Remove linkStart
+            // Now, treat the original '[' as text.
+            tokens.add(Token(TokenType.text, '[', linkStartPos, 1)); // Add '[' as text
+            pos = linkStartPos + 1; // Set main `pos` to parse after the '['
+            textStart = pos; // Reset textStart.
           }
         } else {
-          // Not a link, just an opening bracket
+          // Not a complete link structure (e.g. "[text" or "[text]no_paren").
+          // Treat the initial '[' as plain text.
+          // `addTextToken(textStart, linkStartPos)` was already called.
           tokens.add(Token(TokenType.text, '[', linkStartPos, 1));
-          pos = linkStartPos + 1;
-          textStart = pos;
+          pos = linkStartPos + 1; // Continue parsing after the '['
+          textStart = pos; // Reset textStart for the next segment of plain text.
         }
-      } else if (currentChar == kCloseBracket || //
-          currentChar == kOpenParen ||
-          currentChar == kCloseParen) {
-        // We handle these characters in the link processing block above
-        // Here we just treat them as regular text when encountered outside of link context
-        pos++;
-      } else {
+      }
+      // Fallback for other characters that are not part of other rules
+      // (e.g. single `]`, `(`, `)` not consumed by link logic, or any other char)
+      else {
         // Regular text character, just move forward
         pos++;
       }
 
       // Safety check to ensure forward progress
-      if (pos == startPos) {
+      if (pos == startPosInLoop && pos < length) {
         pos++; // Ensure we always advance
       }
     }

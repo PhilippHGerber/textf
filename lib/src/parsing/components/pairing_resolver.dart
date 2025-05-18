@@ -12,8 +12,8 @@ class PairingResolver {
   ///
   /// This method:
   /// 1. Identifies simple pairs based on token type
-  /// 2. Applies context-aware pairing for ambiguous cases
-  /// 3. Validates proper nesting of the identified pairs
+  /// 2. Applies context-aware pairing for ambiguous cases (not currently implemented, but structure allows)
+  /// 3. Validates proper nesting of the identified pairs using NestingValidator.
   ///
   /// @param tokens The list of tokens to analyze
   /// @return A map where keys are token indices and values are their matching pair indices
@@ -42,35 +42,39 @@ class PairingResolver {
       TokenType.boldItalicMarker: [],
       TokenType.strikeMarker: [],
       TokenType.codeMarker: [],
+      TokenType.underlineMarker: [],
+      TokenType.highlightMarker: [],
     };
 
     // First pass - pair markers based on type
     for (int i = 0; i < tokens.length; i++) {
       final token = tokens[i];
 
-      if (token.type == TokenType.text) continue;
-
-      // Skip link-related tokens as they're handled separately
-      if (token.type.isLinkToken) {
+      // Only consider formatting markers for pairing.
+      // Text tokens and link-specific tokens are ignored here.
+      if (!token.type.isFormattingMarker) {
         continue;
       }
 
-      // Check if we already have an opening marker of this type
+      // Get the stack for the current token's type.
+      // If the token type is not in openingStacks (e.g., an unknown formatting marker),
+      // it will be skipped, which is the desired behavior.
       final stack = openingStacks[token.type];
-      if (stack == null) continue; // Unsupported token type
+      if (stack == null) continue; // Should not happen for known formatting markers
 
       if (stack.isEmpty) {
-        // No opening marker yet - treat this as opening
+        // No opening marker of this type on the stack yet - treat this as an opening marker.
         stack.add(i);
       } else {
-        // We have an opening marker - pair it
-        final openingIndex = stack.removeLast();
+        // An opening marker of this type exists on the stack - pair it with this closing marker.
+        final int openingIndex = stack.removeLast();
 
-        // Record the pair
+        // Record the pair (bidirectionally)
         pairs[openingIndex] = i;
         pairs[i] = openingIndex;
       }
     }
+    // At this point, any markers remaining on the stacks in `openingStacks`
+    // are unpaired opening markers. They will not be included in the `pairs` map.
   }
-
 }
