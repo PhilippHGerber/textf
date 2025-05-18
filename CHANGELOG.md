@@ -2,6 +2,12 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 0.4.1
+
+### Removed
+
+- Removed unnecessary files
+
 ## 0.4.0
 
 2025-05-18

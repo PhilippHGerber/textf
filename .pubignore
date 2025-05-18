@@ -1,19 +1,24 @@
 # Development/test directories
 
 /test/
+/coverage/
+/example/widgetbook_textf
+/build/
+**build/
 
-# Documentation
+## Documentation
 
 /images/
 
-# CI/CD configuration files (if any)
+## CI/CD configuration files (if any)
 
 /.github/
 /.travis.yml
 /.gitlab-ci.yml
 
-# Miscellaneous development files
+## Miscellaneous development files
 
 /analysis_options.yaml
 /tool/
 /benchmark/
+

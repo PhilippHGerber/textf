@@ -2,7 +2,7 @@ name: textf
 description: >
   A lightweight Flutter widget for inline text formatting with Markdown-like syntax.
   Supports bold, italic, strikethrough, and code with minimal overhead.
-version: 0.4.0
+version: 0.4.1
 
 homepage: https://github.com/PhilippHGerber/textf
 repository: https://github.com/PhilippHGerber/textf
