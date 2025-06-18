@@ -55,7 +55,7 @@ class LinkHandler {
       final linkUrlToken = tokens[index + 3];
       final rawLinkText = linkTextToken.value;
       final rawLinkUrl = linkUrlToken.value;
-      final normalizedUrl = _normalizeUrl(rawLinkUrl);
+      final normalizedUrl = normalizeUrl(rawLinkUrl);
 
       // 1. Calculate the style inherited from formatting markers *outside* the link
       TextStyle inheritedStyle = state.baseStyle;
@@ -157,7 +157,8 @@ class LinkHandler {
   }
 
   /// Normalizes a URL string (e.g., adds 'http://' if scheme is missing).
-  static String _normalizeUrl(String url) {
+  @visibleForTesting
+  static String normalizeUrl(String url) {
     url = url.trim();
     if (!url.contains(':') && //
         !url.startsWith('/') &&
