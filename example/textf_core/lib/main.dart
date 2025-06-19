@@ -25,7 +25,6 @@ class _TextfExampleAppState extends State<TextfExampleApp> {
     // Read initial system theme preference
     final Brightness platformBrightness = SchedulerBinding.instance.platformDispatcher.platformBrightness;
     _themeModeNotifier = ValueNotifier(platformBrightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light);
-    // You could also default to ThemeMode.dark or ThemeMode.system
   }
 
   @override
@@ -54,7 +53,6 @@ class _TextfExampleAppState extends State<TextfExampleApp> {
               brightness: Brightness.light,
             ),
             useMaterial3: true,
-
           ),
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
@@ -62,10 +60,8 @@ class _TextfExampleAppState extends State<TextfExampleApp> {
               brightness: Brightness.dark,
             ),
             useMaterial3: true,
-
           ),
-          themeMode: currentMode, // Set the current theme mode
-          // Pass down the toggle function and current mode to HomeScreen
+          themeMode: currentMode,
           home: HomeScreen(
             currentThemeMode: currentMode,
             toggleThemeMode: _toggleThemeMode,
