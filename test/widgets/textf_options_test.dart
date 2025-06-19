@@ -5,17 +5,6 @@ import 'package:textf/src/widgets/textf_options.dart';
 
 // ----- Helper Class and Callbacks -----
 class ResolvedOptions {
-  final TextStyle? urlStyle;
-  final TextStyle? urlHoverStyle;
-  final MouseCursor? urlMouseCursor;
-  final TextStyle? boldStyle;
-  final TextStyle? italicStyle;
-  final TextStyle? boldItalicStyle;
-  final TextStyle? strikethroughStyle;
-  final TextStyle? codeStyle;
-  final Function? onUrlTap;
-  final Function? onUrlHover;
-
   ResolvedOptions({
     this.urlStyle,
     this.urlHoverStyle,
@@ -53,7 +42,7 @@ class ResolvedOptions {
       final Color codeForegroundColor = theme.colorScheme.onSurfaceVariant;
       const String codeFontFamily = 'monospace';
       // FIX: Use the constant directly from DefaultStyles
-      final List<String> codeFontFamilyFallback = DefaultStyles.defaultCodeFontFamilyFallback;
+      const List<String> codeFontFamilyFallback = DefaultStyles.defaultCodeFontFamilyFallback;
 
       return currentBase.copyWith(
         fontFamily: codeFontFamily,
@@ -107,13 +96,23 @@ class ResolvedOptions {
       onUrlHover: resolvedHoverCb,
     );
   }
+  final TextStyle? urlStyle;
+  final TextStyle? urlHoverStyle;
+  final MouseCursor? urlMouseCursor;
+  final TextStyle? boldStyle;
+  final TextStyle? italicStyle;
+  final TextStyle? boldItalicStyle;
+  final TextStyle? strikethroughStyle;
+  final TextStyle? codeStyle;
+  final Function? onUrlTap;
+  final Function? onUrlHover;
 }
 
 // Dummy callbacks
 void dummyTap1(String u, String d) {}
 void dummyTap2(String u, String d) {}
-void dummyHover1(String u, String d, bool h) {}
-void dummyHover2(String u, String d, bool h) {}
+void dummyHover1(String u, String d, {required bool isHovering}) {}
+void dummyHover2(String u, String d, {required bool isHovering}) {}
 // ----------------------------------------------------------
 
 void main() {
@@ -124,12 +123,12 @@ void main() {
   const rootBoldStyle = TextStyle(fontWeight: FontWeight.w900, color: Colors.red);
   const rootUrlStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
   const rootCursor = SystemMouseCursors.text;
-  final rootOnTap = dummyTap1;
+  const rootOnTap = dummyTap1;
 
   const childUrlStyle = TextStyle(color: Colors.green, fontSize: 18);
   const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
 
-  final childOnTap = dummyTap2;
+  const childOnTap = dummyTap2;
   // ----------------------------------------------------
 
   group('TextfOptions Inheritance Tests', () {
@@ -146,11 +145,11 @@ void main() {
               // Capture the actual DefaultTextStyle from the context where resolved is calculated
               capturedDefaultStyle = DefaultTextStyle.of(context).style;
               // Ensure we captured something sensible before proceeding
-              expect(capturedDefaultStyle, isNotNull, reason: "Failed to capture DefaultTextStyle");
+              expect(capturedDefaultStyle, isNotNull, reason: 'Failed to capture DefaultTextStyle');
               expect(
                 capturedDefaultStyle!.fontSize,
                 isNotNull,
-                reason: "Captured DefaultTextStyle must have a fontSize",
+                reason: 'Captured DefaultTextStyle must have a fontSize',
               );
               // Pass the captured style explicitly as the base style
               resolved = ResolvedOptions.fromContext(context, capturedDefaultStyle!);
@@ -161,11 +160,11 @@ void main() {
       );
 
       // Ensure resolution happened
-      expect(resolved, isNotNull, reason: "ResolvedOptions should not be null after pump");
+      expect(resolved, isNotNull, reason: 'ResolvedOptions should not be null after pump');
 
       // Ensure the captured style is still valid before using it in expectations
-      expect(capturedDefaultStyle, isNotNull, reason: "DefaultTextStyle should be available after pump");
-      expect(capturedDefaultStyle!.fontSize, isNotNull, reason: "DefaultTextStyle must have a fontSize after pump");
+      expect(capturedDefaultStyle, isNotNull, reason: 'DefaultTextStyle should be available after pump');
+      expect(capturedDefaultStyle!.fontSize, isNotNull, reason: 'DefaultTextStyle must have a fontSize after pump');
 
       // Verify resolved options match defaults merged with the capturedDefaultStyle
 
@@ -174,42 +173,42 @@ void main() {
       expect(
         resolved!.urlStyle?.fontSize,
         capturedDefaultStyle!.fontSize, // Compare against the captured default size
-        reason: "URL style font size should match the DefaultTextStyle font size",
+        reason: 'URL style font size should match the DefaultTextStyle font size',
       );
       expect(
         resolved!.urlStyle?.fontFamily,
         capturedDefaultStyle!.fontFamily,
-        reason: "URL style font family should match the DefaultTextStyle font family",
+        reason: 'URL style font family should match the DefaultTextStyle font family',
       );
       // Check properties overridden by theme link style
       expect(
         resolved!.urlStyle?.color,
         theme.colorScheme.primary,
-        reason: "URL style color should be theme primary color",
+        reason: 'URL style color should be theme primary color',
       );
       expect(
         resolved!.urlStyle?.decoration,
         TextDecoration.underline,
-        reason: "URL style decoration should be underline",
+        reason: 'URL style decoration should be underline',
       );
       expect(
         resolved!.urlStyle?.decorationColor,
         theme.colorScheme.primary,
-        reason: "URL style decoration color should be theme primary color",
+        reason: 'URL style decoration color should be theme primary color',
       );
 
       // --- Check other styles (ensure they also use the correct base) ---
       expect(
         resolved!.boldStyle?.fontSize,
         capturedDefaultStyle!.fontSize,
-        reason: "Bold style font size should match default",
+        reason: 'Bold style font size should match default',
       );
       expect(resolved!.boldStyle?.fontWeight, DefaultStyles.boldStyle(capturedDefaultStyle!).fontWeight);
 
       expect(
         resolved!.italicStyle?.fontSize,
         capturedDefaultStyle!.fontSize,
-        reason: "Italic style font size should match default",
+        reason: 'Italic style font size should match default',
       );
       expect(resolved!.italicStyle?.fontStyle, DefaultStyles.italicStyle(capturedDefaultStyle!).fontStyle);
 
@@ -217,7 +216,7 @@ void main() {
       expect(
         resolved!.codeStyle?.fontSize,
         capturedDefaultStyle!.fontSize,
-        reason: "Code style font size should match default",
+        reason: 'Code style font size should match default',
       );
       expect(resolved!.codeStyle?.fontFamily, 'monospace');
       expect(resolved!.codeStyle?.color, theme.colorScheme.onSurfaceVariant);
@@ -414,7 +413,7 @@ void main() {
       expect(
         resolved!.codeStyle?.fontFamily,
         'monospace', // Expect default monospace
-        reason: "Code style fallback should use monospace font",
+        reason: 'Code style fallback should use monospace font',
       );
       expect(resolved!.codeStyle?.color, theme.colorScheme.onSurfaceVariant); // Theme color
       expect(resolved!.urlMouseCursor, DefaultStyles.urlMouseCursor); // Default cursor

@@ -1,3 +1,5 @@
+// ignore_for_file: cascade_invocations // cascade_invocations for readability and chaining methods.
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/formatting_utils.dart';
 

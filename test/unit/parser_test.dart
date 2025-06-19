@@ -1,3 +1,4 @@
+// ignore_for_file: cascade_invocations // cascade_invocations for readability and chaining methods.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
@@ -116,20 +117,20 @@ void main() {
           (spans[0] as TextSpan).style?.backgroundColor,
           // Expect theme surfaceContainer instead of old hardcoded grey
           lightTheme.colorScheme.surfaceContainer,
-          reason: "Code background should come from theme",
+          reason: 'Code background should come from theme',
         );
         expect((spans[0] as TextSpan).text, 'code');
         expect(
           (spans[0] as TextSpan).style?.color,
           // Expect theme text color for code
           lightTheme.colorScheme.onSurfaceVariant,
-          reason: "Code text color should come from theme",
+          reason: 'Code text color should come from theme',
         );
       });
 
       testWidgets('base style is preserved and extended', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = TextStyle(fontSize: 20, color: Colors.blue);
+        const baseStyle = TextStyle(fontSize: 20, color: Colors.blue);
         final spans = parser.parse('**bold**', mockContext, baseStyle);
         expect((spans[0] as TextSpan).style?.fontSize, 20);
         expect((spans[0] as TextSpan).style?.color, Colors.blue);
@@ -280,9 +281,9 @@ void main() {
     group('Cache Tests', () {
       testWidgets('different styles use different cache entries', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final text = 'Cache **test**';
-        final style1 = TextStyle(fontSize: 16);
-        final style2 = TextStyle(fontSize: 18);
+        const text = 'Cache **test**';
+        const style1 = TextStyle(fontSize: 16);
+        const style2 = TextStyle(fontSize: 18);
 
         final firstParse = parser.parse(text, mockContext, style1);
         final secondParse = parser.parse(text, mockContext, style2);
@@ -368,7 +369,7 @@ void main() {
 
       testWidgets('complex formatting combinations work', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final complex = 'Normal **bold _italic bold_ back to bold** normal *italic* end';
+        const complex = 'Normal **bold _italic bold_ back to bold** normal *italic* end';
         final spans = parser.parse(complex, mockContext, const TextStyle());
 
         // Manually verify a few key spans

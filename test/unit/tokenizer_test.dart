@@ -215,7 +215,7 @@ void main() {
         final tokens = tokenizer.tokenize(r'This is \\backslash');
         expect(tokens.length, 3);
         expect(tokens[1].type, TokenType.text);
-        expect(tokens[1].value, '\\');
+        expect(tokens[1].value, r'\');
       });
 
       test('Multiple escaped characters', () {
@@ -389,7 +389,7 @@ void main() {
 
       test('Alternating character formatting', () {
         // This is a pathological case: b*o*l*d* (every character has a marker)
-        final text = List.generate(100, (i) => '${String.fromCharCode(97 + i)}*').join('');
+        final text = List.generate(100, (i) => '${String.fromCharCode(97 + i)}*').join();
         final tokens = tokenizer.tokenize(text);
         expect(tokens.length > 100, true);
       });

@@ -1,3 +1,4 @@
+// ignore_for_file: cascade_invocations // cascade_invocations for readability and chaining methods.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -45,7 +46,7 @@ void main() {
       final innermostSpan = actualTextSpan.children![0];
       expect(innermostSpan, isA<TextSpan>(), reason: 'Innermost element should be a TextSpan');
       expect((innermostSpan as TextSpan).text, text, reason: 'Innermost span should contain the text');
-      expect((innermostSpan).children, isNull, reason: 'Innermost span should not have further children');
+      expect(innermostSpan.children, isNull, reason: 'Innermost span should not have further children');
     });
 
     testWidgets('Renders basic bold formatting', (tester) async {
@@ -58,9 +59,9 @@ void main() {
       expect(rootSpan.text, isNull);
       expect(rootSpan.children, isNotNull);
 
-      expect(rootSpan.children!.length, 1, reason: "Test failure indicates only one direct child");
+      expect(rootSpan.children!.length, 1, reason: 'Test failure indicates only one direct child');
       final containerSpan = rootSpan.children![0] as TextSpan;
-      expect(containerSpan.children, isNotNull, reason: "The container span should hold the actual segments");
+      expect(containerSpan.children, isNotNull, reason: 'The container span should hold the actual segments');
       final actualSpans = containerSpan.children!;
 
       // Now assert the length and content of the *actual* spans
@@ -79,7 +80,7 @@ void main() {
       final rootSpan = getRootTextSpan(tester);
       expect(rootSpan.children, isNotNull);
 
-      expect(rootSpan.children!.length, 1, reason: "Test failure indicates only one direct child");
+      expect(rootSpan.children!.length, 1, reason: 'Test failure indicates only one direct child');
       final containerSpan = rootSpan.children![0] as TextSpan;
       expect(containerSpan.children, isNotNull);
       final actualSpans = containerSpan.children!;
@@ -99,7 +100,7 @@ void main() {
       final rootSpan = getRootTextSpan(tester);
       expect(rootSpan.children, isNotNull);
 
-      expect(rootSpan.children!.length, 1, reason: "Test failure indicates only one direct child");
+      expect(rootSpan.children!.length, 1, reason: 'Test failure indicates only one direct child');
       final containerSpan = rootSpan.children![0] as TextSpan;
       expect(containerSpan.children, isNotNull);
       final actualSpans = containerSpan.children!;
@@ -190,7 +191,7 @@ void main() {
       expect(rootSpan.children, isNotNull);
 
       // --- Apply Nesting ---
-      expect(rootSpan.children!.length, 1, reason: "Structure has container span");
+      expect(rootSpan.children!.length, 1, reason: 'Structure has container span');
       final containerSpan = rootSpan.children![0] as TextSpan;
       expect(containerSpan.children, isNotNull);
       final actualSpans = containerSpan.children!;

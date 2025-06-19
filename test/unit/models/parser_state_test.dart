@@ -1,3 +1,4 @@
+// ignore_for_file: cascade_invocations // cascade_invocations for readability and chaining methods.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/format_stack_entry.dart';
@@ -10,14 +11,13 @@ import 'package:textf/src/styling/textf_style_resolver.dart';
 // test ParserState in isolation. We can tell it which TextStyle to return
 // for a given TokenType.
 class MockTextfStyleResolver implements TextfStyleResolver {
+  MockTextfStyleResolver(this.context);
   // Ignore the unused 'context' field, as it's not needed for the mock.
   // ignore: unused_field
   @override
   final BuildContext context;
 
   final Map<TokenType, TextStyle> _styleMap = {};
-
-  MockTextfStyleResolver(this.context);
 
   // A method to configure the mock for a specific test.
   void whenResolveStyle(TokenType type, TextStyle styleToReturn) {
@@ -47,7 +47,8 @@ class MockTextfStyleResolver implements TextfStyleResolver {
   @override
   void Function(String url, String displayText)? resolveOnUrlTap() => throw UnimplementedError();
   @override
-  void Function(String url, String displayText, bool isHovering)? resolveOnUrlHover() => throw UnimplementedError();
+  void Function(String url, String displayText, {required bool isHovering})? resolveOnUrlHover() =>
+      throw UnimplementedError();
 }
 
 void main() {

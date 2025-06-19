@@ -50,7 +50,7 @@ void main() {
             ),
           ),
         );
-        final baseStyle = const TextStyle();
+        const baseStyle = TextStyle();
         final parser = TextfParser();
 
         // Parse
@@ -70,7 +70,7 @@ void main() {
         final hoverableWidget = widgetSpan.child as HoverableLinkSpan;
         // --- Verify properties on the HoverableLinkSpan ---
         expect(hoverableWidget.url, 'https://flutter.dev');
-        expect(hoverableWidget.rawDisplayText, 'Flutter website', reason: "Raw display text should be stored");
+        expect(hoverableWidget.rawDisplayText, 'Flutter website', reason: 'Raw display text should be stored');
 
         // For simple text without internal formatting, initialPlainText should be set,
         // and initialChildrenSpans should be empty.
@@ -92,18 +92,18 @@ void main() {
           hoverableWidget.normalStyle.color,
           // Expect theme primary color instead of old hardcoded blue
           lightTheme.colorScheme.primary,
-          reason: "Normal style color should match theme primary color", // Updated reason
+          reason: 'Normal style color should match theme primary color', // Updated reason
         );
         expect(
           hoverableWidget.normalStyle.decoration,
           TextDecoration.underline, // Default decoration still expected
-          reason: "Normal style decoration should be underline",
+          reason: 'Normal style decoration should be underline',
         );
         expect(
           hoverableWidget.normalStyle.decorationColor,
           // Expect theme primary color for decoration
           lightTheme.colorScheme.primary,
-          reason: "Normal style decoration color should match theme primary color", // Updated reason
+          reason: 'Normal style decoration color should match theme primary color', // Updated reason
         );
 
         // Hover style check (assuming default hover = normal style when no options)
@@ -111,12 +111,12 @@ void main() {
         expect(
           hoverableWidget.hoverStyle.color,
           expectedHoverStyle.color,
-          reason: "Hover style color should match normal theme style",
+          reason: 'Hover style color should match normal theme style',
         );
         expect(
           hoverableWidget.hoverStyle.decorationColor,
           expectedHoverStyle.decorationColor,
-          reason: "Hover style decoration color should match normal theme style",
+          reason: 'Hover style decoration color should match normal theme style',
         );
 
         // --- Verify other interaction properties (optional but good) ---
@@ -128,7 +128,7 @@ void main() {
       testWidgets('link with URL normalization', (tester) async {
         // Setup context
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = const TextStyle();
+        const baseStyle = TextStyle();
 
         // Parse
         final spans = parser.parse(
@@ -143,16 +143,16 @@ void main() {
         expect((spans[0] as TextSpan).text, 'Visit ');
 
         // --- Verify the WidgetSpan for the link ---
-        expect(spans[1], isA<WidgetSpan>(), reason: "Link span should be a WidgetSpan");
+        expect(spans[1], isA<WidgetSpan>(), reason: 'Link span should be a WidgetSpan');
         final widgetSpan = spans[1] as WidgetSpan;
 
         // --- Verify the child widget inside the WidgetSpan ---
-        expect(widgetSpan.child, isA<HoverableLinkSpan>(), reason: "WidgetSpan should contain HoverableLinkSpan");
+        expect(widgetSpan.child, isA<HoverableLinkSpan>(), reason: 'WidgetSpan should contain HoverableLinkSpan');
         final hoverableWidget = widgetSpan.child as HoverableLinkSpan;
 
         // --- Check URL normalization on the HoverableLinkSpan ---
         // This is the core assertion for this test case.
-        expect(hoverableWidget.url, 'http://google.com', reason: "URL should be normalized with http:// prefix");
+        expect(hoverableWidget.url, 'http://google.com', reason: 'URL should be normalized with http:// prefix');
 
         // --- Also check other properties (optional but good practice) ---
         expect(hoverableWidget.rawDisplayText, 'Google'); // The original text between []
@@ -163,7 +163,7 @@ void main() {
       testWidgets('multiple links in text', (tester) async {
         // Setup context
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = const TextStyle();
+        const baseStyle = TextStyle();
 
         // Parse
         final spans = parser.parse(
@@ -173,7 +173,7 @@ void main() {
         );
 
         // Expect 4 spans: "Visit ", first link (WidgetSpan), " or ", second link (WidgetSpan)
-        expect(spans.length, 4, reason: "Should have 4 spans total");
+        expect(spans.length, 4, reason: 'Should have 4 spans total');
 
         // --- Check text spans  ---
         expect(spans[0], isA<TextSpan>());
@@ -182,9 +182,9 @@ void main() {
         expect((spans[2] as TextSpan).text, ' or ');
 
         // --- Check first link span (spans[1]) ---
-        expect(spans[1], isA<WidgetSpan>(), reason: "First link should be a WidgetSpan");
+        expect(spans[1], isA<WidgetSpan>(), reason: 'First link should be a WidgetSpan');
         final widgetSpan1 = spans[1] as WidgetSpan;
-        expect(widgetSpan1.child, isA<HoverableLinkSpan>(), reason: "WidgetSpan 1 should contain HoverableLinkSpan");
+        expect(widgetSpan1.child, isA<HoverableLinkSpan>(), reason: 'WidgetSpan 1 should contain HoverableLinkSpan');
         final hoverableWidget1 = widgetSpan1.child as HoverableLinkSpan;
 
         // Verify properties of the first HoverableLinkSpan
@@ -194,9 +194,9 @@ void main() {
         expect(hoverableWidget1.initialChildrenSpans, isEmpty);
 
         // --- Check second link span (spans[3]) ---
-        expect(spans[3], isA<WidgetSpan>(), reason: "Second link should be a WidgetSpan");
+        expect(spans[3], isA<WidgetSpan>(), reason: 'Second link should be a WidgetSpan');
         final widgetSpan2 = spans[3] as WidgetSpan;
-        expect(widgetSpan2.child, isA<HoverableLinkSpan>(), reason: "WidgetSpan 2 should contain HoverableLinkSpan");
+        expect(widgetSpan2.child, isA<HoverableLinkSpan>(), reason: 'WidgetSpan 2 should contain HoverableLinkSpan');
         final hoverableWidget2 = widgetSpan2.child as HoverableLinkSpan;
 
         // Verify properties of the second HoverableLinkSpan
@@ -211,8 +211,8 @@ void main() {
       testWidgets('bold text in link', (tester) async {
         // Setup
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = const TextStyle();
-        final text = 'Visit [**Bold Link**](https://example.com)';
+        const baseStyle = TextStyle();
+        const text = 'Visit [**Bold Link**](https://example.com)';
 
         // Parse
         final spans = parser.parse(text, mockContext, baseStyle);
@@ -228,9 +228,9 @@ void main() {
         // Verify HoverableLinkSpan properties
         expect(hoverableWidget.url, 'https://example.com');
         expect(hoverableWidget.rawDisplayText, '**Bold Link**');
-        expect(hoverableWidget.initialPlainText, isNull, reason: "Should have children spans, not plain text");
+        expect(hoverableWidget.initialPlainText, isNull, reason: 'Should have children spans, not plain text');
         expect(hoverableWidget.initialChildrenSpans, isNotEmpty);
-        expect(hoverableWidget.initialChildrenSpans.length, 1, reason: "Link text itself has one formatted part");
+        expect(hoverableWidget.initialChildrenSpans.length, 1, reason: 'Link text itself has one formatted part');
 
         // --- Verify the *inner* span's style ---
         final innerSpan = hoverableWidget.initialChildrenSpans[0];
@@ -239,27 +239,27 @@ void main() {
 
         // Check formatting applied *within* the link text
         expect(innerTextSpan.text, 'Bold Link');
-        expect(innerTextSpan.style?.fontWeight, FontWeight.bold, reason: "Inner span should be bold");
+        expect(innerTextSpan.style?.fontWeight, FontWeight.bold, reason: 'Inner span should be bold');
 
         // Check that the inner span *also* inherits the link's base style
         // (which comes from hoverableWidget.normalStyle)
         expect(
           innerTextSpan.style?.color,
           hoverableWidget.normalStyle.color,
-          reason: "Inner span should inherit link color",
+          reason: 'Inner span should inherit link color',
         );
         expect(
           innerTextSpan.style?.decoration,
           hoverableWidget.normalStyle.decoration,
-          reason: "Inner span should inherit link decoration",
+          reason: 'Inner span should inherit link decoration',
         );
       });
 
       testWidgets('italic text in link', (tester) async {
         // Setup
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = const TextStyle();
-        final text = 'Visit [*Italic Link*](https://example.com)';
+        const baseStyle = TextStyle();
+        const text = 'Visit [*Italic Link*](https://example.com)';
 
         // Parse
         final spans = parser.parse(text, mockContext, baseStyle);
@@ -280,7 +280,7 @@ void main() {
         // Verify the inner span's style
         final innerSpan = hoverableWidget.initialChildrenSpans[0] as TextSpan;
         expect(innerSpan.text, 'Italic Link');
-        expect(innerSpan.style?.fontStyle, FontStyle.italic, reason: "Inner span should be italic");
+        expect(innerSpan.style?.fontStyle, FontStyle.italic, reason: 'Inner span should be italic');
 
         // Verify inheritance of base link style
         expect(innerSpan.style?.color, hoverableWidget.normalStyle.color);
@@ -290,8 +290,8 @@ void main() {
       testWidgets('strikethrough text in link', (tester) async {
         // Setup
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = const TextStyle();
-        final text = 'Visit [~~Strikethrough Link~~](https://example.com)';
+        const baseStyle = TextStyle();
+        const text = 'Visit [~~Strikethrough Link~~](https://example.com)';
 
         // Parse
         final spans = parser.parse(text, mockContext, baseStyle);
@@ -339,9 +339,9 @@ void main() {
             ),
           ),
         );
-        final baseStyle = const TextStyle();
+        const baseStyle = TextStyle();
         final parser = TextfParser();
-        final text = 'Visit [`Code Link`](https://example.com)';
+        const text = 'Visit [`Code Link`](https://example.com)';
 
         // Parse
         final spans = parser.parse(text, mockContext, baseStyle);
@@ -380,19 +380,19 @@ void main() {
         expect(
           innerSpan.style?.fontFamily,
           expectedInnerCodeStyle.fontFamily,
-          reason: "Inner span should have monospace font",
+          reason: 'Inner span should have monospace font',
         );
         expect(
           innerSpan.style?.backgroundColor,
           // Expect theme surfaceContainer color
           lightTheme.colorScheme.surfaceContainer,
-          reason: "Inner span should have theme code background",
+          reason: 'Inner span should have theme code background',
         );
         expect(
           innerSpan.style?.color,
           // Expect theme code text color
           lightTheme.colorScheme.onSurfaceVariant,
-          reason: "Inner span should have theme code text color",
+          reason: 'Inner span should have theme code text color',
         );
       });
     });
@@ -401,8 +401,8 @@ void main() {
       testWidgets('multiple formatting styles in link', (tester) async {
         // Setup
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = const TextStyle();
-        final text = 'Visit [**Bold** and *italic* text](https://example.com)';
+        const baseStyle = TextStyle();
+        const text = 'Visit [**Bold** and *italic* text](https://example.com)';
 
         // Parse
         final spans = parser.parse(text, mockContext, baseStyle);
@@ -457,8 +457,8 @@ void main() {
       testWidgets('nested formatting in link text', (tester) async {
         // Setup
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = const TextStyle();
-        final text = 'Visit [**Bold _and italic_**](https://example.com)';
+        const baseStyle = TextStyle();
+        const text = 'Visit [**Bold _and italic_**](https://example.com)';
 
         // Parse
         final spans = parser.parse(text, mockContext, baseStyle);
@@ -498,9 +498,9 @@ void main() {
     group('Style Inheritance', () {
       testWidgets('link style is properly applied to formatted text from TextfOptions', (tester) async {
         // Define styles and options
-        final baseStyle = const TextStyle(fontSize: 16, color: Colors.black);
-        final optionsUrlStyle = TextStyle(color: Colors.red, fontSize: 18, decoration: TextDecoration.none);
-        final optionsBoldStyle =
+        const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
+        const optionsUrlStyle = TextStyle(color: Colors.red, fontSize: 18, decoration: TextDecoration.none);
+        const optionsBoldStyle =
             TextStyle(fontWeight: FontWeight.w900, decoration: TextDecoration.underline); // Add another prop to bold
 
         // Setup widget tree with TextfOptions
@@ -547,17 +547,17 @@ void main() {
         expect(
           hoverableWidget.normalStyle.color,
           optionsUrlStyle.color,
-          reason: "Normal link style should have options color",
+          reason: 'Normal link style should have options color',
         );
         expect(
           hoverableWidget.normalStyle.fontSize,
           optionsUrlStyle.fontSize,
-          reason: "Normal link style should have options font size",
+          reason: 'Normal link style should have options font size',
         );
         expect(
           hoverableWidget.normalStyle.decoration,
           optionsUrlStyle.decoration,
-          reason: "Normal link style should have options decoration",
+          reason: 'Normal link style should have options decoration',
         );
 
         // Verify HoverableLinkSpan properties
@@ -597,7 +597,7 @@ void main() {
             ),
           ),
         );
-        final baseStyle = TextStyle(
+        const baseStyle = TextStyle(
           // Base style is purple
           fontFamily: 'Roboto',
           fontSize: 20,
@@ -628,7 +628,7 @@ void main() {
           hoverableWidget.normalStyle.color,
           // Expect theme primary color, overriding base purple
           lightTheme.colorScheme.primary,
-          reason: "Theme link color should override base color",
+          reason: 'Theme link color should override base color',
         );
         expect(hoverableWidget.normalStyle.decoration, TextDecoration.underline);
 
@@ -647,7 +647,7 @@ void main() {
           innerSpan.style?.color,
           // Expect theme primary color
           lightTheme.colorScheme.primary,
-          reason: "Inner span should inherit theme link color",
+          reason: 'Inner span should inherit theme link color',
         );
         expect(innerSpan.style?.decoration, TextDecoration.underline);
 
@@ -660,8 +660,8 @@ void main() {
       testWidgets('escaped formatting characters in link text', (tester) async {
         // Setup
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = const TextStyle();
-        final text = r'Visit [This is \*not formatted\*](https://example.com)';
+        const baseStyle = TextStyle();
+        const text = r'Visit [This is \*not formatted\*](https://example.com)';
 
         // Parse
         final spans = parser.parse(text, mockContext, baseStyle);
@@ -681,16 +681,16 @@ void main() {
         expect(
           hoverableWidget.initialPlainText,
           'This is *not formatted*',
-          reason: "Escaped text should be in initialPlainText",
+          reason: 'Escaped text should be in initialPlainText',
         );
-        expect(hoverableWidget.initialChildrenSpans, isEmpty, reason: "Should have no children spans for escaped text");
+        expect(hoverableWidget.initialChildrenSpans, isEmpty, reason: 'Should have no children spans for escaped text');
       });
 
       testWidgets('Unicode characters in link text', (tester) async {
         // Setup
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = const TextStyle();
-        final text = 'Visit [**你好世界**](https://example.com)';
+        const baseStyle = TextStyle();
+        const text = 'Visit [**你好世界**](https://example.com)';
 
         // Parse
         final spans = parser.parse(text, mockContext, baseStyle);
@@ -718,8 +718,8 @@ void main() {
       testWidgets('empty link text', (tester) async {
         // Setup
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = const TextStyle();
-        final text = 'Visit [](https://example.com)';
+        const baseStyle = TextStyle();
+        const text = 'Visit [](https://example.com)';
 
         // Parse
         final spans = parser.parse(text, mockContext, baseStyle);
@@ -742,7 +742,7 @@ void main() {
         // Added 'with formatting'
         // Setup
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = const TextStyle();
+        const baseStyle = TextStyle();
         final longText = 'A' * 1000;
         final text = 'Visit [**$longText**](https://example.com)'; // Make it bold
 
@@ -775,21 +775,21 @@ void main() {
       testWidgets('multiple links with different formatting', (tester) async {
         // Setup
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final baseStyle = const TextStyle();
-        final text = 'Visit [**Bold**](https://bold.com) or [*Italic*](https://italic.com)';
+        const baseStyle = TextStyle();
+        const text = 'Visit [**Bold**](https://bold.com) or [*Italic*](https://italic.com)';
 
         // Parse
         final spans = parser.parse(text, mockContext, baseStyle);
 
         // Verify structure
-        expect(spans.length, 4, reason: "Should have 4 spans total");
-        expect(spans[0], isA<TextSpan>(), reason: "First span is plain text");
-        expect(spans[2], isA<TextSpan>(), reason: "Third span is plain text");
+        expect(spans.length, 4, reason: 'Should have 4 spans total');
+        expect(spans[0], isA<TextSpan>(), reason: 'First span is plain text');
+        expect(spans[2], isA<TextSpan>(), reason: 'Third span is plain text');
 
         // --- Verify First Link (Bold) ---
-        expect(spans[1], isA<WidgetSpan>(), reason: "Span at index 1 should be a WidgetSpan for the bold link");
+        expect(spans[1], isA<WidgetSpan>(), reason: 'Span at index 1 should be a WidgetSpan for the bold link');
         final widgetSpan1 = spans[1] as WidgetSpan;
-        expect(widgetSpan1.child, isA<HoverableLinkSpan>(), reason: "WidgetSpan 1 should contain a HoverableLinkSpan");
+        expect(widgetSpan1.child, isA<HoverableLinkSpan>(), reason: 'WidgetSpan 1 should contain a HoverableLinkSpan');
         final hoverableWidget1 = widgetSpan1.child as HoverableLinkSpan;
 
         // Verify properties of the first HoverableLinkSpan
@@ -798,7 +798,7 @@ void main() {
         expect(
           hoverableWidget1.initialPlainText,
           isNull,
-          reason: "Link text has internal formatting, so plain text should be null",
+          reason: 'Link text has internal formatting, so plain text should be null',
         );
         // Debug output showed length is 1
         expect(
@@ -810,12 +810,12 @@ void main() {
         // --- ADJUSTMENT: Access the *direct* inner span ---
         // Since children is null, the first element IS the actual formatted span
         final innerSpan1 = hoverableWidget1.initialChildrenSpans[0];
-        expect(innerSpan1, isA<TextSpan>(), reason: "The single child span should be a TextSpan");
+        expect(innerSpan1, isA<TextSpan>(), reason: 'The single child span should be a TextSpan');
         // --- END ADJUSTMENT ---
 
         // Check style of the actual inner span
         expect((innerSpan1 as TextSpan).text, 'Bold');
-        expect(innerSpan1.style?.fontWeight, FontWeight.bold, reason: "Inner span should be bold");
+        expect(innerSpan1.style?.fontWeight, FontWeight.bold, reason: 'Inner span should be bold');
         expect(
           innerSpan1.style?.color,
           hoverableWidget1.normalStyle.color,
@@ -825,9 +825,9 @@ void main() {
         expect(innerSpan1.children, isNull, reason: "Directly returned span shouldn't have nested children here");
 
         // --- Verify Second Link (Italic) ---
-        expect(spans[3], isA<WidgetSpan>(), reason: "Span at index 3 should be a WidgetSpan for the italic link");
+        expect(spans[3], isA<WidgetSpan>(), reason: 'Span at index 3 should be a WidgetSpan for the italic link');
         final widgetSpan2 = spans[3] as WidgetSpan;
-        expect(widgetSpan2.child, isA<HoverableLinkSpan>(), reason: "WidgetSpan 2 should contain a HoverableLinkSpan");
+        expect(widgetSpan2.child, isA<HoverableLinkSpan>(), reason: 'WidgetSpan 2 should contain a HoverableLinkSpan');
         final hoverableWidget2 = widgetSpan2.child as HoverableLinkSpan;
 
         // Verify properties of the second HoverableLinkSpan
@@ -843,12 +843,12 @@ void main() {
 
         // --- ADJUSTMENT: Access the *direct* inner span ---
         final innerSpan2 = hoverableWidget2.initialChildrenSpans[0];
-        expect(innerSpan2, isA<TextSpan>(), reason: "The single child span should be a TextSpan");
+        expect(innerSpan2, isA<TextSpan>(), reason: 'The single child span should be a TextSpan');
         // --- END ADJUSTMENT ---
 
         // Check style of the actual inner span
         expect((innerSpan2 as TextSpan).text, 'Italic');
-        expect(innerSpan2.style?.fontStyle, FontStyle.italic, reason: "Inner span should be italic");
+        expect(innerSpan2.style?.fontStyle, FontStyle.italic, reason: 'Inner span should be italic');
         expect(
           innerSpan2.style?.color,
           hoverableWidget2.normalStyle.color,
@@ -874,9 +874,9 @@ void main() {
             ),
           ),
         );
-        final baseStyle = const TextStyle(color: Colors.black); // Base style is black
+        const baseStyle = TextStyle(color: Colors.black); // Base style is black
         final parser = TextfParser();
-        final text = '**Bold text with [a link](https://example.com) inside**';
+        const text = '**Bold text with [a link](https://example.com) inside**';
 
         // Parse
         final spans = parser.parse(text, mockContext, baseStyle);
@@ -885,14 +885,14 @@ void main() {
         expect(spans.length, 3);
 
         // Verify Bold Start
-        expect(spans[0], isA<TextSpan>(), reason: "First span should be bold text");
+        expect(spans[0], isA<TextSpan>(), reason: 'First span should be bold text');
         final boldStartSpan = spans[0] as TextSpan;
         expect(boldStartSpan.text, 'Bold text with ');
         expect(boldStartSpan.style?.fontWeight, FontWeight.bold);
-        expect(boldStartSpan.style?.color, baseStyle.color, reason: "Should inherit base color");
+        expect(boldStartSpan.style?.color, baseStyle.color, reason: 'Should inherit base color');
 
         // Verify Link Span
-        expect(spans[1], isA<WidgetSpan>(), reason: "Second span should be the link WidgetSpan");
+        expect(spans[1], isA<WidgetSpan>(), reason: 'Second span should be the link WidgetSpan');
         final widgetSpan = spans[1] as WidgetSpan;
         expect(widgetSpan.child, isA<HoverableLinkSpan>());
         final hoverableWidget = widgetSpan.child as HoverableLinkSpan;
@@ -901,8 +901,8 @@ void main() {
         expect(hoverableWidget.url, 'https://example.com');
         expect(hoverableWidget.rawDisplayText, 'a link');
         // Check plain text handling because inner link text has no formatting
-        expect(hoverableWidget.initialPlainText, 'a link', reason: "Link text is plain, should be in initialPlainText");
-        expect(hoverableWidget.initialChildrenSpans, isEmpty, reason: "Plain link text should have no children spans");
+        expect(hoverableWidget.initialPlainText, 'a link', reason: 'Link text is plain, should be in initialPlainText');
+        expect(hoverableWidget.initialChildrenSpans, isEmpty, reason: 'Plain link text should have no children spans');
 
         expect(
           hoverableWidget.normalStyle.fontWeight,
@@ -938,9 +938,9 @@ void main() {
             ),
           ),
         );
-        final baseStyle = const TextStyle();
+        const baseStyle = TextStyle();
         final parser = TextfParser();
-        final text = 'Visit [**Bold** *Italic* ~~Strike~~ `Code` **_Both_**](https://example.com)';
+        const text = 'Visit [**Bold** *Italic* ~~Strike~~ `Code` **_Both_**](https://example.com)';
 
         // Parse
         final spans = parser.parse(text, mockContext, baseStyle);
@@ -1006,7 +1006,7 @@ void main() {
           codeSpan.style?.backgroundColor,
           // Expect theme background color
           lightTheme.colorScheme.surfaceContainer,
-          reason: "Code segment inside link should use theme background",
+          reason: 'Code segment inside link should use theme background',
         );
         expect(codeSpan.style?.color, expectedInnerCodeStyle.color);
 
@@ -1046,7 +1046,7 @@ void main() {
         // We need to find the HoverableLinkSpan widget rendered on screen.
         // Since there's only one link, finding by type should be sufficient.
         final linkFinder = find.byType(HoverableLinkSpan);
-        expect(linkFinder, findsOneWidget, reason: "Should find the HoverableLinkSpan widget");
+        expect(linkFinder, findsOneWidget, reason: 'Should find the HoverableLinkSpan widget');
 
         // --- Simulate Tap ---
         await tester.tap(linkFinder);
@@ -1054,15 +1054,15 @@ void main() {
         await tester.pumpAndSettle();
 
         // --- Verify Callback Invocation and Parameters ---
-        expect(tapCalled, isTrue, reason: "onUrlTap callback should have been triggered");
-        expect(tappedUrl, expectedUrl, reason: "Callback should receive the correct URL");
-        expect(tappedText, expectedRawText, reason: "Callback should receive the raw display text");
+        expect(tapCalled, isTrue, reason: 'onUrlTap callback should have been triggered');
+        expect(tappedUrl, expectedUrl, reason: 'Callback should receive the correct URL');
+        expect(tappedText, expectedRawText, reason: 'Callback should receive the raw display text');
       });
 
       testWidgets('onUrlHover callback is triggered on hover', (tester) async {
         // --- Setup Callback Tracking ---
         bool hoverCalled = false;
-        bool isHovering = false;
+        bool isHover = false;
         String? hoveredUrl;
         String? hoveredText;
         const inputText = 'Visit [Flutter](https://flutter.dev)';
@@ -1075,11 +1075,11 @@ void main() {
           data: inputText,
           textfOptions: TextfOptions(
             child: const SizedBox.shrink(), // Dummy child
-            onUrlHover: (url, displayText, hovering) {
+            onUrlHover: (url, displayText, {required bool isHovering}) {
               hoverCalled = true;
               hoveredUrl = url;
               hoveredText = displayText;
-              isHovering = hovering;
+              isHover = isHovering;
             },
           ),
         );
@@ -1095,8 +1095,8 @@ void main() {
         await tester.pump(); // Allow hover event processing
 
         // --- Verify Hover Enter Callback ---
-        expect(hoverCalled, isTrue, reason: "onUrlHover should be called on enter");
-        expect(isHovering, isTrue, reason: "isHovering should be true on enter");
+        expect(hoverCalled, isTrue, reason: 'onUrlHover should be called on enter');
+        expect(isHover, isTrue, reason: 'isHovering should be true on enter');
         expect(hoveredUrl, expectedUrl);
         expect(hoveredText, expectedRawText);
 
@@ -1106,8 +1106,8 @@ void main() {
         await tester.pump(); // Allow hover event processing
 
         // --- Verify Hover Exit Callback ---
-        expect(hoverCalled, isTrue, reason: "onUrlHover should be called again on exit");
-        expect(isHovering, isFalse, reason: "isHovering should be false on exit");
+        expect(hoverCalled, isTrue, reason: 'onUrlHover should be called again on exit');
+        expect(isHover, isFalse, reason: 'isHovering should be false on exit');
         // URL and text should remain the same from the last call
         expect(hoveredUrl, expectedUrl);
         expect(hoveredText, expectedRawText);

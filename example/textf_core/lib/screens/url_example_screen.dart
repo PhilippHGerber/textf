@@ -86,7 +86,7 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
     // _launchUrl(url); // Optional auto-launch
   }
 
-  void _handleUrlHover(String url, String rawDisplayText, bool isHovering) {
+  void _handleUrlHover(String url, String rawDisplayText, {required bool isHovering}) {
     if (!mounted) return;
     // Optimization: Only update state/overlay if hover status or URL changes,
     // or if we are definitely starting to hover over a valid URL.

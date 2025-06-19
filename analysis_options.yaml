@@ -8,7 +8,6 @@ analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
-    - "test/**"
 
   errors:
     unused_import: warning

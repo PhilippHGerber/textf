@@ -88,7 +88,7 @@ void main() {
       });
 
       test('applies specified thickness', () {
-        final newStyle = DefaultStyles.strikethroughStyle(baseStyle, thickness: 3.0);
+        final newStyle = DefaultStyles.strikethroughStyle(baseStyle, thickness: 3);
         expect(newStyle.decorationThickness, 3.0);
       });
     });

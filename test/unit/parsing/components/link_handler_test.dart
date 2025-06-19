@@ -46,7 +46,7 @@ class MockLinkStyleResolver extends TextfStyleResolver {
   void Function(String url, String displayText)? resolveOnUrlTap() => null;
 
   @override
-  void Function(String url, String displayText, bool isHovering)? resolveOnUrlHover() => null;
+  void Function(String url, String displayText, {required bool isHovering})? resolveOnUrlHover() => null;
 
   // We don't need to override `resolveStyle` because the LinkHandler
   // uses its own internal parser for nested content, but we could if needed.
@@ -106,7 +106,7 @@ void main() {
         final hoverableSpan = widgetSpan.child as HoverableLinkSpan;
         expect(hoverableSpan.url, 'http://example.com');
         expect(hoverableSpan.rawDisplayText, 'link text');
-        expect(hoverableSpan.normalStyle.color, Colors.blue, reason: "Normal style should come from mock resolver");
+        expect(hoverableSpan.normalStyle.color, Colors.blue, reason: 'Normal style should come from mock resolver');
 
         expect(state.processedIndices, {0, 1, 2, 3, 4}, reason: 'All link tokens should be marked as processed');
       });
