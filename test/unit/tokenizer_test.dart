@@ -1,9 +1,12 @@
+// ignore_for_file: no-magic-number
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/token_type.dart';
 import 'package:textf/src/parsing/textf_tokenizer.dart';
 
 void main() {
   group('Tokenizer Tests', () {
+    // ignore: avoid-late-keyword
     late TextfTokenizer tokenizer;
 
     setUp(() {
@@ -19,17 +22,17 @@ void main() {
       test('Plain text returns single text token', () {
         final tokens = tokenizer.tokenize('plain text');
         expect(tokens.length, 1);
-        expect(tokens[0].type, TokenType.text);
-        expect(tokens[0].value, 'plain text');
-        expect(tokens[0].position, 0);
-        expect(tokens[0].length, 10);
+        expect(tokens.first.type, TokenType.text);
+        expect(tokens.first.value, 'plain text');
+        expect(tokens.first.position, 0);
+        expect(tokens.first.length, 10);
       });
 
       test('Whitespace-only text returns single text token', () {
         final tokens = tokenizer.tokenize('   \t\n');
         expect(tokens.length, 1);
-        expect(tokens[0].type, TokenType.text);
-        expect(tokens[0].value, '   \t\n');
+        expect(tokens.first.type, TokenType.text);
+        expect(tokens.first.value, '   \t\n');
       });
     });
 
@@ -37,8 +40,8 @@ void main() {
       test('Bold text with asterisks', () {
         final tokens = tokenizer.tokenize('This is **bold** text');
         expect(tokens.length, 5);
-        expect(tokens[0].type, TokenType.text);
-        expect(tokens[0].value, 'This is ');
+        expect(tokens.first.type, TokenType.text);
+        expect(tokens.first.value, 'This is ');
         expect(tokens[1].type, TokenType.boldMarker);
         expect(tokens[1].value, '**');
         expect(tokens[2].type, TokenType.text);
@@ -61,8 +64,8 @@ void main() {
       test('Bold marker at beginning of text', () {
         final tokens = tokenizer.tokenize('**Bold** at start');
         expect(tokens.length, 4);
-        expect(tokens[0].type, TokenType.boldMarker);
-        expect(tokens[0].value, '**');
+        expect(tokens.first.type, TokenType.boldMarker);
+        expect(tokens.first.value, '**');
         expect(tokens[1].type, TokenType.text);
         expect(tokens[1].value, 'Bold');
       });
@@ -99,8 +102,8 @@ void main() {
       test('Italic marker at beginning of text', () {
         final tokens = tokenizer.tokenize('*Italic* at start');
         expect(tokens.length, 4);
-        expect(tokens[0].type, TokenType.italicMarker);
-        expect(tokens[0].value, '*');
+        expect(tokens.first.type, TokenType.italicMarker);
+        expect(tokens.first.value, '*');
       });
 
       test('Italic marker at end of text', () {
@@ -144,8 +147,8 @@ void main() {
       test('Single tilde is not recognized as strikethrough', () {
         final tokens = tokenizer.tokenize('This is ~not strikethrough~ text');
         expect(tokens.length, 1);
-        expect(tokens[0].type, TokenType.text);
-        expect(tokens[0].value, 'This is ~not strikethrough~ text');
+        expect(tokens.first.type, TokenType.text);
+        expect(tokens.first.value, 'This is ~not strikethrough~ text');
       });
     });
 
@@ -174,8 +177,8 @@ void main() {
       test('Escaped asterisk', () {
         final tokens = tokenizer.tokenize(r'This is \*not italic\*');
         expect(tokens.length, 4);
-        expect(tokens[0].type, TokenType.text);
-        expect(tokens[0].value, 'This is ');
+        expect(tokens.first.type, TokenType.text);
+        expect(tokens.first.value, 'This is ');
         expect(tokens[1].type, TokenType.text);
         expect(tokens[1].value, '*');
         expect(tokens[2].type, TokenType.text);
@@ -232,15 +235,15 @@ void main() {
       test('Escape followed by non-special character is treated literally', () {
         final tokens = tokenizer.tokenize(r'This has \a normal character');
         expect(tokens.length, 1);
-        expect(tokens[0].type, TokenType.text);
-        expect(tokens[0].value, r'This has \a normal character');
+        expect(tokens.first.type, TokenType.text);
+        expect(tokens.first.value, r'This has \a normal character');
       });
 
       test('Escape at end of string is preserved', () {
         final tokens = tokenizer.tokenize(r'Text ending with backslash \');
         expect(tokens.length, 1);
-        expect(tokens[0].type, TokenType.text);
-        expect(tokens[0].value, r'Text ending with backslash \');
+        expect(tokens.first.type, TokenType.text);
+        expect(tokens.first.value, r'Text ending with backslash \');
       });
     });
 
@@ -248,8 +251,8 @@ void main() {
       test('Bold with nested italic using different marker types', () {
         final tokens = tokenizer.tokenize('**Bold with _nested italic_**');
         expect(tokens.length, 6);
-        expect(tokens[0].type, TokenType.boldMarker);
-        expect(tokens[0].value, '**');
+        expect(tokens.first.type, TokenType.boldMarker);
+        expect(tokens.first.value, '**');
         expect(tokens[1].type, TokenType.text);
         expect(tokens[1].value, 'Bold with ');
         expect(tokens[2].type, TokenType.italicMarker);
@@ -287,7 +290,7 @@ void main() {
       test('Adjacent markers', () {
         final tokens = tokenizer.tokenize('**Bold**_Italic_');
         expect(tokens.length, 6);
-        expect(tokens[0].type, TokenType.boldMarker);
+        expect(tokens.first.type, TokenType.boldMarker);
         expect(tokens[2].type, TokenType.boldMarker);
         expect(tokens[3].type, TokenType.italicMarker);
         expect(tokens[5].type, TokenType.italicMarker);
@@ -301,7 +304,7 @@ void main() {
       test('Potential nested formatting (tokenizer handles without validation)', () {
         final tokens = tokenizer.tokenize('**Bold with _nested italic_**');
         expect(tokens.length, 6);
-        expect(tokens[0].type, TokenType.boldMarker);
+        expect(tokens.first.type, TokenType.boldMarker);
         expect(tokens[2].type, TokenType.italicMarker);
         expect(tokens[4].type, TokenType.italicMarker);
         expect(tokens[5].type, TokenType.boldMarker);
@@ -352,7 +355,7 @@ void main() {
           'This * is not formatting and neither is this _ character',
         );
         expect(tokens.length, 5);
-        expect(tokens[0].type, TokenType.text);
+        expect(tokens.first.type, TokenType.text);
         expect(tokens[1].type, TokenType.italicMarker);
         expect(tokens[3].type, TokenType.italicMarker);
       });
@@ -361,8 +364,8 @@ void main() {
         final longText = 'A' * 10000;
         final tokens = tokenizer.tokenize(longText);
         expect(tokens.length, 1);
-        expect(tokens[0].type, TokenType.text);
-        expect(tokens[0].value.length, 10000);
+        expect(tokens.first.type, TokenType.text);
+        expect(tokens.first.value.length, 10000);
       });
 
       test('Very long input with formatting', () {
@@ -370,8 +373,8 @@ void main() {
         final longSuffix = 'B' * 5000;
         final tokens = tokenizer.tokenize('$longPrefix**bold**$longSuffix');
         expect(tokens.length, 5);
-        expect(tokens[0].type, TokenType.text);
-        expect(tokens[0].value.length, 5000);
+        expect(tokens.first.type, TokenType.text);
+        expect(tokens.first.value.length, 5000);
         expect(tokens[4].type, TokenType.text);
         expect(tokens[4].value.length, 5000);
       });
@@ -389,7 +392,7 @@ void main() {
 
       test('Alternating character formatting', () {
         // This is a pathological case: b*o*l*d* (every character has a marker)
-        final text = List.generate(100, (i) => '${String.fromCharCode(97 + i)}*').join();
+        final text = List.generate(100, (i) => '${String.fromCharCode(i + 97)}*').join();
         final tokens = tokenizer.tokenize(text);
         expect(tokens.length > 100, true);
       });

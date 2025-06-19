@@ -1,11 +1,14 @@
+// ignore_for_file: avoid-non-null-assertion
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
 import 'package:textf/src/widgets/textf_options.dart';
 
 // ----- Helper Class and Callbacks -----
-class ResolvedOptions {
-  ResolvedOptions({
+// ignore: prefer-match-file-name
+class _ResolvedOptions {
+  _ResolvedOptions({
     this.urlStyle,
     this.urlHoverStyle,
     this.urlMouseCursor,
@@ -19,7 +22,7 @@ class ResolvedOptions {
   });
 
   // Factory to create from context
-  factory ResolvedOptions.fromContext(BuildContext context, TextStyle baseStyle) {
+  factory _ResolvedOptions.fromContext(BuildContext context, TextStyle baseStyle) {
     final TextfOptions? nearestOptions = TextfOptions.maybeOf(context);
     final ThemeData theme = Theme.of(context); // Get theme for fallbacks
 
@@ -83,7 +86,7 @@ class ResolvedOptions {
     final resolvedTap = nearestOptions?.getEffectiveOnUrlTap(context); // Null if not found
     final resolvedHoverCb = nearestOptions?.getEffectiveOnUrlHover(context); // Null if not found
 
-    return ResolvedOptions(
+    return _ResolvedOptions(
       urlStyle: resolvedUrl,
       urlHoverStyle: resolvedUrlHover,
       urlMouseCursor: resolvedCursor,
@@ -109,10 +112,17 @@ class ResolvedOptions {
 }
 
 // Dummy callbacks
-void dummyTap1(String u, String d) {}
-void dummyTap2(String u, String d) {}
-void dummyHover1(String u, String d, {required bool isHovering}) {}
-void dummyHover2(String u, String d, {required bool isHovering}) {}
+void _dummyTap1(String u, String d) {
+  debugPrint('Dummy tap 1: $u, $d');
+}
+
+void _dummyTap2(String u, String d) {
+  debugPrint('Dummy tap 2: $u, $d');
+}
+
+void _dummyHover2(String u, String d, {required bool isHovering}) {
+  debugPrint('Dummy hover 2: $u, $d, hovering: $isHovering');
+}
 // ----------------------------------------------------------
 
 void main() {
@@ -123,17 +133,17 @@ void main() {
   const rootBoldStyle = TextStyle(fontWeight: FontWeight.w900, color: Colors.red);
   const rootUrlStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
   const rootCursor = SystemMouseCursors.text;
-  const rootOnTap = dummyTap1;
+  const rootOnTap = _dummyTap1;
 
   const childUrlStyle = TextStyle(color: Colors.green, fontSize: 18);
   const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
 
-  const childOnTap = dummyTap2;
+  const childOnTap = _dummyTap2;
   // ----------------------------------------------------
 
   group('TextfOptions Inheritance Tests', () {
     testWidgets('Falls back to defaults when no TextfOptions is present', (tester) async {
-      ResolvedOptions? resolved;
+      _ResolvedOptions? resolved;
       final theme = ThemeData.light(); // Use a specific theme
       TextStyle? capturedDefaultStyle; // To capture the style from context
 
@@ -152,7 +162,7 @@ void main() {
                 reason: 'Captured DefaultTextStyle must have a fontSize',
               );
               // Pass the captured style explicitly as the base style
-              resolved = ResolvedOptions.fromContext(context, capturedDefaultStyle!);
+              resolved = _ResolvedOptions.fromContext(context, capturedDefaultStyle!);
               return const SizedBox();
             },
           ),
@@ -229,7 +239,7 @@ void main() {
     });
 
     testWidgets('Uses values from single ancestor', (tester) async {
-      ResolvedOptions? resolved;
+      _ResolvedOptions? resolved;
       final theme = ThemeData.light();
 
       await tester.pumpWidget(
@@ -243,7 +253,7 @@ void main() {
             // italicStyle left null
             child: Builder(
               builder: (context) {
-                resolved = ResolvedOptions.fromContext(context, baseStyle);
+                resolved = _ResolvedOptions.fromContext(context, baseStyle);
                 return const SizedBox();
               },
             ),
@@ -269,7 +279,7 @@ void main() {
     });
 
     testWidgets('Nested options override ancestor values', (tester) async {
-      ResolvedOptions? resolved;
+      _ResolvedOptions? resolved;
       final theme = ThemeData.light();
 
       await tester.pumpWidget(
@@ -287,7 +297,7 @@ void main() {
               // Italic style NOT specified here
               child: Builder(
                 builder: (context) {
-                  resolved = ResolvedOptions.fromContext(context, baseStyle); // black, size 16
+                  resolved = _ResolvedOptions.fromContext(context, baseStyle); // black, size 16
                   return const SizedBox();
                 },
               ),
@@ -314,7 +324,7 @@ void main() {
     });
 
     testWidgets('Nested options inherit unspecified values from ancestor', (tester) async {
-      ResolvedOptions? resolved;
+      _ResolvedOptions? resolved;
       final theme = ThemeData.light();
 
       await tester.pumpWidget(
@@ -329,12 +339,12 @@ void main() {
               // Child (provides childUrl, italic, hover)
               urlStyle: childUrlStyle, // green, 18 (no decoration)
               italicStyle: childItalicStyle, // normal, yellow bg
-              onUrlHover: dummyHover2,
+              onUrlHover: _dummyHover2,
               // boldStyle is null here
               // onUrlTap is null here
               child: Builder(
                 builder: (context) {
-                  resolved = ResolvedOptions.fromContext(context, baseStyle); // black, 16
+                  resolved = _ResolvedOptions.fromContext(context, baseStyle); // black, 16
                   return const SizedBox();
                 },
               ),
@@ -348,7 +358,7 @@ void main() {
       expect(resolved!.italicStyle?.fontStyle, childItalicStyle.fontStyle); // normal
       expect(resolved!.italicStyle?.backgroundColor, childItalicStyle.backgroundColor); // yellow bg
       expect(resolved!.italicStyle?.fontSize, baseStyle.fontSize); // base size
-      expect(resolved!.onUrlHover, same(dummyHover2));
+      expect(resolved!.onUrlHover, same(_dummyHover2));
 
       // Value specified in Child (overriding Root for url)
       expect(resolved!.urlStyle?.color, childUrlStyle.color); // green
@@ -367,7 +377,7 @@ void main() {
     });
 
     testWidgets('Inheritance works across multiple levels', (tester) async {
-      ResolvedOptions? resolved;
+      _ResolvedOptions? resolved;
       final theme = ThemeData.light();
 
       await tester.pumpWidget(
@@ -383,11 +393,11 @@ void main() {
               child: TextfOptions(
                 // Level 3 (Leaf: url, hover)
                 urlStyle: childUrlStyle, // green, 18
-                onUrlHover: dummyHover2,
+                onUrlHover: _dummyHover2,
                 // codeStyle not specified anywhere
                 child: Builder(
                   builder: (context) {
-                    resolved = ResolvedOptions.fromContext(context, baseStyle); // black, 16
+                    resolved = _ResolvedOptions.fromContext(context, baseStyle); // black, 16
                     return const SizedBox();
                   },
                 ),
@@ -401,7 +411,7 @@ void main() {
       // Comes from Leaf (Level 3)
       expect(resolved!.urlStyle?.color, childUrlStyle.color); // green
       expect(resolved!.urlStyle?.fontSize, childUrlStyle.fontSize); // 18
-      expect(resolved!.onUrlHover, same(dummyHover2));
+      expect(resolved!.onUrlHover, same(_dummyHover2));
       // Comes from Mid (Level 2)
       expect(resolved!.italicStyle?.backgroundColor, childItalicStyle.backgroundColor); // yellow bg
       expect(resolved!.italicStyle?.fontStyle, childItalicStyle.fontStyle); // normal
@@ -420,7 +430,7 @@ void main() {
     });
 
     testWidgets('Correctly merges styles with baseStyle', (tester) async {
-      ResolvedOptions? resolved;
+      _ResolvedOptions? resolved;
       final theme = ThemeData.light();
       // Use a distinct base style
       const specificBaseStyle = TextStyle(fontSize: 10, fontFamily: 'Arial', color: Colors.grey);
@@ -438,7 +448,7 @@ void main() {
             ),
             child: Builder(
               builder: (context) {
-                resolved = ResolvedOptions.fromContext(context, specificBaseStyle); // grey, 10, Arial
+                resolved = _ResolvedOptions.fromContext(context, specificBaseStyle); // grey, 10, Arial
                 return const SizedBox();
               },
             ),

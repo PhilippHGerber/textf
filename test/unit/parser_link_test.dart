@@ -1,3 +1,5 @@
+// ignore_for_file: avoid-late-keyword, no-magic-number
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -62,8 +64,8 @@ void main() {
 
         // Verify overall structure (remains the same)
         expect(spans.length, 2);
-        expect(spans[0], isA<TextSpan>());
-        expect((spans[0] as TextSpan).text, 'Visit ');
+        expect(spans.first, isA<TextSpan>());
+        expect((spans.first as TextSpan).text, 'Visit ');
         expect(spans[1], isA<WidgetSpan>());
         final widgetSpan = spans[1] as WidgetSpan;
         expect(widgetSpan.child, isA<HoverableLinkSpan>());
@@ -139,8 +141,8 @@ void main() {
 
         // Verify overall structure
         expect(spans.length, 2, reason: "Should have 2 spans: 'Visit ' and the link");
-        expect(spans[0], isA<TextSpan>());
-        expect((spans[0] as TextSpan).text, 'Visit ');
+        expect(spans.first, isA<TextSpan>());
+        expect((spans.first as TextSpan).text, 'Visit ');
 
         // --- Verify the WidgetSpan for the link ---
         expect(spans[1], isA<WidgetSpan>(), reason: 'Link span should be a WidgetSpan');
@@ -176,8 +178,8 @@ void main() {
         expect(spans.length, 4, reason: 'Should have 4 spans total');
 
         // --- Check text spans  ---
-        expect(spans[0], isA<TextSpan>());
-        expect((spans[0] as TextSpan).text, 'Visit ');
+        expect(spans.first, isA<TextSpan>());
+        expect((spans.first as TextSpan).text, 'Visit ');
         expect(spans[2], isA<TextSpan>());
         expect((spans[2] as TextSpan).text, ' or ');
 
@@ -219,7 +221,7 @@ void main() {
 
         // Verify structure
         expect(spans.length, 2);
-        expect(spans[0], isA<TextSpan>()); // "Visit "
+        expect(spans.first, isA<TextSpan>()); // "Visit "
         expect(spans[1], isA<WidgetSpan>()); // Link WidgetSpan
         final widgetSpan = spans[1] as WidgetSpan;
         expect(widgetSpan.child, isA<HoverableLinkSpan>());
@@ -233,7 +235,7 @@ void main() {
         expect(hoverableWidget.initialChildrenSpans.length, 1, reason: 'Link text itself has one formatted part');
 
         // --- Verify the *inner* span's style ---
-        final innerSpan = hoverableWidget.initialChildrenSpans[0];
+        final innerSpan = hoverableWidget.initialChildrenSpans.first;
         expect(innerSpan, isA<TextSpan>());
         final innerTextSpan = innerSpan as TextSpan;
 
@@ -278,7 +280,7 @@ void main() {
         expect(hoverableWidget.initialChildrenSpans.length, 1);
 
         // Verify the inner span's style
-        final innerSpan = hoverableWidget.initialChildrenSpans[0] as TextSpan;
+        final innerSpan = hoverableWidget.initialChildrenSpans.first as TextSpan;
         expect(innerSpan.text, 'Italic Link');
         expect(innerSpan.style?.fontStyle, FontStyle.italic, reason: 'Inner span should be italic');
 
@@ -310,7 +312,7 @@ void main() {
         expect(hoverableWidget.initialChildrenSpans.length, 1);
 
         // Verify the inner span's style
-        final innerSpan = hoverableWidget.initialChildrenSpans[0] as TextSpan;
+        final innerSpan = hoverableWidget.initialChildrenSpans.first as TextSpan;
         expect(innerSpan.text, 'Strikethrough Link');
         expect(
           innerSpan.style?.decoration,
@@ -360,7 +362,7 @@ void main() {
         expect(hoverableWidget.initialChildrenSpans.length, 1);
 
         // Verify the inner span's style
-        final innerSpan = hoverableWidget.initialChildrenSpans[0] as TextSpan;
+        final innerSpan = hoverableWidget.initialChildrenSpans.first as TextSpan;
 
         // Calculate expected code style merged with the *link's normal style*
         // The link's normal style gets the theme primary color.
@@ -428,7 +430,7 @@ void main() {
         final innerSpans = hoverableWidget.initialChildrenSpans;
 
         // Child 0: Bold
-        final boldSpan = innerSpans[0] as TextSpan;
+        final boldSpan = innerSpans.first as TextSpan;
         expect(boldSpan.text, 'Bold');
         expect(boldSpan.style?.fontWeight, FontWeight.bold);
         expect(boldSpan.style?.color, hoverableWidget.normalStyle.color); // Inherited link color
@@ -480,7 +482,7 @@ void main() {
         final innerSpans = hoverableWidget.initialChildrenSpans;
 
         // Child 0: Bold only
-        final boldSpan = innerSpans[0] as TextSpan;
+        final boldSpan = innerSpans.first as TextSpan;
         expect(boldSpan.text, 'Bold ');
         expect(boldSpan.style?.fontWeight, FontWeight.bold);
         expect(boldSpan.style?.fontStyle, isNot(FontStyle.italic)); // Not italic
@@ -566,7 +568,7 @@ void main() {
         expect(hoverableWidget.initialChildrenSpans.length, 1);
 
         // Verify the *inner* span's style (should inherit final link style + have its own format)
-        final innerSpan = hoverableWidget.initialChildrenSpans[0] as TextSpan;
+        final innerSpan = hoverableWidget.initialChildrenSpans.first as TextSpan;
         expect(innerSpan.text, 'Bold Link');
 
         // Check inheritance of the final normal link style
@@ -636,7 +638,7 @@ void main() {
         expect(hoverableWidget.rawDisplayText, '**Bold Link**');
         expect(hoverableWidget.initialPlainText, isNull);
         expect(hoverableWidget.initialChildrenSpans.length, 1);
-        final innerSpan = hoverableWidget.initialChildrenSpans[0] as TextSpan;
+        final innerSpan = hoverableWidget.initialChildrenSpans.first as TextSpan;
         expect(innerSpan.text, 'Bold Link');
 
         // Check inheritance of final link style properties
@@ -709,7 +711,7 @@ void main() {
         expect(hoverableWidget.initialChildrenSpans.length, 1);
 
         // Verify inner span
-        final innerSpan = hoverableWidget.initialChildrenSpans[0] as TextSpan;
+        final innerSpan = hoverableWidget.initialChildrenSpans.first as TextSpan;
         expect(innerSpan.text, '你好世界');
         expect(innerSpan.style?.fontWeight, FontWeight.bold);
         expect(innerSpan.style?.color, hoverableWidget.normalStyle.color); // Inherited link color
@@ -763,7 +765,7 @@ void main() {
         expect(hoverableWidget.initialChildrenSpans.length, 1);
 
         // Verify inner span
-        final innerSpan = hoverableWidget.initialChildrenSpans[0] as TextSpan;
+        final innerSpan = hoverableWidget.initialChildrenSpans.first as TextSpan;
         expect(innerSpan.text, longText); // Contains the long text
         expect(innerSpan.text?.length, 1000);
         expect(innerSpan.style?.fontWeight, FontWeight.bold); // Is bold
@@ -783,7 +785,7 @@ void main() {
 
         // Verify structure
         expect(spans.length, 4, reason: 'Should have 4 spans total');
-        expect(spans[0], isA<TextSpan>(), reason: 'First span is plain text');
+        expect(spans.first, isA<TextSpan>(), reason: 'First span is plain text');
         expect(spans[2], isA<TextSpan>(), reason: 'Third span is plain text');
 
         // --- Verify First Link (Bold) ---
@@ -809,7 +811,7 @@ void main() {
 
         // --- ADJUSTMENT: Access the *direct* inner span ---
         // Since children is null, the first element IS the actual formatted span
-        final innerSpan1 = hoverableWidget1.initialChildrenSpans[0];
+        final innerSpan1 = hoverableWidget1.initialChildrenSpans.first;
         expect(innerSpan1, isA<TextSpan>(), reason: 'The single child span should be a TextSpan');
         // --- END ADJUSTMENT ---
 
@@ -842,7 +844,7 @@ void main() {
         );
 
         // --- ADJUSTMENT: Access the *direct* inner span ---
-        final innerSpan2 = hoverableWidget2.initialChildrenSpans[0];
+        final innerSpan2 = hoverableWidget2.initialChildrenSpans.first;
         expect(innerSpan2, isA<TextSpan>(), reason: 'The single child span should be a TextSpan');
         // --- END ADJUSTMENT ---
 
@@ -885,8 +887,8 @@ void main() {
         expect(spans.length, 3);
 
         // Verify Bold Start
-        expect(spans[0], isA<TextSpan>(), reason: 'First span should be bold text');
-        final boldStartSpan = spans[0] as TextSpan;
+        expect(spans.first, isA<TextSpan>(), reason: 'First span should be bold text');
+        final boldStartSpan = spans.first as TextSpan;
         expect(boldStartSpan.text, 'Bold text with ');
         expect(boldStartSpan.style?.fontWeight, FontWeight.bold);
         expect(boldStartSpan.style?.color, baseStyle.color, reason: 'Should inherit base color');
@@ -961,10 +963,10 @@ void main() {
 
         // --- Verify *inner* spans ---
         final linkNormalColor = lightTheme.colorScheme.primary; // Use theme color
-        expect(innerSpans[0], isA<TextSpan>());
-        expect((innerSpans[0] as TextSpan).text, 'Bold');
-        expect((innerSpans[0] as TextSpan).style?.fontWeight, FontWeight.bold);
-        expect((innerSpans[0] as TextSpan).style?.color, linkNormalColor);
+        expect(innerSpans.first, isA<TextSpan>());
+        expect((innerSpans.first as TextSpan).text, 'Bold');
+        expect((innerSpans.first as TextSpan).style?.fontWeight, FontWeight.bold);
+        expect((innerSpans.first as TextSpan).style?.color, linkNormalColor);
 
         expect(innerSpans[1], isA<TextSpan>());
         expect((innerSpans[1] as TextSpan).text, ' '); // Space

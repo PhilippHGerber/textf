@@ -1,5 +1,7 @@
 // test/unit/parsing/components/link_handler_test.dart
 
+// ignore_for_file: no-magic-number
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/parser_state.dart';
@@ -11,9 +13,10 @@ import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
 // By using `extends`, we inherit the concrete implementation of TextfStyleResolver
 // and only need to override the methods relevant to this test. This is the correct
 // way to mock a concrete class.
-class MockLinkStyleResolver extends TextfStyleResolver {
+// ignore: prefer-match-file-name
+class _MockLinkStyleResolver extends TextfStyleResolver {
   // We must call the super constructor.
-  MockLinkStyleResolver(super.context);
+  _MockLinkStyleResolver(super.context);
 
   // Override only the methods needed to test the LinkHandler.
   // We want to control the output for link-related styles.
@@ -54,6 +57,7 @@ class MockLinkStyleResolver extends TextfStyleResolver {
 
 void main() {
   group('LinkHandler Tests', () {
+    // ignore: avoid-late-keyword
     late TextfTokenizer tokenizer;
 
     setUp(() {
@@ -65,6 +69,7 @@ void main() {
       WidgetTester tester,
       String text,
     ) async {
+      // ignore: avoid-late-keyword
       late BuildContext buildContext;
       await tester.pumpWidget(
         MaterialApp(
@@ -82,7 +87,7 @@ void main() {
         baseStyle: const TextStyle(),
         matchingPairs: {},
         // Use our new mock that `extends` TextfStyleResolver.
-        styleResolver: MockLinkStyleResolver(buildContext),
+        styleResolver: _MockLinkStyleResolver(buildContext),
       );
     }
 

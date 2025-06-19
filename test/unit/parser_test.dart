@@ -1,11 +1,13 @@
-// ignore_for_file: cascade_invocations // cascade_invocations for readability and chaining methods.
+// ignore_for_file: cascade_invocations // cascade_invocations for readability and chaining methods., no-magic-number
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
 
 void main() {
   group('TextfParser Tests', () {
+    // ignore: avoid-late-keyword
     late TextfParser parser;
+    // ignore: avoid-late-keyword
     late BuildContext mockContext;
 
     setUp(() {
@@ -39,8 +41,8 @@ void main() {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse('plain text', mockContext, const TextStyle());
         expect(spans.length, 1);
-        expect(spans[0], isA<TextSpan>());
-        expect((spans[0] as TextSpan).text, 'plain text');
+        expect(spans.first, isA<TextSpan>());
+        expect((spans.first as TextSpan).text, 'plain text');
       });
 
       testWidgets('text with no actual formatting is handled efficiently', (tester) async {
@@ -51,7 +53,7 @@ void main() {
           const TextStyle(),
         );
         expect(spans.length, 1);
-        expect((spans[0] as TextSpan).text, 'text with * single asterisk');
+        expect((spans.first as TextSpan).text, 'text with * single asterisk');
       });
     });
 
@@ -60,25 +62,25 @@ void main() {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse('**bold**', mockContext, const TextStyle());
         expect(spans.length, 1);
-        expect((spans[0] as TextSpan).style?.fontWeight, FontWeight.bold);
-        expect((spans[0] as TextSpan).text, 'bold');
+        expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
+        expect((spans.first as TextSpan).text, 'bold');
       });
 
       testWidgets('italic text applies FontStyle.italic', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse('*italic*', mockContext, const TextStyle());
         expect(spans.length, 1);
-        expect((spans[0] as TextSpan).style?.fontStyle, FontStyle.italic);
-        expect((spans[0] as TextSpan).text, 'italic');
+        expect((spans.first as TextSpan).style?.fontStyle, FontStyle.italic);
+        expect((spans.first as TextSpan).text, 'italic');
       });
 
       testWidgets('bold-italic text applies both styles', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse('***bold-italic***', mockContext, const TextStyle());
         expect(spans.length, 1);
-        expect((spans[0] as TextSpan).style?.fontWeight, FontWeight.bold);
-        expect((spans[0] as TextSpan).style?.fontStyle, FontStyle.italic);
-        expect((spans[0] as TextSpan).text, 'bold-italic');
+        expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
+        expect((spans.first as TextSpan).style?.fontStyle, FontStyle.italic);
+        expect((spans.first as TextSpan).text, 'bold-italic');
       });
 
       testWidgets('strikethrough text applies line-through decoration', (tester) async {
@@ -86,13 +88,14 @@ void main() {
         final spans = parser.parse('~~strikethrough~~', mockContext, const TextStyle());
         expect(spans.length, 1);
         expect(
-          (spans[0] as TextSpan).style?.decoration,
+          (spans.first as TextSpan).style?.decoration,
           TextDecoration.lineThrough,
         );
-        expect((spans[0] as TextSpan).text, 'strikethrough');
+        expect((spans.first as TextSpan).text, 'strikethrough');
       });
 
       testWidgets('code text applies monospace and background', (tester) async {
+        // ignore: avoid-late-keyword
         late BuildContext mockContext;
         final lightTheme = ThemeData.light();
 
@@ -112,16 +115,16 @@ void main() {
 
         final spans = parser.parse('`code`', mockContext, const TextStyle());
         expect(spans.length, 1);
-        expect((spans[0] as TextSpan).style?.fontFamily, 'monospace');
+        expect((spans.first as TextSpan).style?.fontFamily, 'monospace');
         expect(
-          (spans[0] as TextSpan).style?.backgroundColor,
+          (spans.first as TextSpan).style?.backgroundColor,
           // Expect theme surfaceContainer instead of old hardcoded grey
           lightTheme.colorScheme.surfaceContainer,
           reason: 'Code background should come from theme',
         );
-        expect((spans[0] as TextSpan).text, 'code');
+        expect((spans.first as TextSpan).text, 'code');
         expect(
-          (spans[0] as TextSpan).style?.color,
+          (spans.first as TextSpan).style?.color,
           // Expect theme text color for code
           lightTheme.colorScheme.onSurfaceVariant,
           reason: 'Code text color should come from theme',
@@ -132,26 +135,26 @@ void main() {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         const baseStyle = TextStyle(fontSize: 20, color: Colors.blue);
         final spans = parser.parse('**bold**', mockContext, baseStyle);
-        expect((spans[0] as TextSpan).style?.fontSize, 20);
-        expect((spans[0] as TextSpan).style?.color, Colors.blue);
-        expect((spans[0] as TextSpan).style?.fontWeight, FontWeight.bold);
+        expect((spans.first as TextSpan).style?.fontSize, 20);
+        expect((spans.first as TextSpan).style?.color, Colors.blue);
+        expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
       });
 
       testWidgets('understcore variants apply correct styles', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         final boldSpans = parser.parse('__bold__', mockContext, const TextStyle());
-        expect((boldSpans[0] as TextSpan).style?.fontWeight, FontWeight.bold);
+        expect((boldSpans.first as TextSpan).style?.fontWeight, FontWeight.bold);
 
         final italicSpans = parser.parse('_italic_', mockContext, const TextStyle());
-        expect((italicSpans[0] as TextSpan).style?.fontStyle, FontStyle.italic);
+        expect((italicSpans.first as TextSpan).style?.fontStyle, FontStyle.italic);
 
         final boldItalicSpans = parser.parse('___both___', mockContext, const TextStyle());
         expect(
-          (boldItalicSpans[0] as TextSpan).style?.fontWeight,
+          (boldItalicSpans.first as TextSpan).style?.fontWeight,
           FontWeight.bold,
         );
         expect(
-          (boldItalicSpans[0] as TextSpan).style?.fontStyle,
+          (boldItalicSpans.first as TextSpan).style?.fontStyle,
           FontStyle.italic,
         );
       });
@@ -167,8 +170,8 @@ void main() {
         );
 
         expect(spans.length, 3);
-        expect((spans[0] as TextSpan).style?.fontWeight, FontWeight.bold);
-        expect((spans[0] as TextSpan).text, 'bold with ');
+        expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
+        expect((spans.first as TextSpan).text, 'bold with ');
 
         expect((spans[1] as TextSpan).style?.fontWeight, FontWeight.bold);
         expect((spans[1] as TextSpan).style?.fontStyle, FontStyle.italic);
@@ -242,14 +245,14 @@ void main() {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse('**bold', mockContext, const TextStyle());
         expect(spans.length, 1);
-        expect((spans[0] as TextSpan).text, '**bold');
+        expect((spans.first as TextSpan).text, '**bold');
       });
 
       testWidgets('unpaired closing marker treated as text', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse('bold**', mockContext, const TextStyle());
         expect(spans.length, 1);
-        expect((spans[0] as TextSpan).text, 'bold**');
+        expect((spans.first as TextSpan).text, 'bold**');
       });
 
       testWidgets('improperly nested tags handled gracefully', (tester) async {
@@ -299,7 +302,7 @@ void main() {
         final longText = '${'A' * 1000}**bold**${'B' * 1000}';
         final spans = parser.parse(longText, mockContext, const TextStyle());
         expect(spans.length, 3);
-        expect((spans[0] as TextSpan).text?.length, 1000);
+        expect((spans.first as TextSpan).text?.length, 1000);
         expect((spans[1] as TextSpan).style?.fontWeight, FontWeight.bold);
         expect((spans[2] as TextSpan).text?.length, 1000);
       });
@@ -312,8 +315,8 @@ void main() {
           const TextStyle(),
         );
         expect(spans.length, 5); // 3 formatted spans + 2 spaces
-        expect((spans[0] as TextSpan).text, '你好世界');
-        expect((spans[0] as TextSpan).style?.fontWeight, FontWeight.bold);
+        expect((spans.first as TextSpan).text, '你好世界');
+        expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
         expect((spans[2] as TextSpan).text, '안녕하세요');
         expect((spans[2] as TextSpan).style?.fontStyle, FontStyle.italic);
         expect((spans[4] as TextSpan).text, 'Привет');
@@ -327,8 +330,8 @@ void main() {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         final spans = parser.parse('**😀** *🌍* ~~🚫~~', mockContext, const TextStyle());
         expect(spans.length, 5); // 3 formatted spans + 2 spaces
-        expect((spans[0] as TextSpan).text, '😀');
-        expect((spans[0] as TextSpan).style?.fontWeight, FontWeight.bold);
+        expect((spans.first as TextSpan).text, '😀');
+        expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
       });
 
       testWidgets('escaped characters parse correctly', (tester) async {
@@ -339,7 +342,7 @@ void main() {
           const TextStyle(),
         );
         expect(spans.length, 1);
-        expect((spans[0] as TextSpan).text, 'This is *not italic*');
+        expect((spans.first as TextSpan).text, 'This is *not italic*');
       });
     });
 
@@ -358,7 +361,7 @@ void main() {
         ); // 4 formatted segments + 3 plain "and " segments
 
         // Verify styles
-        expect((spans[0] as TextSpan).style?.fontWeight, FontWeight.bold);
+        expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
         expect((spans[2] as TextSpan).style?.fontStyle, FontStyle.italic);
         expect(
           (spans[4] as TextSpan).style?.decoration,

@@ -10,8 +10,9 @@ import 'package:textf/src/styling/textf_style_resolver.dart';
 // This class simulates the behavior of the real resolver, allowing us to
 // test ParserState in isolation. We can tell it which TextStyle to return
 // for a given TokenType.
-class MockTextfStyleResolver implements TextfStyleResolver {
-  MockTextfStyleResolver(this.context);
+// ignore: prefer-match-file-name
+class _MockTextfStyleResolver implements TextfStyleResolver {
+  _MockTextfStyleResolver(this.context);
   // Ignore the unused 'context' field, as it's not needed for the mock.
   // ignore: unused_field
   @override
@@ -56,7 +57,8 @@ void main() {
 
   // Helper function to set up a valid BuildContext and mock resolver for each test.
   // It takes the `tester` from `testWidgets` to ensure it runs in a valid environment.
-  Future<(BuildContext, MockTextfStyleResolver)> setupTest(WidgetTester tester) async {
+  Future<(BuildContext, _MockTextfStyleResolver)> setupTest(WidgetTester tester) async {
+    // ignore: avoid-late-keyword
     late BuildContext mockContext;
     await tester.pumpWidget(
       MaterialApp(
@@ -68,7 +70,7 @@ void main() {
         ),
       ),
     );
-    final mockResolver = MockTextfStyleResolver(mockContext);
+    final mockResolver = _MockTextfStyleResolver(mockContext);
     return (mockContext, mockResolver);
   }
 

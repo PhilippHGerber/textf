@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
 
+// ignore: avoid-top-level-members-in-tests
 Future<void> pumpTextfWidget(
   WidgetTester tester, {
   required String data,

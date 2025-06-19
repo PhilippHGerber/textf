@@ -28,6 +28,7 @@ void main() {
       TextfOptions? options,
       TextfOptions? parentOptions,
     }) async {
+      // ignore: avoid-late-keyword
       late BuildContext capturedContext;
       Widget child = Builder(
         builder: (context) {
@@ -88,7 +89,9 @@ void main() {
     }
 
     group('No TextfOptions (Fallback to Defaults)', () {
+      // ignore: avoid-late-keyword
       late BuildContext testContext;
+      // ignore: avoid-late-keyword
       late TextfStyleResolver resolver;
 
       // setUp needs to be called within testWidgets or use a helper that takes tester
@@ -217,8 +220,14 @@ void main() {
       const optionUrlStyle = TextStyle(color: Colors.orange, decoration: TextDecoration.overline);
       const optionUrlHoverStyle = TextStyle(color: Colors.pink, letterSpacing: 2);
       const optionCursor = SystemMouseCursors.help;
-      void testOnTap(String u, String d) {}
-      void testOnHover(String u, String d, {required bool isHovering}) {}
+
+      void testOnTap(String u, String d) {
+        debugPrint('Tapped URL: $u with display text: $d');
+      }
+
+      void testOnHover(String u, String d, {required bool isHovering}) {
+        debugPrint('Hovered URL: $u with display text: $d, isHovering: $isHovering');
+      }
 
       final options = TextfOptions(
         boldStyle: optionBoldStyle,
@@ -329,11 +338,15 @@ void main() {
       const parentBoldStyle = TextStyle(color: Colors.amber);
       // CORRECTED: parentUrlStyle now defines no color, so baseStyle or theme should provide it
       const parentUrlStyle = TextStyle(decoration: TextDecoration.none /* no color here */);
-      void parentTap(String u, String d) {}
+      void parentTap(String u, String d) {
+        debugPrint('Parent tapped URL: $u with display text: $d');
+      }
 
       const childBoldStyle = TextStyle(fontWeight: FontWeight.w300);
       const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, color: Colors.teal);
-      void childTap(String u, String d) {}
+      void childTap(String u, String d) {
+        debugPrint('Child tapped URL: $u with display text: $d');
+      }
 
       final parentOpts = TextfOptions(
         boldStyle: parentBoldStyle,

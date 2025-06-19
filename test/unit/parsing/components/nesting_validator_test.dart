@@ -5,6 +5,7 @@ import 'package:textf/src/parsing/textf_tokenizer.dart';
 
 void main() {
   group('NestingValidator Tests', () {
+    // ignore: avoid-late-keyword
     late TextfTokenizer tokenizer;
 
     setUp(() {
