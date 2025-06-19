@@ -54,11 +54,7 @@ class _TextfExampleAppState extends State<TextfExampleApp> {
               brightness: Brightness.light,
             ),
             useMaterial3: true,
-            // Optional: Customize specific component themes for light mode
-            cardTheme: const CardTheme(
-              elevation: 1,
-              margin: EdgeInsets.zero, // Adjusted for consistency
-            ),
+
           ),
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
@@ -66,11 +62,7 @@ class _TextfExampleAppState extends State<TextfExampleApp> {
               brightness: Brightness.dark,
             ),
             useMaterial3: true,
-            // Optional: Customize specific component themes for dark mode
-            cardTheme: const CardTheme(
-              elevation: 1,
-              margin: EdgeInsets.zero, // Adjusted for consistency
-            ),
+
           ),
           themeMode: currentMode, // Set the current theme mode
           // Pass down the toggle function and current mode to HomeScreen
