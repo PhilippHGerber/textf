@@ -1,4 +1,4 @@
-import 'token.dart';
+import 'token_type.dart';
 
 /// Helper class for tracking format stack entries during parsing.
 ///
@@ -7,6 +7,13 @@ import 'token.dart';
 /// in tracking the nesting of formatting styles and ensures that
 /// they are properly applied and removed in the correct order.
 class FormatStackEntry {
+  /// Creates a new format stack entry.
+  const FormatStackEntry({
+    required this.index,
+    required this.matchingIndex,
+    required this.type,
+  });
+
   /// Index of the opening formatting marker in the token list.
   final int index;
 
@@ -15,13 +22,6 @@ class FormatStackEntry {
 
   /// Type of the formatting marker.
   final TokenType type;
-
-  /// Creates a new format stack entry.
-  const FormatStackEntry({
-    required this.index,
-    required this.matchingIndex,
-    required this.type,
-  });
 
   @override
   String toString() => 'FormatStackEntry($type, $index -> $matchingIndex)';

@@ -2,15 +2,14 @@ import 'dart:ui' as ui show TextHeightBehavior;
 
 import 'package:flutter/material.dart';
 
-import '../../parsing/parser.dart';
+import '../../parsing/textf_parser.dart';
 
 /// Internal StatefulWidget that handles parsing, styling resolution via the parser,
 /// and hot reload notification. It bridges the Textf widget parameters with
 /// the parsing and rendering logic provided by the TextfParser.
 class TextfRenderer extends StatefulWidget {
-  // Parameters mirror those of the public Textf widget.
+  /// Creates a new TextfRenderer widget.
   const TextfRenderer({
-    super.key,
     required this.data,
     required this.style,
     required this.parser,
@@ -26,6 +25,7 @@ class TextfRenderer extends StatefulWidget {
     required this.textWidthBasis,
     required this.textHeightBehavior,
     required this.selectionColor,
+    super.key,
   });
 
   /// The text data containing potential formatting markers.
@@ -79,6 +79,7 @@ class TextfRenderer extends StatefulWidget {
   State<TextfRenderer> createState() => TextfRendererState();
 }
 
+/// The state class for [TextfRenderer] that builds the text widget
 class TextfRendererState extends State<TextfRenderer> {
   @override
   Widget build(BuildContext context) {

@@ -2,10 +2,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/parser_state.dart';
-import '../../models/token.dart';
+import '../../models/token_type.dart';
 import '../../widgets/internal/hoverable_link_span.dart';
-import '../parser.dart';
-import '../tokenizer.dart';
+import '../textf_parser.dart';
+import '../textf_tokenizer.dart';
 
 /// Handles the processing of link tokens during parsing.
 ///
@@ -15,6 +15,13 @@ import '../tokenizer.dart';
 /// link-specific styling (normal, hover), mouse cursor, and interaction callbacks,
 /// considering `TextfOptions`, `Theme`, and defaults.
 class LinkHandler {
+  // Link structure constants
+  static const int _linkTextOffset = 1;
+  static const int _linkSeparatorOffset = 2;
+  static const int _linkUrlOffset = 3;
+  static const int _linkEndOffset = 4;
+  static const int _linkTokenCount = 5;
+
   /// Processes a potential link structure starting at the given `index`.
   ///
   /// If a valid `[text](url)` structure is found:
@@ -51,8 +58,8 @@ class LinkHandler {
       // --- Valid Link Found ---
 
       // Extract raw text and URL
-      final linkTextToken = tokens[index + 1];
-      final linkUrlToken = tokens[index + 3];
+      final linkTextToken = tokens[index + _linkTextOffset];
+      final linkUrlToken = tokens[index + _linkUrlOffset];
       final rawLinkText = linkTextToken.value;
       final rawLinkUrl = linkUrlToken.value;
       final normalizedUrl = normalizeUrl(rawLinkUrl);
@@ -69,8 +76,9 @@ class LinkHandler {
       final TextStyle finalLinkStyle = state.styleResolver.resolveLinkStyle(inheritedStyle);
       final TextStyle finalLinkHoverStyle = state.styleResolver.resolveLinkHoverStyle(inheritedStyle);
       final MouseCursor effectiveCursor = state.styleResolver.resolveLinkMouseCursor();
-      final Function(String url, String displayText)? effectiveOnTap = state.styleResolver.resolveOnUrlTap();
-      final Function(String url, String displayText, bool isHovering)? effectiveOnHover =
+      final void Function(String url, String displayText)? effectiveOnTap = state.styleResolver.resolveOnUrlTap();
+      // TODO 'bool' parameters should be named parameters.
+      final void Function(String url, String displayText, bool isHovering)? effectiveOnHover =
           state.styleResolver.resolveOnUrlHover();
 
       // 3. Prepare TapGestureRecognizer if needed
@@ -102,7 +110,7 @@ class LinkHandler {
         // Plain text content, remove escape characters
         spanText = rawLinkText.replaceAllMapped(
           RegExp(r'\\([*_~`\[\]()\\])'),
-          (match) => match.group(1)!,
+          (match) => match.group(1) ?? '',
         );
         childrenSpans = [];
       }
@@ -133,46 +141,50 @@ class LinkHandler {
       _markLinkTokensProcessed(state, index);
 
       // 8. Return the index *after* the link structure (after ')')
-      return index + 5; // index points to '[', +5 goes past ')'
+      return index + _linkTokenCount;
     } else {
       // --- Not a valid link structure ---
       // Treat the opening bracket '[' as plain text.
       state.textBuffer += tokens[index].value; // Add '[' character
       state.processedIndices.add(index); // Mark '[' as processed
-      return null; // Let the main parsing loop continue from the next token
-    }
-  }
 
-  /// Checks if tokens starting at `index` form a complete `[text](url)` structure.
-  static bool _isCompleteLink(List<Token> tokens, int index) {
-    // Needs 5 tokens: linkStart, text, linkSeparator, urlText, linkEnd
-    if (index + 4 >= tokens.length) {
-      return false;
+      // Let the main parsing loop continue from the next token
+      return null;
     }
-    return tokens[index].type == TokenType.linkStart &&
-        tokens[index + 1].type == TokenType.text && // Link text (can be empty)
-        tokens[index + 2].type == TokenType.linkSeparator && // `](`
-        tokens[index + 3].type == TokenType.text && // URL text (can be empty)
-        tokens[index + 4].type == TokenType.linkEnd; // `)`
   }
 
   /// Normalizes a URL string (e.g., adds 'http://' if scheme is missing).
   @visibleForTesting
   static String normalizeUrl(String url) {
-    url = url.trim();
-    if (!url.contains(':') && //
-        !url.startsWith('/') &&
-        !url.startsWith('#') &&
-        url.contains('.')) {
-      return 'http://$url';
+    final String normalizedUrl = url.trim();
+    if (!normalizedUrl.contains(':') && //
+        !normalizedUrl.startsWith('/') &&
+        !normalizedUrl.startsWith('#') &&
+        normalizedUrl.contains('.')) {
+      return 'http://$normalizedUrl';
     }
-    return url;
+
+    return normalizedUrl;
+  }
+
+  /// Checks if tokens starting at `index` form a complete `[text](url)` structure.
+  static bool _isCompleteLink(List<Token> tokens, int index) {
+    // Needs 5 tokens: linkStart, text, linkSeparator, urlText, linkEnd
+    if (index + _linkEndOffset >= tokens.length) {
+      return false;
+    }
+
+    return tokens[index].type == TokenType.linkStart &&
+        tokens[index + _linkTextOffset].type == TokenType.text && // Link text (can be empty)
+        tokens[index + _linkSeparatorOffset].type == TokenType.linkSeparator && // `](`
+        tokens[index + _linkUrlOffset].type == TokenType.text && // URL text (can be empty)
+        tokens[index + _linkEndOffset].type == TokenType.linkEnd; // `)`
   }
 
   /// Marks the 5 tokens forming a complete link structure as processed.
   static void _markLinkTokensProcessed(ParserState state, int startIndex) {
     // Mark '[', 'text', '](', 'url', ')' as processed
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < _linkTokenCount; i++) {
       state.processedIndices.add(startIndex + i);
     }
   }

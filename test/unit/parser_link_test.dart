@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
-import 'package:textf/src/parsing/parser.dart';
+import 'package:textf/src/parsing/textf_parser.dart';
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
 import 'package:textf/src/widgets/textf_options.dart';
 

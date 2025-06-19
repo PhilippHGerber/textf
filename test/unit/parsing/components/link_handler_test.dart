@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/parser_state.dart';
 import 'package:textf/src/parsing/components/link_handler.dart';
-import 'package:textf/src/parsing/tokenizer.dart';
-import 'package:textf/src/styling/style_resolver.dart';
+import 'package:textf/src/parsing/textf_tokenizer.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
-
 
 // By using `extends`, we inherit the concrete implementation of TextfStyleResolver
 // and only need to override the methods relevant to this test. This is the correct

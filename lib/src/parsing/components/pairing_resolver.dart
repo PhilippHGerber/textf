@@ -1,4 +1,4 @@
-import '../../models/token.dart';
+import '../../models/token_type.dart';
 import 'nesting_validator.dart';
 
 /// Identifies matching pairs of formatting markers in a token list.

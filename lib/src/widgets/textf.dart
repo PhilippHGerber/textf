@@ -2,7 +2,7 @@ import 'dart:ui' as ui show TextHeightBehavior;
 
 import 'package:flutter/material.dart';
 
-import '../parsing/parser.dart';
+import '../parsing/textf_parser.dart';
 import 'internal/textf_renderer.dart';
 
 /// A lightweight text widget for simple inline formatting.

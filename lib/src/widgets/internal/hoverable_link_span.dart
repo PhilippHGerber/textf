@@ -11,6 +11,20 @@ import 'package:flutter/material.dart';
 ///
 /// It's intended to be wrapped within a `WidgetSpan` by the `LinkHandler`.
 class HoverableLinkSpan extends StatefulWidget {
+  /// Creates an internal widget to manage hover state and interaction for a link.
+  const HoverableLinkSpan({
+    required this.url,
+    required this.rawDisplayText,
+    required this.initialChildrenSpans,
+    required this.normalStyle,
+    required this.hoverStyle,
+    required this.tapRecognizer,
+    required this.mouseCursor,
+    super.key,
+    this.initialPlainText,
+    this.onHoverCallback,
+  });
+
   /// The target URL of the link.
   final String url;
 
@@ -42,37 +56,18 @@ class HoverableLinkSpan extends StatefulWidget {
   /// An optional callback function triggered when the hover state changes.
   /// Resolved by TextfStyleResolver. Provides the URL, the raw display text,
   /// and the new hover state (`true` for enter, `false` for exit).
-  final Function(String url, String rawDisplayText, bool isHovering)? onHoverCallback;
-
-  /// Creates an internal widget to manage hover state and interaction for a link.
-  const HoverableLinkSpan({
-    super.key,
-    required this.url,
-    required this.rawDisplayText,
-    required this.initialChildrenSpans,
-    this.initialPlainText,
-    required this.normalStyle,
-    required this.hoverStyle,
-    required this.tapRecognizer,
-    required this.mouseCursor,
-    this.onHoverCallback,
-  });
+  /// TODO: 'bool' parameters should be named parameters.
+  final void Function(String url, String rawDisplayText, bool isHovering)? onHoverCallback;
 
   @override
   State<HoverableLinkSpan> createState() => HoverableLinkSpanState();
 }
 
+/// The state class for [HoverableLinkSpan] that manages hover interactions
+/// and applies the appropriate styles based on hover state.
 class HoverableLinkSpanState extends State<HoverableLinkSpan> {
   /// Tracks whether the mouse cursor is currently over this specific link instance.
   bool _isHovering = false;
-
-  @override
-  void dispose() {
-    // If a TapGestureRecognizer was created and passed in,
-    // it must be disposed when the widget is removed to prevent memory leaks.
-    widget.tapRecognizer?.dispose();
-    super.dispose();
-  }
 
   /// Handles the pointer entering the bounds of the link.
   void _onEnter(PointerEnterEvent event) {
@@ -109,23 +104,13 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
       // The decoration already present on the inner span (e.g., lineThrough, or combine)
       final TextDecoration? innerExistingDecoration = innerSpanOriginalStyle.decoration;
 
-      if (linkBaseDecoration != null && linkBaseDecoration != TextDecoration.none) {
-        if (innerExistingDecoration != null && innerExistingDecoration != TextDecoration.none) {
-          // Both the link and the inner span have decorations. Combine them.
-          // Ensure we don't double-add the link's base decoration if it's already part of a combine.
-          if (innerExistingDecoration.contains(linkBaseDecoration)) {
-            finalDecoration = innerExistingDecoration;
-          } else {
-            finalDecoration = TextDecoration.combine([innerExistingDecoration, linkBaseDecoration]);
-          }
-        } else {
-          // Only the link has a decoration, apply it.
-          finalDecoration = linkBaseDecoration;
-        }
-      } else {
-        // Link has no decoration (or TextDecoration.none). Preserve the inner span's decoration.
-        finalDecoration = innerExistingDecoration;
-      }
+      finalDecoration = (linkBaseDecoration != null && linkBaseDecoration != TextDecoration.none)
+          ? ((innerExistingDecoration != null && innerExistingDecoration != TextDecoration.none)
+              ? (innerExistingDecoration.contains(linkBaseDecoration)
+                  ? innerExistingDecoration
+                  : TextDecoration.combine([innerExistingDecoration, linkBaseDecoration]))
+              : linkBaseDecoration)
+          : innerExistingDecoration;
 
       // Determine final decoration color and thickness
       // Priority:
@@ -155,15 +140,21 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
         children: span.children?.map(_applyInteraction).toList(),
         style: finalSpanStyle,
         recognizer: widget.tapRecognizer,
-        mouseCursor: null, // Handled by MouseRegion
-        onEnter: null, // Handled by MouseRegion
-        onExit: null, // Handled by MouseRegion
         semanticsLabel: span.semanticsLabel,
         locale: span.locale,
         spellOut: span.spellOut,
       );
     }
+
     return span;
+  }
+
+  @override
+  void dispose() {
+    // If a TapGestureRecognizer was created and passed in,
+    // it must be disposed when the widget is removed to prevent memory leaks.
+    widget.tapRecognizer?.dispose();
+    super.dispose();
   }
 
   @override

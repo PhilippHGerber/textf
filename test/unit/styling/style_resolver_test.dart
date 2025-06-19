@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
-import 'package:textf/src/models/token.dart';
-import 'package:textf/src/styling/style_resolver.dart';
+import 'package:textf/src/models/token_type.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/textf_options.dart';
 
 void main() {

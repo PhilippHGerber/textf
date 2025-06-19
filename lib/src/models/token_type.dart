@@ -56,6 +56,9 @@ enum TokenType {
 /// A token can be either a formatting marker or a segment of regular text.
 /// Each token tracks its type, content value, and position within the original string.
 class Token {
+  /// Creates a new token with the specified properties.
+  const Token(this.type, this.value, this.position, this.length);
+
   /// The type of this token (e.g., boldMarker, text).
   final TokenType type;
 
@@ -67,9 +70,6 @@ class Token {
 
   /// The length of this token in characters.
   final int length;
-
-  /// Creates a new token with the specified properties.
-  const Token(this.type, this.value, this.position, this.length);
 
   @override
   String toString() => 'Token($type, "$value" at $position)';

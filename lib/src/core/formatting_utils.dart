@@ -28,6 +28,7 @@ class FormattingUtils {
         return true;
       }
     }
+
     return false;
   }
 
@@ -51,6 +52,7 @@ class FormattingUtils {
         return true;
       }
     }
+
     return false;
   }
 }

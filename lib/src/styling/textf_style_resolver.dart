@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/default_styles.dart';
-import '../models/token.dart';
+import '../models/token_type.dart';
 import '../widgets/textf_options.dart'; // Needed for options lookup
 
 /// A class responsible for resolving the final TextStyle for formatted text segments.
@@ -16,16 +16,17 @@ import '../widgets/textf_options.dart'; // Needed for options lookup
 ///
 /// The resolved style is always merged with the provided `baseStyle`.
 class TextfStyleResolver {
+  /// Creates a style resolver for the given context.
+  TextfStyleResolver(this.context)
+      : _theme = Theme.of(context),
+        _nearestOptions = TextfOptions.maybeOf(context); // Find nearest options once
+
+  /// The context in which the resolver operates.
   final BuildContext context;
   // Store theme and options for potential reuse within a single resolve cycle,
   // though looking them up on demand is also fine.
   final ThemeData _theme;
   final TextfOptions? _nearestOptions;
-
-  /// Creates a style resolver for the given context.
-  TextfStyleResolver(this.context)
-      : _theme = Theme.of(context),
-        _nearestOptions = TextfOptions.maybeOf(context); // Find nearest options once
 
   /// Resolves the final TextStyle for a given token type and base style.
   ///
@@ -61,6 +62,7 @@ class TextfStyleResolver {
           final double? thicknessOption = _nearestOptions?.getEffectiveStrikethroughThickness(context);
           // Use the option thickness if provided, otherwise use the default thickness.
           final double finalThickness = thicknessOption ?? DefaultStyles.defaultStrikethroughThickness;
+
           // Apply the default strikethrough effect with the resolved thickness.
           return DefaultStyles.strikethroughStyle(
             baseStyle,
@@ -96,12 +98,7 @@ class TextfStyleResolver {
   TextStyle resolveLinkStyle(TextStyle baseStyle) {
     final TextStyle? optionsStyle = _nearestOptions?.getEffectiveUrlStyle(context, baseStyle);
 
-    if (optionsStyle != null) {
-      return optionsStyle; // Use style from TextfOptions hierarchy
-    } else {
-      // Fallback to theme-based default
-      return _getThemeBasedLinkStyle(baseStyle);
-    }
+    return optionsStyle ?? _getThemeBasedLinkStyle(baseStyle);
   }
 
   /// Resolves the final HOVER TextStyle for a URL link.
@@ -119,13 +116,7 @@ class TextfStyleResolver {
     // 2. Try to get a hover-specific style from options, merging it onto the normalLinkStyle
     final TextStyle? optionsStyle = _nearestOptions?.getEffectiveUrlHoverStyle(context, normalLinkStyle);
 
-    if (optionsStyle != null) {
-      return optionsStyle; // Use style from TextfOptions hierarchy
-    } else {
-      // Fallback: No specific hover option.
-      // Default hover is same as normalLinkStyle.
-      return normalLinkStyle;
-    }
+    return optionsStyle ?? normalLinkStyle;
   }
 
   /// Resolves the effective MouseCursor for a URL link.
@@ -145,6 +136,7 @@ class TextfStyleResolver {
   /// Resolves the effective onUrlHover callback for a URL link.
   ///
   /// Checks TextfOptions hierarchy for the callback. Returns null if none found.
+  /// TODO: 'bool' parameters should be named parameters.
   void Function(String url, String displayText, bool isHovering)? resolveOnUrlHover() {
     return _nearestOptions?.getEffectiveOnUrlHover(context);
   }
@@ -154,25 +146,26 @@ class TextfStyleResolver {
   /// Internal helper to retrieve the effective style from TextfOptions hierarchy.
   /// Returns null if no option is defined for the given type.
   TextStyle? _getEffectiveStyleFromOptions(TokenType type, TextStyle baseStyle) {
-    if (_nearestOptions == null) return null;
+    final TextfOptions? options = _nearestOptions;
+    if (options == null) return null;
 
     // Call the appropriate getter on the TextfOptions instance.
     // These methods handle the ancestor lookup internally.
     switch (type) {
       case TokenType.boldMarker:
-        return _nearestOptions!.getEffectiveBoldStyle(context, baseStyle);
+        return options.getEffectiveBoldStyle(context, baseStyle);
       case TokenType.italicMarker:
-        return _nearestOptions!.getEffectiveItalicStyle(context, baseStyle);
+        return options.getEffectiveItalicStyle(context, baseStyle);
       case TokenType.boldItalicMarker:
-        return _nearestOptions!.getEffectiveBoldItalicStyle(context, baseStyle);
+        return options.getEffectiveBoldItalicStyle(context, baseStyle);
       case TokenType.strikeMarker:
-        return _nearestOptions!.getEffectiveStrikethroughStyle(context, baseStyle);
+        return options.getEffectiveStrikethroughStyle(context, baseStyle);
       case TokenType.codeMarker:
-        return _nearestOptions!.getEffectiveCodeStyle(context, baseStyle);
+        return options.getEffectiveCodeStyle(context, baseStyle);
       case TokenType.underlineMarker:
-        return _nearestOptions!.getEffectiveUnderlineStyle(context, baseStyle);
+        return options.getEffectiveUnderlineStyle(context, baseStyle);
       case TokenType.highlightMarker:
-        return _nearestOptions!.getEffectiveHighlightStyle(context, baseStyle);
+        return options.getEffectiveHighlightStyle(context, baseStyle);
       // Link styles are handled by resolveLinkStyle/resolveLinkHoverStyle directly
       case TokenType.linkStart:
       case TokenType.linkText:
@@ -195,7 +188,7 @@ class TextfStyleResolver {
     // Use monospace font family
     const String codeFontFamily = 'monospace';
     // Use the constant list directly from DefaultStyles
-    final List<String> codeFontFamilyFallback = DefaultStyles.defaultCodeFontFamilyFallback;
+    const List<String> codeFontFamilyFallback = DefaultStyles.defaultCodeFontFamilyFallback;
 
     // Merge theme defaults with the base style
     return baseStyle.copyWith(
@@ -225,25 +218,13 @@ class TextfStyleResolver {
   TextStyle _getThemeBasedHighlightStyle(TextStyle baseStyle) {
     final ColorScheme colorScheme = _theme.colorScheme;
 
-    Color highlightBgColor = colorScheme.tertiaryContainer;
-    Color highlightTextColor = colorScheme.onTertiaryContainer;
-
-    // Fallback if tertiaryContainer is too similar to surface or not distinct enough.
-    // This logic can be made more sophisticated.
-    if (highlightBgColor == colorScheme.surface || highlightBgColor == colorScheme.surface) {
-      // A more generic fallback, trying a slightly opaque primary or a fixed color.
-      highlightBgColor = colorScheme.primary.withValues(alpha: .2); // Lightly tint with primary
-      highlightTextColor = baseStyle.color ?? colorScheme.onSurface; // Try to keep original or use onSurface
-    }
-    // A common "highlighter yellow" as an alternative if no theme color feels right:
-    if (true) {
-      // force yellow for now to see it clearly
-      highlightBgColor = colorScheme.brightness == Brightness.light
-          ? Colors.yellow.withValues(alpha: .4)
-          : Colors.yellow.shade700.withValues(alpha: .5);
-      highlightTextColor =
-          baseStyle.color ?? (colorScheme.brightness == Brightness.light ? Colors.black87 : Colors.white);
-    }
+    // A common "highlighter yellow":
+    // force yellow for now to see it clearly
+    final Color highlightBgColor = colorScheme.brightness == Brightness.light
+        ? Colors.yellow.withValues(alpha: DefaultStyles.highlightAlphaLight)
+        : Colors.yellow.shade700.withValues(alpha: DefaultStyles.highlightAlphaDark);
+    final Color highlightTextColor =
+        baseStyle.color ?? (colorScheme.brightness == Brightness.light ? Colors.black87 : Colors.white);
 
     return baseStyle.copyWith(
       backgroundColor: highlightBgColor,

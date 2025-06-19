@@ -1,4 +1,4 @@
-import '../../models/token.dart';
+import '../../models/token_type.dart';
 
 /// Validates proper nesting of formatting markers.
 ///
@@ -51,8 +51,9 @@ class NestingValidator {
         // Check nesting depth limit
         if (openingStack.length >= maxDepth) {
           // Exceeds maximum nesting depth, mark as invalid
-          invalidPairs.add(i);
-          invalidPairs.add(matchingIndex);
+          invalidPairs
+            ..add(i)
+            ..add(matchingIndex);
           continue;
         }
 
@@ -112,8 +113,9 @@ class NestingValidator {
         final openIndex = openingStack[j];
         final closeIndex = pairs[openIndex]!;
 
-        invalidPairs.add(openIndex);
-        invalidPairs.add(closeIndex);
+        invalidPairs
+          ..add(openIndex)
+          ..add(closeIndex);
       }
 
       // Remove processed markers

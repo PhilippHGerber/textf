@@ -1,5 +1,7 @@
+// ignore_for_file: no-magic-number
+
 import '../core/constants.dart';
-import '../models/token.dart';
+import '../models/token_type.dart';
 
 /// Tokenizes text into formatting markers and content segments.
 ///
@@ -11,7 +13,7 @@ import '../models/token.dart';
 /// and special handling for escape sequences.
 ///
 /// Example:
-/// ```
+/// ```dart
 /// final tokenizer = TextfTokenizer();
 /// final tokens = tokenizer.tokenize('Hello **world**');
 /// // Results in 3 tokens: "Hello ", "**" (bold marker), "world", "**" (bold marker)
@@ -193,7 +195,7 @@ class TextfTokenizer {
         pos++; // Move past '['
 
         // Find the end of link text
-        int linkTextStart = pos;
+        final int linkTextStart = pos;
         int nestLevel = 0;
         int linkTextEnd = -1;
 
@@ -272,7 +274,7 @@ class TextfTokenizer {
           pos = linkTextEnd + 2; // Move main `pos` past ']('
 
           // Now collect the URL
-          int urlStart = pos;
+          final int urlStart = pos;
           int urlEnd = -1;
           nestLevel = 0; // For nested parentheses within URL
 
@@ -321,11 +323,12 @@ class TextfTokenizer {
             // and let subsequent characters be re-evaluated by the main loop.
             // To achieve this, we must discard any link tokens already added for this attempt
             // and reset `pos` and `textStart` correctly.
-            tokens.removeLast(); // Remove linkSeparator
-            tokens.removeLast(); // Remove linkText (or empty linkText token)
-            tokens.removeLast(); // Remove linkStart
-            // Now, treat the original '[' as text.
-            tokens.add(Token(TokenType.text, '[', linkStartPos, 1)); // Add '[' as text
+            tokens
+              ..removeLast() // Remove linkSeparator
+              ..removeLast() // Remove linkText (or empty linkText token)
+              ..removeLast() // Remove linkStart
+              // Now, treat the original '[' as text.
+              ..add(Token(TokenType.text, '[', linkStartPos, 1)); // Add '[' as text
             pos = linkStartPos + 1; // Set main `pos` to parse after the '['
             textStart = pos; // Reset textStart.
           }

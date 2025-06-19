@@ -11,6 +11,12 @@ class DefaultStyles {
   /// via TextfOptions in the widget tree.
   static const MouseCursor urlMouseCursor = SystemMouseCursors.click;
 
+  /// Default alpha values for highlight background color.
+  static const highlightAlphaDark = 0.4;
+
+  /// Default alpha values for highlight background color.
+  static const highlightAlphaLight = 0.5;
+
   /// Default font family fallback list for inline code (`code`).
   /// Used by TextfStyleResolver when applying theme-based code styling
   /// if no specific `codeStyle` (with font information) is provided via TextfOptions.
@@ -29,19 +35,19 @@ class DefaultStyles {
 
   /// Applies default bold formatting (`**bold**` or `__bold__`) to a base style.
   /// Used as a fallback by TextfStyleResolver if no `boldStyle` is found via TextfOptions.
-  static TextStyle boldStyle(final TextStyle baseStyle) {
+  static TextStyle boldStyle(TextStyle baseStyle) {
     return baseStyle.copyWith(fontWeight: FontWeight.bold);
   }
 
   /// Applies default italic formatting (`*italic*` or `_italic_`) to a base style.
   /// Used as a fallback by TextfStyleResolver if no `italicStyle` is found via TextfOptions.
-  static TextStyle italicStyle(final TextStyle baseStyle) {
+  static TextStyle italicStyle(TextStyle baseStyle) {
     return baseStyle.copyWith(fontStyle: FontStyle.italic);
   }
 
   /// Applies default bold and italic formatting (`***both***` or `___both___`) to a base style.
   /// Used as a fallback by TextfStyleResolver if no `boldItalicStyle` is found via TextfOptions.
-  static TextStyle boldItalicStyle(final TextStyle baseStyle) {
+  static TextStyle boldItalicStyle(TextStyle baseStyle) {
     return baseStyle.copyWith(
       fontWeight: FontWeight.bold,
       fontStyle: FontStyle.italic,
@@ -54,17 +60,18 @@ class DefaultStyles {
   /// via TextfOptions. The thickness resolved by the resolver (considering TextfOptions
   /// or the default) is passed in here.
   static TextStyle strikethroughStyle(
-    final TextStyle baseStyle, {
-    final double thickness = defaultStrikethroughThickness,
+    TextStyle baseStyle, {
+    double thickness = defaultStrikethroughThickness,
   }) {
     TextDecoration newDecoration = TextDecoration.lineThrough;
     // Combine with existing decoration if present
     if (baseStyle.decoration != null) {
       // Prevent combining with itself if somehow applied twice (defensive)
-      if (baseStyle.decoration!.contains(TextDecoration.lineThrough)) {
-        newDecoration = baseStyle.decoration!;
-      } else {
-        newDecoration = TextDecoration.combine([baseStyle.decoration!, TextDecoration.lineThrough]);
+      final decoration = baseStyle.decoration;
+      if (decoration != null && decoration.contains(TextDecoration.lineThrough)) {
+        newDecoration = decoration;
+      } else if (decoration != null) {
+        newDecoration = TextDecoration.combine([decoration, TextDecoration.lineThrough]);
       }
     }
 
@@ -72,7 +79,7 @@ class DefaultStyles {
     // If combining decorations, the original decorationColor might be for a different part.
     // It's safer to let Flutter pick or for the user to specify a combined decorationColor via TextfOptions.
     // For simplicity here, we might just use baseStyle.color if no decorationColor is set.
-    Color? decorationColorToApply = baseStyle.decorationColor ?? baseStyle.color;
+    final Color? decorationColorToApply = baseStyle.decorationColor ?? baseStyle.color;
 
     return baseStyle.copyWith(
       decoration: newDecoration,
@@ -83,19 +90,18 @@ class DefaultStyles {
 
   /// Applies default underline formatting (`++underline++`) to a base style.
   /// Used as a fallback by TextfStyleResolver if no `underlineStyle` is found via TextfOptions.
-  static TextStyle underlineStyle(final TextStyle baseStyle) {
+  static TextStyle underlineStyle(TextStyle baseStyle) {
     TextDecoration newDecoration = TextDecoration.underline;
     // Combine with existing decoration if present
-    if (baseStyle.decoration != null) {
+    final TextDecoration? decoration = baseStyle.decoration;
+    if (decoration != null) {
       // Prevent combining with itself (defensive)
-      if (baseStyle.decoration!.contains(TextDecoration.underline)) {
-        newDecoration = baseStyle.decoration!;
-      } else {
-        newDecoration = TextDecoration.combine([baseStyle.decoration!, TextDecoration.underline]);
-      }
+      newDecoration = decoration.contains(TextDecoration.underline)
+          ? decoration
+          : TextDecoration.combine([decoration, TextDecoration.underline]);
     }
 
-    Color? decorationColorToApply = baseStyle.decorationColor ?? baseStyle.color;
+    final Color? decorationColorToApply = baseStyle.decorationColor ?? baseStyle.color;
 
     return baseStyle.copyWith(
       decoration: newDecoration,
@@ -111,16 +117,17 @@ class DefaultStyles {
   /// and would be implemented in `TextfStyleResolver`.
   /// Used as a fallback by TextfStyleResolver if no `highlightStyle` is found via TextfOptions
   /// AND no theme-based default is implemented or chosen in the resolver.
-  static TextStyle highlightStyle(final TextStyle baseStyle) {
+  static TextStyle highlightStyle(TextStyle baseStyle) {
     // A common, though not necessarily theme-adaptive, highlight color.
     // Brightness check could make it slightly more adaptive if used as a true last resort.
-    final bool isDark = baseStyle.color != null //
-        ? ThemeData.estimateBrightnessForColor(baseStyle.color!) == Brightness.dark
-        : false;
+    final baseStyleColor = baseStyle.color;
+    final bool isDark =
+        baseStyleColor != null && ThemeData.estimateBrightnessForColor(baseStyleColor) == Brightness.dark;
+
     return baseStyle.copyWith(
       backgroundColor: isDark //
-          ? Colors.yellow.withValues(alpha: .4)
-          : Colors.yellow.withValues(alpha: .5),
+          ? Colors.yellow.withValues(alpha: highlightAlphaDark)
+          : Colors.yellow.withValues(alpha: highlightAlphaLight),
       // Retain the original text color unless a specific contrast logic is needed.
       // color: baseStyle.color, // Text color usually remains the same for highlight
     );

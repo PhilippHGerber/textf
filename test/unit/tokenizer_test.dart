@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:textf/src/models/token.dart';
-import 'package:textf/src/parsing/tokenizer.dart';
+import 'package:textf/src/models/token_type.dart';
+import 'package:textf/src/parsing/textf_tokenizer.dart';
 
 void main() {
   group('Tokenizer Tests', () {

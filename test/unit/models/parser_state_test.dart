@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/format_stack_entry.dart';
 import 'package:textf/src/models/parser_state.dart';
-import 'package:textf/src/models/token.dart';
-import 'package:textf/src/styling/style_resolver.dart';
+import 'package:textf/src/models/token_type.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
 
 // ---- Mock class for TextfStyleResolver ----
 // This class simulates the behavior of the real resolver, allowing us to

@@ -108,12 +108,54 @@ TextStyle? getEffectiveStrikethroughStyle(BuildContext context, TextStyle baseSt
 /// Callbacks (`onUrlTap`, `onUrlHover`) and `urlMouseCursor` also search up the tree
 /// for the first non-null value.
 class TextfOptions extends InheritedWidget {
+  /// Creates a new TextfOptions instance to provide configuration down the tree.
+  const TextfOptions({
+    required super.child,
+    super.key,
+    this.onUrlTap,
+    this.onUrlHover,
+    this.urlMouseCursor,
+    this.urlStyle,
+    this.urlHoverStyle,
+    this.boldStyle,
+    this.italicStyle,
+    this.boldItalicStyle,
+    this.strikethroughStyle,
+    this.codeStyle,
+    this.strikethroughThickness,
+    this.underlineStyle,
+    this.highlightStyle,
+  });
+
+  /// Finds the nearest [TextfOptions] ancestor in the widget tree.
+  /// Returns null if no ancestor is found. Does not establish a dependency.
+  static TextfOptions? maybeOf(BuildContext context) {
+    final inheritedElement = context.getElementForInheritedWidgetOfExactType<TextfOptions>();
+
+    return inheritedElement?.widget as TextfOptions?;
+  }
+
+  /// Finds the nearest [TextfOptions] ancestor and establishes a dependency.
+  /// Throws if no ancestor is found.
+  static TextfOptions of(BuildContext context) {
+    final TextfOptions? result = context.dependOnInheritedWidgetOfExactType<TextfOptions>();
+    if (result == null) {
+      throw FlutterError(
+        'No TextfOptions found in context. Wrap your widget with TextfOptions '
+        'or ensure one exists higher in the tree.',
+      );
+    }
+
+    return result;
+  }
+
   /// Callback function executed when tapping/clicking on a URL.
   /// Provides the resolved `url` and the raw `displayText` including formatting markers.
   final void Function(String url, String displayText)? onUrlTap;
 
   /// Callback function executed when hovering over a URL.
   /// Provides the resolved `url`, raw `displayText`, and hover state `isHovering`.
+  /// TODO: 'bool' parameters should be named parameters.
   final void Function(String url, String displayText, bool isHovering)? onUrlHover;
 
   /// Styling for URLs in normal state. Merged **onto** the base text style if provided.
@@ -154,44 +196,6 @@ class TextfOptions extends InheritedWidget {
   /// Merged **onto** the base text style if provided.
   final TextStyle? highlightStyle;
 
-  /// Creates a new TextfOptions instance to provide configuration down the tree.
-  const TextfOptions({
-    super.key,
-    required super.child,
-    this.onUrlTap,
-    this.onUrlHover,
-    this.urlMouseCursor,
-    this.urlStyle,
-    this.urlHoverStyle,
-    this.boldStyle,
-    this.italicStyle,
-    this.boldItalicStyle,
-    this.strikethroughStyle,
-    this.codeStyle,
-    this.strikethroughThickness,
-    this.underlineStyle,
-    this.highlightStyle,
-  });
-
-  /// Finds the nearest [TextfOptions] ancestor in the widget tree.
-  /// Returns null if no ancestor is found. Does not establish a dependency.
-  static TextfOptions? maybeOf(BuildContext context) {
-    final inheritedElement = context.getElementForInheritedWidgetOfExactType<TextfOptions>();
-    return inheritedElement?.widget as TextfOptions?;
-  }
-
-  /// Finds the nearest [TextfOptions] ancestor and establishes a dependency.
-  /// Throws if no ancestor is found.
-  static TextfOptions of(BuildContext context) {
-    final TextfOptions? result = context.dependOnInheritedWidgetOfExactType<TextfOptions>();
-    assert(
-      result != null,
-      'No TextfOptions found in context. Wrap your widget with TextfOptions '
-      'or ensure one exists higher in the tree.',
-    );
-    return result!;
-  }
-
   // Helper function to iteratively search ancestors for the first non-null value
   // of a specific property getter.
   T? _findFirstAncestorValue<T>(
@@ -216,12 +220,15 @@ class TextfOptions extends InheritedWidget {
       currentElement.visitAncestorElements((Element ancestor) {
         if (ancestor.widget is TextfOptions) {
           parentElement = ancestor;
+
           return false; // Stop searching upwards for this iteration
         }
+
         return true; // Continue searching upwards
       });
       currentElement = parentElement; // Prepare for the next loop iteration
     }
+
     return null; // Not found anywhere up the tree
   }
 
@@ -321,6 +328,7 @@ class TextfOptions extends InheritedWidget {
   }
 
   /// Finds the first non-null [onUrlHover] callback defined up the tree.
+  /// TODO: 'bool' parameters should be named parameters.
   void Function(String url, String displayText, bool isHovering)? getEffectiveOnUrlHover(BuildContext context) {
     return _findFirstAncestorValue(context, (options) => options.onUrlHover);
   }

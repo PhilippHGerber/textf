@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/format_stack_entry.dart';
 import '../../models/parser_state.dart';
-import '../../models/token.dart';
+import '../../models/token_type.dart';
 
 /// Handles the processing of formatting tokens (bold, italic, etc.) during parsing.
 ///

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:textf/src/parsing/parser.dart';
+import 'package:textf/src/parsing/textf_parser.dart';
 
 void main() {
   group('TextfParser Tests', () {
