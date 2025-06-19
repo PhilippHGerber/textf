@@ -1,6 +1,15 @@
-# Textf • [![pub package](https://img.shields.io/pub/v/textf.svg)](https://pub.dev/packages/llmifier) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+# Text*f*
 
-A lightweight, high-performance Flutter widget for simple inline text formatting.
+[![pub package](https://img.shields.io/pub/v/textf.svg)](https://pub.dev/packages/textf) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+A Flutter widget for inline text formatting — fully compatible with Flutter’s `Text` widget.
+Easily replace `Text` with `Textf` to add simple formatting:
+
+```dart
+Textf('Hello **Flutter**. Build for ==any screen== !');
+```
+
+![image](https://github.com/PhilippHGerber/textf/raw/main/images/textf.png)
 
 ## Overview
 
@@ -8,15 +17,15 @@ Textf provides basic text formatting capabilities similar to a subset of Markdow
 
 ### About the Name
 
-The name "Textf" is inspired by the C standard library function `printf` (print formatted), which formats text and writes it to standard output. Similarly, Textf (Text formatted) provides simple, efficient text formatting for Flutter applications.
+The name "Textf" is inspired by the C standard library function `printf` (print formatted), which formats text and writes it to standard output. Similarly, `Textf` (Text formatted) provides simple, efficient text formatting for Flutter applications.
 
-### Why Textf?
+### Why Text*f*?
 
-- **Lightweight** - Significantly smaller and faster than full Markdown packages
-- **Performance-focused** - Optimized for speed and memory efficiency
-- **Flutter-friendly** - Familiar API that mirrors Flutter's standard Text widget
-- **Minimal dependencies** - No external packages required
-- **Link support** - Interactive links with customizable styling and hover effects
+* **Lightweight** – Significantly smaller and faster than full Markdown packages
+* **Performance-focused** – Optimized for speed and memory efficiency
+* **Flutter-native** – Uses the familiar Text API for seamless integration
+* **Zero dependencies** – No external packages required
+* **Interactive links** – Built-in link support with customizable styles and hover effects
 
 Perfect for chat applications, comment sections, UI elements, and any scenario where simple inline formatting is all you need.
 
@@ -37,7 +46,7 @@ flutter pub get
 
 ## Requirements
 
-- Flutter: >=3.0.0
+* Flutter: >=3.0.0
 
 ## Getting Started
 
@@ -78,17 +87,17 @@ Textf supports the following inline formatting syntax, similar to a subset of Ma
 
 ---
 
-### Links (`[text](url)`)
+### Links `[text](url)`
 
 ![image](https://github.com/PhilippHGerber/textf/raw/main/images/link-hover.gif)
 
-- **Syntax:** Enclose the display text in square brackets `[]` and the URL in parentheses `()`.
-- **Rendering:** Links are rendered with a distinct style (usually blue and underlined) that can be customized via `TextfOptions`.
-- **Interaction:**
-  - `Textf` renders links as tappable/clickable elements.
-  - To handle taps (e.g., open the URL) or hovers, wrap your `Textf` widget (or a parent widget containing multiple `Textf` widgets) with `TextfOptions` and provide the `onUrlTap` and/or `onUrlHover` callbacks.
-  - `TextfOptions` also allows custom styling for links (`urlStyle`, `urlHoverStyle`) and mouse cursor (`urlMouseCursor`).
-- **Nested Formatting:** The display text within the square brackets `[ ]` can contain other formatting markers (e.g., `[**bold link**](https://example.com)`).
+* **Syntax:** Enclose the display text in square brackets `[]` and the URL in parentheses `()`.
+* **Rendering:** Links are rendered with a distinct style (usually blue and underlined) that can be customized via `TextfOptions`.
+* **Interaction:**
+  * `Textf` renders links as tappable/clickable elements.
+  * To handle taps (e.g., open the URL) or hovers, wrap your `Textf` widget (or a parent widget containing multiple `Textf` widgets) with `TextfOptions` and provide the `onUrlTap` and/or `onUrlHover` callbacks.
+  * `TextfOptions` also allows custom styling for links (`urlStyle`, `urlHoverStyle`) and mouse cursor (`urlMouseCursor`).
+* **Nested Formatting:** The display text within the square brackets `[ ]` can contain other formatting markers (e.g., `[**bold link**](https://example.com)`).
 
 ```dart
 // Example using TextfOptions for link interaction and styling
@@ -187,45 +196,45 @@ TextfOptions(
 
 **Available `TextfOptions` Properties:**
 
-- **`boldStyle`**: `TextStyle?` for bold text (`**bold**` or `__bold__`).
-  - Merged **onto** the base text style if provided.
-  - If `null`, `DefaultStyles.boldStyle` (adds `FontWeight.bold`) is used as a fallback.
-- **`italicStyle`**: `TextStyle?` for italic text (`*italic*` or `_italic_`).
-  - Merged **onto** the base text style if provided.
-  - If `null`, `DefaultStyles.italicStyle` (adds `FontStyle.italic`) is used as a fallback.
-- **`boldItalicStyle`**: `TextStyle?` for bold and italic text (`***both***` or `___both___`).
-  - Merged **onto** the base text style if provided.
-  - If `null`, `DefaultStyles.boldItalicStyle` (adds `FontWeight.bold` and `FontStyle.italic`) is used as a fallback.
-- **`strikethroughStyle`**: `TextStyle?` for strikethrough text (`~~strike~~`).
-  - Merged **onto** the base text style if provided.
-  - If `null`, the default strikethrough effect is applied using the resolved `strikethroughThickness`. Providing this overrides `strikethroughThickness`.
-- **`strikethroughThickness`**: `double?` Specifies the thickness of the strikethrough line.
-  - This property is **only used if `strikethroughStyle` is `null`**.
-  - If both `strikethroughStyle` and `strikethroughThickness` are `null` in the entire ancestor chain, `DefaultStyles.defaultStrikethroughThickness` (`1.5`) is used.
-- **`underlineStyle`**: `TextStyle?` for underlined text (`++underline++`).
-  - Merged **onto** the base text style if provided.
-  - If `null`, `DefaultStyles.underlineStyle` (adds `TextDecoration.underline`) is used as a fallback. The decoration color and thickness are derived from the base style or package defaults.
-- **`highlightStyle`**: `TextStyle?` for highlighted text (`==highlight==`).
-  - Merged **onto** the base text style if provided.
-  - If `null`, a theme-aware default highlight style (e.g., using `Theme.of(context).colorScheme.tertiaryContainer` as background) is applied.
-- **`codeStyle`**: `TextStyle?` for inline code text (`` `code` ``).
-  - Merged **onto** the base text style if provided.
-  - Overrides the default theme-based styling for code if specified.
-- **`urlStyle`**: `TextStyle?` for link text (`[text](url)`) in its normal (non-hovered) state.
-  - Merged **onto** the base text style if provided.
-  - Overrides the default theme-based styling for links if specified.
-- **`urlHoverStyle`**: `TextStyle?` for link text when hovered.
-  - Merged **onto** the final *normal* link style (which includes base style and `urlStyle` if provided).
-  - Allows defining specific hover appearances.
-- **`urlMouseCursor`**: `MouseCursor?` The cursor to display when hovering over links.
-  - Searches up the widget tree for the first non-null value.
-  - If none found, defaults to `DefaultStyles.urlMouseCursor` (`SystemMouseCursors.click`).
-- **`onUrlTap`**: Callback `Function(String url, String rawDisplayText)?` triggered when a link is tapped or clicked.
-  - Searches up the widget tree for the first non-null callback.
-  - Provides the resolved URL and the original, unparsed display text (e.g., `**bold** link`).
-- **`onUrlHover`**: Callback `Function(String url, String rawDisplayText, bool isHovering)?` triggered when the mouse pointer enters or exits the bounds of a link.
-  - Searches up the widget tree for the first non-null callback.
-  - Provides the resolved URL, the raw display text, and the current hover state (`true` on enter, `false` on exit).
+* **`boldStyle`**: `TextStyle?` for bold text (`**bold**` or `__bold__`).
+  * Merged **onto** the base text style if provided.
+  * If `null`, `DefaultStyles.boldStyle` (adds `FontWeight.bold`) is used as a fallback.
+* **`italicStyle`**: `TextStyle?` for italic text (`*italic*` or `_italic_`).
+  * Merged **onto** the base text style if provided.
+  * If `null`, `DefaultStyles.italicStyle` (adds `FontStyle.italic`) is used as a fallback.
+* **`boldItalicStyle`**: `TextStyle?` for bold and italic text (`***both***` or `___both___`).
+  * Merged **onto** the base text style if provided.
+  * If `null`, `DefaultStyles.boldItalicStyle` (adds `FontWeight.bold` and `FontStyle.italic`) is used as a fallback.
+* **`strikethroughStyle`**: `TextStyle?` for strikethrough text (`~~strike~~`).
+  * Merged **onto** the base text style if provided.
+  * If `null`, the default strikethrough effect is applied using the resolved `strikethroughThickness`. Providing this overrides `strikethroughThickness`.
+* **`strikethroughThickness`**: `double?` Specifies the thickness of the strikethrough line.
+  * This property is **only used if `strikethroughStyle` is `null`**.
+  * If both `strikethroughStyle` and `strikethroughThickness` are `null` in the entire ancestor chain, `DefaultStyles.defaultStrikethroughThickness` (`1.5`) is used.
+* **`underlineStyle`**: `TextStyle?` for underlined text (`++underline++`).
+  * Merged **onto** the base text style if provided.
+  * If `null`, `DefaultStyles.underlineStyle` (adds `TextDecoration.underline`) is used as a fallback. The decoration color and thickness are derived from the base style or package defaults.
+* **`highlightStyle`**: `TextStyle?` for highlighted text (`==highlight==`).
+  * Merged **onto** the base text style if provided.
+  * If `null`, a theme-aware default highlight style (e.g., using `Theme.of(context).colorScheme.tertiaryContainer` as background) is applied.
+* **`codeStyle`**: `TextStyle?` for inline code text (`` `code` ``).
+  * Merged **onto** the base text style if provided.
+  * Overrides the default theme-based styling for code if specified.
+* **`urlStyle`**: `TextStyle?` for link text (`[text](url)`) in its normal (non-hovered) state.
+  * Merged **onto** the base text style if provided.
+  * Overrides the default theme-based styling for links if specified.
+* **`urlHoverStyle`**: `TextStyle?` for link text when hovered.
+  * Merged **onto** the final *normal* link style (which includes base style and `urlStyle` if provided).
+  * Allows defining specific hover appearances.
+* **`urlMouseCursor`**: `MouseCursor?` The cursor to display when hovering over links.
+  * Searches up the widget tree for the first non-null value.
+  * If none found, defaults to `DefaultStyles.urlMouseCursor` (`SystemMouseCursors.click`).
+* **`onUrlTap`**: Callback `Function(String url, String rawDisplayText)?` triggered when a link is tapped or clicked.
+  * Searches up the widget tree for the first non-null callback.
+  * Provides the resolved URL and the original, unparsed display text (e.g., `**bold** link`).
+* **`onUrlHover`**: Callback `Function(String url, String rawDisplayText, bool isHovering)?` triggered when the mouse pointer enters or exits the bounds of a link.
+  * Searches up the widget tree for the first non-null callback.
+  * Provides the resolved URL, the raw display text, and the current hover state (`true` on enter, `false` on exit).
 
 ### Inheritance
 
@@ -273,8 +282,8 @@ TextfOptions(
 To effectively style your `Textf` widgets and leverage the theme-aware defaults and customization options, follow these recommendations:
 
 1. **Use `DefaultTextStyle` for Base Styles:**
-    - **What:** Apply base styling like font size, default text color, or font family by wrapping `Textf` (or a common ancestor) with `DefaultTextStyle`.
-    - **Why:** This is the standard Flutter approach for inherited text styles. It ensures that `Textf`'s theme-aware defaults (for code and links) and relative format styles (bold, italic) are correctly merged onto a consistent base style provided by your app's theme or your explicit `DefaultTextStyle`.
+    * **What:** Apply base styling like font size, default text color, or font family by wrapping `Textf` (or a common ancestor) with `DefaultTextStyle`.
+    * **Why:** This is the standard Flutter approach for inherited text styles. It ensures that `Textf`'s theme-aware defaults (for code and links) and relative format styles (bold, italic) are correctly merged onto a consistent base style provided by your app's theme or your explicit `DefaultTextStyle`.
 
     ```dart
     // Good: Set base style via DefaultTextStyle
@@ -287,12 +296,12 @@ To effectively style your `Textf` widgets and leverage the theme-aware defaults 
     ```
 
 2. **Use `TextfOptions` for Format-Specific Styles:**
-    - **What:** Use `TextfOptions` to customize the appearance of specific formatting types (e.g., making bold text blue, changing link underlines, setting a custom code background).
-    - **Why:** `TextfOptions` provides targeted overrides for how formatted segments look, taking precedence over theme and package defaults for those specific formats. See the "Customizing with TextfOptions" section for details.
+    * **What:** Use `TextfOptions` to customize the appearance of specific formatting types (e.g., making bold text blue, changing link underlines, setting a custom code background).
+    * **Why:** `TextfOptions` provides targeted overrides for how formatted segments look, taking precedence over theme and package defaults for those specific formats. See the "Customizing with TextfOptions" section for details.
 
 3. **Use `Textf`'s `style` Parameter Cautiously:**
-    - **What:** The `style` parameter directly on the `Textf` widget.
-    - **Why:** Use this primarily for one-off style overrides on a specific `Textf` instance *where you don't want it to inherit from `DefaultTextStyle`*. Be aware that providing an explicit `style` here **replaces** the `DefaultTextStyle` when the parser calculates its internal base style. If this explicit `style` is incomplete (e.g., only sets `fontSize`), it can interfere with the correct application of theme-based defaults (like code background/color) for that specific instance. Prefer `DefaultTextStyle` for setting the base.
+    * **What:** The `style` parameter directly on the `Textf` widget.
+    * **Why:** Use this primarily for one-off style overrides on a specific `Textf` instance *where you don't want it to inherit from `DefaultTextStyle`*. Be aware that providing an explicit `style` here **replaces** the `DefaultTextStyle` when the parser calculates its internal base style. If this explicit `style` is incomplete (e.g., only sets `fontSize`), it can interfere with the correct application of theme-based defaults (like code background/color) for that specific instance. Prefer `DefaultTextStyle` for setting the base.
 
     ```dart
     // Use with caution: Might interfere with theme defaults for code/links within this Textf
@@ -303,11 +312,11 @@ To effectively style your `Textf` widgets and leverage the theme-aware defaults 
     ```
 
 4. **Understand Styling Precedence:**
-    - `Textf` resolves styles in this order (highest priority first):
+    * `Textf` resolves styles in this order (highest priority first):
         1. **`TextfOptions`:** Specific style defined for the format type (e.g., `boldStyle`, `urlStyle`) found in the nearest ancestor `TextfOptions`.
         2. **Theme/Package Defaults (if no Option):**
-            - For `code`, links, and `highlight`: Theme-aware defaults derived from `ThemeData` (e.g., `colorScheme.primary` for links).
-            - For `bold`, `italic`, `strikethrough`, `underline`: Relative styles applied to the base style (e.g., adding `FontWeight.bold`).
+            * For `code`, links, and `highlight`: Theme-aware defaults derived from `ThemeData` (e.g., `colorScheme.primary` for links).
+            * For `bold`, `italic`, `strikethrough`, `underline`: Relative styles applied to the base style (e.g., adding `FontWeight.bold`).
         3. **Base Style:** The style inherited from `DefaultTextStyle` or provided directly via `Textf`'s `style` parameter.
 
 By following these guidelines, you can ensure predictable styling that integrates well with your application's theme while retaining full control over specific formatting appearances via `TextfOptions`.
@@ -336,10 +345,10 @@ Textf(
 
 Textf is designed with performance in mind:
 
-- **Optimized parsing** - Efficient tokenization algorithm
-- **Smart caching** - Automatically caches parse results
-- **Fast paths** - Quick handling of plain text without formatting
-- **Memory efficient** - Minimal memory overhead
+* **Optimized parsing** - Efficient tokenization algorithm
+* **Smart caching** - Automatically caches parse results
+* **Fast paths** - Quick handling of plain text without formatting
+* **Memory efficient** - Minimal memory overhead
 
 Performance benchmarks show Textf maintains smooth rendering (60+ FPS) even with frequent updates and complex formatting. Memory usage scales linearly with text length.
 
@@ -347,10 +356,10 @@ Performance benchmarks show Textf maintains smooth rendering (60+ FPS) even with
 
 Textf is intentionally focused on inline formatting only:
 
-- **Maximum nesting depth of 2 formatting levels**
-- No support for block elements (headings, lists, quotes, etc.)
-- No support for images
-- Designed for inline formatting and links only, not full Markdown rendering
+* **Maximum nesting depth of 2 formatting levels**
+* No support for block elements (headings, lists, quotes, etc.)
+* No support for images
+* Designed for inline formatting and links only, not full Markdown rendering
 
 If you need more comprehensive Markdown features, consider a full Markdown package.
 
@@ -358,48 +367,47 @@ If you need more comprehensive Markdown features, consider a full Markdown packa
 
 ### Implemented Features
 
-- ✅ Bold formatting with `**text**` or `__text__`
-- ✅ Italic formatting with `*text*` or `_text_`
-- ✅ Combined bold+italic with `***text***` or `___text___`
-- ✅ Strikethrough with `~~text~~`
-- ✅ Inline code with `` `code` ``
-- ✅ Underline with `++underline++`
-- ✅ Highlight with `==highlight==`
-- ✅ Nested formatting (up to 2 levels deep)
-- ✅ Escaped characters with backslash
-- ✅ Performance optimization with caching
-- ✅ Fast paths for plain text
-- ✅ Link support with `[text](url)`
-- ✅ Custom styles for each formatting type
+* ✅ Bold formatting with `**text**` or `__text__`
+* ✅ Italic formatting with `*text*` or `_text_`
+* ✅ Combined bold+italic with `***text***` or `___text___`
+* ✅ Strikethrough with `~~text~~`
+* ✅ Inline code with `` `code` ``
+* ✅ Underline with `++underline++`
+* ✅ Highlight with `==highlight==`
+* ✅ Nested formatting (up to 2 levels deep)
+* ✅ Escaped characters with backslash
+* ✅ Fast paths for plain text
+* ✅ Link support with `[text](url)`
+* ✅ Custom styles for each formatting type
+* ✅ Full support for Flutter text properties
 
 ### Planned Features
 
-- 🔲 Full support for Flutter text properties
-- 🔲 Superscript and subscript with `^text^` and `~text~`: Textf('E = mc^2^ and H~2~O')
-- 🔲 RTL language optimization
-- 🔲 Improved accessibility features
+* 🔲 Superscript and subscript with `^text^` and `~text~`: Textf('E = mc^2^ and H~2~O')
+* 🔲 RTL language optimization
+* 🔲 Improved accessibility features
 
-## When to Use Textf
+## When to Use Text*f*
 
-- ✅ When you need simple inline text formatting
-- ✅ When performance is critical
-- ✅ When you want a familiar Flutter Text-like API
-- ✅ For chat messages, comments, captions, or UI labels
-- ✅ For internationalized text with formatting
-- ❌ When you need full Markdown with blocks, links, images
-- ❌ When you need HTML rendering
-- ❌ For complex document rendering
+* ✅ When you need simple inline text formatting
+* ✅ When performance is critical
+* ✅ When you want a familiar Flutter Text-like API
+* ✅ For chat messages, comments, captions, or UI labels
+* ✅ For internationalized text with formatting
+* ❌ When you need full Markdown with blocks, links, images
+* ❌ When you need HTML rendering
+* ❌ For complex document rendering
 
 ## Internationalization (i18n)
 
-Textf is particularly valuable for applications requiring internationalization:
+Text*f* is particularly valuable for applications requiring internationalization:
 
-### Why Textf is Great for i18n
+### Why Text*f* is Great for i18n
 
-- **Translator-friendly syntax** - Simple formatting that non-technical translators can understand
-- **Consistent across languages** - Maintain formatting regardless of text length or language
-- **Error-tolerant** - Gracefully handles formatting mistakes that might occur during translation
-- **No HTML required** - Avoid HTML tags that might break during translation workflows
+* **Translator-friendly syntax** - Simple formatting that non-technical translators can understand
+* **Consistent across languages** - Maintain formatting regardless of text length or language
+* **Error-tolerant** - Gracefully handles formatting mistakes that might occur during translation
+* **No HTML required** - Avoid HTML tags that might break during translation workflows
 
 ### Example with i18n
 
@@ -423,9 +431,9 @@ This approach allows translators to focus on the content while preserving format
 
 Textf handles malformed formatting gracefully:
 
-- Unclosed tags are treated as plain text
-- Excessive nesting is prevented
-- Escaped characters are properly rendered
+* Unclosed tags are treated as plain text
+* Excessive nesting is prevented
+* Escaped characters are properly rendered
 
 ## API Documentation
 
