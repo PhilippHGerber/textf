@@ -155,8 +155,7 @@ class TextfOptions extends InheritedWidget {
 
   /// Callback function executed when hovering over a URL.
   /// Provides the resolved `url`, raw `displayText`, and hover state `isHovering`.
-  /// TODO: 'bool' parameters should be named parameters.
-  final void Function(String url, String displayText, bool isHovering)? onUrlHover;
+  final void Function(String url, String displayText, {required bool isHovering})? onUrlHover;
 
   /// Styling for URLs in normal state. Merged **onto** the base text style if provided.
   final TextStyle? urlStyle;
@@ -329,7 +328,9 @@ class TextfOptions extends InheritedWidget {
 
   /// Finds the first non-null [onUrlHover] callback defined up the tree.
   /// TODO: 'bool' parameters should be named parameters.
-  void Function(String url, String displayText, bool isHovering)? getEffectiveOnUrlHover(BuildContext context) {
+  void Function(String url, String displayText, {required bool isHovering})? getEffectiveOnUrlHover(
+    BuildContext context,
+  ) {
     return _findFirstAncestorValue(context, (options) => options.onUrlHover);
   }
 

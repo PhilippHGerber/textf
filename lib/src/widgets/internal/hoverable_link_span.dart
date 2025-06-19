@@ -56,8 +56,7 @@ class HoverableLinkSpan extends StatefulWidget {
   /// An optional callback function triggered when the hover state changes.
   /// Resolved by TextfStyleResolver. Provides the URL, the raw display text,
   /// and the new hover state (`true` for enter, `false` for exit).
-  /// TODO: 'bool' parameters should be named parameters.
-  final void Function(String url, String rawDisplayText, bool isHovering)? onHoverCallback;
+  final void Function(String url, String rawDisplayText, {required bool isHovering})? onHoverCallback;
 
   @override
   State<HoverableLinkSpan> createState() => HoverableLinkSpanState();
@@ -74,7 +73,7 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
     if (mounted) {
       setState(() => _isHovering = true);
       // Notify listener about hover start, passing URL and raw text
-      widget.onHoverCallback?.call(widget.url, widget.rawDisplayText, true);
+      widget.onHoverCallback?.call(widget.url, widget.rawDisplayText, isHovering: true);
     }
   }
 
@@ -83,7 +82,7 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
     if (mounted) {
       setState(() => _isHovering = false);
       // Notify listener about hover end
-      widget.onHoverCallback?.call(widget.url, widget.rawDisplayText, false);
+      widget.onHoverCallback?.call(widget.url, widget.rawDisplayText, isHovering: false);
     }
   }
 

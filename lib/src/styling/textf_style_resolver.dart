@@ -136,8 +136,7 @@ class TextfStyleResolver {
   /// Resolves the effective onUrlHover callback for a URL link.
   ///
   /// Checks TextfOptions hierarchy for the callback. Returns null if none found.
-  /// TODO: 'bool' parameters should be named parameters.
-  void Function(String url, String displayText, bool isHovering)? resolveOnUrlHover() {
+  void Function(String url, String displayText, {required bool isHovering})? resolveOnUrlHover() {
     return _nearestOptions?.getEffectiveOnUrlHover(context);
   }
 
