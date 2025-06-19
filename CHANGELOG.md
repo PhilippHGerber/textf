@@ -2,6 +2,47 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 0.5.0
+
+2025-06-19
+
+### Breaking Changes
+
+- **Hover Callbacks:** Changed hover callback parameters from positional to named parameters for improved API clarity. The `onUrlHover` callback now uses `isHovering` as a named parameter:
+
+  ```dart
+  // Before:
+  onUrlHover: (url, displayText, true)
+
+  // After:
+  onUrlHover: (url, displayText, isHovering: true)
+  ```
+
+### Added
+
+- **Enhanced Code Analysis:** Integrated `very_good_analysis` and `dart_code_metrics` for improved code quality and consistency
+- **Unit Tests:** Added comprehensive unit tests for `NestingValidator` class
+
+### Changed
+
+- **Code Quality:** Significant refactoring throughout the codebase for improved readability and consistency
+- **Documentation:** Enhanced README clarity and updated package description for better discoverability
+- **Example App:** Streamlined theme mode setup and removed unnecessary theme customizations
+
+### Removed
+
+- **Unused Code:** Removed the `UrlLinkSpan` class which was no longer needed after architectural improvements
+
+### Developer Experience
+
+- **Linting:** Updated analysis options with stricter rules for better code quality
+- **Formatting:** Applied consistent code formatting across the entire codebase
+
+### Internal
+
+- Refactored test suites for consistency and improved readability
+- Various code cleanup and optimization improvements
+
 ## 0.4.1
 
 ### Removed
