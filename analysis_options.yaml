@@ -1,12 +1,65 @@
-include: package:flutter_lints/flutter.yaml
+include: package:very_good_analysis/analysis_options.yaml
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
-
-analyzer:
-linter:
-  rules:
-    require_trailing_commas: true
-    prefer_relative_imports: true
 formatter:
   page_width: 120
+#  trailing_commas: preserve
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "test/**"
+
+  errors:
+    unused_import: warning
+    todo: ignore
+
+linter:
+  rules:
+    # Allow relative imports for files within the same package
+    always_use_package_imports: false
+    # Prefer using relative imports within the same package
+    prefer_relative_imports: true
+    # Allow lines to exceed 80 characters
+    lines_longer_than_80_chars: false
+    # Prefer using const constructors where possible
+    prefer_const_constructors: true
+    # Prefer declaring local variables as final if they are not reassigned
+    prefer_final_locals: true
+    # Use trailing commas for all parameter lists and argument lists.
+    require_trailing_commas: true
+    # Allow mutable literal lists/maps/sets even if they could be const
+    prefer_const_literals_to_create_immutables: false
+    # Allow explicitly typing closure parameters
+    avoid_types_on_closure_parameters: false
+    # Allow TODOs without the Flutter-style format (e.g., missing author tags)
+    flutter_style_todos: false
+    # Omit type annotations for local variables.
+    omit_local_variable_types: false
+
+dart_code_metrics:
+  rules:
+    - avoid-cascade-after-if-null
+    - avoid-duplicate-named-imports
+    - avoid-dynamic
+    - avoid-global-state
+    - avoid-late-keyword
+    - avoid-non-null-assertion
+    - avoid-self-compare
+    - avoid-substring
+    - avoid-throw-in-catch-block
+    - avoid-top-level-members-in-tests
+    - binary-expression-operand-order
+    - double-literal-format
+    - member-ordering
+    - no-boolean-literal-compare
+    - no-empty-block
+    - no-equal-then-else
+    - no-magic-number
+    - prefer-conditional-expressions
+    - prefer-enums-by-name
+    - prefer-first
+    - prefer-immediate-return
+    - prefer-iterable-of
+    - prefer-last
+    - prefer-match-file-name
