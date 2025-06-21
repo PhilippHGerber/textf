@@ -21,5 +21,6 @@ llms.txt
 /analysis_options.yaml
 /tool/
 /benchmark/
+/example/textf_core/
 /example/textf_flex/
 /example/widgetbook_textf/
