@@ -35,7 +35,7 @@ Add Textf to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  textf: ^0.5.0
+  textf: ^0.5.1
 ```
 
 Then run:
@@ -74,15 +74,15 @@ class MyWidget extends StatelessWidget {
 
 Textf supports the following inline formatting syntax, similar to a subset of Markdown:
 
-| Format        | Syntax                       | Result            |
-| ------------- | ---------------------------- | ----------------- |
-| Bold          | `**bold**` or `__bold__`     | **bold**          |
-| Italic        | `*italic*` or `_italic_`     | *italic*          |
-| Bold+Italic   | `***both***` or `___both___` | ***both***        |
-| Strikethrough | `~~strikethrough~~`          | ~~strikethrough~~ |
-| Underline     | `++underline++`              | ++underline++     |
-| Highlight     | `==highlight==`              | ==highlight==     |
-| Code          | `` `code` ``                 | `code`            |
+| Format        | Syntax                       | Result                              |
+| ------------- | ---------------------------- | ----------------------------------- |
+| Bold          | `**bold**` or `__bold__`     | **bold**                            |
+| Italic        | `*italic*` or `_italic_`     | *italic*                            |
+| Bold+Italic   | `***both***` or `___both___` | ***both***                          |
+| Strikethrough | `~~strikethrough~~`          | ~~strikethrough~~                   |
+| Underline     | `++underline++`              | ++underline++                       |
+| Highlight     | `==highlight==`              | ==highlight==                       |
+| Code          | `` `code` ``                 | `code`                              |
 | Link          | `[text](url)`                | [Example Link](https://example.com) |
 
 ---
