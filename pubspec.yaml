@@ -2,7 +2,7 @@ name: textf
 description: >
   A Flutter widget for inline text formatting — fully compatible with Flutter’s Text widget.
   Easily replace Text with Textf to add simple formatting.
-version: 0.5.1
+version: 0.6.0
 homepage: https://github.com/PhilippHGerber/textf
 repository: https://github.com/PhilippHGerber/textf
 issue_tracker: https://github.com/PhilippHGerber/textf/issues
@@ -18,7 +18,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  very_good_analysis: ^8.0.0
+  very_good_analysis: ^9.0.0
 
 topics:
   - text
