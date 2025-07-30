@@ -1,112 +1,86 @@
 import 'package:flutter/material.dart';
 
-// TODO: [Decoration Combining on Options Level]
-// The current `getEffective...Style` methods (e.g., getEffectiveUnderlineStyle,
-// getEffectiveStrikethroughStyle) use `baseStyle.merge(optionsStyle)`.
-// If `optionsStyle` defines a `decoration`, it will override any `decoration`
-// present in `baseStyle` (which might have been applied by an outer TextfOptions
-// or a DefaultStyles fallback for a different format).
-//
-// This is standard TextStyle.merge behavior and is predictable.
-// However, for scenarios where a user might want an `optionsStyle` (e.g., for strikethrough)
-// to *combine* its decoration with a decoration already present in `baseStyle`
-// (e.g., an underline from a parent TextfOptions or a DefaultStyles.underlineStyle call),
-// the current merge logic is insufficient for automatic combination.
-//
-// The `DefaultStyles.underlineStyle` and `DefaultStyles.strikethroughStyle` methods
-// *do* implement logic to combine decorations if called sequentially by the resolver
-// when no options are overriding them.
-//
-// Potential Solution for Options-Level Combining:
-// Each `getEffective...Style` method that deals with decorations could be made more
-// intelligent. If `optionsStyle.decoration` is not null and `baseStyle.decoration` is also
-// not null (and they are different and neither is TextDecoration.none),
-// it could explicitly use `TextDecoration.combine([baseStyle.decoration!, optionsStyle.decoration!])`.
-//
-// This would involve:
-// 1. Checking if both `baseStyle` and `optionsStyle` have non-null, different,
-//    and non-`TextDecoration.none` decorations.
-// 2. If so, creating a new `TextStyle` that includes the combined decoration.
-// 3. Carefully considering which `decorationColor` and `decorationThickness`
-//    should apply to the combined decoration (likely those from `optionsStyle`
-//    would take precedence for the part of the decoration it's contributing).
-//    This is a limitation of TextStyle, which only allows one color/thickness
-//    for all combined decorations.
-//
-// Example for getEffectiveStrikethroughStyle:
-/*
-TextStyle? getEffectiveStrikethroughStyle(BuildContext context, TextStyle baseStyle) {
-  final optionsSpecificStyle = _findFirstAncestorValue(context, (o) => o.strikethroughStyle);
-  if (optionsSpecificStyle == null) {
-    return null; // No option defined
+/// Merges two [TextStyle] objects with special handling for [TextDecoration].
+///
+/// Unlike the standard [TextStyle.merge], this function intelligently combines
+/// decorations from both styles instead of letting the [optionsStyle]'s decoration
+/// completely overwrite the [baseStyle]'s.
+///
+/// The merging logic is as follows:
+/// 1.  All properties from [optionsStyle] (e.g., `color`, `fontWeight`,
+///     `fontSize`) take precedence over [baseStyle], except for decoration.
+/// 2.  Decoration-related properties (`decorationColor`, `decorationThickness`,
+///     `decorationStyle`) from [optionsStyle] are given priority.
+/// 3.  The `decoration` property itself is combined:
+///     - If both styles have active, distinct decorations, they are combined
+///       using [TextDecoration.combine].
+///     - If [optionsStyle] specifies `TextDecoration.none`, any decoration from
+///       [baseStyle] is removed.
+///     - In all other cases, the standard merge logic applies (i.e., the
+///       [optionsStyle]'s decoration is used).
+///
+/// This ensures that nested [TextfOptions] can layer decorations (e.g., add a
+/// strikethrough to an existing underline) in an intuitive way.
+///
+/// - [baseStyle]: The base style, typically from a parent `TextfOptions` or
+///   a `DefaultTextStyle`.
+/// - [optionsStyle]: The style from the current `TextfOptions` widget, which
+///   should take precedence.
+///
+/// Returns a new [TextStyle] with the properties correctly merged and
+/// decorations combined.
+TextStyle _mergeStyles(TextStyle baseStyle, TextStyle optionsStyle) {
+  final TextDecoration? baseDecoration = baseStyle.decoration;
+  final TextDecoration? optionDecoration = optionsStyle.decoration;
+
+  TextDecoration? finalDecoration;
+
+  final bool shouldCombine = optionDecoration != null &&
+      optionDecoration != TextDecoration.none &&
+      baseDecoration != null &&
+      baseDecoration != TextDecoration.none &&
+      !baseDecoration.contains(optionDecoration);
+
+  if (shouldCombine) {
+    finalDecoration = TextDecoration.combine([baseDecoration, optionDecoration]);
+  } else {
+    finalDecoration = optionDecoration ?? baseDecoration;
   }
 
-  TextStyle mergedStyle = baseStyle.merge(optionsSpecificStyle); // Initial merge
-
-  // Intelligent decoration combination
-  final baseDecoration = baseStyle.decoration;
-  final optionDecoration = optionsSpecificStyle.decoration;
-
-  if (optionDecoration != null && optionDecoration != TextDecoration.none &&
-      baseDecoration != null && baseDecoration != TextDecoration.none &&
-      !baseDecoration.contains(optionDecoration) // Avoid re-adding same decoration
-  ) {
-    // Both have distinct, active decorations, so combine them.
-    // The optionsSpecificStyle's color/thickness for its part of the decoration
-    // would implicitly win due to the initial merge order if not further specified.
-    mergedStyle = mergedStyle.copyWith(
-      decoration: TextDecoration.combine([baseDecoration, optionDecoration]),
-      // decorationColor and decorationThickness from optionsSpecificStyle are preferred.
-      // If baseStyle had a decorationColor and optionsSpecificStyle doesn't,
-      // merge might clear it or keep base's. Explicit handling might be needed
-      // if optionsSpecificStyle should only contribute its decoration type but not color/thickness.
-      // For now, optionsSpecificStyle's decoration-related properties (if any) take precedence for the combined effect.
-      decorationColor: optionsSpecificStyle.decorationColor ?? mergedStyle.decorationColor, // Prefer option's color
-      decorationThickness: optionsSpecificStyle.decorationThickness ?? mergedStyle.decorationThickness, // Prefer option's thickness
-    );
-  }
-  // If optionDecoration is TextDecoration.none, merge already handled clearing it.
-  // If only one has a decoration, merge already handled it.
-
-  return mergedStyle;
+  return baseStyle.merge(optionsStyle).copyWith(
+        decoration: finalDecoration,
+      );
 }
-*/
-// This enhanced logic would make TextfOptions more powerful for fine-grained
-// control over combined decorations originating from different levels of the options tree,
-// but increases the complexity of these getter methods.
-// For now, the simpler override behavior is in place for options.
 
 /// Configuration options for Textf widgets within a specific scope.
 ///
 /// This widget uses the `InheritedWidget` pattern to make configuration
-/// available to descendant `Textf` widgets. Options include styling for different
-/// formatting types (bold, italic, code, links, underline, highlight)
-/// and callbacks for link interactions.
+/// available to all descendant `Textf` widgets. It allows for hierarchical
+/// styling and behavior management.
 ///
-/// ## Implicit Inheritance and Style Resolution
+/// ## Style Inheritance Logic
 ///
-/// When resolving a style (e.g., for bold text), the system (specifically
-/// `TextfStyleResolver` interacting with these methods) follows this process:
+/// `TextStyle` properties (like `boldStyle`, `urlStyle`, etc.) are resolved
+/// using a **recursive merge strategy**. The system collects all `TextfOptions`
+/// widgets up the tree and merges their styles starting from the top-most
+/// (root) ancestor down to the nearest one.
 ///
-/// 1. **Check Ancestor Options:** It calls the relevant `getEffective...Style`
-///    method on the nearest `TextfOptions` ancestor (e.g., `getEffectiveBoldStyle`).
-///    This method looks up the widget tree for the *first* ancestor `TextfOptions`
-///    that defines that specific style property (e.g., `boldStyle`).
-/// 2. **Apply Option Style:** If an ancestor option is found, it's merged with the
-///    current segment's `baseStyle` and returned. This result is used directly.
-/// 3. **Return Null:** If *no* ancestor `TextfOptions` defines the specific style
-///    property, the `getEffective...Style` method returns `null`.
-/// 4. **Resolver Fallback:** When `TextfStyleResolver` receives `null`, it knows
-///    no explicit option was provided. It then applies its own fallback logic:
-///    - For code/links/highlight: It derives a style from the current `ThemeData`.
-///    - For bold/italic/strike/underline: It applies the relative default effect
-///      from `DefaultStyles` to the `baseStyle`.
+/// This allows for powerful and intuitive style composition. For example, a
+/// parent `TextfOptions` can define a `boldStyle` with a red color, and a
+/// child `TextfOptions` can define its own `boldStyle` with only a bold font
+/// weight. The final resolved style for bold text in that subtree will be
+/// **both red and bold**.
 ///
-/// This ensures explicit options always win, followed by theme defaults (where applicable),
-/// and finally package defaults.
+/// The final, fully-merged style from the `TextfOptions` hierarchy is then
+/// applied on top of the `Textf` widget's base style (from `DefaultTextStyle`
+/// or the `style` parameter).
 ///
-/// Callbacks (`onUrlTap`, `onUrlHover`) and `urlMouseCursor` also search up the tree
-/// for the first non-null value.
+/// ## Callback and Value Inheritance Logic
+///
+/// Non-style properties that cannot be merged (like `onUrlTap`, `onUrlHover`,
+/// and `urlMouseCursor`) use a **"nearest ancestor wins"** strategy. The first
+/// non-null value found when searching up the widget tree from the `Textf`
+/// widget is the one that will be used.
 class TextfOptions extends InheritedWidget {
   /// Creates a new TextfOptions instance to provide configuration down the tree.
   const TextfOptions({
@@ -127,230 +101,222 @@ class TextfOptions extends InheritedWidget {
     this.highlightStyle,
   });
 
-  /// Finds the nearest [TextfOptions] ancestor in the widget tree.
-  /// Returns null if no ancestor is found. Does not establish a dependency.
-  static TextfOptions? maybeOf(BuildContext context) {
-    final inheritedElement = context.getElementForInheritedWidgetOfExactType<TextfOptions>();
+  /// Callback function executed when tapping or clicking on a URL.
+  /// Provides the resolved `url` and the raw `displayText` including any
+  /// original formatting markers (e.g., `**bold link**`).
+  final void Function(String url, String displayText)? onUrlTap;
 
-    return inheritedElement?.widget as TextfOptions?;
+  /// Callback function executed when the mouse pointer enters or exits a URL.
+  /// Provides the resolved `url`, the raw `displayText`, and the hover state
+  /// (`isHovering` is `true` on enter, `false` on exit).
+  final void Function(String url, String displayText, {required bool isHovering})? onUrlHover;
+
+  /// The [TextStyle] for link text (`[text](url)`) in its normal (non-hovered) state.
+  /// Merged onto the base style if provided.
+  final TextStyle? urlStyle;
+
+  /// The [TextStyle] for link text when hovered.
+  /// This style is merged on top of the link's final normal style.
+  final TextStyle? urlHoverStyle;
+
+  /// The [MouseCursor] to display when hovering over a URL link.
+  final MouseCursor? urlMouseCursor;
+
+  /// The [TextStyle] for bold text (`**bold**` or `__bold__`).
+  /// Merged onto the base style if provided.
+  final TextStyle? boldStyle;
+
+  /// The [TextStyle] for italic text (`*italic*` or `_italic_`).
+  /// Merged onto the base style if provided.
+  final TextStyle? italicStyle;
+
+  /// The [TextStyle] for bold and italic text (`***both***` or `___both___`).
+  /// Merged onto the base style if provided.
+  final TextStyle? boldItalicStyle;
+
+  /// The [TextStyle] for strikethrough text (`~~strike~~`).
+  /// Merged onto the base style if provided.
+  final TextStyle? strikethroughStyle;
+
+  /// The [TextStyle] for inline code text (`` `code` ``).
+  /// Merged onto the base style if provided.
+  final TextStyle? codeStyle;
+
+  /// A specific thickness for the strikethrough line decoration.
+  /// This property is **only used if `strikethroughStyle` is `null`**.
+  final double? strikethroughThickness;
+
+  /// The [TextStyle] for underlined text (`++underline++`).
+  /// Merged onto the base style if provided.
+  final TextStyle? underlineStyle;
+
+  /// The [TextStyle] for highlighted text (`==highlight==`).
+  /// Merged onto the base style if provided.
+  final TextStyle? highlightStyle;
+
+  /// Finds the nearest [TextfOptions] ancestor in the widget tree.
+  ///
+  /// Returns null if no ancestor is found. This establishes a dependency on the
+  /// nearest `TextfOptions`, so the calling widget will rebuild if it changes.
+  static TextfOptions? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<TextfOptions>();
   }
 
   /// Finds the nearest [TextfOptions] ancestor and establishes a dependency.
-  /// Throws if no ancestor is found.
+  ///
+  /// Throws a [FlutterError] if no ancestor is found.
   static TextfOptions of(BuildContext context) {
     final TextfOptions? result = context.dependOnInheritedWidgetOfExactType<TextfOptions>();
     if (result == null) {
       throw FlutterError(
-        'No TextfOptions found in context. Wrap your widget with TextfOptions '
-        'or ensure one exists higher in the tree.',
+        'No TextfOptions found in context. To use TextfOptions.of, a TextfOptions widget must be an ancestor of the calling widget.',
       );
     }
-
     return result;
   }
 
-  /// Callback function executed when tapping/clicking on a URL.
-  /// Provides the resolved `url` and the raw `displayText` including formatting markers.
-  final void Function(String url, String displayText)? onUrlTap;
+  // ===== STATIC HELPERS FOR STYLE RESOLUTION LOGIC =====
 
-  /// Callback function executed when hovering over a URL.
-  /// Provides the resolved `url`, raw `displayText`, and hover state `isHovering`.
-  final void Function(String url, String displayText, {required bool isHovering})? onUrlHover;
-
-  /// Styling for URLs in normal state. Merged **onto** the base text style if provided.
-  final TextStyle? urlStyle;
-
-  /// Styling for URLs in hover state. Merged **onto** the final *normal* URL style if provided.
-  final TextStyle? urlHoverStyle;
-
-  /// The mouse cursor to use when hovering over a URL link. Inherits up the tree.
-  final MouseCursor? urlMouseCursor;
-
-  /// Styling for bold formatted text. Merged **onto** the base text style if provided.
-  final TextStyle? boldStyle;
-
-  /// Styling for italic formatted text. Merged **onto** the base text style if provided.
-  final TextStyle? italicStyle;
-
-  /// Styling for bold and italic formatted text. Merged **onto** the base text style if provided.
-  final TextStyle? boldItalicStyle;
-
-  /// Styling for strikethrough text. Merged **onto** the base text style if provided.
-  final TextStyle? strikethroughStyle;
-
-  /// Styling for inline code text. Merged **onto** the base text style if provided.
-  final TextStyle? codeStyle;
-
-  /// Optional thickness for the default strikethrough decoration line.
-  /// This value is only used if `strikethroughStyle` is *not* provided.
-  /// If null, `DefaultStyles.defaultStrikethroughThickness` is used.
-  /// Inherits up the tree.
-  final double? strikethroughThickness;
-
-  /// Styling for underlined text (`++underline++`).
-  /// Merged **onto** the base text style if provided.
-  final TextStyle? underlineStyle;
-
-  /// Styling for highlighted text (`==highlight==`).
-  /// Merged **onto** the base text style if provided.
-  final TextStyle? highlightStyle;
-
-  // Helper function to iteratively search ancestors for the first non-null value
-  // of a specific property getter.
-  T? _findFirstAncestorValue<T>(
-    BuildContext context,
-    T? Function(TextfOptions options) getter,
-  ) {
-    // Start search from the element associated with the context used to find 'this' instance
-    // or the nearest ancestor if 'this' wasn't found directly via context.
-    Element? currentElement = context.getElementForInheritedWidgetOfExactType<TextfOptions>();
-
-    while (currentElement != null) {
-      // Ensure the widget associated with the element is indeed TextfOptions
-      if (currentElement.widget is TextfOptions) {
-        final currentOptions = currentElement.widget as TextfOptions;
-        final value = getter(currentOptions);
-        if (value != null) {
-          return value; // Found the first non-null value
-        }
+  /// Gathers all [TextfOptions] widgets from the current context upwards.
+  /// The returned list is ordered from the nearest ancestor to the furthest.
+  static List<TextfOptions> _getAncestorOptions(BuildContext context) {
+    final List<TextfOptions> optionsHierarchy = [];
+    context.visitAncestorElements((element) {
+      if (element.widget is TextfOptions) {
+        optionsHierarchy.add(element.widget as TextfOptions);
       }
-      // Move up to the next ancestor TextfOptions
-      Element? parentElement;
-      currentElement.visitAncestorElements((Element ancestor) {
-        if (ancestor.widget is TextfOptions) {
-          parentElement = ancestor;
-
-          return false; // Stop searching upwards for this iteration
-        }
-
-        return true; // Continue searching upwards
-      });
-      currentElement = parentElement; // Prepare for the next loop iteration
-    }
-
-    return null; // Not found anywhere up the tree
+      return true; // Continue visiting all the way to the root.
+    });
+    return optionsHierarchy;
   }
 
-  // --- Effective Style Getters ---
-  // These methods find the first defined style in the ancestor chain
-  // and merge it with the baseStyle. They return NULL if no ancestor defines the style.
+  /// Merges a specific [TextStyle] property from the entire options hierarchy.
+  ///
+  /// It achieves this by reversing the ancestor list (to start from the
+  /// top-most parent) and iteratively merging styles downwards.
+  static TextStyle? _getMergedStyleFromHierarchy(
+    BuildContext context,
+    TextStyle? Function(TextfOptions) getter,
+  ) {
+    final List<TextfOptions> hierarchy = _getAncestorOptions(context);
+    if (hierarchy.isEmpty) {
+      return null;
+    }
 
-  /// Finds the first defined `boldStyle` up the tree and merges it with `baseStyle`.
-  /// Returns `null` if no ancestor defines `boldStyle`.
+    // Reverse the list to start from the top-most ancestor and merge down.
+    final Iterable<TextfOptions> reversedHierarchy = hierarchy.reversed;
+    TextStyle? finalStyle;
+
+    for (final options in reversedHierarchy) {
+      final TextStyle? localStyle = getter(options);
+      if (localStyle != null) {
+        finalStyle = finalStyle == null ? localStyle : _mergeStyles(finalStyle, localStyle);
+      }
+    }
+    return finalStyle;
+  }
+
+  /// Finds the first non-null value for a given property by searching up
+  /// the widget tree (from nearest to furthest).
+  ///
+  /// This is used for non-mergeable properties like callbacks and enums where
+  /// a "nearest wins" strategy is appropriate.
+  static T? _findFirstAncestorValue<T>(
+    BuildContext context,
+    T? Function(TextfOptions) getter,
+  ) {
+    final List<TextfOptions> hierarchy = _getAncestorOptions(context);
+    for (final options in hierarchy) {
+      final T? value = getter(options);
+      if (value != null) {
+        return value; // Found the nearest value, stop searching.
+      }
+    }
+    return null; // Reached the top with no value found.
+  }
+
+  // ===== EFFECTIVE GETTERS (Used by TextfStyleResolver) =====
+
+  /// Resolves the final merged `boldStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveBoldStyle(BuildContext context, TextStyle baseStyle) {
-    final optionsStyle = _findFirstAncestorValue(context, (o) => o.boldStyle);
-    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.boldStyle);
+    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
-  /// Finds the first defined `italicStyle` up the tree and merges it with `baseStyle`.
-  /// Returns `null` if no ancestor defines `italicStyle`.
+  /// Resolves the final merged `italicStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveItalicStyle(BuildContext context, TextStyle baseStyle) {
-    final optionsStyle = _findFirstAncestorValue(context, (o) => o.italicStyle);
-    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.italicStyle);
+    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
-  /// Finds the first defined `boldItalicStyle` up the tree and merges it with `baseStyle`.
-  /// Returns `null` if no ancestor defines `boldItalicStyle`.
+  /// Resolves the final merged `boldItalicStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveBoldItalicStyle(BuildContext context, TextStyle baseStyle) {
-    final optionsStyle = _findFirstAncestorValue(context, (o) => o.boldItalicStyle);
-    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.boldItalicStyle);
+    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
-  /// Finds the first defined `strikethroughStyle` up the tree and merges it with `baseStyle`.
-  /// Returns `null` if no ancestor defines `strikethroughStyle`.
-  /// Note: This does *not* handle `strikethroughThickness` directly here. The resolver
-  /// uses `getEffectiveStrikethroughThickness` if this method returns null.
+  /// Resolves the final merged `strikethroughStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveStrikethroughStyle(BuildContext context, TextStyle baseStyle) {
-    final optionsStyle = _findFirstAncestorValue(context, (o) => o.strikethroughStyle);
-    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.strikethroughStyle);
+    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
-  /// Finds the first defined `codeStyle` up the tree and merges it with `baseStyle`.
-  /// Returns `null` if no ancestor defines `codeStyle`.
+  /// Resolves the final merged `codeStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveCodeStyle(BuildContext context, TextStyle baseStyle) {
-    final optionsStyle = _findFirstAncestorValue(context, (o) => o.codeStyle);
-    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.codeStyle);
+    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
-  /// Finds the first defined `urlStyle` up the tree and merges it with `baseStyle`.
-  /// Returns `null` if no ancestor defines `urlStyle`.
+  /// Resolves the final merged `urlStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveUrlStyle(BuildContext context, TextStyle baseStyle) {
-    final optionsStyle = _findFirstAncestorValue(context, (o) => o.urlStyle);
-    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.urlStyle);
+    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
-  /// Finds the first defined `urlHoverStyle` up the tree and merges it onto
-  /// the resolved *normal* URL style (which itself considers options and base style).
-  /// Returns `null` if no ancestor defines `urlHoverStyle`.
-  TextStyle? getEffectiveUrlHoverStyle(BuildContext context, TextStyle baseStyle) {
-    // This logic for hover needs to merge onto the *final normal link style*.
-    // The TextfStyleResolver handles this by first getting the normal link style
-    // (which might be from options or theme), and then if this method returns a
-    // hover-specific option, it merges that onto the already resolved normal style.
-    // So, this method just needs to find the hover option and merge it with the
-    // *incoming baseStyle* (which, for hover, is the resolved normal link style).
-
-    final hoverOption = _findFirstAncestorValue(context, (o) => o.urlHoverStyle);
-    if (hoverOption == null) {
-      return null; // No hover option specified, resolver handles fallback.
-    }
-    // Merge the found hover option onto the provided baseStyle (which is the normal link style)
-    return baseStyle.merge(hoverOption);
+  /// Resolves the final merged `urlHoverStyle` and merges it onto the final `normalLinkStyle`.
+  TextStyle? getEffectiveUrlHoverStyle(BuildContext context, TextStyle normalLinkStyle) {
+    final TextStyle? hoverOptionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.urlHoverStyle);
+    if (hoverOptionsStyle == null) return null;
+    return _mergeStyles(normalLinkStyle, hoverOptionsStyle);
   }
 
-  /// Finds the first defined `underlineStyle` up the tree and merges it with `baseStyle`.
-  /// Returns `null` if no ancestor defines `underlineStyle`.
+  /// Resolves the final merged `underlineStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveUnderlineStyle(BuildContext context, TextStyle baseStyle) {
-    final optionsStyle = _findFirstAncestorValue(context, (o) => o.underlineStyle);
-    // If an option style is found, merge it. Otherwise, return null.
-    // The intelligent combination of decorations (if any in baseStyle)
-    // would ideally happen here if the optionsStyle also has a decoration.
-    // For simplicity now, we use standard merge. If DefaultStyles has already
-    // combined decorations, and optionsStyle also defines one, option wins.
-    // If we want Option to combine with what DefaultStyles did, this needs more logic.
-    // Current approach: Option style takes precedence for decoration.
-    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.underlineStyle);
+    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
-  /// Finds the first defined `highlightStyle` up the tree and merges it with `baseStyle`.
-  /// Returns `null` if no ancestor defines `highlightStyle`.
+  /// Resolves the final merged `highlightStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveHighlightStyle(BuildContext context, TextStyle baseStyle) {
-    final optionsStyle = _findFirstAncestorValue(context, (o) => o.highlightStyle);
-    return optionsStyle == null ? null : baseStyle.merge(optionsStyle);
+    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.highlightStyle);
+    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
-  // --- Effective Callback & Cursor Getters ---
-
-  /// Finds the first non-null [onUrlTap] callback defined up the tree.
+  /// Resolves the nearest `onUrlTap` callback from the hierarchy.
   void Function(String url, String displayText)? getEffectiveOnUrlTap(BuildContext context) {
-    return _findFirstAncestorValue(context, (options) => options.onUrlTap);
+    return _findFirstAncestorValue(context, (o) => o.onUrlTap);
   }
 
-  /// Finds the first non-null [onUrlHover] callback defined up the tree.
-  /// TODO: 'bool' parameters should be named parameters.
+  /// Resolves the nearest `onUrlHover` callback from the hierarchy.
   void Function(String url, String displayText, {required bool isHovering})? getEffectiveOnUrlHover(
     BuildContext context,
   ) {
-    return _findFirstAncestorValue(context, (options) => options.onUrlHover);
+    return _findFirstAncestorValue(context, (o) => o.onUrlHover);
   }
 
-  /// Finds the first non-null [urlMouseCursor] defined up the tree, falling back to default.
+  /// Resolves the nearest `urlMouseCursor` from the hierarchy.
   MouseCursor? getEffectiveUrlMouseCursor(BuildContext context) {
     return _findFirstAncestorValue(context, (o) => o.urlMouseCursor);
-    // Fallback to DefaultStyles.urlMouseCursor happens in the resolver if this returns null.
   }
 
-  /// Finds the first non-null [strikethroughThickness] defined up the tree.
-  /// Returns null if none is found (resolver applies final default from DefaultStyles).
+  /// Resolves the nearest `strikethroughThickness` from the hierarchy.
   double? getEffectiveStrikethroughThickness(BuildContext context) {
     return _findFirstAncestorValue(context, (o) => o.strikethroughThickness);
   }
 
-  /// Determines if the widget tree should be rebuilt when options change.
-  /// Compares only the properties of this specific instance.
   @override
   bool updateShouldNotify(TextfOptions oldWidget) {
-    // Compare all properties directly held by this widget instance.
+    // Comparing only the properties of this specific instance.
     return onUrlTap != oldWidget.onUrlTap ||
         onUrlHover != oldWidget.onUrlHover ||
         urlStyle != oldWidget.urlStyle ||
