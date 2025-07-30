@@ -89,12 +89,12 @@ class MyHomePage extends StatelessWidget {
 
               // Handle link clicks
               onUrlTap: (url, displayText) {
-                print('Link clicked: $displayText -> $url');
+                debugPrint('Link clicked: $displayText -> $url');
               },
 
               // Handle hover state changes
               onUrlHover: (url, displayText, {required bool isHovering}) {
-                print('Hovering over "$displayText": $isHovering');
+                debugPrint('Hovering over "$displayText": $isHovering');
               },
 
               // All Textf widgets inside this will use these custom styles
@@ -103,10 +103,8 @@ class MyHomePage extends StatelessWidget {
                 children: [
                   Textf('**Red bold text** with normal text.', style: TextStyle(fontSize: 16)),
                   SizedBox(height: 8),
-
                   Textf('Code has `green background` with italic style.', style: TextStyle(fontSize: 16)),
                   SizedBox(height: 8),
-
                   Textf(
                     'Links are [blue without underline](https://example.com) - '
                     'they get underlined on hover.',

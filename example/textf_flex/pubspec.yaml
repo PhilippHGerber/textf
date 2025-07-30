@@ -11,8 +11,11 @@ dependencies:
   flex_color_scheme: ^8.2.0
   flutter:
     sdk: flutter
-  textf:
-    path: ../../
+  textf: ^0.6.0
+
+# dependency_overrides:
+#   textf:
+#     path: ../../
 
 dev_dependencies:
   flutter_test:

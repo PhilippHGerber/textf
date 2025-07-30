@@ -13,9 +13,12 @@ dependencies:
     sdk: flutter
   share_plus: ^10.1.4
   super_clipboard: ^0.8.24
-  textf:
-    path: ../../
+  textf: ^0.6.0
   url_launcher: ^6.3.1
+
+# dependency_overrides:
+#   textf:
+#     path: ../../
 
 dev_dependencies:
   flutter_test:
