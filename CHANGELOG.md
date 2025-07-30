@@ -2,6 +2,18 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 0.6.0
+
+### BREAKING CHANGES
+
+- **Style Inheritance Logic:** The logic for inheriting `TextStyle` properties from nested `TextfOptions` has been completely refactored to be more intuitive and powerful.
+  - **Previous Behavior:** A `TextStyle` property (like `boldStyle`) in a child `TextfOptions` would completely overwrite the style from a parent. For example, a child's `decoration` would replace the parent's `decoration`.
+  - **New Behavior:** `TextStyle` properties are now merged down the tree. Decorations from parent and child `TextfOptions` are intelligently combined, allowing for layering (e.g., adding a strikethrough to text that is already underlined by a parent).
+
+### Fixed
+
+- TextfOptions does not combine decorations from nested widgets (#3)
+
 ## 0.5.1
 
 ### Added
