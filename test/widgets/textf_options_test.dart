@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
+import 'package:textf/src/models/token_type.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/textf_options.dart';
 
 // ----- Helper Class and Callbacks -----
@@ -116,10 +118,6 @@ void _dummyTap1(String u, String d) {
   debugPrint('Dummy tap 1: $u, $d');
 }
 
-void _dummyTap2(String u, String d) {
-  debugPrint('Dummy tap 2: $u, $d');
-}
-
 void _dummyHover2(String u, String d, {required bool isHovering}) {
   debugPrint('Dummy hover 2: $u, $d, hovering: $isHovering');
 }
@@ -138,7 +136,6 @@ void main() {
   const childUrlStyle = TextStyle(color: Colors.green, fontSize: 18);
   const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
 
-  const childOnTap = _dummyTap2;
   // ----------------------------------------------------
 
   group('TextfOptions Inheritance Tests', () {
@@ -278,102 +275,141 @@ void main() {
       expect(resolved!.onUrlHover, isNull);
     });
 
-    testWidgets('Nested options override ancestor values', (tester) async {
-      _ResolvedOptions? resolved;
-      final theme = ThemeData.light();
+    testWidgets('Child properties correctly merge with and override parent properties', (tester) async {
+      // SETUP
+      const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
+      const rootUrlStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
+      // ignore: no-empty-block
+      void rootOnTap(String u, String d) {}
+      const rootItalicStyle = TextStyle(fontStyle: FontStyle.italic, color: Colors.purple);
+
+      const childUrlStyle = TextStyle(color: Colors.green, fontSize: 18); // No decoration specified
+      // ignore: no-empty-block
+      void childOnTap(String u, String d) {}
 
       await tester.pumpWidget(
         MaterialApp(
-          theme: theme,
           home: TextfOptions(
             // Root
-            urlStyle: rootUrlStyle, // blue, no decoration
+            urlStyle: rootUrlStyle,
             onUrlTap: rootOnTap,
-            italicStyle: const TextStyle(fontStyle: FontStyle.italic, color: Colors.purple), // purple italic
+            italicStyle: rootItalicStyle,
             child: TextfOptions(
               // Child override
-              urlStyle: childUrlStyle, // green, size 18 (no decoration specified)
-              onUrlTap: childOnTap, // dummyTap2
-              // Italic style NOT specified here
-              child: Builder(
-                builder: (context) {
-                  resolved = _ResolvedOptions.fromContext(context, baseStyle); // black, size 16
-                  return const SizedBox();
-                },
-              ),
+              urlStyle: childUrlStyle,
+              onUrlTap: childOnTap,
+              // Italic style NOT specified here, so it should be inherited.
+              child: const SizedBox(), // Dummy child for context
             ),
           ),
         ),
       );
 
-      expect(resolved, isNotNull);
-      // Check overridden values (come from child, merged with base)
-      expect(resolved!.urlStyle?.color, childUrlStyle.color); // green from child
-      expect(resolved!.urlStyle?.fontSize, childUrlStyle.fontSize); // 18 from child
-      expect(
-        resolved!.urlStyle?.decoration,
-        isNull, // Expect no decoration
-        reason: "Decoration should be null as child option didn't specify it",
-      );
-      expect(resolved!.onUrlTap, same(childOnTap)); // dummyTap2 from child
+      // ARRANGE: Get context and create the resolver
+      final BuildContext context = tester.element(find.byType(SizedBox));
+      final resolver = TextfStyleResolver(context);
 
-      // Check non-overridden value (comes from root)
-      expect(resolved!.italicStyle?.fontStyle, FontStyle.italic); // from root
-      expect(resolved!.italicStyle?.color, Colors.purple); // from root
-      expect(resolved!.italicStyle?.fontSize, baseStyle.fontSize); // from base
+      // --- ASSERT MERGED URL STYLE ---
+      final resolvedUrlStyle = resolver.resolveLinkStyle(baseStyle);
+
+      // Properties from child should win
+      expect(
+        resolvedUrlStyle.color,
+        childUrlStyle.color,
+        reason: 'Child color (green) should override parent color (blue).',
+      );
+      expect(
+        resolvedUrlStyle.fontSize,
+        childUrlStyle.fontSize,
+        reason: 'Child font size (18) should override base style size (16).',
+      );
+      // Property from parent should be inherited
+      expect(
+        resolvedUrlStyle.decoration,
+        rootUrlStyle.decoration, // TextDecoration.none
+        reason: 'Parent decoration should be inherited as child did not specify one.',
+      );
+
+      // --- ASSERT INHERITED ITALIC STYLE ---
+      final resolvedItalicStyle = resolver.resolveStyle(TokenType.italicMarker, baseStyle);
+      expect(
+        resolvedItalicStyle.color,
+        rootItalicStyle.color,
+        reason: 'Italic color should be inherited from parent.',
+      );
+      expect(
+        resolvedItalicStyle.fontStyle,
+        rootItalicStyle.fontStyle,
+        reason: 'Italic style should be inherited from parent.',
+      );
+
+      // --- ASSERT CALLBACK (NEAREST WINS) ---
+      expect(
+        resolver.resolveOnUrlTap(),
+        childOnTap,
+        reason: 'Callback should come from the nearest (child) ancestor.',
+      );
     });
 
-    testWidgets('Nested options inherit unspecified values from ancestor', (tester) async {
-      _ResolvedOptions? resolved;
-      final theme = ThemeData.light();
+    testWidgets('Unspecified child properties are correctly inherited from parent', (tester) async {
+      // SETUP
+      const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
+      const rootBoldStyle = TextStyle(fontWeight: FontWeight.w900, color: Colors.red);
+      // ignore: no-empty-block
+      void rootOnTap(String u, String d) {}
+      const rootUrlStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
+
+      const childUrlStyle = TextStyle(color: Colors.green, fontSize: 18);
+      const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
+      // ignore: no-empty-block
+      void childOnHover(String u, String d, {required bool isHovering}) {}
 
       await tester.pumpWidget(
         MaterialApp(
-          theme: theme,
           home: TextfOptions(
             // Root (provides bold, tap, rootUrl)
-            boldStyle: rootBoldStyle, // w900, red
+            boldStyle: rootBoldStyle,
             onUrlTap: rootOnTap,
-            urlStyle: rootUrlStyle, // blue, no decoration
+            urlStyle: rootUrlStyle,
             child: TextfOptions(
-              // Child (provides childUrl, italic, hover)
-              urlStyle: childUrlStyle, // green, 18 (no decoration)
-              italicStyle: childItalicStyle, // normal, yellow bg
-              onUrlHover: _dummyHover2,
-              // boldStyle is null here
-              // onUrlTap is null here
-              child: Builder(
-                builder: (context) {
-                  resolved = _ResolvedOptions.fromContext(context, baseStyle); // black, 16
-                  return const SizedBox();
-                },
-              ),
+              // Child (provides childUrl, italic, hover, but NOT bold or tap)
+              urlStyle: childUrlStyle,
+              italicStyle: childItalicStyle,
+              onUrlHover: childOnHover,
+              child: const SizedBox(),
             ),
           ),
         ),
       );
 
-      expect(resolved, isNotNull);
-      // Value specified only in Child
-      expect(resolved!.italicStyle?.fontStyle, childItalicStyle.fontStyle); // normal
-      expect(resolved!.italicStyle?.backgroundColor, childItalicStyle.backgroundColor); // yellow bg
-      expect(resolved!.italicStyle?.fontSize, baseStyle.fontSize); // base size
-      expect(resolved!.onUrlHover, same(_dummyHover2));
+      // ARRANGE
+      final BuildContext context = tester.element(find.byType(SizedBox));
+      final resolver = TextfStyleResolver(context);
 
-      // Value specified in Child (overriding Root for url)
-      expect(resolved!.urlStyle?.color, childUrlStyle.color); // green
-      expect(resolved!.urlStyle?.fontSize, childUrlStyle.fontSize); // 18
+      // --- 1. Assert properties specified ONLY in Child ---
+      final resolvedItalic = resolver.resolveStyle(TokenType.italicMarker, baseStyle);
+      expect(resolvedItalic.fontStyle, childItalicStyle.fontStyle);
+      expect(resolvedItalic.backgroundColor, childItalicStyle.backgroundColor);
+      expect(resolver.resolveOnUrlHover(), childOnHover);
+
+      // --- 2. Assert properties MERGED between Parent and Child ---
+      final resolvedUrl = resolver.resolveLinkStyle(baseStyle);
       expect(
-        resolved!.urlStyle?.decoration,
-        isNull, // Expect no decoration
-        reason: "Decoration should be null as child option didn't specify it",
+        resolvedUrl.color,
+        childUrlStyle.color, // Green from Child wins
+        reason: 'Child URL color should override Parent.',
+      );
+      expect(
+        resolvedUrl.decoration,
+        rootUrlStyle.decoration, // Decoration from Parent is inherited
+        reason: "Child did not specify a decoration, so Parent's should be used.",
       );
 
-      // Value NOT specified in Child (inherited from Root)
-      expect(resolved!.boldStyle?.fontWeight, rootBoldStyle.fontWeight); // w900
-      expect(resolved!.boldStyle?.color, rootBoldStyle.color); // red
-      expect(resolved!.boldStyle?.fontSize, baseStyle.fontSize); // base size
-      expect(resolved!.onUrlTap, same(rootOnTap));
+      // --- 3. Assert properties inherited from Parent because Child did not specify them ---
+      final resolvedBold = resolver.resolveStyle(TokenType.boldMarker, baseStyle);
+      expect(resolvedBold.fontWeight, rootBoldStyle.fontWeight);
+      expect(resolvedBold.color, rootBoldStyle.color);
+      expect(resolver.resolveOnUrlTap(), rootOnTap);
     });
 
     testWidgets('Inheritance works across multiple levels', (tester) async {

@@ -363,7 +363,35 @@ void main() {
         child: const SizedBox.shrink(),
       );
 
-      testWidgets('Nearest TextfOptions value is used', (tester) async {
+      testWidgets('Nested options correctly merge with and override ancestor values', (tester) async {
+        // SETUP:
+        // parentOpts provides a red color for bold text.
+        // childOptsWithOverride provides a light font weight for bold text.
+        // The expected result is a MERGE of both.
+
+        const parentBoldStyle = TextStyle(fontWeight: FontWeight.w900, color: Colors.red);
+        const parentItalicStyle = TextStyle(fontStyle: FontStyle.italic, color: Colors.purple);
+        void parentTap(String u, String d) {}
+
+        const childBoldStyle = TextStyle(fontWeight: FontWeight.w300); // No color specified.
+        const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
+        void childTap(String u, String d) {}
+
+        final parentOpts = TextfOptions(
+          boldStyle: parentBoldStyle,
+          italicStyle: parentItalicStyle,
+          onUrlTap: parentTap,
+          child: const SizedBox.shrink(),
+        );
+
+        final childOptsWithOverride = TextfOptions(
+          boldStyle: childBoldStyle,
+          italicStyle: childItalicStyle,
+          onUrlTap: childTap,
+          child: const SizedBox.shrink(),
+        );
+
+        // ARRANGE: Pump the widget tree.
         final context = await pumpWithContext(
           tester,
           parentOptions: parentOpts,
@@ -371,16 +399,44 @@ void main() {
         );
         final resolver = TextfStyleResolver(context);
 
+        // --- ASSERT BOLD STYLE (MERGED) ---
         final resolvedBold = resolver.resolveStyle(TokenType.boldMarker, baseStyle);
+        // The fontWeight should come from the child (it overrides the parent).
         expect(resolvedBold.fontWeight, childBoldStyle.fontWeight);
-        expect(resolvedBold.color, baseStyle.color); // childBoldStyle has no color, so baseStyle.color
-        expect(resolvedBold.fontSize, baseStyle.fontSize);
+        // The color should be inherited from the parent (since the child didn't specify one).
+        expect(
+          resolvedBold.color,
+          parentBoldStyle.color, // This is the key change in the test's expectation.
+          reason: 'Color should be inherited from the parent TextfOptions.',
+        );
+        expect(resolvedBold.fontSize, baseStyle.fontSize); // Inherited from baseStyle.
 
-        expect(resolver.resolveOnUrlTap(), childTap);
-
+        // --- ASSERT ITALIC STYLE (MERGED) ---
         final resolvedItalic = resolver.resolveStyle(TokenType.italicMarker, baseStyle);
-        expect(resolvedItalic.color, childItalicStyle.color);
-        expect(resolvedItalic.fontStyle, childItalicStyle.fontStyle);
+        // It should have properties from both parent and child.
+        expect(
+          resolvedItalic.color,
+          parentItalicStyle.color, // From parent.
+          reason: 'Italic color should be inherited from parent.',
+        );
+        expect(
+          resolvedItalic.backgroundColor,
+          childItalicStyle.backgroundColor, // From child.
+          reason: 'Italic background color should come from child.',
+        );
+        expect(
+          resolvedItalic.fontStyle,
+          childItalicStyle.fontStyle, // From child (overriding parent).
+          reason: 'Italic fontStyle should be overridden by child.',
+        );
+
+        // --- ASSERT CALLBACK (NEAREST WINS) ---
+        // Callbacks do not merge, so "nearest wins" logic is still correct here.
+        expect(
+          resolver.resolveOnUrlTap(),
+          childTap,
+          reason: 'Callback should be taken from the nearest (child) TextfOptions.',
+        );
       });
 
       testWidgets('Falls back to ancestor if nearest option is null for a property', (tester) async {
