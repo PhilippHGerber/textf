@@ -392,10 +392,11 @@ packages:
   textf:
     dependency: "direct main"
     description:
-      path: "../.."
-      relative: true
-    source: path
-    version: "0.6.0"
+      name: textf
+      sha256: f7415a9cea142f5157bd0d3b74a8ccb910df22d2fa4331ab112a8aaf7f3162ef
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.1"
   typed_data:
     dependency: transitive
     description:
