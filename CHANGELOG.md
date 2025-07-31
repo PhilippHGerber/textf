@@ -2,6 +2,13 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 0.6.1
+
+### Changed
+
+- Formatted codebase for consistency and readability
+- Updated documentation for clarity and completeness
+
 ## 0.6.0
 
 ### BREAKING CHANGES
