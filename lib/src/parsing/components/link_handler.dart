@@ -74,16 +74,19 @@ class LinkHandler {
       // 2. Resolve link-specific styles, cursor, and callbacks using the resolver
       //    Pass the calculated inheritedStyle as the base for link style resolution.
       final TextStyle finalLinkStyle = state.styleResolver.resolveLinkStyle(inheritedStyle);
-      final TextStyle finalLinkHoverStyle = state.styleResolver.resolveLinkHoverStyle(inheritedStyle);
+      final TextStyle finalLinkHoverStyle =
+          state.styleResolver.resolveLinkHoverStyle(inheritedStyle);
       final MouseCursor effectiveCursor = state.styleResolver.resolveLinkMouseCursor();
-      final void Function(String url, String displayText)? effectiveOnTap = state.styleResolver.resolveOnUrlTap();
-      final void Function(String url, String displayText, {required bool isHovering})? effectiveOnHover =
-          state.styleResolver.resolveOnUrlHover();
+      final void Function(String url, String displayText)? effectiveOnTap =
+          state.styleResolver.resolveOnUrlTap();
+      final void Function(String url, String displayText, {required bool isHovering})?
+          effectiveOnHover = state.styleResolver.resolveOnUrlHover();
 
       // 3. Prepare TapGestureRecognizer if needed
       TapGestureRecognizer? recognizer;
       if (effectiveOnTap != null) {
-        recognizer = TapGestureRecognizer()..onTap = () => effectiveOnTap(normalizedUrl, rawLinkText);
+        recognizer = TapGestureRecognizer()
+          ..onTap = () => effectiveOnTap(normalizedUrl, rawLinkText);
         // Remember to handle recognizer disposal if necessary, usually managed
         // by the widget holding the TextSpan tree (e.g., dispose in HoverableLinkSpanState).
       }
@@ -94,7 +97,8 @@ class LinkHandler {
 
       final tokenizerForLinkText = TextfTokenizer();
       final linkTextTokens = tokenizerForLinkText.tokenize(rawLinkText);
-      final bool containsFormattingMarkers = linkTextTokens.any((token) => token.type != TokenType.text);
+      final bool containsFormattingMarkers =
+          linkTextTokens.any((token) => token.type != TokenType.text);
 
       if (containsFormattingMarkers) {
         // Parse inner content, using the *resolved normal link style* as the base

@@ -59,9 +59,11 @@ class TextfStyleResolver {
         case TokenType.strikeMarker:
           // No full style override from options, use default effect.
           // Check if a specific thickness is provided via options.
-          final double? thicknessOption = _nearestOptions?.getEffectiveStrikethroughThickness(context);
+          final double? thicknessOption =
+              _nearestOptions?.getEffectiveStrikethroughThickness(context);
           // Use the option thickness if provided, otherwise use the default thickness.
-          final double finalThickness = thicknessOption ?? DefaultStyles.defaultStrikethroughThickness;
+          final double finalThickness =
+              thicknessOption ?? DefaultStyles.defaultStrikethroughThickness;
 
           // Apply the default strikethrough effect with the resolved thickness.
           return DefaultStyles.strikethroughStyle(
@@ -114,7 +116,8 @@ class TextfStyleResolver {
     // 1. Resolve the normal link style first
     final TextStyle normalLinkStyle = resolveLinkStyle(baseStyle);
     // 2. Try to get a hover-specific style from options, merging it onto the normalLinkStyle
-    final TextStyle? optionsStyle = _nearestOptions?.getEffectiveUrlHoverStyle(context, normalLinkStyle);
+    final TextStyle? optionsStyle =
+        _nearestOptions?.getEffectiveUrlHoverStyle(context, normalLinkStyle);
 
     return optionsStyle ?? normalLinkStyle;
   }
@@ -222,12 +225,12 @@ class TextfStyleResolver {
     final Color highlightBgColor = colorScheme.brightness == Brightness.light
         ? Colors.yellow.withValues(alpha: DefaultStyles.highlightAlphaLight)
         : Colors.yellow.shade700.withValues(alpha: DefaultStyles.highlightAlphaDark);
-    final Color highlightTextColor =
-        baseStyle.color ?? (colorScheme.brightness == Brightness.light ? Colors.black87 : Colors.white);
+    final Color highlightTextColor = baseStyle.color ??
+        (colorScheme.brightness == Brightness.light ? Colors.black87 : Colors.white);
 
     return baseStyle.copyWith(
       backgroundColor: highlightBgColor,
-      color: highlightTextColor, // Adjust text color for contrast if needed, otherwise keep baseStyle.color
+      color: highlightTextColor,
     );
   }
 }

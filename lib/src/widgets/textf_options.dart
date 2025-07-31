@@ -257,7 +257,8 @@ class TextfOptions extends InheritedWidget {
 
   /// Resolves the final merged `strikethroughStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveStrikethroughStyle(BuildContext context, TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.strikethroughStyle);
+    final TextStyle? optionsStyle =
+        _getMergedStyleFromHierarchy(context, (o) => o.strikethroughStyle);
     return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
@@ -275,7 +276,8 @@ class TextfOptions extends InheritedWidget {
 
   /// Resolves the final merged `urlHoverStyle` and merges it onto the final `normalLinkStyle`.
   TextStyle? getEffectiveUrlHoverStyle(BuildContext context, TextStyle normalLinkStyle) {
-    final TextStyle? hoverOptionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.urlHoverStyle);
+    final TextStyle? hoverOptionsStyle =
+        _getMergedStyleFromHierarchy(context, (o) => o.urlHoverStyle);
     if (hoverOptionsStyle == null) return null;
     return _mergeStyles(normalLinkStyle, hoverOptionsStyle);
   }

@@ -84,7 +84,7 @@ class DefaultStyles {
     return baseStyle.copyWith(
       decoration: newDecoration,
       decorationColor: decorationColorToApply,
-      decorationThickness: thickness, // This thickness applies to the new lineThrough part
+      decorationThickness: thickness,
     );
   }
 
@@ -121,11 +121,11 @@ class DefaultStyles {
     // A common, though not necessarily theme-adaptive, highlight color.
     // Brightness check could make it slightly more adaptive if used as a true last resort.
     final baseStyleColor = baseStyle.color;
-    final bool isDark =
-        baseStyleColor != null && ThemeData.estimateBrightnessForColor(baseStyleColor) == Brightness.dark;
+    final bool isDark = baseStyleColor != null &&
+        ThemeData.estimateBrightnessForColor(baseStyleColor) == Brightness.dark;
 
     return baseStyle.copyWith(
-      backgroundColor: isDark //
+      backgroundColor: isDark
           ? Colors.yellow.withValues(alpha: highlightAlphaDark)
           : Colors.yellow.withValues(alpha: highlightAlphaLight),
       // Retain the original text color unless a specific contrast logic is needed.

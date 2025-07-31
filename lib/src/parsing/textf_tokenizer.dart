@@ -251,7 +251,9 @@ class TextfTokenizer {
         // `pos` is currently at `linkTextEnd` (']') or at `length` if `]` wasn't found.
         // If `break` happened from `if (pos + 1 < length && codeUnits[pos + 1] == kOpenParen)`,
         // then `pos` points to `]`.
-        if (linkTextEnd != -1 && (linkTextEnd + 1) < length && codeUnits[linkTextEnd + 1] == kOpenParen) {
+        if (linkTextEnd != -1 &&
+            (linkTextEnd + 1) < length &&
+            codeUnits[linkTextEnd + 1] == kOpenParen) {
           // Valid '[text](' structure found.
           tokens.add(Token(TokenType.linkStart, '[', linkStartPos, 1));
 

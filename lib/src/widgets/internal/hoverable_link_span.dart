@@ -56,7 +56,8 @@ class HoverableLinkSpan extends StatefulWidget {
   /// An optional callback function triggered when the hover state changes.
   /// Resolved by TextfStyleResolver. Provides the URL, the raw display text,
   /// and the new hover state (`true` for enter, `false` for exit).
-  final void Function(String url, String rawDisplayText, {required bool isHovering})? onHoverCallback;
+  final void Function(String url, String rawDisplayText, {required bool isHovering})?
+      onHoverCallback;
 
   @override
   State<HoverableLinkSpan> createState() => HoverableLinkSpanState();
@@ -124,8 +125,8 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
           targetLinkAppearance.decorationThickness ?? innerSpanOriginalStyle.decorationThickness;
 
       final TextStyle finalSpanStyle = innerSpanOriginalStyle.copyWith(
-        color: targetLinkAppearance.color ?? innerSpanOriginalStyle.color, // Link color takes precedence
-        decoration: finalDecoration, // Apply the intelligently combined/chosen decoration
+        color: targetLinkAppearance.color ?? innerSpanOriginalStyle.color,
+        decoration: finalDecoration,
         decorationColor: finalDecorationColor,
         decorationThickness: finalDecorationThickness,
         // Preserve other properties from innerSpanOriginalStyle like fontWeight, fontStyle, backgroundColor
