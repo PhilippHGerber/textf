@@ -11,6 +11,10 @@ Textf('Hello **Flutter**. Build for ==any screen== !');
 
 ![image](https://github.com/PhilippHGerber/textf/raw/main/images/textf.png)
 
+> **⚠️ Important:**
+> Textf is designed for inline styling only and is not a full Markdown renderer. It doesn't support block elements like lists, headings, or images.
+
+
 ## Overview
 
 Textf provides basic text formatting capabilities similar to a subset of Markdown syntax, focusing exclusively on inline styles. It's designed for situations where you need simple text formatting without the overhead of a full Markdown rendering solution.
@@ -35,7 +39,7 @@ Add Textf to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  textf: ^0.6.0
+  textf: ^0.6.1
 ```
 
 Then run:
