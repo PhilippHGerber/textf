@@ -1,26 +1,17 @@
 # Development/test directories
 
-/test/
-/coverage/
 /build/
 **build/
-
-## Documentation
+pubspec.lock
+coverage/
+lcov.info
+llmifierrc.yaml
+llms.txt
 
 /images/
 llmifierrc.yaml
 llms.txt
 
-## CI/CD configuration files (if any)
-
-/.github/
-/.travis.yml
-/.gitlab-ci.yml
-
-## Miscellaneous development files
-
-/analysis_options.yaml
-/tool/
 /benchmark/
 /example/textf_core/
 /example/textf_flex/
