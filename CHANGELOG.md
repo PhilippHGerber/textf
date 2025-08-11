@@ -2,6 +2,12 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 0.6.3
+
+### Fixed
+
+- Dart format code: analysis_options
+
 ## 0.6.2
 
 ### Added
