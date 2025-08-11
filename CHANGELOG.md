@@ -2,6 +2,13 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 0.6.2
+
+### Added
+
+- Multi-byte Character Tests
+- Dart code: added trailing commas
+
 ## 0.6.1
 
 ### Changed

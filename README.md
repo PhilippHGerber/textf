@@ -39,7 +39,7 @@ Add Textf to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  textf: ^0.6.1
+  textf: ^0.6.2
 ```
 
 Then run:
