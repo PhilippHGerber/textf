@@ -71,7 +71,8 @@ class NestedFormattingScreen extends StatelessWidget {
             SizedBox(height: 16),
             ExampleCard(
               title: 'What Not To Do',
-              description: 'Using same marker type for nested formatting (may not work as expected)',
+              description:
+                  'Using same marker type for nested formatting (may not work as expected)',
               code: 'Textf(\n  \'**Bold with *italic* inside**\',\n  \n)',
               child: Textf(
                 '**Bold with *italic* inside**',

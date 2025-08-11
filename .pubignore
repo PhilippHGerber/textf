@@ -8,6 +8,7 @@
 ## Documentation
 
 /images/
+llmifierrc.yaml
 llms.txt
 
 ## CI/CD configuration files (if any)
@@ -24,3 +25,4 @@ llms.txt
 /example/textf_core/
 /example/textf_flex/
 /example/widgetbook_textf/
+/example/**/pubspec_overrides.yaml

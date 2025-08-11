@@ -40,7 +40,8 @@ class ChatExampleScreen extends StatelessWidget {
             ExampleCard(
               // No need to pass theme info to ExampleCard directly
               title: 'Chat Bubble',
-              description: 'Formatted text in a chat bubble using theme colors', // Updated description
+              description:
+                  'Formatted text in a chat bubble using theme colors', // Updated description
               code: '''Container(
   padding: EdgeInsets.all(12),
   decoration: BoxDecoration(
@@ -62,7 +63,8 @@ class ChatExampleScreen extends StatelessWidget {
                     child: const ChatBubble(
                       // Use const if no params change
                       isMe: true,
-                      message: 'Hey! Did you read that **important** article I sent you about _Flutter performance_?',
+                      message:
+                          'Hey! Did you read that **important** article I sent you about _Flutter performance_?',
                     ),
                   ),
                 ),
@@ -115,9 +117,12 @@ class ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context); // Get theme
     // Use theme colors for bubbles
-    final bubbleColor = isMe ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHighest;
+    final bubbleColor =
+        isMe ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHighest;
     // Determine appropriate text color based on bubble color for contrast
-    final textColor = isMe ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurfaceVariant; // Or onSurface
+    final textColor = isMe
+        ? theme.colorScheme.onPrimaryContainer
+        : theme.colorScheme.onSurfaceVariant; // Or onSurface
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Adjusted padding
@@ -149,7 +154,8 @@ class ChatExample extends StatefulWidget {
 class _ChatExampleState extends State<ChatExample> {
   final List<ChatMessage> _messages = [
     ChatMessage(
-      message: 'Hey! Did you read that **important** article I sent you about _Flutter performance_?',
+      message:
+          'Hey! Did you read that **important** article I sent you about _Flutter performance_?',
       isMe: true,
     ),
     ChatMessage(
@@ -157,7 +163,8 @@ class _ChatExampleState extends State<ChatExample> {
       isMe: false,
     ),
     ChatMessage(
-      message: 'We should apply those techniques to our ~~slow~~ `app`! ++Remember to check the docs++.',
+      message:
+          'We should apply those techniques to our ~~slow~~ `app`! ++Remember to check the docs++.',
       isMe: false,
     ),
     ChatMessage(

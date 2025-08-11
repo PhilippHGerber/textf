@@ -23,8 +23,10 @@ class _TextfExampleAppState extends State<TextfExampleApp> {
   void initState() {
     super.initState();
     // Read initial system theme preference
-    final Brightness platformBrightness = SchedulerBinding.instance.platformDispatcher.platformBrightness;
-    _themeModeNotifier = ValueNotifier(platformBrightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light);
+    final Brightness platformBrightness =
+        SchedulerBinding.instance.platformDispatcher.platformBrightness;
+    _themeModeNotifier =
+        ValueNotifier(platformBrightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light);
   }
 
   @override
@@ -34,7 +36,8 @@ class _TextfExampleAppState extends State<TextfExampleApp> {
   }
 
   void _toggleThemeMode() {
-    _themeModeNotifier.value = _themeModeNotifier.value == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    _themeModeNotifier.value =
+        _themeModeNotifier.value == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
   }
 
   @override

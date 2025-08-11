@@ -133,8 +133,11 @@ Textf(
             const ExampleCard(
               title: 'Combined Decorations',
               description: 'Demonstrating combined strikethrough and underline',
-              code: "Textf('This text is ++~~both underlined and strikethrough~~++. And also ~~++vice versa++~~.')",
-              child: Textf('This text is ++~~both underlined and strikethrough~~++. And also ~~++vice versa++~~.'),
+              code:
+                  "Textf('This text is ++~~both underlined and strikethrough~~++. And also ~~++vice versa++~~.')",
+              child: Textf(
+                'This text is ++~~both underlined and strikethrough~~++. And also ~~++vice versa++~~.',
+              ),
             ),
           ],
         ),

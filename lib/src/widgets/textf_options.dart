@@ -41,11 +41,9 @@ TextStyle _mergeStyles(TextStyle baseStyle, TextStyle optionsStyle) {
       baseDecoration != TextDecoration.none &&
       !baseDecoration.contains(optionDecoration);
 
-  if (shouldCombine) {
-    finalDecoration = TextDecoration.combine([baseDecoration, optionDecoration]);
-  } else {
-    finalDecoration = optionDecoration ?? baseDecoration;
-  }
+  finalDecoration = shouldCombine
+      ? TextDecoration.combine([baseDecoration, optionDecoration])
+      : optionDecoration ?? baseDecoration;
 
   return baseStyle.merge(optionsStyle).copyWith(
         decoration: finalDecoration,

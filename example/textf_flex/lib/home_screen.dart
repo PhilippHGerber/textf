@@ -195,7 +195,8 @@ class HomeScreen extends StatelessWidget {
               '**No boilerplate. No TextSpan pain. Just** `Textf`.\n'
               'Easily apply bold, italic, strikethrough, and inline code styles using a clean, Markdown-like syntax.',
             ),
-            code: 'Textf(\'This is \\*\\*bold**, \\*italic*, \\~~strikethrough~~, \\`inline code\\`\')',
+            code:
+                'Textf(\'This is \\*\\*bold**, \\*italic*, \\~~strikethrough~~, \\`inline code\\`\')',
             textf: Textf('This is **bold**, *italic*, ~~strikethrough~~, `inline code`'),
           ),
           _buildExampleCard(

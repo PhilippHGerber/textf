@@ -51,6 +51,24 @@ class TextfTokenizer {
         tokens.add(
           Token(
             TokenType.text,
+            // The `avoid_substring` lint is ignored here for specific, performance-critical reasons.
+            // This tokenizer works by iterating through the string's UTF-16 code units and
+            // tracking positions (`start`, `end`) as code unit indices, not as grapheme clusters
+            // (user-perceived characters).
+            //
+            // 1. **Consistency**: The entire tokenizer's logic, including its loop counters and
+            //    marker detection, is based on UTF-16 code unit indices. Using `substring`, which
+            //    also operates on these indices, ensures perfect alignment and correctness within
+            //    this specific algorithm.
+            //
+            // 2. **Safety**: Since `start` and `end` are guaranteed by the tokenizer's logic to
+            //    never fall within the middle of a multi-byte character sequence (they always
+            //    point to the boundaries between characters or markers), using `substring` is
+            //    safe in this context and will not slice characters apart.
+            //
+            // For these reasons, `substring` is the correct and necessary choice for this low-level
+            // parsing task, despite the general validity of the linting rule for UI-level text manipulation.
+            // ignore: avoid-substring
             text.substring(start, end),
             start,
             end - start,
@@ -262,6 +280,24 @@ class TextfTokenizer {
             tokens.add(
               Token(
                 TokenType.text, // It's just text at this stage
+                // The `avoid_substring` lint is ignored here for specific, performance-critical reasons.
+                // This tokenizer works by iterating through the string's UTF-16 code units and
+                // tracking positions (`start`, `end`) as code unit indices, not as grapheme clusters
+                // (user-perceived characters).
+                //
+                // 1. **Consistency**: The entire tokenizer's logic, including its loop counters and
+                //    marker detection, is based on UTF-16 code unit indices. Using `substring`, which
+                //    also operates on these indices, ensures perfect alignment and correctness within
+                //    this specific algorithm.
+                //
+                // 2. **Safety**: Since `start` and `end` are guaranteed by the tokenizer's logic to
+                //    never fall within the middle of a multi-byte character sequence (they always
+                //    point to the boundaries between characters or markers), using `substring` is
+                //    safe in this context and will not slice characters apart.
+                //
+                // For these reasons, `substring` is the correct and necessary choice for this low-level
+                // parsing task, despite the general validity of the linting rule for UI-level text manipulation.
+                // ignore: avoid-substring
                 text.substring(linkTextStart, linkTextEnd),
                 linkTextStart,
                 linkTextEnd - linkTextStart,
@@ -307,6 +343,24 @@ class TextfTokenizer {
               tokens.add(
                 Token(
                   TokenType.text, // URL is also just text at this stage
+                  // The `avoid_substring` lint is ignored here for specific, performance-critical reasons.
+                  // This tokenizer works by iterating through the string's UTF-16 code units and
+                  // tracking positions (`start`, `end`) as code unit indices, not as grapheme clusters
+                  // (user-perceived characters).
+                  //
+                  // 1. **Consistency**: The entire tokenizer's logic, including its loop counters and
+                  //    marker detection, is based on UTF-16 code unit indices. Using `substring`, which
+                  //    also operates on these indices, ensures perfect alignment and correctness within
+                  //    this specific algorithm.
+                  //
+                  // 2. **Safety**: Since `start` and `end` are guaranteed by the tokenizer's logic to
+                  //    never fall within the middle of a multi-byte character sequence (they always
+                  //    point to the boundaries between characters or markers), using `substring` is
+                  //    safe in this context and will not slice characters apart.
+                  //
+                  // For these reasons, `substring` is the correct and necessary choice for this low-level
+                  // parsing task, despite the general validity of the linting rule for UI-level text manipulation.
+                  // ignore: avoid-substring
                   text.substring(urlStart, urlEnd),
                   urlStart,
                   urlEnd - urlStart,

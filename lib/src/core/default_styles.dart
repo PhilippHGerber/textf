@@ -77,7 +77,8 @@ class DefaultStyles {
 
     // Use the base color for the line if available, otherwise let Flutter decide.
     // If combining decorations, the original decorationColor might be for a different part.
-    // It's safer to let Flutter pick or for the user to specify a combined decorationColor via TextfOptions.
+    // It's safer to let Flutter pick or for the user to specify a combined decorationColor
+    // via TextfOptions.
     // For simplicity here, we might just use baseStyle.color if no decorationColor is set.
     final Color? decorationColorToApply = baseStyle.decorationColor ?? baseStyle.color;
 

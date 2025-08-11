@@ -20,10 +20,12 @@ TextSpan _findSpanByText(WidgetTester tester, String text) {
     return true; // Continue visiting
   });
 
-  if (foundSpan == null) {
+  final span = foundSpan;
+  if (span != null) {
+    return span;
+  } else {
     throw StateError('TextSpan with text "$text" not found in the widget tree.');
   }
-  return foundSpan!;
 }
 
 void main() {
@@ -146,9 +148,10 @@ void main() {
           Colors.red,
           reason: 'Child decorationColor should take precedence.',
         );
+        const expectDecorationThickness = 4.0;
         expect(
           boldSpan.style?.decorationThickness,
-          4.0,
+          expectDecorationThickness,
           reason: 'Child decorationThickness should take precedence.',
         );
         expect(

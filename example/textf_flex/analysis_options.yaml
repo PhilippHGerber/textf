@@ -1,12 +1,10 @@
 include: package:flutter_lints/flutter.yaml
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+formatter:
+  page_width: 100
+  trailing_commas: preserve
 
-analyzer:
 linter:
   rules:
     require_trailing_commas: true
     prefer_relative_imports: true
-formatter:
-  page_width: 120

@@ -20,7 +20,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Textf Demo',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue), useMaterial3: true),
+      theme:
+          ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue), useMaterial3: true),
       home: const MyHomePage(),
     );
   }
@@ -42,23 +43,28 @@ class MyHomePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Example 1: Basic usage with default styling
-            const Text('Example 1: Basic Usage', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text('Example 1: Basic Usage',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
 
             // Textf supports markdown-like syntax out of the box
-            const Textf('This is **bold** text and this is *italic*.', style: TextStyle(fontSize: 16)),
+            const Textf('This is **bold** text and this is *italic*.',
+                style: TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
 
             // Strikethrough and inline code formatting
-            const Textf('Text with ~~strikethrough~~ and `inline code`.', style: TextStyle(fontSize: 16)),
+            const Textf('Text with ~~strikethrough~~ and `inline code`.',
+                style: TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
 
             // Additional formatting options
-            const Textf('Also supports ++underline++ and ==highlight==!', style: TextStyle(fontSize: 16)),
+            const Textf('Also supports ++underline++ and ==highlight==!',
+                style: TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
 
             // Links are rendered with theme colors by default
-            const Textf('A [link to Flutter](https://flutter.dev) in text.', style: TextStyle(fontSize: 16)),
+            const Textf('A [link to Flutter](https://flutter.dev) in text.',
+                style: TextStyle(fontSize: 16)),
 
             const SizedBox(height: 32),
 
@@ -75,7 +81,8 @@ class MyHomePage extends StatelessWidget {
               boldStyle: const TextStyle(fontWeight: FontWeight.w900, color: Colors.red),
 
               // Add background to inline code
-              codeStyle: TextStyle(backgroundColor: Colors.green.shade200, fontStyle: FontStyle.italic),
+              codeStyle:
+                  TextStyle(backgroundColor: Colors.green.shade200, fontStyle: FontStyle.italic),
 
               // Style links: blue without underline
               urlStyle: const TextStyle(color: Colors.blue, decoration: TextDecoration.none),
@@ -103,7 +110,8 @@ class MyHomePage extends StatelessWidget {
                 children: [
                   Textf('**Red bold text** with normal text.', style: TextStyle(fontSize: 16)),
                   SizedBox(height: 8),
-                  Textf('Code has `green background` with italic style.', style: TextStyle(fontSize: 16)),
+                  Textf('Code has `green background` with italic style.',
+                      style: TextStyle(fontSize: 16)),
                   SizedBox(height: 8),
                   Textf(
                     'Links are [blue without underline](https://example.com) - '

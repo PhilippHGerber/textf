@@ -120,7 +120,8 @@ void main() {
         expect(resolved.fontSize, baseStyle.fontSize);
       });
 
-      testWidgets('resolveStyle for boldItalicMarker uses DefaultStyles.boldItalicStyle', (tester) async {
+      testWidgets('resolveStyle for boldItalicMarker uses DefaultStyles.boldItalicStyle',
+          (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
         final resolved = resolver.resolveStyle(TokenType.boldItalicMarker, baseStyle);
@@ -129,7 +130,8 @@ void main() {
         expect(resolved.fontSize, baseStyle.fontSize);
       });
 
-      testWidgets('resolveStyle for strikeMarker uses DefaultStyles.strikethroughStyle with default thickness',
+      testWidgets(
+          'resolveStyle for strikeMarker uses DefaultStyles.strikethroughStyle with default thickness',
           (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
@@ -151,7 +153,8 @@ void main() {
         expect(resolved.fontSize, baseStyle.fontSize); // Base font size
       });
 
-      testWidgets('resolveStyle for underlineMarker uses DefaultStyles.underlineStyle', (tester) async {
+      testWidgets('resolveStyle for underlineMarker uses DefaultStyles.underlineStyle',
+          (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
         final resolved = resolver.resolveStyle(TokenType.underlineMarker, baseStyle);
@@ -260,7 +263,8 @@ void main() {
         expect(resolved.fontSize, baseStyle.fontSize);
       });
 
-      testWidgets('resolveStyle for strikeMarker uses TextfOptions.strikethroughStyle', (tester) async {
+      testWidgets('resolveStyle for strikeMarker uses TextfOptions.strikethroughStyle',
+          (tester) async {
         final testContextWithOptions = await pumpWithContext(tester, options: options);
         final resolverWithOptions = TextfStyleResolver(testContextWithOptions);
         final resolved = resolverWithOptions.resolveStyle(TokenType.strikeMarker, baseStyle);
@@ -270,7 +274,8 @@ void main() {
         expect(resolved.decorationThickness, optionStrikeStyle.decorationThickness);
       });
 
-      testWidgets('resolveStyle for strikeMarker uses TextfOptions.strikethroughThickness if style is null',
+      testWidgets(
+          'resolveStyle for strikeMarker uses TextfOptions.strikethroughThickness if style is null',
           (tester) async {
         const optionsWithThickness = TextfOptions(
           strikethroughThickness: optionStrikeThickness,
@@ -303,7 +308,8 @@ void main() {
         expect(resolved.fontSize, baseStyle.fontSize);
       });
 
-      testWidgets('resolveLinkHoverStyle uses TextfOptions and merges onto normal style', (tester) async {
+      testWidgets('resolveLinkHoverStyle uses TextfOptions and merges onto normal style',
+          (tester) async {
         final testContextWithOptions = await pumpWithContext(tester, options: options);
         final resolverWithOptions = TextfStyleResolver(testContextWithOptions);
         final normalLinkStyleWithOptions = baseStyle.merge(optionUrlStyle);
@@ -342,12 +348,6 @@ void main() {
         debugPrint('Parent tapped URL: $u with display text: $d');
       }
 
-      const childBoldStyle = TextStyle(fontWeight: FontWeight.w300);
-      const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, color: Colors.teal);
-      void childTap(String u, String d) {
-        debugPrint('Child tapped URL: $u with display text: $d');
-      }
-
       final parentOpts = TextfOptions(
         boldStyle: parentBoldStyle,
         urlStyle: parentUrlStyle,
@@ -356,14 +356,8 @@ void main() {
         child: const SizedBox.shrink(),
       );
 
-      final childOptsWithOverride = TextfOptions(
-        boldStyle: childBoldStyle,
-        italicStyle: childItalicStyle,
-        onUrlTap: childTap,
-        child: const SizedBox.shrink(),
-      );
-
-      testWidgets('Nested options correctly merge with and override ancestor values', (tester) async {
+      testWidgets('Nested options correctly merge with and override ancestor values',
+          (tester) async {
         // SETUP:
         // parentOpts provides a red color for bold text.
         // childOptsWithOverride provides a light font weight for bold text.
@@ -371,11 +365,16 @@ void main() {
 
         const parentBoldStyle = TextStyle(fontWeight: FontWeight.w900, color: Colors.red);
         const parentItalicStyle = TextStyle(fontStyle: FontStyle.italic, color: Colors.purple);
-        void parentTap(String u, String d) {}
+        void parentTap(String u, String d) {
+          return;
+        }
 
         const childBoldStyle = TextStyle(fontWeight: FontWeight.w300); // No color specified.
-        const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
-        void childTap(String u, String d) {}
+        const childItalicStyle =
+            TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
+        void childTap(String u, String d) {
+          return;
+        }
 
         final parentOpts = TextfOptions(
           boldStyle: parentBoldStyle,
@@ -439,11 +438,13 @@ void main() {
         );
       });
 
-      testWidgets('Falls back to ancestor if nearest option is null for a property', (tester) async {
+      testWidgets('Falls back to ancestor if nearest option is null for a property',
+          (tester) async {
         final context = await pumpWithContext(
           tester,
           parentOptions: parentOpts, // Outer (provides urlStyle, italicStyle from parentOpts)
-          options: const TextfOptions(child: SizedBox.shrink()), // Inner (urlStyle is implicitly null)
+          options:
+              const TextfOptions(child: SizedBox.shrink()), // Inner (urlStyle is implicitly null)
         );
         final resolver = TextfStyleResolver(context);
 
@@ -464,9 +465,11 @@ void main() {
       });
 
       testWidgets('Falls back to theme/DefaultStyles if all ancestors have null', (tester) async {
-        const specificOptionItalicStyle = TextStyle(fontStyle: FontStyle.italic, color: Colors.blueGrey);
+        const specificOptionItalicStyle =
+            TextStyle(fontStyle: FontStyle.italic, color: Colors.blueGrey);
         const parent = TextfOptions(boldStyle: parentBoldStyle, child: SizedBox.shrink());
-        const child = TextfOptions(italicStyle: specificOptionItalicStyle, child: SizedBox.shrink());
+        const child =
+            TextfOptions(italicStyle: specificOptionItalicStyle, child: SizedBox.shrink());
 
         final context = await pumpWithContext(tester, parentOptions: parent, options: child);
         final resolver = TextfStyleResolver(context);
@@ -518,19 +521,25 @@ void main() {
         expect(resolvedBold.fontSize, baseStyle.fontSize);
       });
 
-      testWidgets('Theme-default properties override baseStyle properties for links and code', (tester) async {
+      testWidgets('Theme-default properties override baseStyle properties for links and code',
+          (tester) async {
         // No options, so link style and code style come from theme
         final context = await pumpWithContext(tester);
         final resolver = TextfStyleResolver(context);
 
         // Link
         final resolvedLink = resolver.resolveLinkStyle(baseStyle); // baseStyle is black
-        expect(resolvedLink.color, lightTheme.colorScheme.primary, reason: 'Link color should be theme primary');
+        expect(
+          resolvedLink.color,
+          lightTheme.colorScheme.primary,
+          reason: 'Link color should be theme primary',
+        );
         expect(resolvedLink.decoration, TextDecoration.underline);
         expect(resolvedLink.fontSize, baseStyle.fontSize);
 
         // Code
-        final resolvedCode = resolver.resolveStyle(TokenType.codeMarker, baseStyle); // baseStyle is black
+        final resolvedCode =
+            resolver.resolveStyle(TokenType.codeMarker, baseStyle); // baseStyle is black
         expect(
           resolvedCode.color,
           lightTheme.colorScheme.onSurfaceVariant,
@@ -541,14 +550,20 @@ void main() {
         expect(resolvedCode.fontSize, baseStyle.fontSize);
       });
 
-      testWidgets('Theme-default properties DO NOT override baseStyle for bold/italic if no option', (tester) async {
+      testWidgets('Theme-default properties DO NOT override baseStyle for bold/italic if no option',
+          (tester) async {
         // No options, so bold/italic come from DefaultStyles applied to baseStyle
         final context = await pumpWithContext(tester);
         final resolver = TextfStyleResolver(context);
 
         // Bold
-        final resolvedBold = resolver.resolveStyle(TokenType.boldMarker, baseStyle); // baseStyle is black
-        expect(resolvedBold.color, baseStyle.color, reason: 'Bold color should be from baseStyle'); // Not from theme
+        final resolvedBold =
+            resolver.resolveStyle(TokenType.boldMarker, baseStyle); // baseStyle is black
+        expect(
+          resolvedBold.color,
+          baseStyle.color,
+          reason: 'Bold color should be from baseStyle',
+        ); // Not from theme
         expect(resolvedBold.fontWeight, FontWeight.bold);
         expect(resolvedBold.fontSize, baseStyle.fontSize);
 

@@ -32,7 +32,7 @@ class NestingValidator {
     List<Token> tokens,
     Map<int, int> candidatePairs,
   ) {
-    final Map<int, int> validatedPairs = Map.from(candidatePairs);
+    final Map<int, int> validatedPairs = Map.of(candidatePairs);
     final List<int> openingStack = [];
     final Set<int> invalidPairs = {};
 

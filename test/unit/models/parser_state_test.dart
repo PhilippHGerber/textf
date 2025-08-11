@@ -93,7 +93,8 @@ void main() {
       expect(state.textBuffer, isEmpty, reason: 'Text buffer should still be empty');
     });
 
-    testWidgets('flushText creates a simple TextSpan with baseStyle when formatStack is empty', (tester) async {
+    testWidgets('flushText creates a simple TextSpan with baseStyle when formatStack is empty',
+        (tester) async {
       // ARRANGE
       final (mockContext, mockResolver) = await setupTest(tester);
       final state = ParserState(
@@ -143,16 +144,20 @@ void main() {
       expect(span.text, 'Bold text');
       // The style should have the base properties plus the merged properties.
       expect(span.style?.fontWeight, FontWeight.bold);
-      expect(span.style?.fontSize, baseStyle.fontSize, reason: 'Font size from base style should be preserved');
-      expect(span.style?.color, baseStyle.color, reason: 'Color from base style should be preserved');
+      expect(span.style?.fontSize, baseStyle.fontSize,
+          reason: 'Font size from base style should be preserved');
+      expect(span.style?.color, baseStyle.color,
+          reason: 'Color from base style should be preserved');
       expect(state.textBuffer, isEmpty);
     });
 
-    testWidgets('flushText correctly applies multiple nested styles from the formatStack', (tester) async {
+    testWidgets('flushText correctly applies multiple nested styles from the formatStack',
+        (tester) async {
       // ARRANGE
       final (mockContext, mockResolver) = await setupTest(tester);
       const boldStyle = TextStyle(fontWeight: FontWeight.bold);
-      const italicStyle = TextStyle(fontStyle: FontStyle.italic, color: Colors.red); // Overrides color
+      const italicStyle =
+          TextStyle(fontStyle: FontStyle.italic, color: Colors.red); // Overrides color
       mockResolver.whenResolveStyle(TokenType.boldMarker, boldStyle);
       mockResolver.whenResolveStyle(TokenType.italicMarker, italicStyle);
 
@@ -183,8 +188,10 @@ void main() {
       // The order of application in `flushText` is important.
       expect(span.style?.fontWeight, FontWeight.bold, reason: 'Bold style should be applied');
       expect(span.style?.fontStyle, FontStyle.italic, reason: 'Italic style should be applied');
-      expect(span.style?.color, Colors.red, reason: 'Italic style color should override base and bold color');
-      expect(span.style?.fontSize, baseStyle.fontSize, reason: 'Font size should be inherited from base');
+      expect(span.style?.color, Colors.red,
+          reason: 'Italic style color should override base and bold color');
+      expect(span.style?.fontSize, baseStyle.fontSize,
+          reason: 'Font size should be inherited from base');
       expect(state.textBuffer, isEmpty);
     });
   });

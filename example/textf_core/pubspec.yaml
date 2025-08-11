@@ -1,29 +1,23 @@
 name: textf_core
 description: A new Flutter project to showcase Textf library.
 publish_to: "none"
-version: 0.2.0
+version: 0.2.1
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
-  flutter: ">=3.0.0"
 
 dependencies:
-  cupertino_icons: ^1.0.2
   flutter:
     sdk: flutter
-  share_plus: ^10.1.4
-  super_clipboard: ^0.8.24
-  textf: ^0.6.1
-  url_launcher: ^6.3.1
-
-# dependency_overrides:
-#   textf:
-#     path: ../../
+  share_plus: ^11.0.0
+  super_clipboard: ^0.9.1
+  textf: ^0.6.2
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true

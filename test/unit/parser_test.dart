@@ -382,12 +382,14 @@ void main() {
         for (final span in spans) {
           if (span is TextSpan) {
             // Check for bold+italic
-            if (span.style?.fontWeight == FontWeight.bold && span.style?.fontStyle == FontStyle.italic) {
+            if (span.style?.fontWeight == FontWeight.bold &&
+                span.style?.fontStyle == FontStyle.italic) {
               hasBoldItalic = true;
             }
 
             // Check for just italic (not bold)
-            if (span.style?.fontStyle == FontStyle.italic && span.style?.fontWeight != FontWeight.bold) {
+            if (span.style?.fontStyle == FontStyle.italic &&
+                span.style?.fontWeight != FontWeight.bold) {
               hasRegularItalic = true;
             }
           }

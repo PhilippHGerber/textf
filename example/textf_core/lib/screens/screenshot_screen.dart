@@ -86,7 +86,8 @@ class ScreenshotScreen extends StatefulWidget {
 
 class _ScreenshotScreenState extends State<ScreenshotScreen> {
   final TextEditingController _textController = TextEditingController(
-    text: 'Hello **bold** *italic* ~~strikethrought~~ ++underline++ ==highlight== `code` [link](https://example.com)',
+    text:
+        'Hello **bold** *italic* ~~strikethrought~~ ++underline++ ==highlight== `code` [link](https://example.com)',
   );
   final GlobalKey _screenshotKey = GlobalKey();
 
@@ -141,7 +142,8 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
       // Short delay to ensure UI with potential TextfOptions changes is rendered
       await Future.delayed(const Duration(milliseconds: 150));
 
-      RenderRepaintBoundary? boundary = _screenshotKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      RenderRepaintBoundary? boundary =
+          _screenshotKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) {
         if (kDebugMode) {
           print("Error: Could not find RenderRepaintBoundary.");
@@ -316,7 +318,10 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
               initiallyExpanded: false,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8.0), // Reduced horizontal padding
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 0,
+                    vertical: 8.0,
+                  ), // Reduced horizontal padding
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -531,13 +536,21 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
             width: double.infinity, // Make segmented button take full width
             child: SegmentedButton<TextAlign>(
               segments: const [
-                ButtonSegment(value: TextAlign.left, icon: Icon(Icons.align_horizontal_left), label: Text('Left')),
+                ButtonSegment(
+                  value: TextAlign.left,
+                  icon: Icon(Icons.align_horizontal_left),
+                  label: Text('Left'),
+                ),
                 ButtonSegment(
                   value: TextAlign.center,
                   icon: Icon(Icons.align_horizontal_center),
                   label: Text('Center'),
                 ),
-                ButtonSegment(value: TextAlign.right, icon: Icon(Icons.align_horizontal_right), label: Text('Right')),
+                ButtonSegment(
+                  value: TextAlign.right,
+                  icon: Icon(Icons.align_horizontal_right),
+                  label: Text('Right'),
+                ),
               ],
               selected: {_textAlign},
               onSelectionChanged: (Set<TextAlign> selection) {
@@ -568,7 +581,10 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
               Text(label),
               const Spacer(),
               TextButton(
-                style: TextButton.styleFrom(padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
                 onPressed: onReset,
                 child: Text(resetButtonLabel),
               ),

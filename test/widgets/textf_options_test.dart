@@ -82,8 +82,8 @@ class _ResolvedOptions {
     final resolvedUrlHover = nearestOptions?.getEffectiveUrlHoverStyle(context, baseStyle) ??
         resolvedUrl; // Default hover is same as normal if no option
 
-    final resolvedCursor =
-        nearestOptions?.getEffectiveUrlMouseCursor(context) ?? DefaultStyles.urlMouseCursor; // Default fallback
+    final resolvedCursor = nearestOptions?.getEffectiveUrlMouseCursor(context) ??
+        DefaultStyles.urlMouseCursor; // Default fallback
 
     final resolvedTap = nearestOptions?.getEffectiveOnUrlTap(context); // Null if not found
     final resolvedHoverCb = nearestOptions?.getEffectiveOnUrlHover(context); // Null if not found
@@ -170,8 +170,10 @@ void main() {
       expect(resolved, isNotNull, reason: 'ResolvedOptions should not be null after pump');
 
       // Ensure the captured style is still valid before using it in expectations
-      expect(capturedDefaultStyle, isNotNull, reason: 'DefaultTextStyle should be available after pump');
-      expect(capturedDefaultStyle!.fontSize, isNotNull, reason: 'DefaultTextStyle must have a fontSize after pump');
+      expect(capturedDefaultStyle, isNotNull,
+          reason: 'DefaultTextStyle should be available after pump');
+      expect(capturedDefaultStyle!.fontSize, isNotNull,
+          reason: 'DefaultTextStyle must have a fontSize after pump');
 
       // Verify resolved options match defaults merged with the capturedDefaultStyle
 
@@ -210,14 +212,16 @@ void main() {
         capturedDefaultStyle!.fontSize,
         reason: 'Bold style font size should match default',
       );
-      expect(resolved!.boldStyle?.fontWeight, DefaultStyles.boldStyle(capturedDefaultStyle!).fontWeight);
+      expect(resolved!.boldStyle?.fontWeight,
+          DefaultStyles.boldStyle(capturedDefaultStyle!).fontWeight);
 
       expect(
         resolved!.italicStyle?.fontSize,
         capturedDefaultStyle!.fontSize,
         reason: 'Italic style font size should match default',
       );
-      expect(resolved!.italicStyle?.fontStyle, DefaultStyles.italicStyle(capturedDefaultStyle!).fontStyle);
+      expect(resolved!.italicStyle?.fontStyle,
+          DefaultStyles.italicStyle(capturedDefaultStyle!).fontStyle);
 
       // Code Style: Check against theme defaults merged with base
       expect(
@@ -269,13 +273,15 @@ void main() {
       expect(resolved!.urlMouseCursor, rootCursor);
       expect(resolved!.onUrlTap, same(rootOnTap));
       // Check unspecified (falls back to default effect on base)
-      expect(resolved!.italicStyle?.fontStyle, DefaultStyles.italicStyle(baseStyle).fontStyle); // Default italic
+      expect(resolved!.italicStyle?.fontStyle,
+          DefaultStyles.italicStyle(baseStyle).fontStyle); // Default italic
       expect(resolved!.italicStyle?.color, baseStyle.color); // Base color
       // Check unspecified callback
       expect(resolved!.onUrlHover, isNull);
     });
 
-    testWidgets('Child properties correctly merge with and override parent properties', (tester) async {
+    testWidgets('Child properties correctly merge with and override parent properties',
+        (tester) async {
       // SETUP
       const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
       const rootUrlStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
@@ -360,7 +366,8 @@ void main() {
       const rootUrlStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
 
       const childUrlStyle = TextStyle(color: Colors.green, fontSize: 18);
-      const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
+      const childItalicStyle =
+          TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
       // ignore: no-empty-block
       void childOnHover(String u, String d, {required bool isHovering}) {}
 
@@ -475,7 +482,8 @@ void main() {
         MaterialApp(
           theme: theme,
           home: TextfOptions(
-            boldStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red), // Override weight and color
+            boldStyle: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.red), // Override weight and color
             italicStyle: const TextStyle(fontStyle: FontStyle.italic), // Only specify italic effect
             urlStyle: const TextStyle(
               // Specify only decoration properties
@@ -484,7 +492,8 @@ void main() {
             ),
             child: Builder(
               builder: (context) {
-                resolved = _ResolvedOptions.fromContext(context, specificBaseStyle); // grey, 10, Arial
+                resolved =
+                    _ResolvedOptions.fromContext(context, specificBaseStyle); // grey, 10, Arial
                 return const SizedBox();
               },
             ),

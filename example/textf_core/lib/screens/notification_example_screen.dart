@@ -242,7 +242,10 @@ class _NotificationSystemState extends State<NotificationSystem> {
                         color: theme.colorScheme.errorContainer, // Use theme color for background
                         alignment: Alignment.centerRight,
                         padding: const EdgeInsets.only(right: 16),
-                        child: Icon(Icons.delete_outline, color: theme.colorScheme.onErrorContainer), // Use theme color
+                        child: Icon(
+                          Icons.delete_outline,
+                          color: theme.colorScheme.onErrorContainer,
+                        ), // Use theme color
                       ),
                       direction: DismissDirection.endToStart,
                       onDismissed: (direction) {
@@ -297,8 +300,10 @@ class _NotificationSystemState extends State<NotificationSystem> {
                 NotificationItem(
                   icon: Icons.security,
                   title: 'Security Alert',
-                  message: 'Your account was accessed from a **new device** in _New York_. Was this you?',
-                  time: '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+                  message:
+                      'Your account was accessed from a **new device** in _New York_. Was this you?',
+                  time:
+                      '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
                   iconColor: Colors.green, // Keep semantic color
                 ),
               );
