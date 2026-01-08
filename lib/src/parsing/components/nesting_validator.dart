@@ -76,9 +76,7 @@ class NestingValidator {
     }
 
     // Remove invalid pairs
-    for (final index in invalidPairs) {
-      validatedPairs.remove(index);
-    }
+    invalidPairs.forEach(validatedPairs.remove);
 
     return validatedPairs;
   }
