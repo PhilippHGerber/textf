@@ -99,6 +99,9 @@ class TextfOptions extends InheritedWidget {
     this.highlightStyle,
     this.superscriptStyle,
     this.subscriptStyle,
+    this.superscriptBaselineFactor,
+    this.subscriptBaselineFactor,
+    this.scriptFontSizeFactor,
   });
 
   /// Callback function executed when tapping or clicking on a URL.
@@ -161,6 +164,30 @@ class TextfOptions extends InheritedWidget {
   /// The [TextStyle] for subscript text (`~subscript~`).
   /// Merged onto the base style if provided.
   final TextStyle? subscriptStyle;
+
+  /// Custom baseline offset factor for superscript text.
+  ///
+  /// Determines the vertical offset magnitude relative to the font size.
+  /// The value is treated as an absolute offset; superscript is always raised.
+  ///
+  /// If null, defaults to `DefaultStyles.superscriptBaselineFactor`.
+  final double? superscriptBaselineFactor;
+
+  /// Custom baseline offset factor for subscript text.
+  ///
+  /// Determines the vertical offset magnitude relative to the font size.
+  /// The value is treated as an absolute offset; subscript is always lowered.
+  ///
+  /// If null, defaults to `DefaultStyles.subscriptBaselineFactor`.
+  final double? subscriptBaselineFactor;
+
+  /// Custom font size scaling factor for both superscript and subscript text.
+  ///
+  /// Multiplies the base font size by this factor.
+  /// For example, `0.6` means the script text will be 60% the size of the body text.
+  ///
+  /// If null, defaults to `DefaultStyles.scriptFontSizeFactor` (0.6).
+  final double? scriptFontSizeFactor;
 
   /// Finds the nearest [TextfOptions] ancestor in the widget tree.
   ///
@@ -315,6 +342,21 @@ class TextfOptions extends InheritedWidget {
     return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
+  /// Resolves the nearest `superscriptBaselineFactor` from the hierarchy.
+  double? getEffectiveSuperscriptBaselineFactor(BuildContext context) {
+    return _findFirstAncestorValue(context, (o) => o.superscriptBaselineFactor);
+  }
+
+  /// Resolves the nearest `subscriptBaselineFactor` from the hierarchy.
+  double? getEffectiveSubscriptBaselineFactor(BuildContext context) {
+    return _findFirstAncestorValue(context, (o) => o.subscriptBaselineFactor);
+  }
+
+  /// Resolves the nearest `scriptFontSizeFactor` from the hierarchy.
+  double? getEffectiveScriptFontSizeFactor(BuildContext context) {
+    return _findFirstAncestorValue(context, (o) => o.scriptFontSizeFactor);
+  }
+
   /// Resolves the nearest `onUrlTap` callback from the hierarchy.
   void Function(String url, String displayText)? getEffectiveOnUrlTap(BuildContext context) {
     return _findFirstAncestorValue(context, (o) => o.onUrlTap);
@@ -354,6 +396,9 @@ class TextfOptions extends InheritedWidget {
         underlineStyle != oldWidget.underlineStyle ||
         highlightStyle != oldWidget.highlightStyle ||
         superscriptStyle != oldWidget.superscriptStyle ||
-        subscriptStyle != oldWidget.subscriptStyle;
+        subscriptStyle != oldWidget.subscriptStyle ||
+        superscriptBaselineFactor != oldWidget.superscriptBaselineFactor ||
+        subscriptBaselineFactor != oldWidget.subscriptBaselineFactor ||
+        scriptFontSizeFactor != oldWidget.scriptFontSizeFactor;
   }
 }

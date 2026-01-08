@@ -39,9 +39,23 @@ class TextfStyleResolver {
   ///
   /// Returns the final `TextStyle` to be applied.
   TextStyle resolveStyle(TokenType type, TextStyle baseStyle) {
+    // Handle script font size adjustment first
+    TextStyle effectiveBaseStyle = baseStyle;
+
+    if (type == TokenType.superscriptMarker || type == TokenType.subscriptMarker) {
+      // Resolve the scale factor (Option -> Default)
+      final double scaleFactor = _nearestOptions?.getEffectiveScriptFontSizeFactor(context) ??
+          DefaultStyles.scriptFontSizeFactor;
+
+      // Apply scaling to the base style FIRST
+      // This ensures that if the user only overrides color later, the size is already correct.
+      final double currentSize = baseStyle.fontSize ?? DefaultStyles.defaultFontSize;
+      effectiveBaseStyle = baseStyle.copyWith(fontSize: currentSize * scaleFactor);
+    }
+
     // Get the effective style from TextfOptions hierarchy first.
     // The getEffective... methods handle the lookup and return null if no option is set.
-    final TextStyle? optionsStyle = _getEffectiveStyleFromOptions(type, baseStyle);
+    final TextStyle? optionsStyle = _getEffectiveStyleFromOptions(type, effectiveBaseStyle);
 
     if (optionsStyle != null) {
       // Precedence 1 & 2: Use the style derived from TextfOptions
@@ -77,9 +91,9 @@ class TextfStyleResolver {
         case TokenType.highlightMarker:
           return _getThemeBasedHighlightStyle(baseStyle); // Theme-based default
         case TokenType.superscriptMarker:
-          return DefaultStyles.superscriptStyle(baseStyle); // Relative default
+          return effectiveBaseStyle;
         case TokenType.subscriptMarker:
-          return DefaultStyles.subscriptStyle(baseStyle); // Relative default
+          return effectiveBaseStyle;
         // Link styles are handled separately by resolveLinkStyle/resolveLinkHoverStyle
         case TokenType.linkStart:
         case TokenType.linkText:
@@ -163,10 +177,15 @@ class TextfStyleResolver {
   }) {
     final double fontSize = style.fontSize ?? DefaultStyles.defaultFontSize;
 
-    // Get the factor (can be exposed in Options later, hardcoded for now)
-    final double offsetFactor = isSuperscript
-        ? DefaultStyles.superscriptBaselineFactor
-        : DefaultStyles.subscriptBaselineFactor;
+    // Resolve the geometry factor (Option -> Default)
+    final double? optionFactor = isSuperscript
+        ? _nearestOptions?.getEffectiveSuperscriptBaselineFactor(context)
+        : _nearestOptions?.getEffectiveSubscriptBaselineFactor(context);
+
+    final double offsetFactor = optionFactor ??
+        (isSuperscript
+            ? DefaultStyles.superscriptBaselineFactor
+            : DefaultStyles.subscriptBaselineFactor);
 
     // Calculate the visual offset required
     final double offsetY = fontSize * offsetFactor;
