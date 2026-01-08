@@ -87,7 +87,10 @@ class ScreenshotScreen extends StatefulWidget {
 class _ScreenshotScreenState extends State<ScreenshotScreen> {
   final TextEditingController _textController = TextEditingController(
     text:
-        'Hello **bold** *italic* ~~strikethrought~~ ++underline++ ==highlight== `code` [link](https://example.com)',
+        'Hello **bold** *italic* ~~strikethrought~~ ++underline++ ==highlight== \n'
+        '`code` \n'
+        'E = mc^2^ and H~2~O \n'
+        '[link](https://example.com)',
   );
   final GlobalKey _screenshotKey = GlobalKey();
 
@@ -302,10 +305,10 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
                 hintText: 'Enter text with **bold**, *italic*, `code`, '
                     '++underline++, ==highlight==, [link](url)...',
                 helperText: 'Supports **bold**, *italic*, ~~strike~~, `code`, '
-                    '++underline++, ==highlight==, [link](url)',
+                    '++underline++, ==highlight==, [link](url) ^super^ ~sub~',
                 isDense: true,
               ),
-              maxLines: 3,
+              maxLines: 4,
               onChanged: (value) {
                 setState(() {}); // Rebuild preview on text change
               },

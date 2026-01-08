@@ -336,10 +336,13 @@ Textf(
               code: '''
 Textf(
   'Check out [**bold link**](https://example.com) '
-  'and [*italic link*](https://example.org)',
+  '[*italic link*](https://example.org)'
+  'and [Link with ^*^](https://example.org)',
 )''',
               child: Textf(
-                'Check out [**bold link**](https://example.com) and [*italic link*](https://example.org)',
+                'Check out [**bold link**](https://example.com) '
+                '[*italic link*](https://example.org)'
+                'and [Link with ^*^](https://example.org)',
               ),
             ),
             const SizedBox(height: 16),

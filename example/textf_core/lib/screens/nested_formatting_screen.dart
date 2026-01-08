@@ -36,7 +36,7 @@ class NestedFormattingScreen extends StatelessWidget {
             ExampleCard(
               title: 'Bold with Italic',
               description: 'Bold text containing italic text (using different markers)',
-              code: 'Textf(\n  \'**Bold with _italic_ inside**\',\n  \n)',
+              code: 'Textf(\n  \'**Bold with _italic_ inside**\',\n)',
               child: Textf(
                 '**Bold with _italic_ inside**',
               ),
@@ -45,7 +45,7 @@ class NestedFormattingScreen extends StatelessWidget {
             ExampleCard(
               title: 'Italic with Bold',
               description: 'Italic text containing bold text (using different markers)',
-              code: 'Textf(\n  \'*Italic with __bold__ inside*\',\n  \n)',
+              code: 'Textf(\n  \'*Italic with __bold__ inside*\',\n)',
               child: Textf(
                 '*Italic with __bold__ inside*',
               ),
@@ -54,7 +54,7 @@ class NestedFormattingScreen extends StatelessWidget {
             ExampleCard(
               title: 'Bold with Code',
               description: 'Bold text containing code',
-              code: 'Textf(\n  \'**Bold with `code` inside**\',\n  \n)',
+              code: 'Textf(\n  \'**Bold with `code` inside**\',\n)',
               child: Textf(
                 '**Bold with `code` inside**',
               ),
@@ -63,7 +63,7 @@ class NestedFormattingScreen extends StatelessWidget {
             ExampleCard(
               title: 'Italic with Strikethrough',
               description: 'Italic text containing strikethrough text',
-              code: 'Textf(\n  \'*Italic with ~~strikethrough~~ inside*\',\n  \n)',
+              code: 'Textf(\n  \'*Italic with ~~strikethrough~~ inside*\',\n)',
               child: Textf(
                 '*Italic with ~~strikethrough~~ inside*',
               ),
@@ -73,7 +73,7 @@ class NestedFormattingScreen extends StatelessWidget {
               title: 'What Not To Do',
               description:
                   'Using same marker type for nested formatting (may not work as expected)',
-              code: 'Textf(\n  \'**Bold with *italic* inside**\',\n  \n)',
+              code: 'Textf(\n  \'**Bold with *italic* inside**\',\n)',
               child: Textf(
                 '**Bold with *italic* inside**',
               ),
