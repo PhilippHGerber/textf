@@ -49,6 +49,16 @@ class _MockTextfStyleResolver implements TextfStyleResolver {
   @override
   void Function(String url, String displayText, {required bool isHovering})? resolveOnUrlHover() =>
       throw UnimplementedError();
+
+  @override
+  InlineSpan createScriptSpan({
+    required String text,
+    required TextStyle style,
+    required bool isSuperscript,
+  }) {
+    // Return a dummy span for testing ParserState logic
+    return WidgetSpan(child: Text(text, style: style));
+  }
 }
 
 void main() {

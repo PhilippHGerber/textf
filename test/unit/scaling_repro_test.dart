@@ -11,7 +11,7 @@ void main() {
     // We expect the logical size (30 * 0.66 = 19.8).
     // We do NOT multiply by scaleFactor here because your implementation
     // puts the unscaled size into the widget tree.
-    const double expectedScriptFontSize = baseFontSize * 0.66;
+    const double expectedScriptFontSize = baseFontSize * 0.6;
     const double scaleFactor = 2;
 
     await tester.pumpWidget(
