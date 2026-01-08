@@ -147,6 +147,54 @@ class TextfStyleResolver {
     return _nearestOptions?.getEffectiveOnUrlHover(context);
   }
 
+  /// Creates an [InlineSpan] representing a single script fragment.
+  ///
+  /// The returned span encapsulates the visual styling, semantics, and any
+  /// interactions for the script run produced by the style resolver. This span
+  /// can be inserted into higher-level text layouts or combined with other spans
+  /// to form rich text output.
+  ///
+  /// Returns an [InlineSpan] that encodes the resolved styling and behavior for
+  /// the script fragment.
+  InlineSpan createScriptSpan({
+    required String text,
+    required TextStyle style,
+    required bool isSuperscript,
+  }) {
+    final double fontSize = style.fontSize ?? DefaultStyles.defaultFontSize;
+
+    // Get the factor (can be exposed in Options later, hardcoded for now)
+    final double offsetFactor = isSuperscript
+        ? DefaultStyles.superscriptBaselineFactor
+        : DefaultStyles.subscriptBaselineFactor;
+
+    // Calculate the visual offset required
+    final double offsetY = fontSize * offsetFactor;
+
+    // We use Padding to move the text.
+    // Because we align to 'middle', adding 20px padding moves the visual center by 10px.
+    // Therefore, padding = offset * 2.
+    final EdgeInsetsGeometry padding = isSuperscript
+        // ignore: no-magic-number
+        ? EdgeInsets.only(bottom: offsetY.abs() * 2)
+        // ignore: no-magic-number
+        : EdgeInsets.only(top: offsetY.abs() * 2);
+
+    return WidgetSpan(
+      // Aligning to middle keeps the widget anchored to the line center,
+      // ensuring SelectionArea sorts it correctly (e.g. "E = mc2")
+      alignment: PlaceholderAlignment.middle,
+      child: Padding(
+        padding: padding,
+        child: Text.rich(
+          TextSpan(text: text, style: style),
+          // Allow natural scaling here! Do not use noScaling.
+          textScaler: TextScaler.noScaling,
+        ),
+      ),
+    );
+  }
+
   // --- Private Helper Methods ---
 
   /// Internal helper to retrieve the effective style from TextfOptions hierarchy.

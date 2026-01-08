@@ -72,19 +72,28 @@ class ParserState {
   ///              Alternatively, the resolver could just use its own stored context.
   ///              Let's keep it for now for clarity, assuming the resolver might need it per-call.
   void flushText(BuildContext context) {
-    if (textBuffer.isEmpty) return; // Nothing to flush
+    if (textBuffer.isEmpty) return;
 
-    // Calculate the current style based on the format stack and the resolver
     TextStyle currentStyle = baseStyle;
     for (final FormatStackEntry entry in formatStack) {
-      // Apply the style for the active format marker using the resolver
       currentStyle = styleResolver.resolveStyle(entry.type, currentStyle);
     }
 
-    // Create and add the TextSpan
-    spans.add(TextSpan(text: textBuffer, style: currentStyle));
+    final bool isSuperscript = formatStack.any((e) => e.type == TokenType.superscriptMarker);
+    final bool isSubscript = formatStack.any((e) => e.type == TokenType.subscriptMarker);
 
-    // Clear the buffer for the next segment
+    if (isSuperscript || isSubscript) {
+      spans.add(
+        styleResolver.createScriptSpan(
+          text: textBuffer,
+          style: currentStyle,
+          isSuperscript: isSuperscript,
+        ),
+      );
+    } else {
+      spans.add(TextSpan(text: textBuffer, style: currentStyle));
+    }
+
     textBuffer = '';
   }
 }
