@@ -76,6 +76,10 @@ class TextfStyleResolver {
           return DefaultStyles.underlineStyle(baseStyle); // Relative default
         case TokenType.highlightMarker:
           return _getThemeBasedHighlightStyle(baseStyle); // Theme-based default
+        case TokenType.superscriptMarker:
+          return DefaultStyles.superscriptStyle(baseStyle); // Relative default
+        case TokenType.subscriptMarker:
+          return DefaultStyles.subscriptStyle(baseStyle); // Relative default
         // Link styles are handled separately by resolveLinkStyle/resolveLinkHoverStyle
         case TokenType.linkStart:
         case TokenType.linkText:
@@ -168,6 +172,10 @@ class TextfStyleResolver {
         return options.getEffectiveUnderlineStyle(context, baseStyle);
       case TokenType.highlightMarker:
         return options.getEffectiveHighlightStyle(context, baseStyle);
+      case TokenType.superscriptMarker:
+        return options.getEffectiveSuperscriptStyle(context, baseStyle);
+      case TokenType.subscriptMarker:
+        return options.getEffectiveSubscriptStyle(context, baseStyle);
       // Link styles are handled by resolveLinkStyle/resolveLinkHoverStyle directly
       case TokenType.linkStart:
       case TokenType.linkText:

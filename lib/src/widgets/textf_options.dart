@@ -97,6 +97,8 @@ class TextfOptions extends InheritedWidget {
     this.strikethroughThickness,
     this.underlineStyle,
     this.highlightStyle,
+    this.superscriptStyle,
+    this.subscriptStyle,
   });
 
   /// Callback function executed when tapping or clicking on a URL.
@@ -151,6 +153,14 @@ class TextfOptions extends InheritedWidget {
   /// The [TextStyle] for highlighted text (`==highlight==`).
   /// Merged onto the base style if provided.
   final TextStyle? highlightStyle;
+
+  /// The [TextStyle] for superscript text (`^superscript^`).
+  /// Merged onto the base style if provided.
+  final TextStyle? superscriptStyle;
+
+  /// The [TextStyle] for subscript text (`~subscript~`).
+  /// Merged onto the base style if provided.
+  final TextStyle? subscriptStyle;
 
   /// Finds the nearest [TextfOptions] ancestor in the widget tree.
   ///
@@ -292,6 +302,19 @@ class TextfOptions extends InheritedWidget {
     return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
+  /// Resolves the final merged `superscriptStyle` from the hierarchy and merges it onto `baseStyle`.
+  TextStyle? getEffectiveSuperscriptStyle(BuildContext context, TextStyle baseStyle) {
+    final TextStyle? optionsStyle =
+        _getMergedStyleFromHierarchy(context, (o) => o.superscriptStyle);
+    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
+  }
+
+  /// Resolves the final merged `subscriptStyle` from the hierarchy and merges it onto `baseStyle`.
+  TextStyle? getEffectiveSubscriptStyle(BuildContext context, TextStyle baseStyle) {
+    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.subscriptStyle);
+    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
+  }
+
   /// Resolves the nearest `onUrlTap` callback from the hierarchy.
   void Function(String url, String displayText)? getEffectiveOnUrlTap(BuildContext context) {
     return _findFirstAncestorValue(context, (o) => o.onUrlTap);
@@ -329,6 +352,8 @@ class TextfOptions extends InheritedWidget {
         codeStyle != oldWidget.codeStyle ||
         strikethroughThickness != oldWidget.strikethroughThickness ||
         underlineStyle != oldWidget.underlineStyle ||
-        highlightStyle != oldWidget.highlightStyle;
+        highlightStyle != oldWidget.highlightStyle ||
+        superscriptStyle != oldWidget.superscriptStyle ||
+        subscriptStyle != oldWidget.subscriptStyle;
   }
 }

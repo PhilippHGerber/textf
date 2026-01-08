@@ -94,6 +94,7 @@ class TextfTokenizer {
             nextChar == kBacktick ||
             nextChar == kPlus ||
             nextChar == kEquals ||
+            nextChar == kCaret ||
             nextChar == kEscape ||
             nextChar == kOpenBracket ||
             nextChar == kCloseBracket ||
@@ -172,9 +173,18 @@ class TextfTokenizer {
           pos += 2;
           textStart = pos;
         } else {
-          // Single tilde treated as plain text, handled by falling through
+          // Single tilde for subscript
+          addTextToken(textStart, pos);
+          tokens.add(Token(TokenType.subscriptMarker, '~', pos, 1));
           pos++;
+          textStart = pos;
         }
+      } else if (currentChar == kCaret) {
+        // Caret for superscript
+        addTextToken(textStart, pos);
+        tokens.add(Token(TokenType.superscriptMarker, '^', pos, 1));
+        pos++;
+        textStart = pos;
       } else if (currentChar == kBacktick) {
         // Inline code (`)
         addTextToken(textStart, pos);
@@ -203,221 +213,133 @@ class TextfTokenizer {
           // Single equals treated as plain text, will be handled by final pos increment
           pos++;
         }
-      } //
-      else if (currentChar == kOpenBracket) {
-        // Opening square bracket for link
+      } else if (currentChar == kOpenBracket) {
         addTextToken(textStart, pos);
-
-        // Start link parsing
-        final int linkStartPos = pos;
-        pos++; // Move past '['
-
-        // Find the end of link text
-        final int linkTextStart = pos;
-        int nestLevel = 0;
-        int linkTextEnd = -1;
-
-        while (pos < length) {
-          // Inner loop for link text
-          final int c = codeUnits[pos];
-
-          // Handle escape sequences (original simple version)
-          if (c == kEscape && pos + 1 < length) {
-            pos += 2;
-            continue;
-          }
-
-          // Track nested brackets
-          if (c == kOpenBracket) {
-            nestLevel++;
-          } else if (c == kCloseBracket) {
-            if (nestLevel > 0) {
-              nestLevel--;
-            } else {
-              // This is the closing bracket for our link text
-              linkTextEnd = pos;
-
-              // Check if followed by opening parenthesis for URL
-              if (pos + 1 < length && codeUnits[pos + 1] == kOpenParen) {
-                break; // Found '](', proceed to URL parsing
-              } else {
-                // Not a valid link separator ']( )'.
-                // The ']' found was not part of a valid link structure here.
-                linkTextEnd = -1; // Mark that we didn't find a valid end for a link text segment
-                // that leads to a URL.
-                // The original code from llms.txt effectively did:
-                // pos++; continue;
-                // This means it continues scanning the inner loop.
-                // If the loop finishes and linkTextEnd is still -1,
-                // the outer 'if (linkTextEnd != -1 && ...)' will fail,
-                // and the 'else' branch (treating '[' as text) will be taken.
-                // We need to ensure this loop continues or breaks correctly.
-                // To match original llms.txt behavior if `](` is not found after `]`:
-                // it means the `[` was not a start of a link that completes with `](...)`.
-                // The code would try to find another `]` if `pos++` happens here,
-                // or if `break` happens, the outer `if(linkTextEnd != -1 ...)` fails.
-                // Let's ensure the `break` happens so outer `if` fails.
-                break; // Exit this inner loop. `linkTextEnd` is set, but `(` check failed.
-                // The outer `if` will then determine if it's a full link.
-              }
-            }
-          }
-          pos++;
-        }
-
-        // Check if we found a proper link structure "[text]("
-        // `pos` is currently at `linkTextEnd` (']') or at `length` if `]` wasn't found.
-        // If `break` happened from `if (pos + 1 < length && codeUnits[pos + 1] == kOpenParen)`,
-        // then `pos` points to `]`.
-        if (linkTextEnd != -1 &&
-            (linkTextEnd + 1) < length &&
-            codeUnits[linkTextEnd + 1] == kOpenParen) {
-          // Valid '[text](' structure found.
-          tokens.add(Token(TokenType.linkStart, '[', linkStartPos, 1));
-
-          if (linkTextEnd > linkTextStart) {
-            // If there's actual text between [ and ]
-            tokens.add(
-              Token(
-                TokenType.text, // It's just text at this stage
-                // The `avoid_substring` lint is ignored here for specific, performance-critical reasons.
-                // This tokenizer works by iterating through the string's UTF-16 code units and
-                // tracking positions (`start`, `end`) as code unit indices, not as grapheme clusters
-                // (user-perceived characters).
-                //
-                // 1. **Consistency**: The entire tokenizer's logic, including its loop counters and
-                //    marker detection, is based on UTF-16 code unit indices. Using `substring`, which
-                //    also operates on these indices, ensures perfect alignment and correctness within
-                //    this specific algorithm.
-                //
-                // 2. **Safety**: Since `start` and `end` are guaranteed by the tokenizer's logic to
-                //    never fall within the middle of a multi-byte character sequence (they always
-                //    point to the boundaries between characters or markers), using `substring` is
-                //    safe in this context and will not slice characters apart.
-                //
-                // For these reasons, `substring` is the correct and necessary choice for this low-level
-                // parsing task, despite the general validity of the linting rule for UI-level text manipulation.
-                // ignore: avoid-substring
-                text.substring(linkTextStart, linkTextEnd),
-                linkTextStart,
-                linkTextEnd - linkTextStart,
-              ),
-            );
-          } else {
-            // Empty link text, e.g. [](url)
-            tokens.add(Token(TokenType.text, '', linkTextStart, 0));
-          }
-
-          tokens.add(Token(TokenType.linkSeparator, '](', linkTextEnd, 2));
-          pos = linkTextEnd + 2; // Move main `pos` past ']('
-
-          // Now collect the URL
-          final int urlStart = pos;
-          int urlEnd = -1;
-          nestLevel = 0; // For nested parentheses within URL
-
-          while (pos < length) {
-            // Inner loop for URL
-            final int c = codeUnits[pos];
-            if (c == kEscape && pos + 1 < length) {
-              pos += 2; // Original simple escape skipping
-              continue;
-            }
-            if (c == kOpenParen) {
-              nestLevel++;
-            } else if (c == kCloseParen) {
-              if (nestLevel > 0) {
-                nestLevel--;
-              } else {
-                urlEnd = pos; // Position of ')'
-                break; // Found ')'
-              }
-            }
-            pos++;
-          } // End of inner loop for URL
-
-          if (urlEnd != -1) {
-            // Valid URL found
-            if (urlEnd > urlStart) {
-              // If there's actual text for URL
-              tokens.add(
-                Token(
-                  TokenType.text, // URL is also just text at this stage
-                  // The `avoid_substring` lint is ignored here for specific, performance-critical reasons.
-                  // This tokenizer works by iterating through the string's UTF-16 code units and
-                  // tracking positions (`start`, `end`) as code unit indices, not as grapheme clusters
-                  // (user-perceived characters).
-                  //
-                  // 1. **Consistency**: The entire tokenizer's logic, including its loop counters and
-                  //    marker detection, is based on UTF-16 code unit indices. Using `substring`, which
-                  //    also operates on these indices, ensures perfect alignment and correctness within
-                  //    this specific algorithm.
-                  //
-                  // 2. **Safety**: Since `start` and `end` are guaranteed by the tokenizer's logic to
-                  //    never fall within the middle of a multi-byte character sequence (they always
-                  //    point to the boundaries between characters or markers), using `substring` is
-                  //    safe in this context and will not slice characters apart.
-                  //
-                  // For these reasons, `substring` is the correct and necessary choice for this low-level
-                  // parsing task, despite the general validity of the linting rule for UI-level text manipulation.
-                  // ignore: avoid-substring
-                  text.substring(urlStart, urlEnd),
-                  urlStart,
-                  urlEnd - urlStart,
-                ),
-              );
-            } else {
-              // Empty URL, e.g. [text]()
-              tokens.add(Token(TokenType.text, '', urlStart, 0));
-            }
-            tokens.add(Token(TokenType.linkEnd, ')', urlEnd, 1));
-            pos = urlEnd + 1; // Move main `pos` past ')'
-            textStart = pos; // Reset textStart for the next segment of plain text.
-          } else {
-            // Malformed URL (e.g., [text](url without closing paren).
-            // The original fallback: treat the initial `[` at `linkStartPos` as plain text
-            // and let subsequent characters be re-evaluated by the main loop.
-            // To achieve this, we must discard any link tokens already added for this attempt
-            // and reset `pos` and `textStart` correctly.
-            tokens
-              ..removeLast() // Remove linkSeparator
-              ..removeLast() // Remove linkText (or empty linkText token)
-              ..removeLast() // Remove linkStart
-              // Now, treat the original '[' as text.
-              ..add(Token(TokenType.text, '[', linkStartPos, 1)); // Add '[' as text
-            pos = linkStartPos + 1; // Set main `pos` to parse after the '['
-            textStart = pos; // Reset textStart.
-          }
+        final int? nextPos = _tryParseLink(text, codeUnits, length, pos, tokens);
+        if (nextPos != null) {
+          pos = nextPos;
+          textStart = pos;
         } else {
-          // Not a complete link structure (e.g. "[text" or "[text]no_paren").
-          // Treat the initial '[' as plain text.
-          // `addTextToken(textStart, linkStartPos)` was already called.
-          tokens.add(Token(TokenType.text, '[', linkStartPos, 1));
-          pos = linkStartPos + 1; // Continue parsing after the '['
-          textStart = pos; // Reset textStart for the next segment of plain text.
+          tokens.add(Token(TokenType.text, '[', pos, 1));
+          pos++;
+          textStart = pos;
         }
-      }
-      // Fallback for other characters that are not part of other rules
-      // (e.g. single `]`, `(`, `)` not consumed by link logic, or any other char)
-      else {
+      } else {
         pos++;
       }
 
-      // Safety check to ensure forward progress if no specific token was matched
-      // and pos wasn't advanced by one of the specific rules.
       if (pos == startPosInLoop && pos < length) {
-        // This means the character at `startPosInLoop` was not handled by any
-        // of the if/else if blocks that would advance `pos`.
-        // This typically means it's a plain text character.
-        // The `pos++` in the final `else` block above should handle most plain chars.
-        // This is an ultimate fallback.
         pos++;
       }
     }
 
-    // Add any remaining text
     addTextToken(textStart, pos);
-
     return tokens;
+  }
+
+  /// Attempts to parse a Markdown-style link `[text](url)`.
+  ///
+  /// Returns the position after the closing parenthesis if successful,
+  /// otherwise returns null.
+  int? _tryParseLink(
+    String text,
+    List<int> codeUnits,
+    int length,
+    int startPos,
+    List<Token> tokens,
+  ) {
+    int pos = startPos + 1; // Move past '['
+
+    // 1. Find the end of link text ']'
+    final int linkTextStart = pos;
+    int nestLevel = 0;
+    int linkTextEnd = -1;
+
+    while (pos < length) {
+      // Inner loop for link text
+      final int c = codeUnits[pos];
+      // Handle escape sequences
+      if (c == kEscape && pos + 1 < length) {
+        pos += 2;
+        continue;
+      }
+      // Track nested brackets
+      if (c == kOpenBracket) {
+        nestLevel++;
+      } else if (c == kCloseBracket) {
+        if (nestLevel > 0) {
+          nestLevel--;
+        } else {
+          // This is the closing bracket for our link text
+          linkTextEnd = pos;
+          // Check if followed by opening parenthesis for URL
+          if (pos + 1 < length && codeUnits[pos + 1] == kOpenParen) {
+            break; // Found '](', proceed
+          } else {
+            return null; // Not part of a complete [text](link)
+          }
+        }
+      }
+      pos++;
+    }
+
+    if (linkTextEnd == -1 || pos + 1 >= length || codeUnits[pos + 1] != kOpenParen) {
+      return null;
+    }
+
+    // 2. Find the end of URL ')'
+    final int urlStart = linkTextEnd + 2;
+    pos = urlStart;
+    int urlEnd = -1;
+    nestLevel = 0;
+
+    while (pos < length) {
+      final int c = codeUnits[pos];
+      if (c == kEscape && pos + 1 < length) {
+        pos += 2;
+        continue;
+      }
+      if (c == kOpenParen) {
+        nestLevel++;
+      } else if (c == kCloseParen) {
+        if (nestLevel > 0) {
+          nestLevel--;
+        } else {
+          urlEnd = pos;
+          break;
+        }
+      }
+      pos++;
+    }
+
+    if (urlEnd == -1) {
+      return null;
+    }
+
+    // Successfully parsed a full link structure. Add tokens.
+    tokens
+      ..add(Token(TokenType.linkStart, '[', startPos, 1))
+      ..add(
+        Token(
+          TokenType.text,
+          // ignore: avoid-substring
+          text.substring(linkTextStart, linkTextEnd),
+          linkTextStart,
+          linkTextEnd - linkTextStart,
+        ),
+      )
+      ..add(Token(TokenType.linkSeparator, '](', linkTextEnd, 2))
+      ..add(
+        Token(
+          TokenType.text,
+          // ignore: avoid-substring
+          text.substring(urlStart, urlEnd),
+          urlStart,
+          urlEnd - urlStart,
+        ),
+      )
+      ..add(Token(TokenType.linkEnd, ')', urlEnd, 1));
+
+    return urlEnd + 1;
   }
 }

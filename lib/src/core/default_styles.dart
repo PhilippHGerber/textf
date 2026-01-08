@@ -33,6 +33,18 @@ class DefaultStyles {
   /// if no specific `strikethroughThickness` is provided via TextfOptions.
   static const double defaultStrikethroughThickness = 1.5;
 
+  /// Default font size used for relative calculations when base style has no font size.
+  static const double defaultFontSize = 14;
+
+  /// Default font size factor for superscript and subscript.
+  static const double scriptFontSizeFactor = 0.6;
+
+  /// Default baseline offset factor for superscript (relative to font size).
+  static const double superscriptBaselineFactor = -0.4; // Move up
+
+  /// Default baseline offset factor for subscript (relative to font size).
+  static const double subscriptBaselineFactor = 0.4; // Move down
+
   /// Applies default bold formatting (`**bold**` or `__bold__`) to a base style.
   /// Used as a fallback by TextfStyleResolver if no `boldStyle` is found via TextfOptions.
   static TextStyle boldStyle(TextStyle baseStyle) {
@@ -131,6 +143,20 @@ class DefaultStyles {
           : Colors.yellow.withValues(alpha: highlightAlphaLight),
       // Retain the original text color unless a specific contrast logic is needed.
       // color: baseStyle.color, // Text color usually remains the same for highlight
+    );
+  }
+
+  /// Applies default superscript formatting (`^superscript^`) to a base style.
+  static TextStyle superscriptStyle(TextStyle baseStyle) {
+    return baseStyle.copyWith(
+      fontSize: (baseStyle.fontSize ?? defaultFontSize) * scriptFontSizeFactor,
+    );
+  }
+
+  /// Applies default subscript formatting (`~subscript~`) to a base style.
+  static TextStyle subscriptStyle(TextStyle baseStyle) {
+    return baseStyle.copyWith(
+      fontSize: (baseStyle.fontSize ?? defaultFontSize) * scriptFontSizeFactor,
     );
   }
 }

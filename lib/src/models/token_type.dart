@@ -26,6 +26,12 @@ enum TokenType {
   /// Underline formatting marker: '++'
   underlineMarker(isFormattingMarker: true),
 
+  /// Superscript formatting marker: '^'
+  superscriptMarker(isFormattingMarker: true),
+
+  /// Subscript formatting marker: '~'
+  subscriptMarker(isFormattingMarker: true),
+
   /// Opening square bracket for link: '['
   linkStart(isLinkToken: true),
 

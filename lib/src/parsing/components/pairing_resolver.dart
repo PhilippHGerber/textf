@@ -44,6 +44,8 @@ class PairingResolver {
       TokenType.codeMarker: [],
       TokenType.underlineMarker: [],
       TokenType.highlightMarker: [],
+      TokenType.superscriptMarker: [],
+      TokenType.subscriptMarker: [],
     };
 
     // First pass - pair markers based on type

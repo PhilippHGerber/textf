@@ -22,6 +22,10 @@ const int kBacktick = 0x60;
 /// Used for highlight formatting (==).
 const int kEquals = 0x3D;
 
+/// Caret character ^ (ASCII code 94)
+/// Used for superscript formatting (^).
+const int kCaret = 0x5E;
+
 /// Plus character + (ASCII code 43)
 /// Used for underline formatting (++).
 const int kPlus = 0x2B;

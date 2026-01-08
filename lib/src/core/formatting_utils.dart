@@ -19,6 +19,7 @@ class FormattingUtils {
           char == kTilde ||
           char == kBacktick ||
           char == kEquals ||
+          char == kCaret ||
           char == kPlus ||
           char == kEscape ||
           char == kOpenBracket ||
@@ -46,6 +47,7 @@ class FormattingUtils {
           char == kTilde || // ~
           char == kBacktick || // `
           char == kEquals || // =
+          char == kCaret || // ^
           char == kPlus || // +
           char == kEscape) {
         // \
