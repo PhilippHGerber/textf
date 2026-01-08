@@ -62,8 +62,9 @@ void main() {
     }
 
     group('Superscript (^text^)', () {
-      testWidgets('renders as WidgetSpan with negative vertical translation', (tester) async {
+      testWidgets('renders using Padding (Bottom) + Alignment.middle', (tester) async {
         await pumpTestApp(tester);
+        // Use a known font size to verify padding calculation exists
         const baseStyle = TextStyle(fontSize: 20, color: Colors.black);
 
         final spans = parser.parse('^super^', mockContext, baseStyle);
@@ -73,26 +74,36 @@ void main() {
         expect(spans.first, isA<WidgetSpan>());
 
         final widgetSpan = spans.first as WidgetSpan;
-        expect(widgetSpan.alignment, PlaceholderAlignment.baseline);
-        expect(widgetSpan.baseline, TextBaseline.alphabetic);
 
-        // 2. Check Transform (Translation)
-        expect(widgetSpan.child, isA<Transform>());
-        final transform = widgetSpan.child as Transform;
-        final translation = transform.transform.getTranslation();
+        // CRITICAL check for Selection Sort Order Fix:
+        expect(
+          widgetSpan.alignment,
+          PlaceholderAlignment.middle,
+          reason:
+              'Must use Alignment.middle to keep widget anchored to line center for correct selection sorting',
+        );
 
-        // Y translation should be negative (move up)
-        expect(translation.y, lessThan(0), reason: 'Superscript should move text up (negative Y)');
-        expect(translation.x, 0);
+        // 2. Check Padding Structure
+        expect(widgetSpan.child, isA<Padding>());
+        final paddingWidget = widgetSpan.child as Padding;
+        final padding = paddingWidget.padding as EdgeInsets;
 
-        // 3. Check Inner Text Style (Font Size)
-        expect(transform.child, isA<Text>());
-        final richText = transform.child! as Text;
-        final textSpan = richText.textSpan as TextSpan?;
+        // 3. Check Padding Direction (Superscript needs Bottom padding to push text UP relative to center)
+        expect(
+          padding.bottom,
+          greaterThan(0),
+          reason: 'Superscript requires bottom padding to visually rise',
+        );
+        expect(padding.top, 0.0);
 
-        // Should be scaled down
+        // 4. Check Inner Text
+        expect(paddingWidget.child, isA<Text>());
+        final innerText = (paddingWidget.child! as Text).textSpan as TextSpan?;
+        expect(innerText?.text, 'super');
+
+        // Verify font size is reduced
         const expectedFontSize = DefaultStyles.scriptFontSizeFactor * 20;
-        expect(textSpan?.style?.fontSize, closeTo(expectedFontSize, 0.01));
+        expect(innerText?.style?.fontSize, closeTo(expectedFontSize, 0.01));
       });
 
       testWidgets('integrates with surrounding text', (tester) async {
@@ -102,6 +113,7 @@ void main() {
         final spans = parser.parse('E = mc^2^', mockContext, baseStyle);
 
         expect(spans.length, 2);
+
         // "E = mc"
         expect(spans.first, isA<TextSpan>());
         expect((spans.first as TextSpan).text, 'E = mc');
@@ -109,14 +121,14 @@ void main() {
         // "^2^"
         expect(spans[1], isA<WidgetSpan>());
         final widgetSpan = spans[1] as WidgetSpan;
-        final transform = widgetSpan.child as Transform;
-        final innerText = (transform.child! as Text).textSpan! as TextSpan;
-        expect(innerText.text, '2');
+        final padding = widgetSpan.child as Padding;
+        final innerText = (padding.child! as Text).textSpan as TextSpan?;
+        expect(innerText?.text, '2');
       });
     });
 
     group('Subscript (~text~)', () {
-      testWidgets('renders as WidgetSpan with positive vertical translation', (tester) async {
+      testWidgets('renders using Padding (Top) + Alignment.middle', (tester) async {
         await pumpTestApp(tester);
         const baseStyle = TextStyle(fontSize: 20, color: Colors.black);
 
@@ -125,21 +137,25 @@ void main() {
         expect(spans.first, isA<WidgetSpan>());
         final widgetSpan = spans.first as WidgetSpan;
 
-        expect(widgetSpan.child, isA<Transform>());
-        final transform = widgetSpan.child as Transform;
-        final translation = transform.transform.getTranslation();
+        // CRITICAL check for Selection Sort Order Fix:
+        expect(widgetSpan.alignment, PlaceholderAlignment.middle);
 
-        // Y translation should be positive (move down)
+        expect(widgetSpan.child, isA<Padding>());
+        final paddingWidget = widgetSpan.child as Padding;
+        final padding = paddingWidget.padding as EdgeInsets;
+
+        // Check Padding Direction (Subscript needs Top padding to push text DOWN relative to center)
         expect(
-          translation.y,
+          padding.top,
           greaterThan(0),
-          reason: 'Subscript should move text down (positive Y)',
+          reason: 'Subscript requires top padding to visually sink',
         );
+        expect(padding.bottom, 0.0);
 
         // Check Font Size
-        final textSpan = (transform.child! as Text).textSpan! as TextSpan;
+        final textSpan = (paddingWidget.child! as Text).textSpan as TextSpan?;
         const expectedFontSize = DefaultStyles.scriptFontSizeFactor * 20;
-        expect(textSpan.style?.fontSize, closeTo(expectedFontSize, 0.01));
+        expect(textSpan?.style?.fontSize, closeTo(expectedFontSize, 0.01));
       });
 
       testWidgets('H~2~O example renders correctly', (tester) async {
@@ -148,10 +164,11 @@ void main() {
 
         final spans = parser.parse('H~2~O', mockContext, baseStyle);
 
+        // Expect 3 spans: H, 2, O
         expect(spans.length, 3);
         expect((spans.first as TextSpan).text, 'H');
         expect(spans[1], isA<WidgetSpan>()); // The '2'
-        expect((spans[2] as TextSpan).text, 'O');
+        expect((spans.last as TextSpan).text, 'O');
       });
     });
 
@@ -164,37 +181,34 @@ void main() {
 
         expect(spans.first, isA<WidgetSpan>());
         final widgetSpan = spans.first as WidgetSpan;
-        final transform = widgetSpan.child as Transform;
-        final innerText = (transform.child! as Text).textSpan! as TextSpan;
+        final padding = widgetSpan.child as Padding;
+        final innerText = (padding.child! as Text).textSpan as TextSpan?;
 
-        expect(innerText.text, 'bold');
+        expect(innerText?.text, 'bold');
         expect(
-          innerText.style?.fontWeight,
+          innerText?.style?.fontWeight,
           FontWeight.bold,
           reason: 'Inner text should retain bold formatting',
         );
         // Size should still be scaled
-        expect(innerText.style?.fontSize, closeTo(DefaultStyles.scriptFontSizeFactor * 16, 0.01));
+        expect(innerText?.style?.fontSize, closeTo(DefaultStyles.scriptFontSizeFactor * 16, 0.01));
       });
 
       testWidgets('Superscript inside Bold (**^super^**)', (tester) async {
-        // This tests "Formatting outside Script".
-        // The parser logic flushes text when styles change.
-        // Since WidgetSpan breaks the text run, the bold style must be passed into the script's base style.
         await pumpTestApp(tester);
         const baseStyle = TextStyle(fontSize: 16);
 
-        // Input: **Text ^Super^**
+        // Input: **^super^**
         final spans = parser.parse('**^super^**', mockContext, baseStyle);
 
         expect(spans.first, isA<WidgetSpan>());
         final widgetSpan = spans.first as WidgetSpan;
-        final transform = widgetSpan.child as Transform;
-        final innerText = (transform.child! as Text).textSpan! as TextSpan;
+        final padding = widgetSpan.child as Padding;
+        final innerText = (padding.child! as Text).textSpan as TextSpan?;
 
-        expect(innerText.text, 'super');
+        expect(innerText?.text, 'super');
         expect(
-          innerText.style?.fontWeight,
+          innerText?.style?.fontWeight,
           FontWeight.bold,
           reason: 'Script should inherit surrounding bold style',
         );
@@ -206,15 +220,15 @@ void main() {
         final validSpans = parser.parse('^up^~down~', mockContext, const TextStyle());
         expect(validSpans.length, 2);
 
-        // 1. Up
+        // 1. Up (Padding Bottom)
         final upSpan = validSpans.first as WidgetSpan;
-        final upTrans = (upSpan.child as Transform).transform.getTranslation();
-        expect(upTrans.y, lessThan(0));
+        final upPadding = (upSpan.child as Padding).padding as EdgeInsets;
+        expect(upPadding.bottom, greaterThan(0));
 
-        // 2. Down
-        final downSpan = validSpans[1] as WidgetSpan;
-        final downTrans = (downSpan.child as Transform).transform.getTranslation();
-        expect(downTrans.y, greaterThan(0));
+        // 2. Down (Padding Top)
+        final downSpan = validSpans.last as WidgetSpan;
+        final downPadding = (downSpan.child as Padding).padding as EdgeInsets;
+        expect(downPadding.top, greaterThan(0));
       });
     });
 
@@ -232,10 +246,10 @@ void main() {
         final spans = parser.parse('^super^', mockContext, const TextStyle(color: Colors.black));
 
         final widgetSpan = spans.first as WidgetSpan;
-        final transform = widgetSpan.child as Transform;
-        final innerText = (transform.child! as Text).textSpan! as TextSpan;
+        final padding = widgetSpan.child as Padding;
+        final innerText = (padding.child! as Text).textSpan as TextSpan?;
 
-        expect(innerText.style?.color, Colors.red);
+        expect(innerText?.style?.color, Colors.red);
       });
     });
   });
