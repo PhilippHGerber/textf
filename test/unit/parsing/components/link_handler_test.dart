@@ -112,11 +112,17 @@ void main() {
         final hoverableSpan = widgetSpan.child as HoverableLinkSpan;
         expect(hoverableSpan.url, 'http://example.com');
         expect(hoverableSpan.rawDisplayText, 'link text');
-        expect(hoverableSpan.normalStyle.color, Colors.blue,
-            reason: 'Normal style should come from mock resolver');
+        expect(
+          hoverableSpan.normalStyle.color,
+          Colors.blue,
+          reason: 'Normal style should come from mock resolver',
+        );
 
-        expect(state.processedIndices, {0, 1, 2, 3, 4},
-            reason: 'All link tokens should be marked as processed');
+        expect(
+          state.processedIndices,
+          {0, 1, 2, 3, 4},
+          reason: 'All link tokens should be marked as processed',
+        );
       });
     });
 
@@ -132,10 +138,16 @@ void main() {
         // ASSERT
         expect(nextIndex, isNull, reason: 'Should not process an incomplete link');
         expect(state.spans, isEmpty, reason: 'No span should be created');
-        expect(state.textBuffer, '[',
-            reason: 'The opening bracket should be treated as plain text');
-        expect(state.processedIndices, {0},
-            reason: 'Only the opening bracket token should be marked as processed');
+        expect(
+          state.textBuffer,
+          '[',
+          reason: 'The opening bracket should be treated as plain text',
+        );
+        expect(
+          state.processedIndices,
+          {0},
+          reason: 'Only the opening bracket token should be marked as processed',
+        );
       });
 
       testWidgets('handles link text followed by non-link characters', (tester) async {

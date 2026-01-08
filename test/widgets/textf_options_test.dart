@@ -170,10 +170,16 @@ void main() {
       expect(resolved, isNotNull, reason: 'ResolvedOptions should not be null after pump');
 
       // Ensure the captured style is still valid before using it in expectations
-      expect(capturedDefaultStyle, isNotNull,
-          reason: 'DefaultTextStyle should be available after pump');
-      expect(capturedDefaultStyle!.fontSize, isNotNull,
-          reason: 'DefaultTextStyle must have a fontSize after pump');
+      expect(
+        capturedDefaultStyle,
+        isNotNull,
+        reason: 'DefaultTextStyle should be available after pump',
+      );
+      expect(
+        capturedDefaultStyle!.fontSize,
+        isNotNull,
+        reason: 'DefaultTextStyle must have a fontSize after pump',
+      );
 
       // Verify resolved options match defaults merged with the capturedDefaultStyle
 
@@ -212,16 +218,20 @@ void main() {
         capturedDefaultStyle!.fontSize,
         reason: 'Bold style font size should match default',
       );
-      expect(resolved!.boldStyle?.fontWeight,
-          DefaultStyles.boldStyle(capturedDefaultStyle!).fontWeight);
+      expect(
+        resolved!.boldStyle?.fontWeight,
+        DefaultStyles.boldStyle(capturedDefaultStyle!).fontWeight,
+      );
 
       expect(
         resolved!.italicStyle?.fontSize,
         capturedDefaultStyle!.fontSize,
         reason: 'Italic style font size should match default',
       );
-      expect(resolved!.italicStyle?.fontStyle,
-          DefaultStyles.italicStyle(capturedDefaultStyle!).fontStyle);
+      expect(
+        resolved!.italicStyle?.fontStyle,
+        DefaultStyles.italicStyle(capturedDefaultStyle!).fontStyle,
+      );
 
       // Code Style: Check against theme defaults merged with base
       expect(
@@ -273,8 +283,10 @@ void main() {
       expect(resolved!.urlMouseCursor, rootCursor);
       expect(resolved!.onUrlTap, same(rootOnTap));
       // Check unspecified (falls back to default effect on base)
-      expect(resolved!.italicStyle?.fontStyle,
-          DefaultStyles.italicStyle(baseStyle).fontStyle); // Default italic
+      expect(
+        resolved!.italicStyle?.fontStyle,
+        DefaultStyles.italicStyle(baseStyle).fontStyle,
+      ); // Default italic
       expect(resolved!.italicStyle?.color, baseStyle.color); // Base color
       // Check unspecified callback
       expect(resolved!.onUrlHover, isNull);
@@ -483,7 +495,9 @@ void main() {
           theme: theme,
           home: TextfOptions(
             boldStyle: const TextStyle(
-                fontWeight: FontWeight.bold, color: Colors.red), // Override weight and color
+              fontWeight: FontWeight.bold,
+              color: Colors.red,
+            ), // Override weight and color
             italicStyle: const TextStyle(fontStyle: FontStyle.italic), // Only specify italic effect
             urlStyle: const TextStyle(
               // Specify only decoration properties

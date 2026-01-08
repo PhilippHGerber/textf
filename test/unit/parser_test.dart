@@ -1,4 +1,5 @@
-// ignore_for_file: cascade_invocations // cascade_invocations for readability and chaining methods., no-magic-number
+// ignore_for_file: no-magic-number, avoid-non-null-assertion
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
@@ -138,6 +139,52 @@ void main() {
         expect((spans.first as TextSpan).style?.fontSize, 20);
         expect((spans.first as TextSpan).style?.color, Colors.blue);
         expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
+      });
+
+      testWidgets('superscript text applies WidgetSpan with negative translation', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+        // Provide a font size so offset calculation is non-zero
+        final spans = parser.parse('^super^', mockContext, const TextStyle(fontSize: 20));
+
+        expect(spans.length, 1);
+        expect(spans.first, isA<WidgetSpan>());
+
+        final widgetSpan = spans.first as WidgetSpan;
+        // Verify alignment
+        expect(widgetSpan.alignment, PlaceholderAlignment.baseline);
+
+        // Verify translation (negative Y moves up)
+        expect(widgetSpan.child, isA<Transform>());
+        final transform = widgetSpan.child as Transform;
+        final translation = transform.transform.getTranslation();
+        expect(translation.y, lessThan(0), reason: 'Superscript should translate upwards');
+
+        // Verify inner text content
+        final innerText = (transform.child! as Text).textSpan! as TextSpan;
+        expect(innerText.text, 'super');
+      });
+
+      testWidgets('subscript text applies WidgetSpan with positive translation', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+        // Provide a font size so offset calculation is non-zero
+        final spans = parser.parse('~sub~', mockContext, const TextStyle(fontSize: 20));
+
+        expect(spans.length, 1);
+        expect(spans.first, isA<WidgetSpan>());
+
+        final widgetSpan = spans.first as WidgetSpan;
+        // Verify alignment
+        expect(widgetSpan.alignment, PlaceholderAlignment.baseline);
+
+        // Verify translation (positive Y moves down)
+        expect(widgetSpan.child, isA<Transform>());
+        final transform = widgetSpan.child as Transform;
+        final translation = transform.transform.getTranslation();
+        expect(translation.y, greaterThan(0), reason: 'Subscript should translate downwards');
+
+        // Verify inner text content
+        final innerText = (transform.child! as Text).textSpan! as TextSpan;
+        expect(innerText.text, 'sub');
       });
 
       testWidgets('understcore variants apply correct styles', (tester) async {

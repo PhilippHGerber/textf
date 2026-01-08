@@ -14,7 +14,6 @@ import 'package:textf/src/styling/textf_style_resolver.dart';
 class _MockTextfStyleResolver implements TextfStyleResolver {
   _MockTextfStyleResolver(this.context);
   // Ignore the unused 'context' field, as it's not needed for the mock.
-  // ignore: unused_field
   @override
   final BuildContext context;
 
@@ -144,10 +143,16 @@ void main() {
       expect(span.text, 'Bold text');
       // The style should have the base properties plus the merged properties.
       expect(span.style?.fontWeight, FontWeight.bold);
-      expect(span.style?.fontSize, baseStyle.fontSize,
-          reason: 'Font size from base style should be preserved');
-      expect(span.style?.color, baseStyle.color,
-          reason: 'Color from base style should be preserved');
+      expect(
+        span.style?.fontSize,
+        baseStyle.fontSize,
+        reason: 'Font size from base style should be preserved',
+      );
+      expect(
+        span.style?.color,
+        baseStyle.color,
+        reason: 'Color from base style should be preserved',
+      );
       expect(state.textBuffer, isEmpty);
     });
 
@@ -188,10 +193,16 @@ void main() {
       // The order of application in `flushText` is important.
       expect(span.style?.fontWeight, FontWeight.bold, reason: 'Bold style should be applied');
       expect(span.style?.fontStyle, FontStyle.italic, reason: 'Italic style should be applied');
-      expect(span.style?.color, Colors.red,
-          reason: 'Italic style color should override base and bold color');
-      expect(span.style?.fontSize, baseStyle.fontSize,
-          reason: 'Font size should be inherited from base');
+      expect(
+        span.style?.color,
+        Colors.red,
+        reason: 'Italic style color should override base and bold color',
+      );
+      expect(
+        span.style?.fontSize,
+        baseStyle.fontSize,
+        reason: 'Font size should be inherited from base',
+      );
       expect(state.textBuffer, isEmpty);
     });
   });

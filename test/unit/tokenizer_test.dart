@@ -144,11 +144,33 @@ void main() {
         expect(tokens[3].value, '~~');
       });
 
-      test('Single tilde is not recognized as strikethrough', () {
-        final tokens = tokenizer.tokenize('This is ~not strikethrough~ text');
-        expect(tokens.length, 1);
-        expect(tokens.first.type, TokenType.text);
-        expect(tokens.first.value, 'This is ~not strikethrough~ text');
+      test('Single tilde is recognized as subscript marker', () {
+        final tokens = tokenizer.tokenize('This is ~subscript~ text');
+        expect(tokens.length, 5);
+        expect(tokens[1].type, TokenType.subscriptMarker);
+        expect(tokens[1].value, '~');
+        expect(tokens[3].type, TokenType.subscriptMarker);
+        expect(tokens[3].value, '~');
+      });
+    });
+
+    group('Script Formatting', () {
+      test('Superscript text', () {
+        final tokens = tokenizer.tokenize('This is ^superscript^ text');
+        expect(tokens.length, 5);
+        expect(tokens[1].type, TokenType.superscriptMarker);
+        expect(tokens[1].value, '^');
+        expect(tokens[3].type, TokenType.superscriptMarker);
+        expect(tokens[3].value, '^');
+      });
+
+      test('Subscript text', () {
+        final tokens = tokenizer.tokenize('This is ~subscript~ text');
+        expect(tokens.length, 5);
+        expect(tokens[1].type, TokenType.subscriptMarker);
+        expect(tokens[1].value, '~');
+        expect(tokens[3].type, TokenType.subscriptMarker);
+        expect(tokens[3].value, '~');
       });
     });
 

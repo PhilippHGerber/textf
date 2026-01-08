@@ -72,8 +72,11 @@ void main() {
         final hoverableWidget = widgetSpan.child as HoverableLinkSpan;
         // --- Verify properties on the HoverableLinkSpan ---
         expect(hoverableWidget.url, 'https://flutter.dev');
-        expect(hoverableWidget.rawDisplayText, 'Flutter website',
-            reason: 'Raw display text should be stored');
+        expect(
+          hoverableWidget.rawDisplayText,
+          'Flutter website',
+          reason: 'Raw display text should be stored',
+        );
 
         // For simple text without internal formatting, initialPlainText should be set,
         // and initialChildrenSpans should be empty.
@@ -151,19 +154,27 @@ void main() {
         final widgetSpan = spans[1] as WidgetSpan;
 
         // --- Verify the child widget inside the WidgetSpan ---
-        expect(widgetSpan.child, isA<HoverableLinkSpan>(),
-            reason: 'WidgetSpan should contain HoverableLinkSpan');
+        expect(
+          widgetSpan.child,
+          isA<HoverableLinkSpan>(),
+          reason: 'WidgetSpan should contain HoverableLinkSpan',
+        );
         final hoverableWidget = widgetSpan.child as HoverableLinkSpan;
 
         // --- Check URL normalization on the HoverableLinkSpan ---
         // This is the core assertion for this test case.
-        expect(hoverableWidget.url, 'http://google.com',
-            reason: 'URL should be normalized with http:// prefix');
+        expect(
+          hoverableWidget.url,
+          'http://google.com',
+          reason: 'URL should be normalized with http:// prefix',
+        );
 
         // --- Also check other properties (optional but good practice) ---
         expect(hoverableWidget.rawDisplayText, 'Google'); // The original text between []
-        expect(hoverableWidget.initialPlainText,
-            'Google'); // The plain text content (no internal format)
+        expect(
+          hoverableWidget.initialPlainText,
+          'Google',
+        ); // The plain text content (no internal format)
         expect(hoverableWidget.initialChildrenSpans, isEmpty); // No nested formatting
       });
 
@@ -191,8 +202,11 @@ void main() {
         // --- Check first link span (spans[1]) ---
         expect(spans[1], isA<WidgetSpan>(), reason: 'First link should be a WidgetSpan');
         final widgetSpan1 = spans[1] as WidgetSpan;
-        expect(widgetSpan1.child, isA<HoverableLinkSpan>(),
-            reason: 'WidgetSpan 1 should contain HoverableLinkSpan');
+        expect(
+          widgetSpan1.child,
+          isA<HoverableLinkSpan>(),
+          reason: 'WidgetSpan 1 should contain HoverableLinkSpan',
+        );
         final hoverableWidget1 = widgetSpan1.child as HoverableLinkSpan;
 
         // Verify properties of the first HoverableLinkSpan
@@ -204,8 +218,11 @@ void main() {
         // --- Check second link span (spans[3]) ---
         expect(spans[3], isA<WidgetSpan>(), reason: 'Second link should be a WidgetSpan');
         final widgetSpan2 = spans[3] as WidgetSpan;
-        expect(widgetSpan2.child, isA<HoverableLinkSpan>(),
-            reason: 'WidgetSpan 2 should contain HoverableLinkSpan');
+        expect(
+          widgetSpan2.child,
+          isA<HoverableLinkSpan>(),
+          reason: 'WidgetSpan 2 should contain HoverableLinkSpan',
+        );
         final hoverableWidget2 = widgetSpan2.child as HoverableLinkSpan;
 
         // Verify properties of the second HoverableLinkSpan
@@ -237,11 +254,17 @@ void main() {
         // Verify HoverableLinkSpan properties
         expect(hoverableWidget.url, 'https://example.com');
         expect(hoverableWidget.rawDisplayText, '**Bold Link**');
-        expect(hoverableWidget.initialPlainText, isNull,
-            reason: 'Should have children spans, not plain text');
+        expect(
+          hoverableWidget.initialPlainText,
+          isNull,
+          reason: 'Should have children spans, not plain text',
+        );
         expect(hoverableWidget.initialChildrenSpans, isNotEmpty);
-        expect(hoverableWidget.initialChildrenSpans.length, 1,
-            reason: 'Link text itself has one formatted part');
+        expect(
+          hoverableWidget.initialChildrenSpans.length,
+          1,
+          reason: 'Link text itself has one formatted part',
+        );
 
         // --- Verify the *inner* span's style ---
         final innerSpan = hoverableWidget.initialChildrenSpans.first;
@@ -250,8 +273,11 @@ void main() {
 
         // Check formatting applied *within* the link text
         expect(innerTextSpan.text, 'Bold Link');
-        expect(innerTextSpan.style?.fontWeight, FontWeight.bold,
-            reason: 'Inner span should be bold');
+        expect(
+          innerTextSpan.style?.fontWeight,
+          FontWeight.bold,
+          reason: 'Inner span should be bold',
+        );
 
         // Check that the inner span *also* inherits the link's base style
         // (which comes from hoverableWidget.normalStyle)
@@ -486,8 +512,11 @@ void main() {
         expect(hoverableWidget.url, 'https://example.com');
         expect(hoverableWidget.rawDisplayText, '**Bold _and italic_**');
         expect(hoverableWidget.initialPlainText, isNull);
-        expect(hoverableWidget.initialChildrenSpans.length, 2,
-            reason: "Expected 2 inner spans: 'Bold ', 'and italic'");
+        expect(
+          hoverableWidget.initialChildrenSpans.length,
+          2,
+          reason: "Expected 2 inner spans: 'Bold ', 'and italic'",
+        );
 
         // --- Verify the *inner* spans ---
         final innerSpans = hoverableWidget.initialChildrenSpans;
@@ -505,7 +534,9 @@ void main() {
         expect(boldItalicSpan.style?.fontWeight, FontWeight.bold); // Bold
         expect(boldItalicSpan.style?.fontStyle, FontStyle.italic); // Italic
         expect(
-            boldItalicSpan.style?.color, hoverableWidget.normalStyle.color); // Inherited link color
+          boldItalicSpan.style?.color,
+          hoverableWidget.normalStyle.color,
+        ); // Inherited link color
       });
     });
 
@@ -517,8 +548,9 @@ void main() {
         const optionsUrlStyle =
             TextStyle(color: Colors.red, fontSize: 18, decoration: TextDecoration.none);
         const optionsBoldStyle = TextStyle(
-            fontWeight: FontWeight.w900,
-            decoration: TextDecoration.underline); // Add another prop to bold
+          fontWeight: FontWeight.w900,
+          decoration: TextDecoration.underline,
+        ); // Add another prop to bold
 
         // Setup widget tree with TextfOptions
         late BuildContext testContext;
@@ -700,8 +732,11 @@ void main() {
           'This is *not formatted*',
           reason: 'Escaped text should be in initialPlainText',
         );
-        expect(hoverableWidget.initialChildrenSpans, isEmpty,
-            reason: 'Should have no children spans for escaped text');
+        expect(
+          hoverableWidget.initialChildrenSpans,
+          isEmpty,
+          reason: 'Should have no children spans for escaped text',
+        );
       });
 
       testWidgets('Unicode characters in link text', (tester) async {
@@ -805,11 +840,17 @@ void main() {
         expect(spans[2], isA<TextSpan>(), reason: 'Third span is plain text');
 
         // --- Verify First Link (Bold) ---
-        expect(spans[1], isA<WidgetSpan>(),
-            reason: 'Span at index 1 should be a WidgetSpan for the bold link');
+        expect(
+          spans[1],
+          isA<WidgetSpan>(),
+          reason: 'Span at index 1 should be a WidgetSpan for the bold link',
+        );
         final widgetSpan1 = spans[1] as WidgetSpan;
-        expect(widgetSpan1.child, isA<HoverableLinkSpan>(),
-            reason: 'WidgetSpan 1 should contain a HoverableLinkSpan');
+        expect(
+          widgetSpan1.child,
+          isA<HoverableLinkSpan>(),
+          reason: 'WidgetSpan 1 should contain a HoverableLinkSpan',
+        );
         final hoverableWidget1 = widgetSpan1.child as HoverableLinkSpan;
 
         // Verify properties of the first HoverableLinkSpan
@@ -842,15 +883,24 @@ void main() {
           reason: "Inner span should inherit the link's normal text color",
         );
         // Verify it does NOT have children itself
-        expect(innerSpan1.children, isNull,
-            reason: "Directly returned span shouldn't have nested children here");
+        expect(
+          innerSpan1.children,
+          isNull,
+          reason: "Directly returned span shouldn't have nested children here",
+        );
 
         // --- Verify Second Link (Italic) ---
-        expect(spans[3], isA<WidgetSpan>(),
-            reason: 'Span at index 3 should be a WidgetSpan for the italic link');
+        expect(
+          spans[3],
+          isA<WidgetSpan>(),
+          reason: 'Span at index 3 should be a WidgetSpan for the italic link',
+        );
         final widgetSpan2 = spans[3] as WidgetSpan;
-        expect(widgetSpan2.child, isA<HoverableLinkSpan>(),
-            reason: 'WidgetSpan 2 should contain a HoverableLinkSpan');
+        expect(
+          widgetSpan2.child,
+          isA<HoverableLinkSpan>(),
+          reason: 'WidgetSpan 2 should contain a HoverableLinkSpan',
+        );
         final hoverableWidget2 = widgetSpan2.child as HoverableLinkSpan;
 
         // Verify properties of the second HoverableLinkSpan
@@ -871,16 +921,22 @@ void main() {
 
         // Check style of the actual inner span
         expect((innerSpan2 as TextSpan).text, 'Italic');
-        expect(innerSpan2.style?.fontStyle, FontStyle.italic,
-            reason: 'Inner span should be italic');
+        expect(
+          innerSpan2.style?.fontStyle,
+          FontStyle.italic,
+          reason: 'Inner span should be italic',
+        );
         expect(
           innerSpan2.style?.color,
           hoverableWidget2.normalStyle.color,
           reason: "Inner span should inherit the link's normal text color",
         );
         // Verify it does NOT have children itself
-        expect(innerSpan2.children, isNull,
-            reason: "Directly returned span shouldn't have nested children here");
+        expect(
+          innerSpan2.children,
+          isNull,
+          reason: "Directly returned span shouldn't have nested children here",
+        );
       });
 
       testWidgets('links within formatted text', (tester) async {
@@ -926,10 +982,16 @@ void main() {
         expect(hoverableWidget.url, 'https://example.com');
         expect(hoverableWidget.rawDisplayText, 'a link');
         // Check plain text handling because inner link text has no formatting
-        expect(hoverableWidget.initialPlainText, 'a link',
-            reason: 'Link text is plain, should be in initialPlainText');
-        expect(hoverableWidget.initialChildrenSpans, isEmpty,
-            reason: 'Plain link text should have no children spans');
+        expect(
+          hoverableWidget.initialPlainText,
+          'a link',
+          reason: 'Link text is plain, should be in initialPlainText',
+        );
+        expect(
+          hoverableWidget.initialChildrenSpans,
+          isEmpty,
+          reason: 'Plain link text should have no children spans',
+        );
 
         expect(
           hoverableWidget.normalStyle.fontWeight,

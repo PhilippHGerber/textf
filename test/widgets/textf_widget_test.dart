@@ -1,4 +1,3 @@
-// ignore_for_file: cascade_invocations // cascade_invocations for readability and chaining methods., avoid-non-null-assertion, no-magic-number
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -32,8 +31,11 @@ void main() {
 
       // Expectation 2: The root span's children list contains the spans from the parser
       expect(rootSpan.children, isNotNull, reason: 'Root span should have children from parser');
-      expect(rootSpan.children!.length, 1,
-          reason: 'Parser fast-path should return one primary span');
+      expect(
+        rootSpan.children!.length,
+        1,
+        reason: 'Parser fast-path should return one primary span',
+      );
 
       // Get the first span returned by the parser
       final parserSpan = rootSpan.children!.first;
@@ -43,14 +45,23 @@ void main() {
       // Based on your feedback, we check if this parserSpan *also* nests the text
       final actualTextSpan = parserSpan as TextSpan;
 
-      expect(actualTextSpan.children!.length, 1,
-          reason: 'Nested structure should contain one text span');
+      expect(
+        actualTextSpan.children!.length,
+        1,
+        reason: 'Nested structure should contain one text span',
+      );
       final innermostSpan = actualTextSpan.children!.first;
       expect(innermostSpan, isA<TextSpan>(), reason: 'Innermost element should be a TextSpan');
-      expect((innermostSpan as TextSpan).text, text,
-          reason: 'Innermost span should contain the text');
-      expect(innermostSpan.children, isNull,
-          reason: 'Innermost span should not have further children');
+      expect(
+        (innermostSpan as TextSpan).text,
+        text,
+        reason: 'Innermost span should contain the text',
+      );
+      expect(
+        innermostSpan.children,
+        isNull,
+        reason: 'Innermost span should not have further children',
+      );
     });
 
     testWidgets('Renders basic bold formatting', (tester) async {
@@ -65,8 +76,11 @@ void main() {
 
       expect(rootSpan.children!.length, 1, reason: 'Test failure indicates only one direct child');
       final containerSpan = rootSpan.children!.first as TextSpan;
-      expect(containerSpan.children, isNotNull,
-          reason: 'The container span should hold the actual segments');
+      expect(
+        containerSpan.children,
+        isNotNull,
+        reason: 'The container span should hold the actual segments',
+      );
       final actualSpans = containerSpan.children!;
 
       // Now assert the length and content of the *actual* spans
@@ -245,8 +259,11 @@ void main() {
       expect(containerSpan.children, isNotNull);
       final actualSpans = containerSpan.children!;
 
-      expect(actualSpans.length, 3,
-          reason: "Expected 3 segments: 'Explicit ', style (bold), ' wins'");
+      expect(
+        actualSpans.length,
+        3,
+        reason: "Expected 3 segments: 'Explicit ', style (bold), ' wins'",
+      );
 
       // --- Check Inner Spans ---
       final plainSpan1 = actualSpans.first as TextSpan;
