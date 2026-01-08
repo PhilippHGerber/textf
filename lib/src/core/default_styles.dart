@@ -40,7 +40,7 @@ class DefaultStyles {
   static const double scriptFontSizeFactor = 0.6;
 
   /// Default baseline offset factor for superscript (relative to font size).
-  static const double superscriptBaselineFactor = -0.4; // Move up
+  static const double superscriptBaselineFactor = 0.4; // Move up
 
   /// Default baseline offset factor for subscript (relative to font size).
   static const double subscriptBaselineFactor = 0.4; // Move down
