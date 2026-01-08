@@ -177,13 +177,18 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
     // Render the resulting interactive spans within a Text.rich widget.
     // The outer TextSpan has no text or style itself, just acts as a container.
     return MouseRegion(
-      cursor: widget.mouseCursor, // Der übergebene Cursor (z.B. help)
-      onEnter: _onEnter, // Eigene Methode für Hover-Effekte
-      onExit: _onExit, // Eigene Methode für Hover-Effekte
-      opaque: false, // Wichtig für Textselektion
-      child: Text.rich(
-        TextSpan(
-          children: interactiveSpans,
+      cursor: widget.mouseCursor, // The passed cursor (e.g., click)
+      onEnter: _onEnter, // Methods for hover effects
+      onExit: _onExit, // Methods for hover effects
+      opaque: false, // Important for text selection
+      child: Semantics(
+        link: true,
+        label: widget.rawDisplayText,
+        onTap: widget.tapRecognizer?.onTap,
+        child: Text.rich(
+          TextSpan(
+            children: interactiveSpans,
+          ),
         ),
       ),
     );
