@@ -17,6 +17,8 @@ All notable changes to the `textf` package will be documented in this file.
 
 * **Internal Refactoring:** Major refactoring of the `TextfTokenizer` for improved maintainability and performance.
 * **RTL Support:** Verified and enhanced Right-to-Left (RTL) support throughout the widget and its components.
+* **Performance:** Refactored the internal parsing loop to improve performance and reduce memory allocation, especially with complex formatted text.
+* **Optimization:** Minor optimizations to internal link rendering logic and widget instantiation for better efficiency.
 
 ### Fixed
 
