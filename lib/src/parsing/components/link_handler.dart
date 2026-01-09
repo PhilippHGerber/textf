@@ -156,18 +156,55 @@ class LinkHandler {
     }
   }
 
-  /// Normalizes a URL string (e.g., adds 'http://' if scheme is missing).
+  /// Normalizes a URL string to ensure it is launchable.
+  ///
+  /// This method ensures that URLs without a scheme (like "google.com")
+  /// are treated as web links by prepending "http://", while preserving
+  /// existing schemes (like "https://", "mailto:", "tel:", "file:").
   @visibleForTesting
   static String normalizeUrl(String url) {
     final String normalizedUrl = url.trim();
-    if (!normalizedUrl.contains(':') && //
-        !normalizedUrl.startsWith('/') &&
-        !normalizedUrl.startsWith('#') &&
-        normalizedUrl.contains('.')) {
-      return 'http://$normalizedUrl';
+
+    if (normalizedUrl.isEmpty) return normalizedUrl;
+
+    // Check if the URL already has a scheme.
+    if (_hasScheme(normalizedUrl)) {
+      return normalizedUrl;
     }
 
-    return normalizedUrl;
+    // Special handling for anchors (e.g. "#section") and relative paths
+    if (normalizedUrl.startsWith('#') || normalizedUrl.startsWith('/')) {
+      return normalizedUrl;
+    }
+
+    // Fallback: Assume it's a web domain and prepend http://
+    return 'http://$normalizedUrl';
+  }
+
+  /// Helper to determine if a string starts with a URI scheme.
+  ///
+  /// Returns true if a colon matches the pattern `scheme:...`
+  /// (before any '/', '?', or '#').
+  static bool _hasScheme(String url) {
+    final int colonIndex = url.indexOf(':');
+
+    // No colon means no scheme.
+    if (colonIndex == -1) return false;
+
+    // Find indices of delimiters that would end the authority/path part.
+    final int slashIndex = url.indexOf('/');
+    final int questionIndex = url.indexOf('?');
+    final int hashIndex = url.indexOf('#');
+
+    // If a colon exists, it must appear BEFORE any slash, question mark, or hash
+    // to be considered a scheme delimiter.
+    // e.g. "google.com/foo:bar" -> colon is after slash -> NO scheme.
+    // e.g. "mailto:user" -> colon is before everything -> YES scheme.
+    if (slashIndex != -1 && colonIndex > slashIndex) return false;
+    if (questionIndex != -1 && colonIndex > questionIndex) return false;
+    if (hashIndex != -1 && colonIndex > hashIndex) return false;
+
+    return true;
   }
 
   /// Checks if tokens starting at `index` form a complete `[text](url)` structure.
