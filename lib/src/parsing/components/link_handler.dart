@@ -78,9 +78,9 @@ class LinkHandler {
           state.styleResolver.resolveLinkHoverStyle(inheritedStyle);
       final MouseCursor effectiveCursor = state.styleResolver.resolveLinkMouseCursor();
       final void Function(String url, String displayText)? effectiveOnTap =
-          state.styleResolver.resolveOnUrlTap();
+          state.styleResolver.resolveOnLinkTap();
       final void Function(String url, String displayText, {required bool isHovering})?
-          effectiveOnHover = state.styleResolver.resolveOnUrlHover();
+          effectiveOnHover = state.styleResolver.resolveOnLinkHover();
 
       // 3. Prepare TapGestureRecognizer if needed
       TapGestureRecognizer? recognizer;

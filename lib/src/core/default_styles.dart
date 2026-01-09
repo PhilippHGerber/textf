@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 /// TextfOptions nor the application Theme provide specific guidance for a
 /// particular formatting type.
 class DefaultStyles {
-  /// Default mouse cursor for URLs.
+  /// Default mouse cursor for links.
   /// Used as a fallback by TextfStyleResolver when no cursor is specified
   /// via TextfOptions in the widget tree.
-  static const MouseCursor urlMouseCursor = SystemMouseCursors.click;
+  static const MouseCursor linkMouseCursor = SystemMouseCursors.click;
 
   /// Default alpha values for highlight background color.
   static const highlightAlphaDark = 0.4;

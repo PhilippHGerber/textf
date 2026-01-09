@@ -47,7 +47,7 @@ class HoverableLinkSpan extends StatefulWidget {
   final TextStyle hoverStyle;
 
   /// An optional pre-configured `TapGestureRecognizer` for handling taps.
-  /// Created by LinkHandler if an `onUrlTap` callback is available.
+  /// Created by LinkHandler if an `onLinkTap` callback is available.
   final TapGestureRecognizer? tapRecognizer;
 
   /// The mouse cursor to display when hovering over the link. Resolved by TextfStyleResolver.

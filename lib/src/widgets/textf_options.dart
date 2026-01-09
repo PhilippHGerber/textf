@@ -58,7 +58,7 @@ TextStyle _mergeStyles(TextStyle baseStyle, TextStyle optionsStyle) {
 ///
 /// ## Style Inheritance Logic
 ///
-/// `TextStyle` properties (like `boldStyle`, `urlStyle`, etc.) are resolved
+/// `TextStyle` properties (like `boldStyle`, `linkStyle`, etc.) are resolved
 /// using a **recursive merge strategy**. The system collects all `TextfOptions`
 /// widgets up the tree and merges their styles starting from the top-most
 /// (root) ancestor down to the nearest one.
@@ -75,8 +75,8 @@ TextStyle _mergeStyles(TextStyle baseStyle, TextStyle optionsStyle) {
 ///
 /// ## Callback and Value Inheritance Logic
 ///
-/// Non-style properties that cannot be merged (like `onUrlTap`, `onUrlHover`,
-/// and `urlMouseCursor`) use a **"nearest ancestor wins"** strategy. The first
+/// Non-style properties that cannot be merged (like `onLinkTap`, `onLinkHover`,
+/// and `linkMouseCursor`) use a **"nearest ancestor wins"** strategy. The first
 /// non-null value found when searching up the widget tree from the `Textf`
 /// widget is the one that will be used.
 class TextfOptions extends InheritedWidget {
@@ -84,11 +84,11 @@ class TextfOptions extends InheritedWidget {
   const TextfOptions({
     required super.child,
     super.key,
-    this.onUrlTap,
-    this.onUrlHover,
-    this.urlMouseCursor,
-    this.urlStyle,
-    this.urlHoverStyle,
+    this.onLinkTap,
+    this.onLinkHover,
+    this.linkMouseCursor,
+    this.linkStyle,
+    this.linkHoverStyle,
     this.boldStyle,
     this.italicStyle,
     this.boldItalicStyle,
@@ -104,26 +104,26 @@ class TextfOptions extends InheritedWidget {
     this.scriptFontSizeFactor,
   });
 
-  /// Callback function executed when tapping or clicking on a URL.
+  /// Callback function executed when tapping or clicking on a link.
   /// Provides the resolved `url` and the raw `displayText` including any
   /// original formatting markers (e.g., `**bold link**`).
-  final void Function(String url, String displayText)? onUrlTap;
+  final void Function(String url, String displayText)? onLinkTap;
 
-  /// Callback function executed when the mouse pointer enters or exits a URL.
+  /// Callback function executed when the mouse pointer enters or exits a link.
   /// Provides the resolved `url`, the raw `displayText`, and the hover state
   /// (`isHovering` is `true` on enter, `false` on exit).
-  final void Function(String url, String displayText, {required bool isHovering})? onUrlHover;
+  final void Function(String url, String displayText, {required bool isHovering})? onLinkHover;
 
   /// The [TextStyle] for link text (`[text](url)`) in its normal (non-hovered) state.
   /// Merged onto the base style if provided.
-  final TextStyle? urlStyle;
+  final TextStyle? linkStyle;
 
   /// The [TextStyle] for link text when hovered.
   /// This style is merged on top of the link's final normal style.
-  final TextStyle? urlHoverStyle;
+  final TextStyle? linkHoverStyle;
 
-  /// The [MouseCursor] to display when hovering over a URL link.
-  final MouseCursor? urlMouseCursor;
+  /// The [MouseCursor] to display when hovering over a link.
+  final MouseCursor? linkMouseCursor;
 
   /// The [TextStyle] for bold text (`**bold**` or `__bold__`).
   /// Merged onto the base style if provided.
@@ -303,16 +303,16 @@ class TextfOptions extends InheritedWidget {
     return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
-  /// Resolves the final merged `urlStyle` from the hierarchy and merges it onto `baseStyle`.
-  TextStyle? getEffectiveUrlStyle(BuildContext context, TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.urlStyle);
+  /// Resolves the final merged `linkStyle` from the hierarchy and merges it onto `baseStyle`.
+  TextStyle? getEffectiveLinkStyle(BuildContext context, TextStyle baseStyle) {
+    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.linkStyle);
     return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
   }
 
-  /// Resolves the final merged `urlHoverStyle` and merges it onto the final `normalLinkStyle`.
-  TextStyle? getEffectiveUrlHoverStyle(BuildContext context, TextStyle normalLinkStyle) {
+  /// Resolves the final merged `linkHoverStyle` and merges it onto the final `normalLinkStyle`.
+  TextStyle? getEffectiveLinkHoverStyle(BuildContext context, TextStyle normalLinkStyle) {
     final TextStyle? hoverOptionsStyle =
-        _getMergedStyleFromHierarchy(context, (o) => o.urlHoverStyle);
+        _getMergedStyleFromHierarchy(context, (o) => o.linkHoverStyle);
     if (hoverOptionsStyle == null) return null;
     return _mergeStyles(normalLinkStyle, hoverOptionsStyle);
   }
@@ -357,21 +357,21 @@ class TextfOptions extends InheritedWidget {
     return _findFirstAncestorValue(context, (o) => o.scriptFontSizeFactor);
   }
 
-  /// Resolves the nearest `onUrlTap` callback from the hierarchy.
-  void Function(String url, String displayText)? getEffectiveOnUrlTap(BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.onUrlTap);
+  /// Resolves the nearest `onLinkTap` callback from the hierarchy.
+  void Function(String url, String displayText)? getEffectiveOnLinkTap(BuildContext context) {
+    return _findFirstAncestorValue(context, (o) => o.onLinkTap);
   }
 
-  /// Resolves the nearest `onUrlHover` callback from the hierarchy.
-  void Function(String url, String displayText, {required bool isHovering})? getEffectiveOnUrlHover(
+  /// Resolves the nearest `onLinkHover` callback from the hierarchy.
+  void Function(String url, String displayText, {required bool isHovering})? getEffectiveOnLinkHover(
     BuildContext context,
   ) {
-    return _findFirstAncestorValue(context, (o) => o.onUrlHover);
+    return _findFirstAncestorValue(context, (o) => o.onLinkHover);
   }
 
-  /// Resolves the nearest `urlMouseCursor` from the hierarchy.
-  MouseCursor? getEffectiveUrlMouseCursor(BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.urlMouseCursor);
+  /// Resolves the nearest `linkMouseCursor` from the hierarchy.
+  MouseCursor? getEffectiveLinkMouseCursor(BuildContext context) {
+    return _findFirstAncestorValue(context, (o) => o.linkMouseCursor);
   }
 
   /// Resolves the nearest `strikethroughThickness` from the hierarchy.
@@ -382,11 +382,11 @@ class TextfOptions extends InheritedWidget {
   @override
   bool updateShouldNotify(TextfOptions oldWidget) {
     // Comparing only the properties of this specific instance.
-    return onUrlTap != oldWidget.onUrlTap ||
-        onUrlHover != oldWidget.onUrlHover ||
-        urlStyle != oldWidget.urlStyle ||
-        urlHoverStyle != oldWidget.urlHoverStyle ||
-        urlMouseCursor != oldWidget.urlMouseCursor ||
+    return onLinkTap != oldWidget.onLinkTap ||
+        onLinkHover != oldWidget.onLinkHover ||
+        linkStyle != oldWidget.linkStyle ||
+        linkHoverStyle != oldWidget.linkHoverStyle ||
+        linkMouseCursor != oldWidget.linkMouseCursor ||
         boldStyle != oldWidget.boldStyle ||
         italicStyle != oldWidget.italicStyle ||
         boldItalicStyle != oldWidget.boldItalicStyle ||

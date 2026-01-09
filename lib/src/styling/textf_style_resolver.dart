@@ -106,7 +106,7 @@ class TextfStyleResolver {
     }
   }
 
-  /// Resolves the final NORMAL TextStyle for a URL link.
+  /// Resolves the final NORMAL TextStyle for a link.
   ///
   /// Checks TextfOptions first, then falls back to a theme-based style.
   /// Merges the result with the provided `baseStyle`.
@@ -116,12 +116,12 @@ class TextfStyleResolver {
   ///
   /// Returns the final normal `TextStyle` for the link.
   TextStyle resolveLinkStyle(TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _nearestOptions?.getEffectiveUrlStyle(context, baseStyle);
+    final TextStyle? optionsStyle = _nearestOptions?.getEffectiveLinkStyle(context, baseStyle);
 
     return optionsStyle ?? _getThemeBasedLinkStyle(baseStyle);
   }
 
-  /// Resolves the final HOVER TextStyle for a URL link.
+  /// Resolves the final HOVER TextStyle for a link.
   ///
   /// Checks TextfOptions first, then falls back to a theme-based style
   /// (which, by default, might be the same as the normal style unless overridden).
@@ -135,30 +135,30 @@ class TextfStyleResolver {
     final TextStyle normalLinkStyle = resolveLinkStyle(baseStyle);
     // 2. Try to get a hover-specific style from options, merging it onto the normalLinkStyle
     final TextStyle? optionsStyle =
-        _nearestOptions?.getEffectiveUrlHoverStyle(context, normalLinkStyle);
+        _nearestOptions?.getEffectiveLinkHoverStyle(context, normalLinkStyle);
 
     return optionsStyle ?? normalLinkStyle;
   }
 
-  /// Resolves the effective MouseCursor for a URL link.
+  /// Resolves the effective MouseCursor for a link.
   ///
-  /// Checks TextfOptions first, then falls back to `DefaultStyles.urlMouseCursor`.
+  /// Checks TextfOptions first, then falls back to `DefaultStyles.linkMouseCursor`.
   MouseCursor resolveLinkMouseCursor() {
-    return _nearestOptions?.getEffectiveUrlMouseCursor(context) ?? DefaultStyles.urlMouseCursor;
+    return _nearestOptions?.getEffectiveLinkMouseCursor(context) ?? DefaultStyles.linkMouseCursor;
   }
 
-  /// Resolves the effective onUrlTap callback for a URL link.
+  /// Resolves the effective onLinkTap callback for a link.
   ///
   /// Checks TextfOptions hierarchy for the callback. Returns null if none found.
-  void Function(String url, String displayText)? resolveOnUrlTap() {
-    return _nearestOptions?.getEffectiveOnUrlTap(context);
+  void Function(String url, String displayText)? resolveOnLinkTap() {
+    return _nearestOptions?.getEffectiveOnLinkTap(context);
   }
 
-  /// Resolves the effective onUrlHover callback for a URL link.
+  /// Resolves the effective onLinkHover callback for a link.
   ///
   /// Checks TextfOptions hierarchy for the callback. Returns null if none found.
-  void Function(String url, String displayText, {required bool isHovering})? resolveOnUrlHover() {
-    return _nearestOptions?.getEffectiveOnUrlHover(context);
+  void Function(String url, String displayText, {required bool isHovering})? resolveOnLinkHover() {
+    return _nearestOptions?.getEffectiveOnLinkHover(context);
   }
 
   /// Creates an [InlineSpan] representing a single script fragment.
