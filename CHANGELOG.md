@@ -18,6 +18,10 @@ All notable changes to the `textf` package will be documented in this file.
 * **Internal Refactoring:** Major refactoring of the `TextfTokenizer` for improved maintainability and performance.
 * **RTL Support:** Verified and enhanced Right-to-Left (RTL) support throughout the widget and its components.
 
+### Fixed
+
+* **Link Handling:** Fixed an issue in the URL normalization logic that would incorrectly prepend `http://` to non-HTTP schemes like `mailto:` or `tel:`.
+* **Styling:** Corrected an issue where nested `TextfOptions` could improperly combine `TextDecoration` styles, potentially leading to visual duplication. The style merging logic is now more robust.
 
 ## 0.6.3
 
