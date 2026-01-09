@@ -1,53 +1,61 @@
 import 'package:flutter/material.dart';
 
-/// Merges two [TextStyle] objects with special handling for [TextDecoration].
+/// Merges two [TextStyle] objects with intelligent [TextDecoration] handling.
 ///
-/// Unlike the standard [TextStyle.merge], this function intelligently combines
-/// decorations from both styles instead of letting the [optionsStyle]'s decoration
-/// completely overwrite the [baseStyle]'s.
+/// Unlike the standard [TextStyle.merge], this function prevents:
+/// 1. Accidental removal of decorations: If the base has `underline | lineThrough`
+///    and options adds `underline`, the result remains `underline | lineThrough`
+///    (instead of being downgraded to just `underline`).
+/// 2. Duplicate decorations: It checks if the decoration is already present
+///    before combining.
 ///
-/// The merging logic is as follows:
-/// 1.  All properties from [optionsStyle] (e.g., `color`, `fontWeight`,
-///     `fontSize`) take precedence over [baseStyle], except for decoration.
-/// 2.  Decoration-related properties (`decorationColor`, `decorationThickness`,
-///     `decorationStyle`) from [optionsStyle] are given priority.
-/// 3.  The `decoration` property itself is combined:
-///     - If both styles have active, distinct decorations, they are combined
-///       using [TextDecoration.combine].
-///     - If [optionsStyle] specifies `TextDecoration.none`, any decoration from
-///       [baseStyle] is removed.
-///     - In all other cases, the standard merge logic applies (i.e., the
-///       [optionsStyle]'s decoration is used).
-///
-/// This ensures that nested [TextfOptions] can layer decorations (e.g., add a
-/// strikethrough to an existing underline) in an intuitive way.
-///
-/// - [baseStyle]: The base style, typically from a parent `TextfOptions` or
-///   a `DefaultTextStyle`.
-/// - [optionsStyle]: The style from the current `TextfOptions` widget, which
-///   should take precedence.
-///
-/// Returns a new [TextStyle] with the properties correctly merged and
-/// decorations combined.
+/// - [baseStyle]: The style inherited from the parent/theme.
+/// - [optionsStyle]: The style defined in the current [TextfOptions].
 TextStyle _mergeStyles(TextStyle baseStyle, TextStyle optionsStyle) {
-  final TextDecoration? baseDecoration = baseStyle.decoration;
-  final TextDecoration? optionDecoration = optionsStyle.decoration;
+  // Use standard merge for properties like color, fontSize, fontWeight, etc.
+  // This lets Flutter handle the heavy lifting for most attributes.
+  final TextStyle merged = baseStyle.merge(optionsStyle);
 
-  TextDecoration? finalDecoration;
+  final TextDecoration? baseDeco = baseStyle.decoration;
+  final TextDecoration? optionDeco = optionsStyle.decoration;
 
-  final bool shouldCombine = optionDecoration != null &&
-      optionDecoration != TextDecoration.none &&
-      baseDecoration != null &&
-      baseDecoration != TextDecoration.none &&
-      !baseDecoration.contains(optionDecoration);
+  // Case 1: Options explicitly set decoration to 'none'.
+  // We want to remove all decorations. 'merged' already has this from the standard merge.
+  if (optionDeco == TextDecoration.none) {
+    return merged;
+  }
 
-  finalDecoration = shouldCombine
-      ? TextDecoration.combine([baseDecoration, optionDecoration])
-      : optionDecoration ?? baseDecoration;
+  // Case 2: Options don't specify any decoration (null).
+  // We want to keep the base decoration. 'merged' already inherited baseDeco.
+  if (optionDeco == null) {
+    return merged;
+  }
 
-  return baseStyle.merge(optionsStyle).copyWith(
-        decoration: finalDecoration,
-      );
+  // Case 3: Both styles have active decorations. We need custom logic.
+  if (baseDeco != null && baseDeco != TextDecoration.none) {
+    // Check if the base decoration already "contains" the option's decoration.
+    // TextDecoration treats combinations as a bitmask.
+    // If true:
+    //    The option is adding a decoration that already exists (e.g., adding
+    //    'underline' to text that is already 'underline' or 'underline + lineThrough').
+    //
+    //    Standard merge would overwrite 'baseDeco' with 'optionDeco', potentially
+    //    losing other flags (like 'lineThrough').
+    //    We must restore 'baseDeco' to preserve those other flags.
+    // If false:
+    //    The option adds a completely new decoration (e.g., adding 'lineThrough'
+    //    to text that is only 'underlined').
+    //    Combine them so both appear.
+    return baseDeco.contains(optionDeco)
+        ? merged.copyWith(decoration: baseDeco)
+        : merged.copyWith(
+            decoration: TextDecoration.combine([baseDeco, optionDeco]),
+          );
+  }
+
+  // Case 4: Base has no decoration, but Option does.
+  // 'merged' already has 'optionDeco'.
+  return merged;
 }
 
 /// Configuration options for Textf widgets within a specific scope.
@@ -363,7 +371,8 @@ class TextfOptions extends InheritedWidget {
   }
 
   /// Resolves the nearest `onLinkHover` callback from the hierarchy.
-  void Function(String url, String displayText, {required bool isHovering})? getEffectiveOnLinkHover(
+  void Function(String url, String displayText, {required bool isHovering})?
+      getEffectiveOnLinkHover(
     BuildContext context,
   ) {
     return _findFirstAncestorValue(context, (o) => o.onLinkHover);
