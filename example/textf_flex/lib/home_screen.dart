@@ -223,11 +223,11 @@ class HomeScreen extends StatelessWidget {
               'Freely override link styles, hover effects, and tap behavior using `TextfOptions`.',
             ),
             code: "TextfOptions(\n"
-                "  _urlStyle_: TextStyle(\n"
+                "  _linkStyle_: TextStyle(\n"
                 "    _color: colorScheme.secondary_,\n"
                 "    fontWeight: FontWeight.bold,\n"
                 "  ),\n"
-                "  _urlHoverStyle_: TextStyle(\n"
+                "  _linkHoverStyle_: TextStyle(\n"
                 "    _decoration: TextDecoration.underline_,\n"
                 "    decorationColor: colorScheme.secondary,\n"
                 "  ),\n"

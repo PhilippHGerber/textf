@@ -75,12 +75,12 @@ class _ResolvedOptions {
     final resolvedCode = nearestOptions?.getEffectiveCodeStyle(context, baseStyle) ??
         getThemeCodeStyle(baseStyle); // Theme fallback for code
 
-    final resolvedUrl = nearestOptions?.getEffectiveLinkStyle(context, baseStyle) ??
+    final resolvedLink = nearestOptions?.getEffectiveLinkStyle(context, baseStyle) ??
         getThemeLinkStyle(baseStyle); // Theme fallback for links
 
     // Hover style depends on the resolved *normal* style
-    final resolvedUrlHover = nearestOptions?.getEffectiveLinkHoverStyle(context, baseStyle) ??
-        resolvedUrl; // Default hover is same as normal if no option
+    final resolvedLinkHover = nearestOptions?.getEffectiveLinkHoverStyle(context, baseStyle) ??
+        resolvedLink; // Default hover is same as normal if no option
 
     final resolvedCursor = nearestOptions?.getEffectiveLinkMouseCursor(context) ??
         DefaultStyles.linkMouseCursor; // Default fallback
@@ -88,8 +88,8 @@ class _ResolvedOptions {
     final resolvedTap = nearestOptions?.getEffectiveOnLinkTap(context); // Null if not found
     final resolvedHoverCb = nearestOptions?.getEffectiveOnLinkHover(context); // Null if not found
     return _ResolvedOptions(
-      linkStyle: resolvedUrl,
-      linkHoverStyle: resolvedUrlHover,
+      linkStyle: resolvedLink,
+      linkHoverStyle: resolvedLinkHover,
       linkMouseCursor: resolvedCursor,
       boldStyle: resolvedBold,
       italicStyle: resolvedItalic,
@@ -128,11 +128,11 @@ void main() {
   // which isn't the case in these tests due to MaterialApp.
   const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
   const rootBoldStyle = TextStyle(fontWeight: FontWeight.w900, color: Colors.red);
-  const rootUrlStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
+  const rootLinkStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
   const rootCursor = SystemMouseCursors.text;
   const rootOnTap = _dummyTap1;
 
-  const childUrlStyle = TextStyle(color: Colors.green, fontSize: 18);
+  const childLinkStyle = TextStyle(color: Colors.green, fontSize: 18);
   const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
 
   // ----------------------------------------------------
@@ -257,7 +257,7 @@ void main() {
           theme: theme,
           home: TextfOptions(
             boldStyle: rootBoldStyle,
-            linkStyle: rootUrlStyle, // blue, no decoration
+            linkStyle: rootLinkStyle, // blue, no decoration
             linkMouseCursor: rootCursor,
             onLinkTap: rootOnTap,
             // italicStyle left null
@@ -276,8 +276,8 @@ void main() {
       expect(resolved!.boldStyle?.fontWeight, rootBoldStyle.fontWeight);
       expect(resolved!.boldStyle?.color, rootBoldStyle.color);
       expect(resolved!.boldStyle?.fontSize, baseStyle.fontSize); // Merged from base
-      expect(resolved!.linkStyle?.color, rootUrlStyle.color); // Should be root blue
-      expect(resolved!.linkStyle?.decoration, rootUrlStyle.decoration); // none from root
+      expect(resolved!.linkStyle?.color, rootLinkStyle.color); // Should be root blue
+      expect(resolved!.linkStyle?.decoration, rootLinkStyle.decoration); // none from root
       expect(resolved!.linkStyle?.fontSize, baseStyle.fontSize); // Merged from base
       expect(resolved!.linkMouseCursor, rootCursor);
       expect(resolved!.onLinkTap, same(rootOnTap));
@@ -295,12 +295,13 @@ void main() {
         (tester) async {
       // SETUP
       const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
-      const rootUrlStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
+      const rootLinkStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
       // ignore: no-empty-block
       void rootOnTap(String u, String d) {}
       const rootItalicStyle = TextStyle(fontStyle: FontStyle.italic, color: Colors.purple);
 
-      const childUrlStyle = TextStyle(color: Colors.green, fontSize: 18); // No decoration specified
+      const childLinkStyle =
+          TextStyle(color: Colors.green, fontSize: 18); // No decoration specified
       // ignore: no-empty-block
       void childOnTap(String u, String d) {}
 
@@ -308,12 +309,12 @@ void main() {
         MaterialApp(
           home: TextfOptions(
             // Root
-            linkStyle: rootUrlStyle,
+            linkStyle: rootLinkStyle,
             onLinkTap: rootOnTap,
             italicStyle: rootItalicStyle,
             child: TextfOptions(
               // Child override
-              linkStyle: childUrlStyle,
+              linkStyle: childLinkStyle,
               onLinkTap: childOnTap,
               // Italic style NOT specified here, so it should be inherited.
               child: const SizedBox(), // Dummy child for context
@@ -326,24 +327,24 @@ void main() {
       final BuildContext context = tester.element(find.byType(SizedBox));
       final resolver = TextfStyleResolver(context);
 
-      // --- ASSERT MERGED URL STYLE ---
-      final resolvedUrlStyle = resolver.resolveLinkStyle(baseStyle);
+      // --- ASSERT MERGED Link STYLE ---
+      final resolvedLinkStyle = resolver.resolveLinkStyle(baseStyle);
 
       // Properties from child should win
       expect(
-        resolvedUrlStyle.color,
-        childUrlStyle.color,
+        resolvedLinkStyle.color,
+        childLinkStyle.color,
         reason: 'Child color (green) should override parent color (blue).',
       );
       expect(
-        resolvedUrlStyle.fontSize,
-        childUrlStyle.fontSize,
+        resolvedLinkStyle.fontSize,
+        childLinkStyle.fontSize,
         reason: 'Child font size (18) should override base style size (16).',
       );
       // Property from parent should be inherited
       expect(
-        resolvedUrlStyle.decoration,
-        rootUrlStyle.decoration, // TextDecoration.none
+        resolvedLinkStyle.decoration,
+        rootLinkStyle.decoration, // TextDecoration.none
         reason: 'Parent decoration should be inherited as child did not specify one.',
       );
 
@@ -374,9 +375,9 @@ void main() {
       const rootBoldStyle = TextStyle(fontWeight: FontWeight.w900, color: Colors.red);
       // ignore: no-empty-block
       void rootOnTap(String u, String d) {}
-      const rootUrlStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
+      const rootLinkStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
 
-      const childUrlStyle = TextStyle(color: Colors.green, fontSize: 18);
+      const childLinkStyle = TextStyle(color: Colors.green, fontSize: 18);
       const childItalicStyle =
           TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
       // ignore: no-empty-block
@@ -388,10 +389,10 @@ void main() {
             // Root (provides bold, tap, rootUrl)
             boldStyle: rootBoldStyle,
             onLinkTap: rootOnTap,
-            linkStyle: rootUrlStyle,
+            linkStyle: rootLinkStyle,
             child: TextfOptions(
               // Child (provides childUrl, italic, hover, but NOT bold or tap)
-              linkStyle: childUrlStyle,
+              linkStyle: childLinkStyle,
               italicStyle: childItalicStyle,
               onLinkHover: childOnHover,
               child: const SizedBox(),
@@ -411,15 +412,15 @@ void main() {
       expect(resolver.resolveOnLinkHover(), childOnHover);
 
       // --- 2. Assert properties MERGED between Parent and Child ---
-      final resolvedUrl = resolver.resolveLinkStyle(baseStyle);
+      final resolvedLink = resolver.resolveLinkStyle(baseStyle);
       expect(
-        resolvedUrl.color,
-        childUrlStyle.color, // Green from Child wins
+        resolvedLink.color,
+        childLinkStyle.color, // Green from Child wins
         reason: 'Child URL color should override Parent.',
       );
       expect(
-        resolvedUrl.decoration,
-        rootUrlStyle.decoration, // Decoration from Parent is inherited
+        resolvedLink.decoration,
+        rootLinkStyle.decoration, // Decoration from Parent is inherited
         reason: "Child did not specify a decoration, so Parent's should be used.",
       );
 
@@ -445,8 +446,8 @@ void main() {
               // Level 2 (Mid: italic)
               italicStyle: childItalicStyle, // normal, yellow bg
               child: TextfOptions(
-                // Level 3 (Leaf: url, hover)
-                linkStyle: childUrlStyle, // green, 18
+                // Level 3 (Leaf: link, hover)
+                linkStyle: childLinkStyle, // green, 18
                 onLinkHover: _dummyHover2,
                 // codeStyle not specified anywhere
                 child: Builder(
@@ -463,8 +464,8 @@ void main() {
 
       expect(resolved, isNotNull);
       // Comes from Leaf (Level 3)
-      expect(resolved!.linkStyle?.color, childUrlStyle.color); // green
-      expect(resolved!.linkStyle?.fontSize, childUrlStyle.fontSize); // 18
+      expect(resolved!.linkStyle?.color, childLinkStyle.color); // green
+      expect(resolved!.linkStyle?.fontSize, childLinkStyle.fontSize); // 18
       expect(resolved!.onLinkHover, same(_dummyHover2));
       // Comes from Mid (Level 2)
       expect(resolved!.italicStyle?.backgroundColor, childItalicStyle.backgroundColor); // yellow bg

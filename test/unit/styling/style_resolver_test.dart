@@ -342,15 +342,15 @@ void main() {
 
     group('With Nested TextfOptions', () {
       const parentBoldStyle = TextStyle(color: Colors.amber);
-      // CORRECTED: parentUrlStyle now defines no color, so baseStyle or theme should provide it
-      const parentUrlStyle = TextStyle(decoration: TextDecoration.none /* no color here */);
+      // parentLinkStyle now defines no color, so baseStyle or theme should provide it
+      const parentLinkStyle = TextStyle(decoration: TextDecoration.none /* no color here */);
       void parentTap(String u, String d) {
         debugPrint('Parent tapped URL: $u with display text: $d');
       }
 
       final parentOpts = TextfOptions(
         boldStyle: parentBoldStyle,
-        linkStyle: parentUrlStyle,
+        linkStyle: parentLinkStyle,
         onLinkTap: parentTap,
         italicStyle: const TextStyle(color: Colors.cyan),
         child: const SizedBox.shrink(),
@@ -442,22 +442,22 @@ void main() {
           (tester) async {
         final context = await pumpWithContext(
           tester,
-          parentOptions: parentOpts, // Outer (provides urlStyle, italicStyle from parentOpts)
+          parentOptions: parentOpts, // Outer (provides linkStyle, italicStyle from parentOpts)
           options:
-              const TextfOptions(child: SizedBox.shrink()), // Inner (urlStyle is implicitly null)
+              const TextfOptions(child: SizedBox.shrink()), // Inner (linkStyle is implicitly null)
         );
         final resolver = TextfStyleResolver(context);
 
-        final resolvedUrl = resolver.resolveLinkStyle(baseStyle);
-        expect(resolvedUrl.decoration, parentUrlStyle.decoration); // From parent
-        // CORRECTED EXPECTATION: parentUrlStyle has no color, so it should be baseStyle.color
+        final resolvedLink = resolver.resolveLinkStyle(baseStyle);
+        expect(resolvedLink.decoration, parentLinkStyle.decoration); // From parent
+        // CORRECTED EXPECTATION: parentLinkStyle has no color, so it should be baseStyle.color
         // *IF* the theme fallback didn't kick in.
-        // However, if an option for urlStyle exists (even without color), the theme fallback for color is NOT used.
+        // However, if an option for linkStyle exists (even without color), the theme fallback for color is NOT used.
         // The color comes from merging baseStyle with the optionStyle.
         expect(
-          resolvedUrl.color,
+          resolvedLink.color,
           baseStyle.color,
-          reason: "Color should be from baseStyle as parentUrlStyle didn't set it.",
+          reason: "Color should be from baseStyle as parentLinkStyle didn't set it.",
         );
 
         final resolvedItalic = resolver.resolveStyle(TokenType.italicMarker, baseStyle);

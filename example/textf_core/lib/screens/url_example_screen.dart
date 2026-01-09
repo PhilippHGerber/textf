@@ -86,7 +86,7 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
     // _launchUrl(url); // Optional auto-launch
   }
 
-  void _handleUrlHover(String url, String rawDisplayText, {required bool isHovering}) {
+  void _handleLinkHover(String url, String rawDisplayText, {required bool isHovering}) {
     if (!mounted) return;
     // Optimization: Only update state/overlay if hover status or URL changes,
     // or if we are definitely starting to hover over a valid URL.
@@ -242,7 +242,7 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
       body: TextfOptions(
         // Parent options provide callbacks
         onLinkTap: _handleUrlTap,
-        onLinkHover: _handleUrlHover,
+        onLinkHover: _handleLinkHover,
         linkStyle: TextStyle(
           color: Colors.blue,
           decoration: TextDecoration.none,
@@ -278,12 +278,12 @@ Textf(
               description: 'Demonstrates URL hover interaction (hover to see URL at bottom)',
               code: '''
 TextfOptions(
-  urlStyle: TextStyle(
+  linkStyle: TextStyle(
     color: Colors.blue,
     fontWeight: FontWeight.bold,
     decoration: TextDecoration.none,
   ),
-  urlHoverStyle: TextStyle(
+  linkHoverStyle: TextStyle(
     color: Colors.blue,
     decoration: TextDecoration.underline,
     decorationColor: Colors.blue,

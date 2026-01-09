@@ -190,4 +190,44 @@ void main() {
       });
     });
   });
+
+  group('LinkHandler.normalizeUrl Protocol Tests', () {
+    test('Standard web domains get http:// prefix', () {
+      expect(LinkHandler.normalizeUrl('google.com'), 'http://google.com');
+      expect(LinkHandler.normalizeUrl('example.co.uk/path'), 'http://example.co.uk/path');
+    });
+
+    test('Existing HTTP schemes are preserved', () {
+      expect(LinkHandler.normalizeUrl('http://example.com'), 'http://example.com');
+      expect(LinkHandler.normalizeUrl('https://example.com'), 'https://example.com');
+    });
+
+    test('Non-HTTP schemes are preserved (CRITICAL FIX)', () {
+      // These triggered the bug before the fix
+      expect(LinkHandler.normalizeUrl('mailto:user@example.com'), 'mailto:user@example.com');
+      expect(LinkHandler.normalizeUrl('tel:+123456789'), 'tel:+123456789');
+      expect(LinkHandler.normalizeUrl('sms:12345'), 'sms:12345');
+      expect(LinkHandler.normalizeUrl('file:///Users/me/file.txt'), 'file:///Users/me/file.txt');
+    });
+
+    test('Relative paths and anchors are preserved', () {
+      expect(LinkHandler.normalizeUrl('/local/path'), '/local/path');
+      expect(LinkHandler.normalizeUrl('#section-id'), '#section-id');
+    });
+
+    test('Colons in paths/queries do not count as schemes', () {
+      // "google.com/foo:bar" -> The colon is after the slash, so it's not a scheme.
+      // Should result in http://
+      expect(
+        LinkHandler.normalizeUrl('google.com/search?q=foo:bar'),
+        'http://google.com/search?q=foo:bar',
+      );
+
+      expect(LinkHandler.normalizeUrl('example.com/port:8080'), 'http://example.com/port:8080');
+    });
+
+    test('Trims whitespace', () {
+      expect(LinkHandler.normalizeUrl('  mailto:abc@xyz.com  '), 'mailto:abc@xyz.com');
+    });
+  });
 }

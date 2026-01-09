@@ -28,6 +28,23 @@ TextSpan _findSpanByText(WidgetTester tester, String text) {
   }
 }
 
+// Helper to find the TextSpan style
+TextStyle? _findTextSpanStyle(WidgetTester tester, String textToFind) {
+  final finder = find.byType(RichText);
+  final richText = tester.widget<RichText>(finder.first);
+  final rootSpan = richText.text as TextSpan;
+
+  TextStyle? foundStyle;
+  rootSpan.visitChildren((span) {
+    if (span is TextSpan && span.text == textToFind) {
+      foundStyle = span.style;
+      return false; // Stop visiting
+    }
+    return true;
+  });
+  return foundStyle;
+}
+
 void main() {
   group('TextfOptions Decoration Combining Tests', () {
     testWidgets(
@@ -211,5 +228,78 @@ void main() {
         );
       },
     );
+
+    testWidgets('Preserves existing flags when options add duplicated decoration', (tester) async {
+      // Scenario:
+      // Parent sets: Underline + LineThrough
+      // Child sets: Underline (Redundant)
+      // Result should be: Underline + LineThrough (NOT just Underline)
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextfOptions(
+            // Parent establishes base decoration
+            boldStyle: TextStyle(
+              decoration:
+                  TextDecoration.combine([TextDecoration.underline, TextDecoration.lineThrough]),
+            ),
+            child: const TextfOptions(
+              // Child tries to apply Underline again
+              boldStyle: TextStyle(decoration: TextDecoration.underline),
+              child: Textf('**Target**'),
+            ),
+          ),
+        ),
+      );
+
+      final style = _findTextSpanStyle(tester, 'Target');
+
+      expect(
+        style?.decoration?.contains(TextDecoration.lineThrough),
+        isTrue,
+        reason: 'LineThrough should be preserved even if child applies Underline again',
+      );
+      expect(style?.decoration?.contains(TextDecoration.underline), isTrue);
+    });
+
+    testWidgets('Combines distinct decorations', (tester) async {
+      // Scenario: Parent=Underline, Child=LineThrough -> Result=Both
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: TextfOptions(
+            boldStyle: TextStyle(decoration: TextDecoration.underline),
+            child: TextfOptions(
+              boldStyle: TextStyle(decoration: TextDecoration.lineThrough),
+              child: Textf('**Target**'),
+            ),
+          ),
+        ),
+      );
+
+      final style = _findTextSpanStyle(tester, 'Target');
+      expect(style?.decoration?.contains(TextDecoration.underline), isTrue);
+      expect(style?.decoration?.contains(TextDecoration.lineThrough), isTrue);
+    });
+
+    testWidgets('TextDecoration.none removes decoration', (tester) async {
+      // Scenario: Parent=Underline, Child=None -> Result=None
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: TextfOptions(
+            boldStyle: TextStyle(decoration: TextDecoration.underline),
+            child: TextfOptions(
+              boldStyle: TextStyle(decoration: TextDecoration.none),
+              child: Textf('**Target**'),
+            ),
+          ),
+        ),
+      );
+
+      final style = _findTextSpanStyle(tester, 'Target');
+      // Flutter might treat it as null or none depending on merge logic,
+      // but it definitely shouldn't contain underline.
+      final hasUnderline = style?.decoration?.contains(TextDecoration.underline) ?? false;
+      expect(hasUnderline, isFalse);
+    });
   });
 }

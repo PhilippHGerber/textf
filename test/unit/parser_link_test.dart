@@ -545,7 +545,7 @@ void main() {
           (tester) async {
         // Define styles and options
         const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
-        const optionsUrlStyle =
+        const optionsLinkStyle =
             TextStyle(color: Colors.red, fontSize: 18, decoration: TextDecoration.none);
         const optionsBoldStyle = TextStyle(
           fontWeight: FontWeight.w900,
@@ -562,7 +562,7 @@ void main() {
                 return DefaultTextStyle(
                   style: baseStyle,
                   child: TextfOptions(
-                    linkStyle: optionsUrlStyle,
+                    linkStyle: optionsLinkStyle,
                     boldStyle: optionsBoldStyle,
                     child: Builder(
                       builder: (innerContext) {
@@ -592,20 +592,20 @@ void main() {
         final hoverableWidget = widgetSpan.child as HoverableLinkSpan;
 
         // Verify the style passed *to* HoverableLinkSpan (should reflect options)
-        // Expected normal style = baseStyle merged with optionsUrlStyle
+        // Expected normal style = baseStyle merged with optionsLinkStyle
         expect(
           hoverableWidget.normalStyle.color,
-          optionsUrlStyle.color,
+          optionsLinkStyle.color,
           reason: 'Normal link style should have options color',
         );
         expect(
           hoverableWidget.normalStyle.fontSize,
-          optionsUrlStyle.fontSize,
+          optionsLinkStyle.fontSize,
           reason: 'Normal link style should have options font size',
         );
         expect(
           hoverableWidget.normalStyle.decoration,
-          optionsUrlStyle.decoration,
+          optionsLinkStyle.decoration,
           reason: 'Normal link style should have options decoration',
         );
 
@@ -619,8 +619,8 @@ void main() {
         expect(innerSpan.text, 'Bold Link');
 
         // Check inheritance of the final normal link style
-        expect(innerSpan.style?.color, optionsUrlStyle.color); // Inherited from link
-        expect(innerSpan.style?.fontSize, optionsUrlStyle.fontSize); // Inherited from link
+        expect(innerSpan.style?.color, optionsLinkStyle.color); // Inherited from link
+        expect(innerSpan.style?.fontSize, optionsLinkStyle.fontSize); // Inherited from link
 
         // Check applied bold style (from TextfOptions, overriding default bold)
         expect(innerSpan.style?.fontWeight, optionsBoldStyle.fontWeight); // From options bold
