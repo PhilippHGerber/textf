@@ -86,8 +86,7 @@ class ScreenshotScreen extends StatefulWidget {
 
 class _ScreenshotScreenState extends State<ScreenshotScreen> {
   final TextEditingController _textController = TextEditingController(
-    text:
-        'Hello **bold** *italic* ~~strikethrought~~ ++underline++ ==highlight== \n'
+    text: 'Hello **bold** *italic* ~~strikethrought~~ ++underline++ ==highlight== \n'
         '`code` \n'
         'E = mc^2^ and H~2~O \n'
         '[link](https://example.com)',
@@ -107,9 +106,9 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
   TextStyle? _boldItalicStyle;
   TextStyle? _strikethroughStyle;
   TextStyle? _codeStyle;
-  TextStyle? _urlStyle;
-  TextStyle? _urlHoverStyle;
-  MouseCursor? _urlMouseCursor;
+  TextStyle? _linkStyle;
+  TextStyle? _linkHoverStyle;
+  MouseCursor? _linkMouseCursor;
   TextStyle? _underlineStyle;
   TextStyle? _highlightStyle;
 
@@ -391,9 +390,9 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
                           boldItalicStyle: _boldItalicStyle,
                           strikethroughStyle: _strikethroughStyle,
                           codeStyle: _codeStyle,
-                          urlStyle: _urlStyle,
-                          urlHoverStyle: _urlHoverStyle,
-                          urlMouseCursor: _urlMouseCursor,
+                          linkStyle: _linkStyle,
+                          linkHoverStyle: _linkHoverStyle,
+                          linkMouseCursor: _linkMouseCursor,
                           underlineStyle: _underlineStyle,
                           highlightStyle: _highlightStyle,
                           // Important: Textf widget *without* the explicit style parameter
@@ -657,7 +656,7 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
           const Text('URL Mouse Cursor Override:'),
           const SizedBox(height: 4),
           DropdownButton<MouseCursor?>(
-            value: _urlMouseCursor, // Current state
+            value: _linkMouseCursor, // Current state
             isExpanded: true,
             items: availableCursors.entries.map((entry) {
               return DropdownMenuItem<MouseCursor?>(
@@ -666,10 +665,10 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
               );
             }).toList(),
             onChanged: (newValue) {
-              setState(() => _urlMouseCursor = newValue);
+              setState(() => _linkMouseCursor = newValue);
             },
             // Display 'Default' when state is null
-            hint: _urlMouseCursor == null ? const Text('Default (from Textf)') : null,
+            hint: _linkMouseCursor == null ? const Text('Default (from Textf)') : null,
           ),
         ],
       ),

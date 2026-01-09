@@ -241,18 +241,18 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
       ),
       body: TextfOptions(
         // Parent options provide callbacks
-        onUrlTap: _handleUrlTap,
-        onUrlHover: _handleUrlHover,
-        urlStyle: TextStyle(
+        onLinkTap: _handleUrlTap,
+        onLinkHover: _handleUrlHover,
+        linkStyle: TextStyle(
           color: Colors.blue,
           decoration: TextDecoration.none,
         ),
-        urlHoverStyle: TextStyle(
+        linkHoverStyle: TextStyle(
           color: Colors.blue,
           decoration: TextDecoration.underline,
           decorationColor: Colors.blue,
         ),
-        urlMouseCursor: SystemMouseCursors.click,
+        linkMouseCursor: SystemMouseCursors.click,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -296,11 +296,11 @@ TextfOptions(
 )
 ''',
               child: TextfOptions(
-                urlStyle: TextStyle(
+                linkStyle: TextStyle(
                   color: Colors.blue,
                   decoration: TextDecoration.none,
                 ),
-                urlHoverStyle: TextStyle(
+                linkHoverStyle: TextStyle(
                   color: Colors.blue,
                   decoration: TextDecoration.underline,
                   decorationColor: Colors.blue,

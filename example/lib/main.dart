@@ -85,22 +85,22 @@ class MyHomePage extends StatelessWidget {
                   TextStyle(backgroundColor: Colors.green.shade200, fontStyle: FontStyle.italic),
 
               // Style links: blue without underline
-              urlStyle: const TextStyle(color: Colors.blue, decoration: TextDecoration.none),
+              linkStyle: const TextStyle(color: Colors.blue, decoration: TextDecoration.none),
 
               // Add underline on hover
-              urlHoverStyle: const TextStyle(
+              linkHoverStyle: const TextStyle(
                 color: Colors.blue,
                 decoration: TextDecoration.underline,
                 decorationColor: Colors.blue,
               ),
 
               // Handle link clicks
-              onUrlTap: (url, displayText) {
+              onLinkTap: (url, displayText) {
                 debugPrint('Link clicked: $displayText -> $url');
               },
 
               // Handle hover state changes
-              onUrlHover: (url, displayText, {required bool isHovering}) {
+              onLinkHover: (url, displayText, {required bool isHovering}) {
                 debugPrint('Hovering over "$displayText": $isHovering');
               },
 

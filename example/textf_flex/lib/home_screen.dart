@@ -237,11 +237,11 @@ class HomeScreen extends StatelessWidget {
                 "  ),\n"
                 ")",
             textf: TextfOptions(
-              urlStyle: TextStyle(
+              linkStyle: TextStyle(
                 color: colorScheme.secondary,
                 fontWeight: FontWeight.bold,
               ),
-              urlHoverStyle: TextStyle(
+              linkHoverStyle: TextStyle(
                 decoration: TextDecoration.underline,
                 decorationColor: colorScheme.secondary,
               ),
