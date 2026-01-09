@@ -86,76 +86,63 @@ class TextfParser {
       return <InlineSpan>[TextSpan(text: text, style: baseStyle)];
     }
 
-    // --- Main Parsing Logic ---
-
-    // 1. Tokenize the input text
+    // 1. Tokenize
     final tokens = _tokenizer.tokenize(text);
 
-    // 2. Create the Style Resolver using the current context
+    // 2. Style Resolver
     final resolver = TextfStyleResolver(context);
 
-    // 3. Identify matching *valid* pairs of formatting markers
+    // 3. Pairing
     final validPairs = PairingResolver.identifyPairs(tokens);
 
-    // 4. Create the ParserState, passing the resolver and only valid pairs
+    // 4. State
     final state = ParserState(
       tokens: tokens,
       baseStyle: baseStyle,
-      matchingPairs: validPairs, // Use the validated pairs
+      matchingPairs: validPairs,
       styleResolver: resolver,
       textScaler: textScaler,
     );
 
-    // 5. Process tokens sequentially
+    // 5. Optimized Process Loop
     for (int i = 0; i < tokens.length; i++) {
-      // Skip tokens already processed by handlers (e.g., inside a link or a valid format pair)
-      if (state.processedIndices.contains(i)) continue;
-
       final token = tokens[i];
 
-      // --- Token Processing Logic ---
-      if (token.type == TokenType.text) {
-        // It's plain text, just append to the buffer
-        state.textBuffer += token.value;
-        // No need to mark plain text as processed unless state management requires it
-      } else if (token.type == TokenType.linkStart) {
-        // Potential link start '['. Delegate to LinkHandler.
+      // --- Link Handling ---
+      if (token.type == TokenType.linkStart) {
+        // Attempt to process a link.
         final int? nextIndex = LinkHandler.processLink(context, state, i);
         if (nextIndex != null) {
-          // LinkHandler processed a full link `[...](...)`.
-          // It marked all involved tokens as processed.
-          // Advance loop counter past the processed link.
-          i = nextIndex - 1; // nextIndex is the index *after* ')', loop needs index of ')'
+          // Success: The LinkHandler consumed tokens up to `nextIndex`.
+          // We must advance the loop counter `i`.
+          // Since the loop performs `i++` at the end, we set i to `nextIndex - 1`.
+          i = nextIndex - 1;
+          continue;
         }
+        // Failure: Not a valid link. Fall through to process as plain text.
       }
-      // Is it a formatting marker (bold, italic, code, strike, etc.)?
-      else if (token.type.isFormattingMarker) {
-        // Check if this specific marker instance is part of a *valid* pair.
+
+      // --- Formatting Handling ---
+      if (token.type.isFormattingMarker) {
         if (state.matchingPairs.containsKey(i)) {
-          // Yes, it's part of a valid pair (either opening or closing).
-          // Delegate to FormatHandler to manage the stack and buffer.
-          // FormatHandler will mark both this token and its pair as processed.
+          // This token is part of a valid format pair.
           FormatHandler.processFormat(context, state, i, token);
-        } else {
-          // No, this marker instance is *not* part of a valid pair (e.g., "**abc" or "*abc").
-          // Treat its literal value as plain text.
-          state.textBuffer += token.value;
-          // Mark this specific token as processed so it doesn't get reconsidered.
-          state.processedIndices.add(i);
+          // Handled as a marker (either pushed to or popped from stack).
+          // Do NOT add to text buffer.
+          continue;
         }
+        // Unpaired or invalidly nested marker. Fall through to process as plain text.
       }
-      // Handle other token types (like linkSeparator, linkUrl, linkEnd) that might
-      // be encountered if not part of a structure successfully processed by LinkHandler.
-      // Treat them as plain text.
-      else {
-        // Fallback: Treat any other unexpected token type as plain text.
-        state.textBuffer += token.value;
-        state.processedIndices.add(i); // Mark as processed
-      }
-      // --- End Token Processing Logic ---
+
+      // --- Plain Text Handling ---
+      // Accumulate content into the buffer. This applies to:
+      // 1. TokenType.text
+      // 2. Unpaired/Invalid Formatting Markers
+      // 3. Broken/Partial Link tokens
+      state.textBuffer += token.value;
     }
 
-    // 6. Flush any remaining text in the buffer after the loop finishes
+    // 6. Final Flush
     state.flushText(context);
 
     return state.spans;

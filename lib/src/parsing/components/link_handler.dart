@@ -24,136 +24,105 @@ class LinkHandler {
 
   /// Processes a potential link structure starting at the given `index`.
   ///
-  /// If a valid `[text](url)` structure is found:
-  /// 1. Calculates the style inherited from surrounding formatting markers.
-  /// 2. Uses the `styleResolver` in `state` to get the final normal style,
-  ///    hover style, cursor, and callbacks for the link.
-  /// 3. Parses the `text` part of the link for any nested formatting, using
-  ///    the resolved normal link style as the base for this inner parsing.
-  /// 4. Creates a `HoverableLinkSpan` widget within a `WidgetSpan`.
-  /// 5. Adds the `WidgetSpan` to `state.spans`.
-  /// 6. Marks the consumed link tokens as processed in `state.processedIndices`.
-  /// 7. Returns the index immediately following the link structure.
-  ///
-  /// If no valid link structure is found, it treats the starting `[` as plain text,
-  /// adds it to the `state.textBuffer`, marks it as processed, and returns `null`.
-  ///
-  /// - [context]: The BuildContext (passed down, potentially used by callbacks).
-  /// - [state]: The current parser state containing tokens, stack, resolver, etc.
-  /// - [index]: The index of the `TokenType.linkStart` token (`[`).
-  ///
-  /// Returns the new token index after processing the link structure, or `null`.
+  /// Returns the index immediately following the link structure if successful.
+  /// Returns `null` if the tokens do not form a valid link.
   static int? processLink(
-    BuildContext context, // Keep context for potential callback needs
+    BuildContext context,
     ParserState state,
     int index,
   ) {
-    // Flush any preceding text before potentially starting a link
-    state.flushText(context);
-
     final tokens = state.tokens;
 
-    // Check if the sequence starting at `index` forms a complete link structure
-    if (_isCompleteLink(tokens, index)) {
-      // --- Valid Link Found ---
-
-      // Extract raw text and URL
-      final linkTextToken = tokens[index + _linkTextOffset];
-      final linkUrlToken = tokens[index + _linkUrlOffset];
-      final rawLinkText = linkTextToken.value;
-      final rawLinkUrl = linkUrlToken.value;
-      final normalizedUrl = normalizeUrl(rawLinkUrl);
-
-      // 1. Calculate the style inherited from formatting markers *outside* the link
-      TextStyle inheritedStyle = state.baseStyle;
-      for (final entry in state.formatStack) {
-        // Use the resolver to apply styles from the current stack
-        inheritedStyle = state.styleResolver.resolveStyle(entry.type, inheritedStyle);
-      }
-
-      // 2. Resolve link-specific styles, cursor, and callbacks using the resolver
-      //    Pass the calculated inheritedStyle as the base for link style resolution.
-      final TextStyle finalLinkStyle = state.styleResolver.resolveLinkStyle(inheritedStyle);
-      final TextStyle finalLinkHoverStyle =
-          state.styleResolver.resolveLinkHoverStyle(inheritedStyle);
-      final MouseCursor effectiveCursor = state.styleResolver.resolveLinkMouseCursor();
-      final void Function(String url, String displayText)? effectiveOnTap =
-          state.styleResolver.resolveOnLinkTap();
-      final void Function(String url, String displayText, {required bool isHovering})?
-          effectiveOnHover = state.styleResolver.resolveOnLinkHover();
-
-      // 3. Prepare TapGestureRecognizer if needed
-      TapGestureRecognizer? recognizer;
-      if (effectiveOnTap != null) {
-        recognizer = TapGestureRecognizer()
-          ..onTap = () => effectiveOnTap(normalizedUrl, rawLinkText);
-        // Remember to handle recognizer disposal if necessary, usually managed
-        // by the widget holding the TextSpan tree (e.g., dispose in HoverableLinkSpanState).
-      }
-
-      // 4. Parse the inner link text (between []) for nested formatting
-      List<InlineSpan> childrenSpans = [];
-      String? spanText; // Will hold plain text if no inner formatting
-
-      final tokenizerForLinkText = TextfTokenizer();
-      final linkTextTokens = tokenizerForLinkText.tokenize(rawLinkText);
-      final bool containsFormattingMarkers =
-          linkTextTokens.any((token) => token.type != TokenType.text);
-
-      if (containsFormattingMarkers) {
-        // Parse inner content, using the *resolved normal link style* as the base
-        final innerParser = TextfParser(); // Use a separate parser instance
-        childrenSpans = innerParser.parse(
-          rawLinkText,
-          context, // Pass context for the inner parse
-          finalLinkStyle, // Use the calculated link style as base
-        );
-        spanText = null;
-      } else {
-        // Plain text content, remove escape characters
-        spanText = rawLinkText.replaceAllMapped(
-          RegExp(r'\\([*_~`\[\]()\\])'),
-          (match) => match.group(1) ?? '',
-        );
-        childrenSpans = [];
-      }
-
-      // 5. Create the HoverableLinkSpan widget
-      final hoverableWidget = HoverableLinkSpan(
-        url: normalizedUrl,
-        rawDisplayText: rawLinkText,
-        initialChildrenSpans: childrenSpans, // Parsed inner content
-        initialPlainText: spanText, // Plain inner content
-        normalStyle: finalLinkStyle, // Resolved normal style
-        hoverStyle: finalLinkHoverStyle, // Resolved hover style
-        tapRecognizer: recognizer,
-        mouseCursor: effectiveCursor, // Resolved cursor
-        onHoverCallback: effectiveOnHover, // Resolved hover callback
-      );
-
-      // 6. Add the widget as a WidgetSpan
-      state.spans.add(
-        WidgetSpan(
-          child: hoverableWidget,
-          alignment: PlaceholderAlignment.baseline,
-          baseline: TextBaseline.alphabetic,
-        ),
-      );
-
-      // 7. Mark all 5 link tokens as processed
-      _markLinkTokensProcessed(state, index);
-
-      // 8. Return the index *after* the link structure (after ')')
-      return index + _linkTokenCount;
-    } else {
-      // --- Not a valid link structure ---
-      // Treat the opening bracket '[' as plain text.
-      state.textBuffer += tokens[index].value; // Add '[' character
-      state.processedIndices.add(index); // Mark '[' as processed
-
-      // Let the main parsing loop continue from the next token
+    // 1. Fast Check: Do we have a valid link structure?
+    // We check this BEFORE flushing text. If it's not a link, we want the
+    // '[' character to remain part of the previous text buffer to preserve ligatures.
+    if (!_isCompleteLink(tokens, index)) {
       return null;
     }
+
+    // 2. It IS a link. Now we must flush previous text to start a new span.
+    state.flushText(context);
+
+    // --- Valid Link Processing ---
+
+    // Extract raw text and URL
+    final linkTextToken = tokens[index + _linkTextOffset];
+    final linkUrlToken = tokens[index + _linkUrlOffset];
+    final rawLinkText = linkTextToken.value;
+    final rawLinkUrl = linkUrlToken.value;
+    final normalizedUrl = normalizeUrl(rawLinkUrl);
+
+    // Calculate the style inherited from formatting markers *outside* the link
+    TextStyle inheritedStyle = state.baseStyle;
+    for (final entry in state.formatStack) {
+      inheritedStyle = state.styleResolver.resolveStyle(entry.type, inheritedStyle);
+    }
+
+    // Resolve link-specific styles and callbacks
+    final TextStyle finalLinkStyle = state.styleResolver.resolveLinkStyle(inheritedStyle);
+    final TextStyle finalLinkHoverStyle = state.styleResolver.resolveLinkHoverStyle(inheritedStyle);
+    final MouseCursor effectiveCursor = state.styleResolver.resolveLinkMouseCursor();
+    final void Function(String url, String displayText)? effectiveOnTap =
+        state.styleResolver.resolveOnLinkTap();
+    final void Function(String url, String displayText, {required bool isHovering})?
+        effectiveOnHover = state.styleResolver.resolveOnLinkHover();
+
+    // Prepare TapGestureRecognizer
+    TapGestureRecognizer? recognizer;
+    if (effectiveOnTap != null) {
+      recognizer = TapGestureRecognizer()..onTap = () => effectiveOnTap(normalizedUrl, rawLinkText);
+    }
+
+    // Parse the inner link text (between []) for nested formatting
+    List<InlineSpan> childrenSpans = [];
+    String? spanText;
+
+    final tokenizerForLinkText = TextfTokenizer();
+    final linkTextTokens = tokenizerForLinkText.tokenize(rawLinkText);
+    final bool containsFormattingMarkers =
+        linkTextTokens.any((token) => token.type != TokenType.text);
+
+    if (containsFormattingMarkers) {
+      final innerParser = TextfParser();
+      childrenSpans = innerParser.parse(
+        rawLinkText,
+        context,
+        finalLinkStyle,
+      );
+      spanText = null;
+    } else {
+      // Plain text content, remove escape characters
+      spanText = rawLinkText.replaceAllMapped(
+        RegExp(r'\\([*_~`\[\]()\\])'),
+        (match) => match.group(1) ?? '',
+      );
+      childrenSpans = [];
+    }
+
+    // Create the HoverableLinkSpan widget
+    final hoverableWidget = HoverableLinkSpan(
+      url: normalizedUrl,
+      rawDisplayText: rawLinkText,
+      initialChildrenSpans: childrenSpans,
+      initialPlainText: spanText,
+      normalStyle: finalLinkStyle,
+      hoverStyle: finalLinkHoverStyle,
+      tapRecognizer: recognizer,
+      mouseCursor: effectiveCursor,
+      onHoverCallback: effectiveOnHover,
+    );
+
+    // Add the widget as a WidgetSpan
+    state.spans.add(
+      WidgetSpan(
+        child: hoverableWidget,
+        alignment: PlaceholderAlignment.baseline,
+        baseline: TextBaseline.alphabetic,
+      ),
+    );
+
+    // Return the index *after* the link structure (after ')')
+    return index + _linkTokenCount;
   }
 
   /// Normalizes a URL string to ensure it is launchable.
@@ -215,17 +184,9 @@ class LinkHandler {
     }
 
     return tokens[index].type == TokenType.linkStart &&
-        tokens[index + _linkTextOffset].type == TokenType.text && // Link text (can be empty)
-        tokens[index + _linkSeparatorOffset].type == TokenType.linkSeparator && // `](`
-        tokens[index + _linkUrlOffset].type == TokenType.text && // URL text (can be empty)
-        tokens[index + _linkEndOffset].type == TokenType.linkEnd; // `)`
-  }
-
-  /// Marks the 5 tokens forming a complete link structure as processed.
-  static void _markLinkTokensProcessed(ParserState state, int startIndex) {
-    // Mark '[', 'text', '](', 'url', ')' as processed
-    for (int i = 0; i < _linkTokenCount; i++) {
-      state.processedIndices.add(startIndex + i);
-    }
+        tokens[index + _linkTextOffset].type == TokenType.text &&
+        tokens[index + _linkSeparatorOffset].type == TokenType.linkSeparator &&
+        tokens[index + _linkUrlOffset].type == TokenType.text &&
+        tokens[index + _linkEndOffset].type == TokenType.linkEnd;
   }
 }
