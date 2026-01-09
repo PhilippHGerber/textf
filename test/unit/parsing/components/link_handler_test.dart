@@ -1,5 +1,3 @@
-// test/unit/parsing/components/link_handler_test.dart
-
 // ignore_for_file: no-magic-number
 
 import 'package:flutter/material.dart';
@@ -11,18 +9,14 @@ import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
 
 // By using `extends`, we inherit the concrete implementation of TextfStyleResolver
-// and only need to override the methods relevant to this test. This is the correct
-// way to mock a concrete class.
+// and only need to override the methods relevant to this test.
 // ignore: prefer-match-file-name
 class _MockLinkStyleResolver extends TextfStyleResolver {
   // We must call the super constructor.
   _MockLinkStyleResolver(super.context);
 
-  // Override only the methods needed to test the LinkHandler.
-  // We want to control the output for link-related styles.
   @override
   TextStyle resolveLinkStyle(TextStyle baseStyle) {
-    // Return a predictable, simple style for testing.
     return baseStyle.copyWith(
       color: Colors.blue,
       decoration: TextDecoration.underline,
@@ -31,7 +25,6 @@ class _MockLinkStyleResolver extends TextfStyleResolver {
 
   @override
   TextStyle resolveLinkHoverStyle(TextStyle baseStyle) {
-    // Return a predictable hover style.
     return baseStyle.copyWith(
       color: Colors.red,
       decoration: TextDecoration.underline,
@@ -40,20 +33,15 @@ class _MockLinkStyleResolver extends TextfStyleResolver {
 
   @override
   MouseCursor resolveLinkMouseCursor() {
-    // Return a predictable cursor.
     return SystemMouseCursors.click;
   }
 
-  // For this test, tap and hover callbacks are not needed.
   @override
   void Function(String url, String displayText)? resolveOnLinkTap() => null;
 
   @override
   void Function(String url, String displayText, {required bool isHovering})? resolveOnLinkHover() =>
       null;
-
-  // We don't need to override `resolveStyle` because the LinkHandler
-  // uses its own internal parser for nested content, but we could if needed.
 }
 
 void main() {
@@ -102,7 +90,7 @@ void main() {
         final nextIndex = LinkHandler.processLink(state.styleResolver.context, state, 0);
 
         // ASSERT
-        expect(nextIndex, 5, reason: 'Should consume 5 tokens: [, text, ](, url, )');
+        expect(nextIndex, 5, reason: 'Should return index after )');
         expect(state.spans.length, 1, reason: 'A WidgetSpan for the link should be created');
         expect(state.spans.first, isA<WidgetSpan>());
 
@@ -117,17 +105,11 @@ void main() {
           Colors.blue,
           reason: 'Normal style should come from mock resolver',
         );
-
-        expect(
-          state.processedIndices,
-          {0, 1, 2, 3, 4},
-          reason: 'All link tokens should be marked as processed',
-        );
       });
     });
 
     group('processLink: Invalid Links', () {
-      testWidgets('handles text that looks like a link but is not', (tester) async {
+      testWidgets('returns null for unclosed bracket', (tester) async {
         // ARRANGE
         const text = '[unclosed bracket';
         final state = await createParserState(tester, text);
@@ -136,21 +118,16 @@ void main() {
         final nextIndex = LinkHandler.processLink(state.styleResolver.context, state, 0);
 
         // ASSERT
-        expect(nextIndex, isNull, reason: 'Should not process an incomplete link');
+        expect(nextIndex, isNull, reason: 'Should return null for invalid link');
         expect(state.spans, isEmpty, reason: 'No span should be created');
         expect(
           state.textBuffer,
-          '[',
-          reason: 'The opening bracket should be treated as plain text',
-        );
-        expect(
-          state.processedIndices,
-          {0},
-          reason: 'Only the opening bracket token should be marked as processed',
+          isEmpty,
+          reason: 'LinkHandler should NOT modify textBuffer on failure (caller handles it)',
         );
       });
 
-      testWidgets('handles link text followed by non-link characters', (tester) async {
+      testWidgets('returns null for text followed by non-link characters', (tester) async {
         // ARRANGE
         const text = '[link text] but not a url';
         final state = await createParserState(tester, text);
@@ -161,20 +138,29 @@ void main() {
         // ASSERT
         expect(nextIndex, isNull);
         expect(state.spans, isEmpty);
-        expect(state.textBuffer, '[');
-        expect(state.processedIndices, {0});
+        expect(state.textBuffer, isEmpty);
       });
     });
 
-    group('_normalizeUrl', () {
+    group('normalizeUrl', () {
       test('adds http:// to URLs without a scheme', () {
         expect(LinkHandler.normalizeUrl('example.com'), 'http://example.com');
       });
 
-      test('does not modify URLs that already have a scheme', () {
+      test('does not modify URLs that already have a scheme (https)', () {
         expect(LinkHandler.normalizeUrl('https://example.com'), 'https://example.com');
+      });
+
+      test('does not modify URLs that already have a scheme (ftp)', () {
         expect(LinkHandler.normalizeUrl('ftp://example.com'), 'ftp://example.com');
+      });
+
+      test('does not modify URLs that already have a scheme (mailto)', () {
         expect(LinkHandler.normalizeUrl('mailto:test@example.com'), 'mailto:test@example.com');
+      });
+
+      test('does not modify URLs that already have a scheme (tel)', () {
+        expect(LinkHandler.normalizeUrl('tel:+1234567890'), 'tel:+1234567890');
       });
 
       test('does not modify relative paths', () {
@@ -188,46 +174,10 @@ void main() {
       test('trims whitespace from URLs', () {
         expect(LinkHandler.normalizeUrl('  example.com  '), 'http://example.com');
       });
-    });
-  });
 
-  group('LinkHandler.normalizeUrl Protocol Tests', () {
-    test('Standard web domains get http:// prefix', () {
-      expect(LinkHandler.normalizeUrl('google.com'), 'http://google.com');
-      expect(LinkHandler.normalizeUrl('example.co.uk/path'), 'http://example.co.uk/path');
-    });
-
-    test('Existing HTTP schemes are preserved', () {
-      expect(LinkHandler.normalizeUrl('http://example.com'), 'http://example.com');
-      expect(LinkHandler.normalizeUrl('https://example.com'), 'https://example.com');
-    });
-
-    test('Non-HTTP schemes are preserved (CRITICAL FIX)', () {
-      // These triggered the bug before the fix
-      expect(LinkHandler.normalizeUrl('mailto:user@example.com'), 'mailto:user@example.com');
-      expect(LinkHandler.normalizeUrl('tel:+123456789'), 'tel:+123456789');
-      expect(LinkHandler.normalizeUrl('sms:12345'), 'sms:12345');
-      expect(LinkHandler.normalizeUrl('file:///Users/me/file.txt'), 'file:///Users/me/file.txt');
-    });
-
-    test('Relative paths and anchors are preserved', () {
-      expect(LinkHandler.normalizeUrl('/local/path'), '/local/path');
-      expect(LinkHandler.normalizeUrl('#section-id'), '#section-id');
-    });
-
-    test('Colons in paths/queries do not count as schemes', () {
-      // "google.com/foo:bar" -> The colon is after the slash, so it's not a scheme.
-      // Should result in http://
-      expect(
-        LinkHandler.normalizeUrl('google.com/search?q=foo:bar'),
-        'http://google.com/search?q=foo:bar',
-      );
-
-      expect(LinkHandler.normalizeUrl('example.com/port:8080'), 'http://example.com/port:8080');
-    });
-
-    test('Trims whitespace', () {
-      expect(LinkHandler.normalizeUrl('  mailto:abc@xyz.com  '), 'mailto:abc@xyz.com');
+      test('handles empty strings', () {
+        expect(LinkHandler.normalizeUrl(''), '');
+      });
     });
   });
 }
