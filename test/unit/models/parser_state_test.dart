@@ -45,9 +45,9 @@ class _MockTextfStyleResolver implements TextfStyleResolver {
   @override
   MouseCursor resolveLinkMouseCursor() => throw UnimplementedError();
   @override
-  void Function(String url, String displayText)? resolveOnUrlTap() => throw UnimplementedError();
+  void Function(String url, String displayText)? resolveOnLinkTap() => throw UnimplementedError();
   @override
-  void Function(String url, String displayText, {required bool isHovering})? resolveOnUrlHover() =>
+  void Function(String url, String displayText, {required bool isHovering})? resolveOnLinkHover() =>
       throw UnimplementedError();
 
   @override

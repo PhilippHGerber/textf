@@ -127,7 +127,7 @@ void main() {
         );
 
         // --- Verify other interaction properties (optional but good) ---
-        expect(hoverableWidget.mouseCursor, DefaultStyles.urlMouseCursor);
+        expect(hoverableWidget.mouseCursor, DefaultStyles.linkMouseCursor);
         // Check recognizer existence if tap callback is expected (add TextfOptions for that)
         // expect(hoverableWidget.tapRecognizer, isNotNull);
       });
@@ -562,7 +562,7 @@ void main() {
                 return DefaultTextStyle(
                   style: baseStyle,
                   child: TextfOptions(
-                    urlStyle: optionsUrlStyle,
+                    linkStyle: optionsUrlStyle,
                     boldStyle: optionsBoldStyle,
                     child: Builder(
                       builder: (innerContext) {
@@ -1108,7 +1108,7 @@ void main() {
     });
 
     group('Interaction Behavior', () {
-      testWidgets('onUrlTap callback is triggered on tap', (tester) async {
+      testWidgets('onLinkTap callback is triggered on tap', (tester) async {
         // --- Setup Callback Tracking ---
         bool tapCalled = false;
         String? tappedUrl;
@@ -1124,7 +1124,7 @@ void main() {
           textfOptions: TextfOptions(
             // Provide a dummy child for the constructor if needed, but it's replaced by Textf above
             child: const SizedBox.shrink(),
-            onUrlTap: (url, displayText) {
+            onLinkTap: (url, displayText) {
               tapCalled = true;
               tappedUrl = url;
               tappedText = displayText;
@@ -1144,12 +1144,12 @@ void main() {
         await tester.pumpAndSettle();
 
         // --- Verify Callback Invocation and Parameters ---
-        expect(tapCalled, isTrue, reason: 'onUrlTap callback should have been triggered');
+        expect(tapCalled, isTrue, reason: 'onLinkTap callback should have been triggered');
         expect(tappedUrl, expectedUrl, reason: 'Callback should receive the correct URL');
         expect(tappedText, expectedRawText, reason: 'Callback should receive the raw display text');
       });
 
-      testWidgets('onUrlHover callback is triggered on hover', (tester) async {
+      testWidgets('onLinkHover callback is triggered on hover', (tester) async {
         // --- Setup Callback Tracking ---
         bool hoverCalled = false;
         bool isHover = false;
@@ -1165,7 +1165,7 @@ void main() {
           data: inputText,
           textfOptions: TextfOptions(
             child: const SizedBox.shrink(), // Dummy child
-            onUrlHover: (url, displayText, {required bool isHovering}) {
+            onLinkHover: (url, displayText, {required bool isHovering}) {
               hoverCalled = true;
               hoveredUrl = url;
               hoveredText = displayText;
@@ -1185,7 +1185,7 @@ void main() {
         await tester.pump(); // Allow hover event processing
 
         // --- Verify Hover Enter Callback ---
-        expect(hoverCalled, isTrue, reason: 'onUrlHover should be called on enter');
+        expect(hoverCalled, isTrue, reason: 'onLinkHover should be called on enter');
         expect(isHover, isTrue, reason: 'isHovering should be true on enter');
         expect(hoveredUrl, expectedUrl);
         expect(hoveredText, expectedRawText);
@@ -1196,7 +1196,7 @@ void main() {
         await tester.pump(); // Allow hover event processing
 
         // --- Verify Hover Exit Callback ---
-        expect(hoverCalled, isTrue, reason: 'onUrlHover should be called again on exit');
+        expect(hoverCalled, isTrue, reason: 'onLinkHover should be called again on exit');
         expect(isHover, isFalse, reason: 'isHovering should be false on exit');
         // URL and text should remain the same from the last call
         expect(hoveredUrl, expectedUrl);

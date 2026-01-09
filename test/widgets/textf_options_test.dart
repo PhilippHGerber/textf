@@ -11,16 +11,16 @@ import 'package:textf/src/widgets/textf_options.dart';
 // ignore: prefer-match-file-name
 class _ResolvedOptions {
   _ResolvedOptions({
-    this.urlStyle,
-    this.urlHoverStyle,
-    this.urlMouseCursor,
+    this.linkStyle,
+    this.linkHoverStyle,
+    this.linkMouseCursor,
     this.boldStyle,
     this.italicStyle,
     this.boldItalicStyle,
     this.strikethroughStyle,
     this.codeStyle,
-    this.onUrlTap,
-    this.onUrlHover,
+    this.onLinkTap,
+    this.onLinkHover,
   });
 
   // Factory to create from context
@@ -75,42 +75,41 @@ class _ResolvedOptions {
     final resolvedCode = nearestOptions?.getEffectiveCodeStyle(context, baseStyle) ??
         getThemeCodeStyle(baseStyle); // Theme fallback for code
 
-    final resolvedUrl = nearestOptions?.getEffectiveUrlStyle(context, baseStyle) ??
+    final resolvedUrl = nearestOptions?.getEffectiveLinkStyle(context, baseStyle) ??
         getThemeLinkStyle(baseStyle); // Theme fallback for links
 
     // Hover style depends on the resolved *normal* style
-    final resolvedUrlHover = nearestOptions?.getEffectiveUrlHoverStyle(context, baseStyle) ??
+    final resolvedUrlHover = nearestOptions?.getEffectiveLinkHoverStyle(context, baseStyle) ??
         resolvedUrl; // Default hover is same as normal if no option
 
-    final resolvedCursor = nearestOptions?.getEffectiveUrlMouseCursor(context) ??
-        DefaultStyles.urlMouseCursor; // Default fallback
+    final resolvedCursor = nearestOptions?.getEffectiveLinkMouseCursor(context) ??
+        DefaultStyles.linkMouseCursor; // Default fallback
 
-    final resolvedTap = nearestOptions?.getEffectiveOnUrlTap(context); // Null if not found
-    final resolvedHoverCb = nearestOptions?.getEffectiveOnUrlHover(context); // Null if not found
-
+    final resolvedTap = nearestOptions?.getEffectiveOnLinkTap(context); // Null if not found
+    final resolvedHoverCb = nearestOptions?.getEffectiveOnLinkHover(context); // Null if not found
     return _ResolvedOptions(
-      urlStyle: resolvedUrl,
-      urlHoverStyle: resolvedUrlHover,
-      urlMouseCursor: resolvedCursor,
+      linkStyle: resolvedUrl,
+      linkHoverStyle: resolvedUrlHover,
+      linkMouseCursor: resolvedCursor,
       boldStyle: resolvedBold,
       italicStyle: resolvedItalic,
       boldItalicStyle: resolvedBoldItalic,
       strikethroughStyle: resolvedStrike,
       codeStyle: resolvedCode,
-      onUrlTap: resolvedTap,
-      onUrlHover: resolvedHoverCb,
+      onLinkTap: resolvedTap,
+      onLinkHover: resolvedHoverCb,
     );
   }
-  final TextStyle? urlStyle;
-  final TextStyle? urlHoverStyle;
-  final MouseCursor? urlMouseCursor;
+  final TextStyle? linkStyle;
+  final TextStyle? linkHoverStyle;
+  final MouseCursor? linkMouseCursor;
   final TextStyle? boldStyle;
   final TextStyle? italicStyle;
   final TextStyle? boldItalicStyle;
   final TextStyle? strikethroughStyle;
   final TextStyle? codeStyle;
-  final Function? onUrlTap;
-  final Function? onUrlHover;
+  final Function? onLinkTap;
+  final Function? onLinkHover;
 }
 
 // Dummy callbacks
@@ -183,33 +182,33 @@ void main() {
 
       // Verify resolved options match defaults merged with the capturedDefaultStyle
 
-      // --- Check URL Style ---
+      // --- Check Link Style ---
       // Check inherited properties first
       expect(
-        resolved!.urlStyle?.fontSize,
+        resolved!.linkStyle?.fontSize,
         capturedDefaultStyle!.fontSize, // Compare against the captured default size
-        reason: 'URL style font size should match the DefaultTextStyle font size',
+        reason: 'Link style font size should match the DefaultTextStyle font size',
       );
       expect(
-        resolved!.urlStyle?.fontFamily,
+        resolved!.linkStyle?.fontFamily,
         capturedDefaultStyle!.fontFamily,
-        reason: 'URL style font family should match the DefaultTextStyle font family',
+        reason: 'Link style font family should match the DefaultTextStyle font family',
       );
       // Check properties overridden by theme link style
       expect(
-        resolved!.urlStyle?.color,
+        resolved!.linkStyle?.color,
         theme.colorScheme.primary,
-        reason: 'URL style color should be theme primary color',
+        reason: 'Link style color should be theme primary color',
       );
       expect(
-        resolved!.urlStyle?.decoration,
+        resolved!.linkStyle?.decoration,
         TextDecoration.underline,
-        reason: 'URL style decoration should be underline',
+        reason: 'Link style decoration should be underline',
       );
       expect(
-        resolved!.urlStyle?.decorationColor,
+        resolved!.linkStyle?.decorationColor,
         theme.colorScheme.primary,
-        reason: 'URL style decoration color should be theme primary color',
+        reason: 'Link style decoration color should be theme primary color',
       );
 
       // --- Check other styles (ensure they also use the correct base) ---
@@ -244,9 +243,9 @@ void main() {
       expect(resolved!.codeStyle?.backgroundColor, theme.colorScheme.surfaceContainer);
 
       // --- Check non-style properties ---
-      expect(resolved!.urlMouseCursor, DefaultStyles.urlMouseCursor);
-      expect(resolved!.onUrlTap, isNull);
-      expect(resolved!.onUrlHover, isNull);
+      expect(resolved!.linkMouseCursor, DefaultStyles.linkMouseCursor);
+      expect(resolved!.onLinkTap, isNull);
+      expect(resolved!.onLinkHover, isNull);
     });
 
     testWidgets('Uses values from single ancestor', (tester) async {
@@ -258,9 +257,9 @@ void main() {
           theme: theme,
           home: TextfOptions(
             boldStyle: rootBoldStyle,
-            urlStyle: rootUrlStyle, // blue, no decoration
-            urlMouseCursor: rootCursor,
-            onUrlTap: rootOnTap,
+            linkStyle: rootUrlStyle, // blue, no decoration
+            linkMouseCursor: rootCursor,
+            onLinkTap: rootOnTap,
             // italicStyle left null
             child: Builder(
               builder: (context) {
@@ -277,11 +276,11 @@ void main() {
       expect(resolved!.boldStyle?.fontWeight, rootBoldStyle.fontWeight);
       expect(resolved!.boldStyle?.color, rootBoldStyle.color);
       expect(resolved!.boldStyle?.fontSize, baseStyle.fontSize); // Merged from base
-      expect(resolved!.urlStyle?.color, rootUrlStyle.color); // Should be root blue
-      expect(resolved!.urlStyle?.decoration, rootUrlStyle.decoration); // none from root
-      expect(resolved!.urlStyle?.fontSize, baseStyle.fontSize); // Merged from base
-      expect(resolved!.urlMouseCursor, rootCursor);
-      expect(resolved!.onUrlTap, same(rootOnTap));
+      expect(resolved!.linkStyle?.color, rootUrlStyle.color); // Should be root blue
+      expect(resolved!.linkStyle?.decoration, rootUrlStyle.decoration); // none from root
+      expect(resolved!.linkStyle?.fontSize, baseStyle.fontSize); // Merged from base
+      expect(resolved!.linkMouseCursor, rootCursor);
+      expect(resolved!.onLinkTap, same(rootOnTap));
       // Check unspecified (falls back to default effect on base)
       expect(
         resolved!.italicStyle?.fontStyle,
@@ -289,7 +288,7 @@ void main() {
       ); // Default italic
       expect(resolved!.italicStyle?.color, baseStyle.color); // Base color
       // Check unspecified callback
-      expect(resolved!.onUrlHover, isNull);
+      expect(resolved!.onLinkHover, isNull);
     });
 
     testWidgets('Child properties correctly merge with and override parent properties',
@@ -309,13 +308,13 @@ void main() {
         MaterialApp(
           home: TextfOptions(
             // Root
-            urlStyle: rootUrlStyle,
-            onUrlTap: rootOnTap,
+            linkStyle: rootUrlStyle,
+            onLinkTap: rootOnTap,
             italicStyle: rootItalicStyle,
             child: TextfOptions(
               // Child override
-              urlStyle: childUrlStyle,
-              onUrlTap: childOnTap,
+              linkStyle: childUrlStyle,
+              onLinkTap: childOnTap,
               // Italic style NOT specified here, so it should be inherited.
               child: const SizedBox(), // Dummy child for context
             ),
@@ -363,7 +362,7 @@ void main() {
 
       // --- ASSERT CALLBACK (NEAREST WINS) ---
       expect(
-        resolver.resolveOnUrlTap(),
+        resolver.resolveOnLinkTap(),
         childOnTap,
         reason: 'Callback should come from the nearest (child) ancestor.',
       );
@@ -388,13 +387,13 @@ void main() {
           home: TextfOptions(
             // Root (provides bold, tap, rootUrl)
             boldStyle: rootBoldStyle,
-            onUrlTap: rootOnTap,
-            urlStyle: rootUrlStyle,
+            onLinkTap: rootOnTap,
+            linkStyle: rootUrlStyle,
             child: TextfOptions(
               // Child (provides childUrl, italic, hover, but NOT bold or tap)
-              urlStyle: childUrlStyle,
+              linkStyle: childUrlStyle,
               italicStyle: childItalicStyle,
-              onUrlHover: childOnHover,
+              onLinkHover: childOnHover,
               child: const SizedBox(),
             ),
           ),
@@ -409,7 +408,7 @@ void main() {
       final resolvedItalic = resolver.resolveStyle(TokenType.italicMarker, baseStyle);
       expect(resolvedItalic.fontStyle, childItalicStyle.fontStyle);
       expect(resolvedItalic.backgroundColor, childItalicStyle.backgroundColor);
-      expect(resolver.resolveOnUrlHover(), childOnHover);
+      expect(resolver.resolveOnLinkHover(), childOnHover);
 
       // --- 2. Assert properties MERGED between Parent and Child ---
       final resolvedUrl = resolver.resolveLinkStyle(baseStyle);
@@ -428,7 +427,7 @@ void main() {
       final resolvedBold = resolver.resolveStyle(TokenType.boldMarker, baseStyle);
       expect(resolvedBold.fontWeight, rootBoldStyle.fontWeight);
       expect(resolvedBold.color, rootBoldStyle.color);
-      expect(resolver.resolveOnUrlTap(), rootOnTap);
+      expect(resolver.resolveOnLinkTap(), rootOnTap);
     });
 
     testWidgets('Inheritance works across multiple levels', (tester) async {
@@ -441,14 +440,14 @@ void main() {
           home: TextfOptions(
             // Level 1 (Root: bold, tap)
             boldStyle: rootBoldStyle, // w900, red
-            onUrlTap: rootOnTap,
+            onLinkTap: rootOnTap,
             child: TextfOptions(
               // Level 2 (Mid: italic)
               italicStyle: childItalicStyle, // normal, yellow bg
               child: TextfOptions(
                 // Level 3 (Leaf: url, hover)
-                urlStyle: childUrlStyle, // green, 18
-                onUrlHover: _dummyHover2,
+                linkStyle: childUrlStyle, // green, 18
+                onLinkHover: _dummyHover2,
                 // codeStyle not specified anywhere
                 child: Builder(
                   builder: (context) {
@@ -464,16 +463,16 @@ void main() {
 
       expect(resolved, isNotNull);
       // Comes from Leaf (Level 3)
-      expect(resolved!.urlStyle?.color, childUrlStyle.color); // green
-      expect(resolved!.urlStyle?.fontSize, childUrlStyle.fontSize); // 18
-      expect(resolved!.onUrlHover, same(_dummyHover2));
+      expect(resolved!.linkStyle?.color, childUrlStyle.color); // green
+      expect(resolved!.linkStyle?.fontSize, childUrlStyle.fontSize); // 18
+      expect(resolved!.onLinkHover, same(_dummyHover2));
       // Comes from Mid (Level 2)
       expect(resolved!.italicStyle?.backgroundColor, childItalicStyle.backgroundColor); // yellow bg
       expect(resolved!.italicStyle?.fontStyle, childItalicStyle.fontStyle); // normal
       // Comes from Root (Level 1)
       expect(resolved!.boldStyle?.fontWeight, rootBoldStyle.fontWeight); // w900
       expect(resolved!.boldStyle?.color, rootBoldStyle.color); // red
-      expect(resolved!.onUrlTap, same(rootOnTap));
+      expect(resolved!.onLinkTap, same(rootOnTap));
       // Comes from Default (Not specified anywhere) - Check Code style default
       expect(
         resolved!.codeStyle?.fontFamily,
@@ -481,7 +480,7 @@ void main() {
         reason: 'Code style fallback should use monospace font',
       );
       expect(resolved!.codeStyle?.color, theme.colorScheme.onSurfaceVariant); // Theme color
-      expect(resolved!.urlMouseCursor, DefaultStyles.urlMouseCursor); // Default cursor
+      expect(resolved!.linkMouseCursor, DefaultStyles.linkMouseCursor); // Default cursor
     });
 
     testWidgets('Correctly merges styles with baseStyle', (tester) async {
@@ -499,7 +498,7 @@ void main() {
               color: Colors.red,
             ), // Override weight and color
             italicStyle: const TextStyle(fontStyle: FontStyle.italic), // Only specify italic effect
-            urlStyle: const TextStyle(
+            linkStyle: const TextStyle(
               // Specify only decoration properties
               decoration: TextDecoration.lineThrough,
               decorationColor: Colors.orange,
@@ -527,16 +526,16 @@ void main() {
       expect(resolved!.italicStyle?.color, specificBaseStyle.color); // from base
       expect(resolved!.italicStyle?.fontSize, specificBaseStyle.fontSize); // from base
 
-      // URL: Should have base props + override props. Color comes from base as option didn't specify it.
-      expect(resolved!.urlStyle?.decoration, TextDecoration.lineThrough); // from override
-      expect(resolved!.urlStyle?.decorationColor, Colors.orange); // from override
+      // Link: Should have base props + override props. Color comes from base as option didn't specify it.
+      expect(resolved!.linkStyle?.decoration, TextDecoration.lineThrough); // from override
+      expect(resolved!.linkStyle?.decorationColor, Colors.orange); // from override
       expect(
-        resolved!.urlStyle?.color,
+        resolved!.linkStyle?.color,
         specificBaseStyle.color, // Should be grey from base
-        reason: "URL color should be from baseStyle as option didn't specify it",
+        reason: "Link color should be from baseStyle as option didn't specify it",
       );
-      expect(resolved!.urlStyle?.fontSize, specificBaseStyle.fontSize); // from base
-      expect(resolved!.urlStyle?.fontFamily, specificBaseStyle.fontFamily); // from base
+      expect(resolved!.linkStyle?.fontSize, specificBaseStyle.fontSize); // from base
+      expect(resolved!.linkStyle?.fontFamily, specificBaseStyle.fontFamily); // from base
     });
   });
 }

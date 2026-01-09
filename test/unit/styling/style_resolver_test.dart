@@ -49,11 +49,11 @@ void main() {
           codeStyle: options.codeStyle,
           underlineStyle: options.underlineStyle,
           highlightStyle: options.highlightStyle,
-          urlStyle: options.urlStyle,
-          urlHoverStyle: options.urlHoverStyle,
-          urlMouseCursor: options.urlMouseCursor,
-          onUrlTap: options.onUrlTap,
-          onUrlHover: options.onUrlHover,
+          linkStyle: options.linkStyle,
+          linkHoverStyle: options.linkHoverStyle,
+          linkMouseCursor: options.linkMouseCursor,
+          onLinkTap: options.onLinkTap,
+          onLinkHover: options.onLinkHover,
           child: child,
         );
       }
@@ -70,11 +70,11 @@ void main() {
           codeStyle: parentOptions.codeStyle,
           underlineStyle: parentOptions.underlineStyle,
           highlightStyle: parentOptions.highlightStyle,
-          urlStyle: parentOptions.urlStyle,
-          urlHoverStyle: parentOptions.urlHoverStyle,
-          urlMouseCursor: parentOptions.urlMouseCursor,
-          onUrlTap: parentOptions.onUrlTap,
-          onUrlHover: parentOptions.onUrlHover,
+          linkStyle: parentOptions.linkStyle,
+          linkHoverStyle: parentOptions.linkHoverStyle,
+          linkMouseCursor: parentOptions.linkMouseCursor,
+          onLinkTap: parentOptions.onLinkTap,
+          onLinkHover: parentOptions.onLinkHover,
           child: child,
         );
       }
@@ -190,22 +190,22 @@ void main() {
         expect(resolvedHover, resolvedNormal);
       });
 
-      testWidgets('resolveLinkMouseCursor uses DefaultStyles.urlMouseCursor', (tester) async {
+      testWidgets('resolveLinkMouseCursor uses DefaultStyles.linkMouseCursor', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
-        expect(resolver.resolveLinkMouseCursor(), DefaultStyles.urlMouseCursor);
+        expect(resolver.resolveLinkMouseCursor(), DefaultStyles.linkMouseCursor);
       });
 
-      testWidgets('resolveOnUrlTap returns null', (tester) async {
+      testWidgets('resolveOnLinkTap returns null', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
-        expect(resolver.resolveOnUrlTap(), isNull);
+        expect(resolver.resolveOnLinkTap(), isNull);
       });
 
-      testWidgets('resolveOnUrlHover returns null', (tester) async {
+      testWidgets('resolveOnLinkHover returns null', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
-        expect(resolver.resolveOnUrlHover(), isNull);
+        expect(resolver.resolveOnLinkHover(), isNull);
       });
     });
 
@@ -220,8 +220,8 @@ void main() {
       );
       const optionStrikeThickness = 2.5;
       const optionCodeStyle = TextStyle(backgroundColor: Colors.grey, fontFamily: 'Courier');
-      const optionUrlStyle = TextStyle(color: Colors.orange, decoration: TextDecoration.overline);
-      const optionUrlHoverStyle = TextStyle(color: Colors.pink, letterSpacing: 2);
+      const optionLinkStyle = TextStyle(color: Colors.orange, decoration: TextDecoration.overline);
+      const optionLinkHoverStyle = TextStyle(color: Colors.pink, letterSpacing: 2);
       const optionCursor = SystemMouseCursors.help;
 
       void testOnTap(String u, String d) {
@@ -237,11 +237,11 @@ void main() {
         italicStyle: optionItalicStyle,
         strikethroughStyle: optionStrikeStyle,
         codeStyle: optionCodeStyle,
-        urlStyle: optionUrlStyle,
-        urlHoverStyle: optionUrlHoverStyle,
-        urlMouseCursor: optionCursor,
-        onUrlTap: testOnTap,
-        onUrlHover: testOnHover,
+        linkStyle: optionLinkStyle,
+        linkHoverStyle: optionLinkHoverStyle,
+        linkMouseCursor: optionCursor,
+        onLinkTap: testOnTap,
+        onLinkHover: testOnHover,
         child: const SizedBox.shrink(),
       );
 
@@ -303,8 +303,8 @@ void main() {
         final testContextWithOptions = await pumpWithContext(tester, options: options);
         final resolverWithOptions = TextfStyleResolver(testContextWithOptions);
         final resolved = resolverWithOptions.resolveLinkStyle(baseStyle);
-        expect(resolved.color, optionUrlStyle.color);
-        expect(resolved.decoration, optionUrlStyle.decoration);
+        expect(resolved.color, optionLinkStyle.color);
+        expect(resolved.decoration, optionLinkStyle.decoration);
         expect(resolved.fontSize, baseStyle.fontSize);
       });
 
@@ -312,11 +312,11 @@ void main() {
           (tester) async {
         final testContextWithOptions = await pumpWithContext(tester, options: options);
         final resolverWithOptions = TextfStyleResolver(testContextWithOptions);
-        final normalLinkStyleWithOptions = baseStyle.merge(optionUrlStyle);
+        final normalLinkStyleWithOptions = baseStyle.merge(optionLinkStyle);
         final resolvedHover = resolverWithOptions.resolveLinkHoverStyle(baseStyle);
 
-        expect(resolvedHover.color, optionUrlHoverStyle.color);
-        expect(resolvedHover.letterSpacing, optionUrlHoverStyle.letterSpacing);
+        expect(resolvedHover.color, optionLinkHoverStyle.color);
+        expect(resolvedHover.letterSpacing, optionLinkHoverStyle.letterSpacing);
         expect(resolvedHover.decoration, normalLinkStyleWithOptions.decoration);
         expect(resolvedHover.fontSize, baseStyle.fontSize);
       });
@@ -327,16 +327,16 @@ void main() {
         expect(resolverWithOptions.resolveLinkMouseCursor(), optionCursor);
       });
 
-      testWidgets('resolveOnUrlTap uses TextfOptions', (tester) async {
+      testWidgets('resolveOnLinkTap uses TextfOptions', (tester) async {
         final testContextWithOptions = await pumpWithContext(tester, options: options);
         final resolverWithOptions = TextfStyleResolver(testContextWithOptions);
-        expect(resolverWithOptions.resolveOnUrlTap(), testOnTap);
+        expect(resolverWithOptions.resolveOnLinkTap(), testOnTap);
       });
 
-      testWidgets('resolveOnUrlHover uses TextfOptions', (tester) async {
+      testWidgets('resolveOnLinkHover uses TextfOptions', (tester) async {
         final testContextWithOptions = await pumpWithContext(tester, options: options);
         final resolverWithOptions = TextfStyleResolver(testContextWithOptions);
-        expect(resolverWithOptions.resolveOnUrlHover(), testOnHover);
+        expect(resolverWithOptions.resolveOnLinkHover(), testOnHover);
       });
     });
 
@@ -350,8 +350,8 @@ void main() {
 
       final parentOpts = TextfOptions(
         boldStyle: parentBoldStyle,
-        urlStyle: parentUrlStyle,
-        onUrlTap: parentTap,
+        linkStyle: parentUrlStyle,
+        onLinkTap: parentTap,
         italicStyle: const TextStyle(color: Colors.cyan),
         child: const SizedBox.shrink(),
       );
@@ -379,14 +379,14 @@ void main() {
         final parentOpts = TextfOptions(
           boldStyle: parentBoldStyle,
           italicStyle: parentItalicStyle,
-          onUrlTap: parentTap,
+          onLinkTap: parentTap,
           child: const SizedBox.shrink(),
         );
 
         final childOptsWithOverride = TextfOptions(
           boldStyle: childBoldStyle,
           italicStyle: childItalicStyle,
-          onUrlTap: childTap,
+          onLinkTap: childTap,
           child: const SizedBox.shrink(),
         );
 
@@ -432,7 +432,7 @@ void main() {
         // --- ASSERT CALLBACK (NEAREST WINS) ---
         // Callbacks do not merge, so "nearest wins" logic is still correct here.
         expect(
-          resolver.resolveOnUrlTap(),
+          resolver.resolveOnLinkTap(),
           childTap,
           reason: 'Callback should be taken from the nearest (child) TextfOptions.',
         );

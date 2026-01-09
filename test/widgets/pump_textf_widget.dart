@@ -44,11 +44,11 @@ Future<void> pumpTextfWidget(
                 key: textfOptions.key, // Pass key if needed
 
                 // Use properties from the passed instance
-                onUrlTap: textfOptions.onUrlTap,
-                onUrlHover: textfOptions.onUrlHover,
-                urlStyle: textfOptions.urlStyle,
-                urlHoverStyle: textfOptions.urlHoverStyle,
-                urlMouseCursor: textfOptions.urlMouseCursor,
+                onLinkTap: textfOptions.onLinkTap,
+                onLinkHover: textfOptions.onLinkHover,
+                linkStyle: textfOptions.linkStyle,
+                linkHoverStyle: textfOptions.linkHoverStyle,
+                linkMouseCursor: textfOptions.linkMouseCursor,
                 boldStyle: textfOptions.boldStyle,
                 italicStyle: textfOptions.italicStyle,
                 boldItalicStyle: textfOptions.boldItalicStyle,

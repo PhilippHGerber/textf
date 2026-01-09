@@ -46,10 +46,10 @@ class _MockLinkStyleResolver extends TextfStyleResolver {
 
   // For this test, tap and hover callbacks are not needed.
   @override
-  void Function(String url, String displayText)? resolveOnUrlTap() => null;
+  void Function(String url, String displayText)? resolveOnLinkTap() => null;
 
   @override
-  void Function(String url, String displayText, {required bool isHovering})? resolveOnUrlHover() =>
+  void Function(String url, String displayText, {required bool isHovering})? resolveOnLinkHover() =>
       null;
 
   // We don't need to override `resolveStyle` because the LinkHandler
