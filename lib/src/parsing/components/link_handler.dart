@@ -128,7 +128,7 @@ class LinkHandler {
   /// Normalizes a URL string to ensure it is launchable.
   ///
   /// This method ensures that URLs without a scheme (like "google.com")
-  /// are treated as web links by prepending "http://", while preserving
+  /// are treated as web links by prepending "https://", while preserving
   /// existing schemes (like "https://", "mailto:", "tel:", "file:").
   @visibleForTesting
   static String normalizeUrl(String url) {
@@ -146,8 +146,8 @@ class LinkHandler {
       return normalizedUrl;
     }
 
-    // Fallback: Assume it's a web domain and prepend http://
-    return 'http://$normalizedUrl';
+    // Fallback: Assume it's a web domain and prepend https://
+    return 'https://$normalizedUrl';
   }
 
   /// Helper to determine if a string starts with a URI scheme.

@@ -396,7 +396,7 @@ Textf(
             // --- Normalization Example ---
             const ExampleCard(
               title: 'URL Needing Normalization',
-              description: 'URL without protocol (should get http:// added)',
+              description: 'URL without protocol (should get https:// added)',
               code: 'Textf(\n  \'Visit [Google](google.com)\',\n)',
               child: Textf(
                 'Visit [Google](google.com)',

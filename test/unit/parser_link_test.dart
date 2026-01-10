@@ -165,8 +165,8 @@ void main() {
         // This is the core assertion for this test case.
         expect(
           hoverableWidget.url,
-          'http://google.com',
-          reason: 'URL should be normalized with http:// prefix',
+          'https://google.com',
+          reason: 'URL should be normalized with https:// prefix',
         );
 
         // --- Also check other properties (optional but good practice) ---

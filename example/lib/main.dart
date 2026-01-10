@@ -105,7 +105,7 @@ class ShowcaseScreen extends StatelessWidget {
             // Basic link syntax: [display text](url)
             const Textf('Visit [Flutter](https://flutter.dev) for docs.'),
 
-            // URL auto-normalization (adds http:// if missing)
+            // URL auto-normalization (adds https:// if missing)
             const Textf('Check out [example.com](example.com).'),
 
             // Formatting inside links

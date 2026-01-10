@@ -143,8 +143,8 @@ void main() {
     });
 
     group('normalizeUrl', () {
-      test('adds http:// to URLs without a scheme', () {
-        expect(LinkHandler.normalizeUrl('example.com'), 'http://example.com');
+      test('adds https:// to URLs without a scheme', () {
+        expect(LinkHandler.normalizeUrl('example.com'), 'https://example.com');
       });
 
       test('does not modify URLs that already have a scheme (https)', () {
@@ -172,7 +172,7 @@ void main() {
       });
 
       test('trims whitespace from URLs', () {
-        expect(LinkHandler.normalizeUrl('  example.com  '), 'http://example.com');
+        expect(LinkHandler.normalizeUrl('  example.com  '), 'https://example.com');
       });
 
       test('handles empty strings', () {
