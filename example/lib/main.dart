@@ -2,6 +2,8 @@
 // This file demonstrates all Textf features with concise comments.
 // This file is a code reference, not UI showcase.
 
+// ignore_for_file: no-magic-number
+
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 // import 'package:url_launcher/url_launcher.dart'; // Uncomment for real URL handling
@@ -325,8 +327,8 @@ class ShowcaseScreen extends StatelessWidget {
                 final isDark = Theme.of(context).brightness == Brightness.dark;
                 return TextfOptions(
                   highlightStyle: TextStyle(
-                    backgroundColor: isDark
-                        ? Colors.yellow.shade700.withOpacity(0.3)
+                    backgroundColor: isDark //
+                        ? Colors.yellow.shade700.withAlpha(30)
                         : Colors.yellow.shade200,
                   ),
                   child: const Textf(
@@ -399,43 +401,43 @@ class ShowcaseScreen extends StatelessWidget {
             // ─────────────────────────────────────────────────────────────────
             // SECTION: Highlight Comparison (add after Section 6 or wherever fits)
             // ─────────────────────────────────────────────────────────────────
-Textf('**Highlight Styling Comparison**'),
-const SizedBox(height: 8),
+            const Textf('**Highlight Styling Comparison**'),
+            const SizedBox(height: 8),
 
 // Default highlight: Uses theme-aware yellow background
-const Textf('This is ==highlighted== with default styling.'),
+            const Textf('This is ==highlighted== with default styling.'),
 
-const SizedBox(height: 8),
+            const SizedBox(height: 8),
 
 // Custom highlight:  Soft blue
-TextfOptions(
-  highlightStyle: TextStyle(
-    backgroundColor: Colors.blue.shade50,
-    color: Colors.blue.shade900,
-  ),
-  child: const Textf('==Soft blue== highlight.'),
-),
+            TextfOptions(
+              highlightStyle: TextStyle(
+                backgroundColor: Colors.blue.shade50,
+                color: Colors.blue.shade900,
+              ),
+              child: const Textf('==Soft blue== highlight.'),
+            ),
 
 // Warm orange
-TextfOptions(
-  highlightStyle: TextStyle(
-    backgroundColor: Colors.orange.shade100,
-    color: Colors.orange.shade900,
-  ),
-  child: const Textf('==Warm orange== highlight.'),
-),
+            TextfOptions(
+              highlightStyle: TextStyle(
+                backgroundColor: Colors.orange.shade100,
+                color: Colors.orange.shade900,
+              ),
+              child: const Textf('==Warm orange== highlight.'),
+            ),
 
 // Bold highlight with extra styling
-TextfOptions(
-  highlightStyle: TextStyle(
-    backgroundColor: Colors.lightGreen.shade100,
-    color: Colors.green.shade900,
-    fontWeight: FontWeight.w600,
-  ),
-  child: const Textf('==Bold green== highlight with extra weight.'),
-),
+            TextfOptions(
+              highlightStyle: TextStyle(
+                backgroundColor: Colors.lightGreen.shade100,
+                color: Colors.green.shade900,
+                fontWeight: FontWeight.w600,
+              ),
+              child: const Textf('==Bold green== highlight with extra weight.'),
+            ),
 
-const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // ─────────────────────────────────────────────────────────────
             // SECTION 12: Real-World Examples
