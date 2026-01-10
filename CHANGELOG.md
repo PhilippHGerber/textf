@@ -2,7 +2,7 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
-## Next release
+## 1.0.0
 
 ### BREAKING CHANGES
 
@@ -15,6 +15,7 @@ All notable changes to the `textf` package will be documented in this file.
 
 ### Changed
 
+* **URL Normalization:** Updated the default fallback for scheme-less URLs (e.g., google.com) to prepend https:// instead of http:// .
 * **Internal Refactoring:** Major refactoring of the `TextfTokenizer` for improved maintainability and performance.
 * **RTL Support:** Verified and enhanced Right-to-Left (RTL) support throughout the widget and its components.
 * **Performance:** Refactored the internal parsing loop to improve performance and reduce memory allocation, especially with complex formatted text.

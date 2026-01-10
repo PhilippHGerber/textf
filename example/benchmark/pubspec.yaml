@@ -1,7 +1,7 @@
 name: textf_benchmark
 description: A new Flutter project to showcase Textf library with flex_color_scheme
 publish_to: "none"
-version: 0.2.1
+version: 1.0.0
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -10,7 +10,7 @@ dependencies:
   flex_color_scheme: ^8.2.0
   flutter:
     sdk: flutter
-  textf: ^0.6.2
+  textf: ^1.0.0
 
 dev_dependencies:
   flutter_test:
