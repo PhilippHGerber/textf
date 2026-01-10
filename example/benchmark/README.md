@@ -49,9 +49,3 @@ Look at the **Frame Analysis** chart:
   * **< 8ms:** Excellent (120 FPS capable).
   * **8ms - 16ms:** Good (60 FPS).
   * **> 16ms:** Jank.
-
-**Specific check for Textf:**
-
-1. In the **Timeline Events** (bottom flame chart).
-2. Search (Ctrl+F) for `Textf`.
-3. You won't see `Textf` parsing taking up huge blocks because your O(1) loop is fast. You will likely see `Text.rich` layout taking the most time (which is standard Flutter text rendering cost, not your parsing cost).
