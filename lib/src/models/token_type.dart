@@ -46,6 +46,9 @@ enum TokenType {
 
   /// Closing parenthesis for link: ')'
   linkEnd(isLinkToken: true),
+
+  /// Placeholder for inline spans: '{{N}}'
+  placeholder,
   ;
 
   const TokenType({this.isFormattingMarker = false, this.isLinkToken = false});

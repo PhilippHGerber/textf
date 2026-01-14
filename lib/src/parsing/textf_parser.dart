@@ -72,6 +72,7 @@ class TextfParser {
     BuildContext context,
     TextStyle baseStyle, {
     TextScaler? textScaler,
+    List<InlineSpan>? inlineSpans,
   }) {
     // Fast path for empty text
     if (text.isEmpty) {
@@ -107,6 +108,23 @@ class TextfParser {
     // 5. Optimized Process Loop
     for (int i = 0; i < tokens.length; i++) {
       final token = tokens[i];
+
+      // --- Placeholder Handling ---
+      if (token.type == TokenType.placeholder) {
+        final String raw = token.value;
+        // Expected format {{N}}
+        if (raw.length > 4) {
+          final String numberStr = raw.substring(2, raw.length - 2);
+          final int? index = int.tryParse(numberStr);
+          if (index != null && inlineSpans != null && index > 0 && index <= inlineSpans.length) {
+            // Valid placeholder
+            state.flushText(context);
+            state.spans.add(inlineSpans[index - 1]);
+            continue;
+          }
+        }
+        // Fallthrough to plain text if invalid
+      }
 
       // --- Link Handling ---
       if (token.type == TokenType.linkStart) {

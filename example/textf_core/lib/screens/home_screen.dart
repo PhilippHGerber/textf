@@ -9,6 +9,7 @@ import 'notification_example_screen.dart';
 import 'screenshot_screen.dart';
 import 'theme_example_screen.dart';
 import 'url_example_screen.dart';
+import 'placeholder_example_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final ThemeMode currentThemeMode;
@@ -119,6 +120,15 @@ class HomeScreen extends StatelessWidget {
               'Create custom formatted text and take screenshots',
               ScreenshotScreen(
                 // Pass down theme info
+                currentThemeMode: currentThemeMode,
+                toggleThemeMode: toggleThemeMode,
+              ),
+            ),
+            _buildExampleTile(
+              context,
+              'Placeholder Example',
+              'Inject widgets like Icons and Images inline',
+              PlaceholderExampleScreen(
                 currentThemeMode: currentThemeMode,
                 toggleThemeMode: toggleThemeMode,
               ),

@@ -99,7 +99,9 @@ class TextfTokenizer {
             nextChar == kOpenBracket ||
             nextChar == kCloseBracket ||
             nextChar == kOpenParen ||
-            nextChar == kCloseParen) {
+            nextChar == kCloseParen ||
+            nextChar == kOpenBrace ||
+            nextChar == kCloseBrace) {
           addTextToken(textStart, pos);
           // Just add the escaped character as normal text
           tokens.add(
@@ -224,6 +226,17 @@ class TextfTokenizer {
           pos++;
           textStart = pos;
         }
+      } else if (currentChar == kOpenBrace) {
+        addTextToken(textStart, pos);
+        final int? nextPos = _tryParsePlaceholder(text, codeUnits, length, pos, tokens);
+        if (nextPos != null) {
+          pos = nextPos;
+          textStart = pos;
+        } else {
+          tokens.add(Token(TokenType.text, '{', pos, 1));
+          pos++;
+          textStart = pos;
+        }
       } else {
         pos++;
       }
@@ -341,5 +354,60 @@ class TextfTokenizer {
       ..add(Token(TokenType.linkEnd, ')', urlEnd, 1));
 
     return urlEnd + 1;
+  }
+
+  /// Attempts to parse a placeholder `{{N}}`.
+  ///
+  /// Returns the position after the closing braces if successful,
+  /// otherwise returns null.
+  int? _tryParsePlaceholder(
+    String text,
+    List<int> codeUnits,
+    int length,
+    int startPos,
+    List<Token> tokens,
+  ) {
+    if (startPos + 1 >= length || codeUnits[startPos + 1] != kOpenBrace) {
+      return null;
+    }
+
+    int pos = startPos + 2; // Move past '{{'
+    final int digitsStart = pos;
+
+    while (pos < length) {
+      final int c = codeUnits[pos];
+      if (c >= 0x30 && c <= 0x39) {
+        // Digit 0-9
+        pos++;
+      } else if (c == kCloseBrace) {
+        if (pos + 1 < length && codeUnits[pos + 1] == kCloseBrace) {
+          // Found '}}'
+          if (pos > digitsStart) {
+            // We have at least one digit
+            tokens.add(
+              Token(
+                TokenType.placeholder,
+                // ignore: avoid-substring
+                text.substring(startPos, pos + 2),
+                startPos,
+                pos + 2 - startPos,
+              ),
+            );
+            return pos + 2;
+          } else {
+            // Empty placeholder '{{}}' - treat as text
+            return null;
+          }
+        } else {
+          // Single '}' - invalid for placeholder, treat as text
+          return null;
+        }
+      } else {
+        // Non-digit char inside - treat as text
+        return null;
+      }
+    }
+
+    return null;
   }
 }

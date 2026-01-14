@@ -55,3 +55,9 @@ const int kOpenParen = 0x28;
 ///
 /// Used at the end of a link URL.
 const int kCloseParen = 0x29;
+
+/// Opening curly brace { (ASCII code 123)
+const int kOpenBrace = 0x7B;
+
+/// Closing curly brace } (ASCII code 125)
+const int kCloseBrace = 0x7D;
