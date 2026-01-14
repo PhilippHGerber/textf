@@ -3,7 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
-import 'package:url_launcher/url_launcher.dart' as url_launcher;
+import 'package:url_launcher/url_launcher.dart';
 
 import '../widgets/example_card.dart';
 
@@ -178,11 +178,11 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final bool canLaunch = await url_launcher.canLaunchUrl(uri);
+      final bool canLaunch = await canLaunchUrl(uri);
       if (!mounted) return; // Check mount status after async gap
 
       if (canLaunch) {
-        final bool launched = await url_launcher.launchUrl(uri);
+        final bool launched = await launchUrl(uri);
         if (!mounted) return;
 
         if (!launched) {
@@ -373,6 +373,21 @@ Textf(
 )''',
               child: Textf(
                 'Contact [support](mailto:support@example.com) for assistance',
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // --- Email URL Example 2 ---
+            const ExampleCard(
+              title: 'Email URL with params',
+              description: 'URL with mailto: protocol',
+              code: '''
+Textf(
+  'Contact [support](mailto:support@example.com.com?subject=STOP+THE+AI+SLOP) '
+  'for assistance',
+)''',
+              child: Textf(
+                'Contact [support](mailto:support@example.com.com?subject=STOP+THE+AI+SLOP) for assistance',
               ),
             ),
             const SizedBox(height: 16),
