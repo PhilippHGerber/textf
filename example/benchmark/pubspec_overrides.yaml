@@ -1,3 +1,3 @@
 dependency_overrides:
   textf:
-    path: ../
+    path: ../../
