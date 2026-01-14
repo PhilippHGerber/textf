@@ -17,6 +17,8 @@ import 'internal/textf_renderer.dart';
 /// * `*italic*` or `_italic_` for *italic* text
 /// * `***bold and italic***` or `___bold and italic___` for ***bold and italic*** text
 /// * `~~strikethrough~~` for ~~strikethrough~~ text
+/// * ^^superscript^^ for superscript text
+/// * ,,subscript,, for subscript text
 /// * `` `code` `` for `code` text
 /// * `[link text](url)` for [links](https://example.com)
 ///
@@ -35,7 +37,7 @@ import 'internal/textf_renderer.dart';
 /// - Maximum nesting depth of 2 formatting levels
 /// - When nesting, use different marker types (e.g., **bold with _italic_**)
 /// - No support for block elements (headings, lists, quotes, etc.)
-/// - No support for links or images
+/// - No support for images
 /// - Designed for inline formatting only, not full Markdown rendering
 ///
 /// To escape formatting characters use a backslash: `\*not italic\*`
