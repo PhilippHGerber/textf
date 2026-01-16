@@ -103,8 +103,11 @@ void main() {
         return false;
       }
 
-      expect(isBold(span), isTrue,
-          reason: 'Placeholder should inherit bold style from surrounding markdown');
+      expect(
+        isBold(span),
+        isTrue,
+        reason: 'Placeholder should inherit bold style from surrounding markdown',
+      );
     });
 
     testWidgets('Out of bounds index renders as text', (tester) async {
@@ -134,6 +137,8 @@ void main() {
       expect((spans[0] as TextSpan).text, '{a}');
     });
 
+    // Ignoring for tests purposes
+    // ignore: use_raw_strings
     testWidgets('Simulated interpolation \${property.value} does NOT parse as placeholder',
         (tester) async {
       await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
@@ -163,13 +168,17 @@ void main() {
       expect((spans[0] as TextSpan).text, 'Value: 0');
     });
 
+    // Ignoring for tests purposes
+    // ignore: use_raw_strings
     testWidgets('Mixed usage of {N} and \${} safeguards', (tester) async {
       await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
       final inlineSpans = [const TextSpan(text: '[ICON]')];
 
       // "Count: 5, Icon: [ICON]"
-      final count = 5;
+      const count = 5;
       final spans = parser.parse(
+        // Required for testing
+        // ignore: unnecessary_brace_in_string_interps
         'Count: ${count}, Icon: {0}',
         mockContext,
         const TextStyle(),
