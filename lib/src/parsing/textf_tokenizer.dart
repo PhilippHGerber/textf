@@ -367,11 +367,10 @@ class TextfTokenizer {
     int startPos,
     List<Token> tokens,
   ) {
-    if (startPos + 1 >= length || codeUnits[startPos + 1] != kOpenBrace) {
-      return null;
-    }
+    // Current char at startPos is '{'.
+    // We expect {digits}
 
-    int pos = startPos + 2; // Move past '{{'
+    int pos = startPos + 1; // Move past '{'
     final int digitsStart = pos;
 
     while (pos < length) {
@@ -380,26 +379,21 @@ class TextfTokenizer {
         // Digit 0-9
         pos++;
       } else if (c == kCloseBrace) {
-        if (pos + 1 < length && codeUnits[pos + 1] == kCloseBrace) {
-          // Found '}}'
-          if (pos > digitsStart) {
-            // We have at least one digit
-            tokens.add(
-              Token(
-                TokenType.placeholder,
-                // ignore: avoid-substring
-                text.substring(startPos, pos + 2),
-                startPos,
-                pos + 2 - startPos,
-              ),
-            );
-            return pos + 2;
-          } else {
-            // Empty placeholder '{{}}' - treat as text
-            return null;
-          }
+        // Found '}'
+        if (pos > digitsStart) {
+          // We have at least one digit
+          tokens.add(
+            Token(
+              TokenType.placeholder,
+              // ignore: avoid-substring
+              text.substring(startPos, pos + 1),
+              startPos,
+              pos + 1 - startPos,
+            ),
+          );
+          return pos + 1;
         } else {
-          // Single '}' - invalid for placeholder, treat as text
+          // Empty placeholder '{}' - treat as text
           return null;
         }
       } else {

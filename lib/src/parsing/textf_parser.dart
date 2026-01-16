@@ -112,14 +112,14 @@ class TextfParser {
       // --- Placeholder Handling ---
       if (token.type == TokenType.placeholder) {
         final String raw = token.value;
-        // Expected format {{N}}
-        if (raw.length > 4) {
-          final String numberStr = raw.substring(2, raw.length - 2);
+        // Expected format {N}
+        if (raw.length > 2) {
+          final String numberStr = raw.substring(1, raw.length - 1);
           final int? index = int.tryParse(numberStr);
-          if (index != null && inlineSpans != null && index > 0 && index <= inlineSpans.length) {
+          if (index != null && inlineSpans != null && index >= 0 && index < inlineSpans.length) {
             // Valid placeholder
             state.flushText(context);
-            state.spans.add(inlineSpans[index - 1]);
+            state.spans.add(inlineSpans[index]);
             continue;
           }
         }

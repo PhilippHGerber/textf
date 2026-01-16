@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:textf/textf.dart';
 
 class PlaceholderExampleScreen extends StatelessWidget {
@@ -33,7 +34,7 @@ class PlaceholderExampleScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'You can inject any InlineSpan using {{N}} syntax:',
+              'You can inject any InlineSpan using {N} syntax:',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -45,8 +46,9 @@ class PlaceholderExampleScreen extends StatelessWidget {
                 border: Border.all(color: colorScheme.outlineVariant),
               ),
               child: Textf(
-                'Hello! This is a star icon: {{1}}. And this is a cat: {{2}}\n\n'
-                'You can also mix with **bold {{1}}** or _italic {{1}}_!',
+                'Hello! This is a star icon: {0}. And this is a ~~cat~~ bird: {1}\n\n'
+                'You can also mix with **bold {2}** or _italic {2}_!\n\n'
+                'And you can keep using ${0} as interpolations',
                 style: TextStyle(fontSize: 18, color: colorScheme.onSurface),
                 inlineSpans: [
                   WidgetSpan(
@@ -60,9 +62,15 @@ class PlaceholderExampleScreen extends StatelessWidget {
                   WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: Image.asset(
-                      'assets/img/cat.gif',
+                      'assets/img/bird.gif',
                       width: 32,
                       height: 32,
+                    ),
+                  ),
+                  TextSpan(
+                    text: "Hello world",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ],
@@ -79,10 +87,10 @@ class PlaceholderExampleScreen extends StatelessWidget {
               color: Colors.black87,
               child: const Text(
                 'Textf(\n'
-                "  'Icon: {{1}}, Image: {{2}}',\n"
+                "  'Icon: {0}, Image: {1}',\n"
                 '  inlineSpans: [\n'
                 '    WidgetSpan(child: Icon(Icons.star)),\n'
-                "    WidgetSpan(child: Image.asset('cat.gif')),\n"
+                "    WidgetSpan(child: Image.asset('bird.gif')),\n"
                 '  ],\n'
                 ')',
                 style: TextStyle(fontFamily: 'monospace', color: Colors.white),
