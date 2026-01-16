@@ -119,7 +119,20 @@ class TextfParser {
           if (index != null && inlineSpans != null && index >= 0 && index < inlineSpans.length) {
             // Valid placeholder
             state.flushText(context);
-            state.spans.add(inlineSpans[index]);
+
+            // Get current style to ensure inheritance
+            final currentStyle = state.getCurrentStyle(context);
+
+            // We wrap the injected span in a TextSpan with the current style.
+            // This ensures that if the injected span is a TextSpan, it inherits
+            // the markdown styles (e.g. bold/italic) unless it overrides them.
+            // Even WidgetSpans are valid children of TextSpan.
+            state.spans.add(
+              TextSpan(
+                style: currentStyle,
+                children: [inlineSpans[index]],
+              ),
+            );
             continue;
           }
         }

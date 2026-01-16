@@ -41,7 +41,9 @@ void main() {
 
       expect(spans.length, 3);
       expect((spans[0] as TextSpan).text, 'prefix ');
-      expect((spans[1] as TextSpan).text, 'replacement');
+      // Placeholder is now wrapped for style inheritance
+      final replacementSpan = (spans[1] as TextSpan).children![0] as TextSpan;
+      expect(replacementSpan.text, 'replacement');
       expect((spans[2] as TextSpan).text, ' suffix');
     });
 
@@ -59,12 +61,14 @@ void main() {
       );
 
       expect(spans.length, 3); // "one", " and ", "two"
-      expect((spans[0] as TextSpan).text, 'one');
+      final oneSpan = (spans[0] as TextSpan).children![0] as TextSpan;
+      expect(oneSpan.text, 'one');
       expect((spans[1] as TextSpan).text, ' and ');
-      expect((spans[2] as TextSpan).text, 'two');
+      final twoSpan = (spans[2] as TextSpan).children![0] as TextSpan;
+      expect(twoSpan.text, 'two');
     });
 
-    testWidgets('Nested style works BUT assumes no inheritance yet', (tester) async {
+    testWidgets('Nested style works and SHOULD inherit style', (tester) async {
       await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
       final inlineSpans = [const TextSpan(text: 'replacement')];
       final spans = parser.parse(
@@ -74,13 +78,33 @@ void main() {
         inlineSpans: inlineSpans,
       );
 
-      // Currently, it adds NO text span for bold, just the replacement.
-      // because "**" -> push bold. "{0}" -> flush (empty). add replacement. "**" -> pop bold.
-      // So result is [replacement].
+      // We expect the result to be wrapped or have style applied.
+      // Current implementation returns [TextSpan(text: 'replacement')] with NO style (null).
+      // We want it to be bold.
 
       expect(spans.length, 1);
-      // It should refer to the same object if passed directly
-      expect(spans[0], inlineSpans[0]);
+      final span = spans[0];
+
+      // We can check if it's a TextSpan and has bold, OR if it's a wrapper TextSpan with bold.
+      // Let's inspect the effective style.
+      // Since we can't easily compute effective style without a render tree in this unit test context,
+      // we check the structure.
+
+      // Ideally, it should be: TextSpan(style: bold, children: [replacement])
+      // OR replacement with style merged.
+
+      // Let's assert that we find FontWeight.bold SOMEWHERE in the span or its parent.
+      bool isBold(InlineSpan s) {
+        if (s is TextSpan) {
+          if (s.style?.fontWeight == FontWeight.bold) return true;
+          // If it has children, checking them might be recursive but style is usually on the parent.
+          if (s.children != null) return s.children!.any(isBold);
+        }
+        return false;
+      }
+
+      expect(isBold(span), isTrue,
+          reason: 'Placeholder should inherit bold style from surrounding markdown');
     });
 
     testWidgets('Out of bounds index renders as text', (tester) async {
@@ -129,16 +153,14 @@ void main() {
 
     testWidgets('Interpolated value in source code works as plain text', (tester) async {
       await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-      final val = 123;
-      // "Value: 123"
       final spans = parser.parse(
-        'Value: ${val}',
+        'Value: ${0}',
         mockContext,
         const TextStyle(),
       );
 
       expect(spans.length, 1);
-      expect((spans[0] as TextSpan).text, 'Value: 123');
+      expect((spans[0] as TextSpan).text, 'Value: 0');
     });
 
     testWidgets('Mixed usage of {N} and \${} safeguards', (tester) async {
@@ -156,7 +178,9 @@ void main() {
 
       expect(spans.length, 2);
       expect((spans[0] as TextSpan).text, 'Count: 5, Icon: ');
-      expect((spans[1] as TextSpan).text, '[ICON]');
+
+      final iconSpan = (spans[1] as TextSpan).children![0] as TextSpan;
+      expect(iconSpan.text, '[ICON]');
     });
 
     testWidgets('Escaping {0} works', (tester) async {
