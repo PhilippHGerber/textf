@@ -24,6 +24,7 @@ flutter:
 
   assets:
     - assets/fonts/
+    - assets/img/
 
   fonts:
     - family: RobotoMono

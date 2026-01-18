@@ -49,6 +49,19 @@ class ParserState {
   /// An optional `TextScaler` for scaling the text.
   final TextScaler? textScaler;
 
+  /// Resolves the current style based on the format stack and base style.
+  TextStyle getCurrentStyle(BuildContext context) {
+    if (formatStack.isEmpty) {
+      return baseStyle;
+    }
+
+    TextStyle currentStyle = baseStyle;
+    for (final FormatStackEntry entry in formatStack) {
+      currentStyle = styleResolver.resolveStyle(entry.type, currentStyle);
+    }
+    return currentStyle;
+  }
+
   /// Flushes the accumulated `textBuffer` as a `TextSpan` with the current formatting applied.
   ///
   /// This method calculates the effective text style by starting with `baseStyle`
@@ -65,10 +78,7 @@ class ParserState {
   void flushText(BuildContext context) {
     if (textBuffer.isEmpty) return;
 
-    TextStyle currentStyle = baseStyle;
-    for (final FormatStackEntry entry in formatStack) {
-      currentStyle = styleResolver.resolveStyle(entry.type, currentStyle);
-    }
+    final currentStyle = getCurrentStyle(context);
 
     final bool isSuperscript = formatStack.any((e) => e.type == TokenType.superscriptMarker);
     final bool isSubscript = formatStack.any((e) => e.type == TokenType.subscriptMarker);

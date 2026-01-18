@@ -72,6 +72,7 @@ class TextfParser {
     BuildContext context,
     TextStyle baseStyle, {
     TextScaler? textScaler,
+    List<InlineSpan>? inlineSpans,
   }) {
     // Fast path for empty text
     if (text.isEmpty) {
@@ -107,6 +108,36 @@ class TextfParser {
     // 5. Optimized Process Loop
     for (int i = 0; i < tokens.length; i++) {
       final token = tokens[i];
+
+      // --- Placeholder Handling ---
+      if (token.type == TokenType.placeholder) {
+        final String raw = token.value;
+        // Expected format {N}
+        if (raw.length > 2) {
+          final String numberStr = raw.substring(1, raw.length - 1);
+          final int? index = int.tryParse(numberStr);
+          if (index != null && inlineSpans != null && index >= 0 && index < inlineSpans.length) {
+            // Valid placeholder
+            state.flushText(context);
+
+            // Get current style to ensure inheritance
+            final currentStyle = state.getCurrentStyle(context);
+
+            // We wrap the injected span in a TextSpan with the current style.
+            // This ensures that if the injected span is a TextSpan, it inherits
+            // the markdown styles (e.g. bold/italic) unless it overrides them.
+            // Even WidgetSpans are valid children of TextSpan.
+            state.spans.add(
+              TextSpan(
+                style: currentStyle,
+                children: [inlineSpans[index]],
+              ),
+            );
+            continue;
+          }
+        }
+        // Fallthrough to plain text if invalid
+      }
 
       // --- Link Handling ---
       if (token.type == TokenType.linkStart) {

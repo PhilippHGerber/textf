@@ -3,6 +3,7 @@ import 'dart:ui' as ui show TextHeightBehavior;
 import 'package:flutter/material.dart';
 
 import '../parsing/textf_parser.dart';
+
 import 'internal/textf_renderer.dart';
 
 /// A lightweight text widget for simple inline formatting.
@@ -78,6 +79,7 @@ class Textf extends StatelessWidget {
     this.textWidthBasis,
     this.textHeightBehavior,
     this.selectionColor,
+    this.inlineSpans,
   });
 
   /// The text to display with formatting
@@ -122,6 +124,9 @@ class Textf extends StatelessWidget {
   /// The color to use when painting the selection
   final Color? selectionColor;
 
+  /// The inline spans to replace the placeholders (##1, ##2, etc.)
+  final List<InlineSpan>? inlineSpans;
+
   // Private static instance for default usage
   static final TextfParser _defaultParser = TextfParser();
 
@@ -149,6 +154,7 @@ class Textf extends StatelessWidget {
       textWidthBasis: textWidthBasis,
       textHeightBehavior: textHeightBehavior,
       selectionColor: selectionColor,
+      inlineSpans: inlineSpans,
     );
   }
 }

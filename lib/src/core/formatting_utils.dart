@@ -25,7 +25,8 @@ class FormattingUtils {
           char == kOpenBracket ||
           char == kCloseBracket ||
           char == kOpenParen ||
-          char == kCloseParen) {
+          char == kCloseParen ||
+          char == kOpenBrace) {
         return true;
       }
     }

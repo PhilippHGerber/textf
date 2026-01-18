@@ -101,6 +101,7 @@ class TextfStyleResolver {
         case TokenType.linkUrl:
         case TokenType.linkEnd:
         case TokenType.text:
+        case TokenType.placeholder:
           return baseStyle; // No formatting applied
       }
     }
@@ -250,6 +251,7 @@ class TextfStyleResolver {
       case TokenType.linkUrl:
       case TokenType.linkEnd:
       case TokenType.text:
+      case TokenType.placeholder:
         return null; // No specific option style for these types
     }
   }
