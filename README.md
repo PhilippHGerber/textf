@@ -91,6 +91,34 @@ Textf supports the following inline formatting syntax, similar to a subset of Ma
 | Link          | `[text](url)`                | [Example Link](https://example.com) |
 | Superscript   | `^superscript^`              | ^superscript^                       |
 | Subscript     | `~subscript~`                | ~subscript~                         |
+| Placeholder   | `{0}`, `{1}`, etc.           | Inserted Widgets/Spans              |
+
+---
+
+### Widget Placeholders
+
+You can insert any `InlineSpan` (such as a `WidgetSpan` or `TextSpan`) into your text using placeholders`{n}`, where`n` corresponds to the index in the `inlineSpans` list. This acts like string interpolation but for UI components.
+
+```dart
+Textf(
+  'Press the {0} button to add a {1}.',
+  inlineSpans: [
+    WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: Icon(Icons.add_circle, color: Colors.blue),
+    ),
+    WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: Image.asset('assets/bird.gif'),
+    ),
+  ],
+)
+```
+
+* **Syntax:** Use curly braces with an integer index: `{0}`, `{1}`, `{15}`.
+* **Safety:** If an index is out of bounds or the list is null, the literal text (e.g., `"{5}"`) is displayed instead of crashing.
+* **Nesting:** Placeholders work inside formatting (e.g., `**{0}**` makes the inserted span bold) and inside links (e.g., `[Click {0}](url)`).
+* **Escaping:** To display a literal `{0}`, escape the opening brace: `\{0}`.
 
 ---
 
@@ -229,6 +257,7 @@ Performance benchmarks show Textf maintains smooth rendering (60+ FPS) even with
 * ✅ Interactive styling with `TextfOptions`
 * ✅ RTL language support
 * ✅ Theme-aware defaults
+* ✅ Widget Placeholders `{n}`
 
 ## When to Use Text*f*
 
