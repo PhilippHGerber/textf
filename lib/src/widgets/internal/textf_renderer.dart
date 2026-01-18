@@ -25,7 +25,7 @@ class TextfRenderer extends StatefulWidget {
     required this.textWidthBasis,
     required this.textHeightBehavior,
     required this.selectionColor,
-    required this.inlineSpans,
+    this.inlineSpans,
     super.key,
   });
 
@@ -76,7 +76,7 @@ class TextfRenderer extends StatefulWidget {
   /// {@macro flutter.widgets.basic.selectionColor}
   final Color? selectionColor;
 
-  /// The inline spans to replace the placeholders (##1, ##2, etc.)
+  /// The list of [InlineSpan] objects to insert into placeholders (e.g., {0}).
   final List<InlineSpan>? inlineSpans;
 
   @override

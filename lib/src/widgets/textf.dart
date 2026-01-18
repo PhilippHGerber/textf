@@ -3,7 +3,6 @@ import 'dart:ui' as ui show TextHeightBehavior;
 import 'package:flutter/material.dart';
 
 import '../parsing/textf_parser.dart';
-
 import 'internal/textf_renderer.dart';
 
 /// A lightweight text widget for simple inline formatting.
@@ -22,6 +21,7 @@ import 'internal/textf_renderer.dart';
 /// * ,,subscript,, for subscript text
 /// * `` `code` `` for `code` text
 /// * `[link text](url)` for [links](https://example.com)
+/// * `{n}` placeholders for inserting [InlineSpan]s (e.g., WidgetSpan) via [inlineSpans].
 ///
 /// Links support nested formatting such as `[**bold** link](url)`.
 
@@ -38,7 +38,7 @@ import 'internal/textf_renderer.dart';
 /// - Maximum nesting depth of 2 formatting levels
 /// - When nesting, use different marker types (e.g., **bold with _italic_**)
 /// - No support for block elements (headings, lists, quotes, etc.)
-/// - No support for images
+/// - No support for images (unless inserted via {n} placeholder)
 /// - Designed for inline formatting only, not full Markdown rendering
 ///
 /// To escape formatting characters use a backslash: `\*not italic\*`
@@ -124,7 +124,20 @@ class Textf extends StatelessWidget {
   /// The color to use when painting the selection
   final Color? selectionColor;
 
-  /// The inline spans to replace the placeholders (##1, ##2, etc.)
+  /// A list of [InlineSpan] objects to insert into the text at placeholder positions.
+  ///
+  /// Placeholders are denoted by `{n}` in the [data] string, where `n` is the
+  /// zero-based index of the span in this list.
+  ///
+  /// Example:
+  /// ```dart
+  /// Textf(
+  ///   'Press {0} to continue',
+  ///   inlineSpans: [
+  ///     WidgetSpan(child: Icon(Icons.add)),
+  ///   ],
+  /// )
+  /// ```
   final List<InlineSpan>? inlineSpans;
 
   // Private static instance for default usage
