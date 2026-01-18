@@ -1,6 +1,8 @@
-// example/lib/widgets/example_card.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:syntax_highlight/syntax_highlight.dart';
+
+import '../main.dart'; // Import to access HighlighterThemes
 
 class ExampleCard extends StatelessWidget {
   final String title;
@@ -18,22 +20,19 @@ class ExampleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context); // Get theme
-    final codeStyleBase = theme.textTheme.bodyMedium?.copyWith(
-          // Use bodyMedium as base for code
-          fontFamily: 'RobotoMono',
-          fontFamilyFallback: ['Menlo', 'Courier New', 'monospace'],
-          fontSize: 12,
-        ) ??
-        const TextStyle(
-          // Fallback if bodyMedium is null
-          fontFamily: 'RobotoMono',
-          fontFamilyFallback: ['Menlo', 'Courier New', 'monospace'],
-          fontSize: 12,
-        );
+    final theme = Theme.of(context);
+    final brightness = theme.brightness;
+
+    // Use pre-loaded themes
+    final highlighterTheme =
+        brightness == Brightness.dark ? HighlighterThemes.dark : HighlighterThemes.light;
+
+    final highlighter = Highlighter(
+      language: 'dart',
+      theme: highlighterTheme,
+    );
 
     return Card(
-      // Use default Card theme for elevation/shape
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -41,30 +40,31 @@ class ExampleCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: theme.textTheme.titleLarge, // Use theme style
+              style: theme.textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
               description,
-              style: theme.textTheme.bodyMedium, // Use theme style
+              style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start, // Align top
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      // Use theme color for code background
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      code.trim(), // Trim code block whitespace
-                      // Apply base code style, color will come from theme
-                      style: codeStyleBase.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant, // Explicit text color
+                  child: SelectionArea(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text.rich(
+                        highlighter.highlight(code.trim()),
+                        style: const TextStyle(
+                          fontFamily: 'RobotoMono',
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -89,23 +89,25 @@ class ExampleCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             // Result container
-            Container(
-              width: double.infinity, // Ensure it takes full width
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                // Use a slightly different theme color for result background
-                color: theme.colorScheme.surfaceContainer,
-                borderRadius: BorderRadius.circular(8),
-                // Optional: Add a subtle border
-                border: Border.all(
-                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-                  width: 1,
+            SelectionArea(
+              child: Container(
+                width: double.infinity, // Ensure it takes full width
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  // Use a slightly different theme color for result background
+                  color: theme.colorScheme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(8),
+                  // Optional: Add a subtle border
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
                 ),
-              ),
-              // Apply default text style from theme to the child content
-              child: DefaultTextStyle.merge(
-                style: theme.textTheme.bodyMedium ?? const TextStyle(),
-                child: child,
+                // Apply default text style from theme to the child content
+                child: DefaultTextStyle.merge(
+                  style: theme.textTheme.bodyMedium ?? const TextStyle(),
+                  child: child,
+                ),
               ),
             ),
           ],

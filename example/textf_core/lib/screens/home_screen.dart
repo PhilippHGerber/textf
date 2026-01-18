@@ -1,15 +1,14 @@
 // example/lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:textf/textf.dart';
 
 import 'basic_formatting_screen.dart';
-import 'chat_example_screen.dart';
 import 'complex_formatting_screen.dart';
 import 'nested_formatting_screen.dart';
-import 'notification_example_screen.dart';
+import 'placeholder_example_screen.dart';
 import 'screenshot_screen.dart';
 import 'theme_example_screen.dart';
 import 'url_example_screen.dart';
-import 'placeholder_example_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final ThemeMode currentThemeMode;
@@ -46,8 +45,8 @@ class HomeScreen extends StatelessWidget {
             // Add tile for the new Theme Example Screen
             _buildExampleTile(
               context,
-              'Theme Examples',
-              'Show default link/code styling adapting to themes',
+              const Text('Theme Examples'),
+              const Text('Show default link/code styling adapting to themes'),
               ThemeExampleScreen(
                 // Pass down theme info
                 currentThemeMode: currentThemeMode,
@@ -56,8 +55,8 @@ class HomeScreen extends StatelessWidget {
             ),
             _buildExampleTile(
               context,
-              'Basic Formatting',
-              'Simple examples of bold, italic, strikethrough, and code formatting',
+              const Text('Basic Formatting'),
+              const Text('Simple examples of bold, italic, strikethrough, and code formatting'),
               BasicFormattingScreen(
                 // Pass down theme info
                 currentThemeMode: currentThemeMode,
@@ -66,8 +65,8 @@ class HomeScreen extends StatelessWidget {
             ),
             _buildExampleTile(
               context,
-              'Nested Formatting',
-              'Examples of nested formatting styles',
+              const Text('Nested Formatting'),
+              const Text('Examples of nested formatting styles'),
               NestedFormattingScreen(
                 // Pass down theme info
                 currentThemeMode: currentThemeMode,
@@ -76,8 +75,8 @@ class HomeScreen extends StatelessWidget {
             ),
             _buildExampleTile(
               context,
-              'Complex Formatting',
-              'More advanced text formatting combinations',
+              const Text('Complex Formatting'),
+              const Text('More advanced text formatting combinations'),
               ComplexFormattingScreen(
                 // Pass down theme info
                 currentThemeMode: currentThemeMode,
@@ -86,49 +85,51 @@ class HomeScreen extends StatelessWidget {
             ),
             _buildExampleTile(
               context,
-              'URL Examples',
-              'Examples of URL formatting and interaction',
+              const Text('URL Examples'),
+              const Text('Examples of URL formatting and interaction'),
               UrlExampleScreen(
                 // Pass down theme info
                 currentThemeMode: currentThemeMode,
                 toggleThemeMode: toggleThemeMode,
               ),
             ),
+
             _buildExampleTile(
               context,
-              'Chat Bubble Example',
-              'Example of formatting in a chat bubble',
-              ChatExampleScreen(
-                // Pass down theme info
+              Textf(
+                '{0} Placeholder Example',
+                inlineSpans: [
+                  // Badge "new"
+                  WidgetSpan(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: Colors.green,
+                      ),
+                      child: Text(
+                        'new',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Text('Inject widgets like Icons and Images inline'),
+              PlaceholderExampleScreen(
                 currentThemeMode: currentThemeMode,
                 toggleThemeMode: toggleThemeMode,
               ),
             ),
             _buildExampleTile(
               context,
-              'Notification Example',
-              'Example of formatting in a notification',
-              NotificationExampleScreen(
-                // Pass down theme info
-                currentThemeMode: currentThemeMode,
-                toggleThemeMode: toggleThemeMode,
-              ),
-            ),
-            _buildExampleTile(
-              context,
-              'Screenshot Generator',
-              'Create custom formatted text and take screenshots',
+              const Text('Screenshot Generator'),
+              const Text('Create custom formatted text and take screenshots'),
               ScreenshotScreen(
                 // Pass down theme info
-                currentThemeMode: currentThemeMode,
-                toggleThemeMode: toggleThemeMode,
-              ),
-            ),
-            _buildExampleTile(
-              context,
-              'Placeholder Example',
-              'Inject widgets like Icons and Images inline',
-              PlaceholderExampleScreen(
                 currentThemeMode: currentThemeMode,
                 toggleThemeMode: toggleThemeMode,
               ),
@@ -141,8 +142,8 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildExampleTile(
     BuildContext context,
-    String title,
-    String subtitle,
+    Widget title,
+    Widget subtitle,
     Widget destination, // Destination now already has theme info
   ) {
     return Card(
@@ -150,8 +151,8 @@ class HomeScreen extends StatelessWidget {
       // margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6), // Reduced vertical margin
       child: ListTile(
-        title: Text(title),
-        subtitle: Text(subtitle),
+        title: title,
+        subtitle: subtitle,
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () {
           Navigator.push(
