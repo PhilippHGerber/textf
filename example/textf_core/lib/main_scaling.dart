@@ -40,9 +40,20 @@ class _ScalingReproScreenState extends State<ScalingReproScreen> {
                     ' **hello** ==world== \n'
                     ' E = mc^2^ \n'
                     ' H~2~O \n'
-                    ' a^log~a~b^ ',
+                    ' a^log~a~b^ \n'
+                    ' This is a ~~cat~~ bird {0} \n',
                     style: TextStyle(fontSize: _fontSize),
                     textScaler: TextScaler.linear(_textScaleFactor),
+                    inlineSpans: [
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: Image.asset(
+                          'assets/img/bird.gif',
+                          width: _fontSize*2,
+                          height: _fontSize*2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

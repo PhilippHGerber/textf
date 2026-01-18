@@ -149,9 +149,31 @@ class ShowcaseScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ─────────────────────────────────────────────────────────────
-            // SECTION 5: Escaped Characters
+            // SECTION 5: Placeholders for InlineSpans
             // ─────────────────────────────────────────────────────────────
-            _sectionHeader('5. Escaped Characters'),
+            _sectionHeader('5. Placeholders for InlineSpans'),
+
+            const Textf(
+              'Press the {0} button to add a {1}.',
+              inlineSpans: [
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Icon(Icons.add_circle, color: Colors.blue),
+                ),
+                // Icon of a user
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Icon(Icons.person, color: Colors.green),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // ─────────────────────────────────────────────────────────────
+            // SECTION 6: Escaped Characters
+            // ─────────────────────────────────────────────────────────────
+            _sectionHeader('6. Escaped Characters'),
 
             // Use backslash to escape formatting characters
             // Note: Use raw strings (r'...') for cleaner escape syntax
@@ -168,9 +190,9 @@ class ShowcaseScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ─────────────────────────────────────────────────────────────
-            // SECTION 6: Nested Formatting
+            // SECTION 7: Nested Formatting
             // ─────────────────────────────────────────────────────────────
-            _sectionHeader('6. Nested Formatting'),
+            _sectionHeader('7. Nested Formatting'),
 
             // Use different marker types for nesting (** with _ works best)
             const Textf('**Bold with _nested italic_ inside.**'),
@@ -185,9 +207,9 @@ class ShowcaseScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ─────────────────────────────────────────────────────────────
-            // SECTION 7: Custom Styling with TextfOptions
+            // SECTION 8: Custom Styling with TextfOptions
             // ─────────────────────────────────────────────────────────────
-            _sectionHeader('7. Custom Styling'),
+            _sectionHeader('8. Custom Styling'),
 
             // Override individual format styles
             TextfOptions(
@@ -266,9 +288,9 @@ class ShowcaseScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ─────────────────────────────────────────────────────────────
-            // SECTION 8: Style Inheritance & Nesting
+            // SECTION 9: Style Inheritance & Nesting
             // ─────────────────────────────────────────────────────────────
-            _sectionHeader('8. Style Inheritance'),
+            _sectionHeader('9. Style Inheritance'),
 
             // Parent TextfOptions
             TextfOptions(
@@ -306,9 +328,9 @@ class ShowcaseScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ─────────────────────────────────────────────────────────────
-            // SECTION 9: Theme Integration
+            // SECTION 10: Theme Integration
             // ─────────────────────────────────────────────────────────────
-            _sectionHeader('9. Theme Integration'),
+            _sectionHeader('10. Theme Integration'),
 
             // Textf automatically uses theme colors
             // Links: colorScheme.primary
@@ -341,9 +363,9 @@ class ShowcaseScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ─────────────────────────────────────────────────────────────
-            // SECTION 10: Text Widget Properties
+            // SECTION 11: Text Widget Properties
             // ─────────────────────────────────────────────────────────────
-            _sectionHeader('10. Text Widget Properties'),
+            _sectionHeader('11. Text Widget Properties'),
 
             // All standard Text properties work
             const Textf(
@@ -376,9 +398,9 @@ class ShowcaseScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ─────────────────────────────────────────────────────────────
-            // SECTION 11: Error Handling
+            // SECTION 12: Error Handling
             // ─────────────────────────────────────────────────────────────
-            _sectionHeader('11. Error Handling'),
+            _sectionHeader('12. Error Handling'),
 
             // Unclosed markers become plain text
             const Textf('**Unclosed bold marker'),
@@ -404,12 +426,12 @@ class ShowcaseScreen extends StatelessWidget {
             const Textf('**Highlight Styling Comparison**'),
             const SizedBox(height: 8),
 
-// Default highlight: Uses theme-aware yellow background
+            // Default highlight: Uses theme-aware yellow background
             const Textf('This is ==highlighted== with default styling.'),
 
             const SizedBox(height: 8),
 
-// Custom highlight:  Soft blue
+            // Custom highlight:  Soft blue
             TextfOptions(
               highlightStyle: TextStyle(
                 backgroundColor: Colors.blue.shade50,
@@ -418,7 +440,7 @@ class ShowcaseScreen extends StatelessWidget {
               child: const Textf('==Soft blue== highlight.'),
             ),
 
-// Warm orange
+            // Warm orange
             TextfOptions(
               highlightStyle: TextStyle(
                 backgroundColor: Colors.orange.shade100,
@@ -427,7 +449,7 @@ class ShowcaseScreen extends StatelessWidget {
               child: const Textf('==Warm orange== highlight.'),
             ),
 
-// Bold highlight with extra styling
+            // Bold highlight with extra styling
             TextfOptions(
               highlightStyle: TextStyle(
                 backgroundColor: Colors.lightGreen.shade100,
@@ -440,9 +462,9 @@ class ShowcaseScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ─────────────────────────────────────────────────────────────
-            // SECTION 12: Real-World Examples
+            // SECTION 13: Real-World Examples
             // ─────────────────────────────────────────────────────────────
-            _sectionHeader('12. Real-World Examples'),
+            _sectionHeader('13. Real-World Examples'),
 
             // Chat message
             _exampleCard(
