@@ -57,7 +57,11 @@ const int kOpenParen = 0x28;
 const int kCloseParen = 0x29;
 
 /// Opening curly brace { (ASCII code 123)
+///
+/// Used for widget placeholders (e.g., {0}).
 const int kOpenBrace = 0x7B;
 
 /// Closing curly brace } (ASCII code 125)
+///
+/// Used for widget placeholders (e.g., {0}).
 const int kCloseBrace = 0x7D;
