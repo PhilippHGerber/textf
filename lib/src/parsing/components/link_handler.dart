@@ -79,21 +79,25 @@ class LinkHandler {
 
     final tokenizerForLinkText = TextfTokenizer();
     final linkTextTokens = tokenizerForLinkText.tokenize(rawLinkText);
+
+    // Check if the link text contains any non-text tokens (markers or placeholders)
     final bool containsFormattingMarkers =
         linkTextTokens.any((token) => token.type != TokenType.text);
 
     if (containsFormattingMarkers) {
       final innerParser = TextfParser();
+      // Pass the inlineSpans down to allow placeholders inside links
       childrenSpans = innerParser.parse(
         rawLinkText,
         context,
         finalLinkStyle,
+        inlineSpans: state.inlineSpans,
       );
       spanText = null;
     } else {
       // Plain text content, remove escape characters
       spanText = rawLinkText.replaceAllMapped(
-        RegExp(r'\\([*_~`\[\]()\\])'),
+        RegExp(r'\\([*_~`\[\](){}\\])'),
         (match) => match.group(1) ?? '',
       );
       childrenSpans = [];
@@ -184,6 +188,16 @@ class LinkHandler {
     }
 
     return tokens[index].type == TokenType.linkStart &&
+        (tokens[index + _linkTextOffset].type == TokenType.text ||
+            tokens[index + _linkTextOffset].type ==
+                TokenType.placeholder) && // Allow placeholders in position check?
+        // Actually, token[1] is just "text" or tokens depending on tokenizer.
+        // Wait, the Tokenizer DOES NOT recursively tokenize inside [].
+        // It captures "linkText" as a single TEXT token or sequence.
+        // RE-CHECKING TOKENIZER: The tokenizer emits ONE text token for the link content.
+        // So `tokens[index + 1]` will be TokenType.text even if it contains "{0}".
+        // The LinkHandler THEN re-tokenizes that string.
+        // So this logic remains correct:
         tokens[index + _linkTextOffset].type == TokenType.text &&
         tokens[index + _linkSeparatorOffset].type == TokenType.linkSeparator &&
         tokens[index + _linkUrlOffset].type == TokenType.text &&

@@ -7,6 +7,7 @@ import '../styling/textf_style_resolver.dart';
 import 'components/format_handler.dart';
 import 'components/link_handler.dart';
 import 'components/pairing_resolver.dart';
+import 'components/placeholder_handler.dart'; 
 import 'textf_tokenizer.dart';
 
 /// Parser for formatted text that converts formatting markers into styled text spans.
@@ -22,6 +23,7 @@ import 'textf_tokenizer.dart';
 /// - Handles malformed formatting by treating unpaired markers as plain text.
 /// - Escaped character support (handled by the tokenizer).
 /// - Support for [link text](url) with nested formatting inside links.
+/// - Support for widget placeholders via {0} syntax.
 class TextfParser {
   /// Creates a new [TextfParser] instance.
   ///
@@ -47,16 +49,9 @@ class TextfParser {
   /// 6. Iterates through the tokens:
   ///    - Skips tokens that have already been processed (e.g., as part of a link or format pair).
   ///    - Appends plain text tokens (`TokenType.text`) to the `ParserState`'s text buffer.
-  ///    - If a `TokenType.linkStart` (`[`) is encountered, delegates processing to `LinkHandler`
-  ///      to attempt parsing a complete `[link text](url)` structure. The handler manages
-  ///      nested formatting within the link text and marks processed tokens.
-  ///    - If a formatting marker token (`*`, `_`, `**`, `__`, `***`, `___`, `~`, `` ` ``) is found:
-  ///        - Checks if this specific token instance is part of a *valid pair* identified in step 4.
-  ///        - If **paired**, delegates processing to `FormatHandler`. This handler manages the
-  ///          style stack (pushing/popping styles), flushes the text buffer with the previous style,
-  ///          and marks both the opening and closing marker tokens as processed.
-  ///        - If **unpaired**, treats the marker's literal value (e.g., "*") as plain text and
-  ///          appends it to the `ParserState`'s text buffer. Marks the unpaired marker token as processed.
+  ///    - If a `TokenType.linkStart` (`[`) is encountered, delegates processing to `LinkHandler`.
+  ///    - If a `TokenType.placeholder` (`{n}`) is encountered, delegates to `PlaceholderHandler`.
+  ///    - If a formatting marker token is found, handles stack operations via `FormatHandler`.
   ///    - Treats any other unexpected token types encountered during the loop as plain text.
   /// 7. After iterating through all tokens, flushes any remaining text in the `ParserState`'s
   ///    buffer using the current style context via `state.flushText()`.
@@ -65,6 +60,7 @@ class TextfParser {
   /// - [text]: The input string potentially containing formatting markers.
   /// - [context]: The current build context, required for theme and options lookup by the `TextfStyleResolver`.
   /// - [baseStyle]: The base text style to apply to unformatted text segments and as the foundation for styled segments.
+  /// - [inlineSpans]: Optional list of spans to insert into placeholders like `{0}`.
   ///
   /// Returns a list of [InlineSpan] objects representing the styled text.
   List<InlineSpan> parse(
@@ -81,7 +77,7 @@ class TextfParser {
 
     // Fast path for plain text without formatting markers
     // Note: FormattingUtils.hasFormatting checks for *any* potential marker,
-    // including unpaired ones or link syntax characters.
+    // including unpaired ones, link syntax characters, or braces.
     if (!FormattingUtils.hasFormatting(text)) {
       // No potential formatting, return simple TextSpan list
       return <InlineSpan>[TextSpan(text: text, style: baseStyle)];
@@ -103,6 +99,7 @@ class TextfParser {
       matchingPairs: validPairs,
       styleResolver: resolver,
       textScaler: textScaler,
+      inlineSpans: inlineSpans,
     );
 
     // 5. Optimized Process Loop
@@ -111,32 +108,8 @@ class TextfParser {
 
       // --- Placeholder Handling ---
       if (token.type == TokenType.placeholder) {
-        final String raw = token.value;
-        // Expected format {N}
-        if (raw.length > 2) {
-          final String numberStr = raw.substring(1, raw.length - 1);
-          final int? index = int.tryParse(numberStr);
-          if (index != null && inlineSpans != null && index >= 0 && index < inlineSpans.length) {
-            // Valid placeholder
-            state.flushText(context);
-
-            // Get current style to ensure inheritance
-            final currentStyle = state.getCurrentStyle(context);
-
-            // We wrap the injected span in a TextSpan with the current style.
-            // This ensures that if the injected span is a TextSpan, it inherits
-            // the markdown styles (e.g. bold/italic) unless it overrides them.
-            // Even WidgetSpans are valid children of TextSpan.
-            state.spans.add(
-              TextSpan(
-                style: currentStyle,
-                children: [inlineSpans[index]],
-              ),
-            );
-            continue;
-          }
-        }
-        // Fallthrough to plain text if invalid
+        PlaceholderHandler.processPlaceholder(context, state, token);
+        continue;
       }
 
       // --- Link Handling ---

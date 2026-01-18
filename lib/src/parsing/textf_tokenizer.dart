@@ -3,42 +3,24 @@
 import '../core/constants.dart';
 import '../models/token_type.dart';
 
-/// Tokenizes text into formatting markers and content segments.
+/// Tokenizes text into formatting markers, placeholders, and content segments.
 ///
 /// The TextfTokenizer breaks down input text into a sequence of [Token] objects that
-/// represent either formatting markers (like bold, italic) or regular text content.
-/// It focuses solely on identifying tokens without validating their pairing or nesting.
+/// represent either formatting markers (like bold, italic), placeholders (like {0}),
+/// or regular text content.
 ///
 /// This class is optimized for performance with a character-by-character approach
 /// and special handling for escape sequences.
-///
-/// Example:
-/// ```dart
-/// final tokenizer = TextfTokenizer();
-/// final tokens = tokenizer.tokenize('Hello **world**');
-/// // Results in 3 tokens: "Hello ", "**" (bold marker), "world", "**" (bold marker)
-/// ```
 class TextfTokenizer {
   /// Tokenizes the input text into a list of [Token] objects.
   ///
-  /// This method processes the text character by character, identifying formatting
-  /// markers and regular text segments. It recognizes:
-  /// - Bold markers: ** or __
-  /// - Italic markers: * or _
-  /// - Bold+Italic markers: *** or ___
-  /// - Strikethrough markers: ~~
-  /// - Code markers: `
-  /// - Underline markers: ++
-  /// - Highlight markers: ==
-  /// - Escaped characters: \* \_ \~ \` \\ \+ \= \[ \] \( \)
+  /// This method processes the text character by character, identifying:
+  /// - Formatting markers: **, __, *, _, ~~, `, ++, ==, ^, ~
+  /// - Placeholders: {n} (where n is a digit sequence)
+  /// - Links: [text](url)
+  /// - Regular text
   ///
-  /// The method is optimized for performance by:
-  /// - Pre-processing text into code units
-  /// - Using direct character code comparisons
-  /// - Minimizing string operations
-  ///
-  /// @param text The input text to tokenize
-  /// @return A list of [Token] objects representing the text components
+  /// Escaped characters (preceded by \) are treated as literal text.
   List<Token> tokenize(String text) {
     final tokens = <Token>[];
     int pos = 0;
@@ -87,7 +69,7 @@ class TextfTokenizer {
       // Handle escape character
       if (currentChar == kEscape && pos + 1 < length) {
         final int nextChar = codeUnits[pos + 1];
-        // Check if next char is a formatting character or link-related character
+        // Check if next char is a formatting character, link char, or placeholder brace
         if (nextChar == kAsterisk ||
             nextChar == kUnderscore ||
             nextChar == kTilde ||
@@ -121,7 +103,7 @@ class TextfTokenizer {
       // Identify token patterns without semantic interpretation
       if (currentChar == kAsterisk) {
         // Check for bold+italic (***)
-        if (pos + 2 < length && //
+        if (pos + 2 < length &&
             codeUnits[pos + 1] == kAsterisk &&
             codeUnits[pos + 2] == kAsterisk) {
           addTextToken(textStart, pos);
@@ -145,7 +127,7 @@ class TextfTokenizer {
         }
       } else if (currentChar == kUnderscore) {
         // Check for bold+italic (___)
-        if (pos + 2 < length && //
+        if (pos + 2 < length &&
             codeUnits[pos + 1] == kUnderscore &&
             codeUnits[pos + 2] == kUnderscore) {
           addTextToken(textStart, pos);
@@ -212,10 +194,10 @@ class TextfTokenizer {
           pos += 2;
           textStart = pos;
         } else {
-          // Single equals treated as plain text, will be handled by final pos increment
           pos++;
         }
       } else if (currentChar == kOpenBracket) {
+        // Check for link start [text](url)
         addTextToken(textStart, pos);
         final int? nextPos = _tryParseLink(text, codeUnits, length, pos, tokens);
         if (nextPos != null) {
@@ -227,12 +209,14 @@ class TextfTokenizer {
           textStart = pos;
         }
       } else if (currentChar == kOpenBrace) {
+        // Check for placeholder {n}
         addTextToken(textStart, pos);
         final int? nextPos = _tryParsePlaceholder(text, codeUnits, length, pos, tokens);
         if (nextPos != null) {
           pos = nextPos;
           textStart = pos;
         } else {
+          // Not a valid placeholder (e.g. {a} or { 1 }), treat as plain text '{'
           tokens.add(Token(TokenType.text, '{', pos, 1));
           pos++;
           textStart = pos;
@@ -356,10 +340,14 @@ class TextfTokenizer {
     return urlEnd + 1;
   }
 
-  /// Attempts to parse a placeholder `{{N}}`.
+  /// Attempts to parse a widget placeholder `{n}`.
   ///
-  /// Returns the position after the closing braces if successful,
+  /// Returns the position after the closing brace if successful,
   /// otherwise returns null.
+  ///
+  /// Valid format: `{` followed by one or more digits, followed immediately by `}`.
+  /// Examples: `{0}`, `{12}`, `{999}`.
+  /// Invalid examples: `{}`, `{ 1}`, `{1 }`, `{a}`, `{1,2}`.
   int? _tryParsePlaceholder(
     String text,
     List<int> codeUnits,
@@ -367,41 +355,47 @@ class TextfTokenizer {
     int startPos,
     List<Token> tokens,
   ) {
-    // Current char at startPos is '{'.
-    // We expect {digits}
-
     int pos = startPos + 1; // Move past '{'
-    final int digitsStart = pos;
+    final int digitStart = pos;
 
     while (pos < length) {
-      final int c = codeUnits[pos];
-      if (c >= 0x30 && c <= 0x39) {
-        // Digit 0-9
+      final int char = codeUnits[pos];
+
+      // Check for digits (0-9)
+      if (char >= 0x30 && char <= 0x39) {
         pos++;
-      } else if (c == kCloseBrace) {
-        // Found '}'
-        if (pos > digitsStart) {
-          // We have at least one digit
-          tokens.add(
-            Token(
-              TokenType.placeholder,
-              // ignore: avoid-substring
-              text.substring(startPos, pos + 1),
-              startPos,
-              pos + 1 - startPos,
-            ),
-          );
-          return pos + 1;
-        } else {
-          // Empty placeholder '{}' - treat as text
-          return null;
-        }
-      } else {
-        // Non-digit char inside - treat as text
-        return null;
+        continue;
       }
+
+      // Check for closing brace
+      if (char == kCloseBrace) {
+        // Must have at least one digit between braces
+        if (pos == digitStart) {
+          return null; // Empty {} is treated as text
+        }
+
+        // Successfully parsed a placeholder
+        // Store the digits as the value for easy parsing later
+
+        // substring is safe, because digitStart and pos are validated
+        // ignore: avoid-substring
+        final String digits = text.substring(digitStart, pos);
+        tokens.add(
+          Token(
+            TokenType.placeholder,
+            digits,
+            startPos,
+            (pos + 1) - startPos,
+          ),
+        );
+        return pos + 1;
+      }
+
+      // Any other character (space, letter, comma) invalidates the placeholder
+      return null;
     }
 
+    // End of string reached without closing brace
     return null;
   }
 }
