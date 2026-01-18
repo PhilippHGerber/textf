@@ -47,7 +47,7 @@ enum TokenType {
   /// Closing parenthesis for link: ')'
   linkEnd(isLinkToken: true),
 
-  /// Placeholder for inline spans: '{{N}}'
+  /// Widget placeholder token: '{n}' where n is an integer index.
   placeholder,
   ;
 
