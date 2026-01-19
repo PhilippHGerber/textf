@@ -7,7 +7,7 @@ import '../styling/textf_style_resolver.dart';
 import 'components/format_handler.dart';
 import 'components/link_handler.dart';
 import 'components/pairing_resolver.dart';
-import 'components/placeholder_handler.dart'; 
+import 'components/placeholder_handler.dart';
 import 'textf_tokenizer.dart';
 
 /// Parser for formatted text that converts formatting markers into styled text spans.
@@ -103,12 +103,14 @@ class TextfParser {
     );
 
     // 5. Optimized Process Loop
-    for (int i = 0; i < tokens.length; i++) {
+    int i = 0;
+    while (i < tokens.length) {
       final token = tokens[i];
 
       // --- Placeholder Handling ---
       if (token.type == TokenType.placeholder) {
         PlaceholderHandler.processPlaceholder(context, state, token);
+        i++;
         continue;
       }
 
@@ -118,9 +120,8 @@ class TextfParser {
         final int? nextIndex = LinkHandler.processLink(context, state, i);
         if (nextIndex != null) {
           // Success: The LinkHandler consumed tokens up to `nextIndex`.
-          // We must advance the loop counter `i`.
-          // Since the loop performs `i++` at the end, we set i to `nextIndex - 1`.
-          i = nextIndex - 1;
+          // We set i to `nextIndex` to continue from there.
+          i = nextIndex;
           continue;
         }
         // Failure: Not a valid link. Fall through to process as plain text.
@@ -133,6 +134,7 @@ class TextfParser {
           FormatHandler.processFormat(context, state, i, token);
           // Handled as a marker (either pushed to or popped from stack).
           // Do NOT add to text buffer.
+          i++;
           continue;
         }
         // Unpaired or invalidly nested marker. Fall through to process as plain text.
@@ -144,6 +146,7 @@ class TextfParser {
       // 2. Unpaired/Invalid Formatting Markers
       // 3. Broken/Partial Link tokens
       state.textBuffer += token.value;
+      i++;
     }
 
     // 6. Final Flush
