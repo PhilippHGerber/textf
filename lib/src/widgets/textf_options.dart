@@ -96,6 +96,7 @@ class TextfOptions extends InheritedWidget {
     this.onLinkHover,
     this.linkMouseCursor,
     this.linkStyle,
+    this.linkAlignment,
     this.linkHoverStyle,
     this.boldStyle,
     this.italicStyle,
@@ -388,12 +389,23 @@ class TextfOptions extends InheritedWidget {
     return _findFirstAncestorValue(context, (o) => o.strikethroughThickness);
   }
 
+  /// Custom alignment for link widgets.
+  ///
+  /// Defaults to [PlaceholderAlignment.baseline] if not specified.
+  final PlaceholderAlignment? linkAlignment;
+
+  /// Resolves the nearest `linkAlignment` from the hierarchy.
+  PlaceholderAlignment? getEffectiveLinkAlignment(BuildContext context) {
+    return _findFirstAncestorValue(context, (o) => o.linkAlignment);
+  }
+
   @override
   bool updateShouldNotify(TextfOptions oldWidget) {
     // Comparing only the properties of this specific instance.
     return onLinkTap != oldWidget.onLinkTap ||
         onLinkHover != oldWidget.onLinkHover ||
         linkStyle != oldWidget.linkStyle ||
+        linkAlignment != oldWidget.linkAlignment ||
         linkHoverStyle != oldWidget.linkHoverStyle ||
         linkMouseCursor != oldWidget.linkMouseCursor ||
         boldStyle != oldWidget.boldStyle ||

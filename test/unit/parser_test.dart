@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
+import 'package:textf/textf.dart';
 
 void main() {
   group('TextfParser Tests', () {
@@ -450,6 +451,33 @@ void main() {
 
         expect(hasBoldItalic, true);
         expect(hasRegularItalic, true);
+      });
+    });
+    group('Link Alignment', () {
+      testWidgets('linkAlignment option works', (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: TextfOptions(
+              linkAlignment: PlaceholderAlignment.middle,
+              child: Builder(
+                builder: (context) {
+                  mockContext = context;
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ),
+        );
+        final spans = parser.parse(
+          '[link](url)',
+          mockContext,
+          const TextStyle(),
+        );
+
+        expect(spans, hasLength(1));
+        expect(spans.first, isA<WidgetSpan>());
+        final widgetSpan = spans.first as WidgetSpan;
+        expect(widgetSpan.alignment, PlaceholderAlignment.middle);
       });
     });
   });

@@ -120,7 +120,7 @@ class LinkHandler {
     state.spans.add(
       WidgetSpan(
         child: hoverableWidget,
-        alignment: PlaceholderAlignment.baseline,
+        alignment: state.styleResolver.resolveLinkAlignment(),
         baseline: TextBaseline.alphabetic,
       ),
     );

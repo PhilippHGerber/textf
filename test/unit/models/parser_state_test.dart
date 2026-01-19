@@ -51,6 +51,9 @@ class _MockTextfStyleResolver implements TextfStyleResolver {
       throw UnimplementedError();
 
   @override
+  PlaceholderAlignment resolveLinkAlignment() => throw UnimplementedError();
+
+  @override
   InlineSpan createScriptSpan({
     required String text,
     required TextStyle style,

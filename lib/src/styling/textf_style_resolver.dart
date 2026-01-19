@@ -162,6 +162,13 @@ class TextfStyleResolver {
     return _nearestOptions?.getEffectiveOnLinkHover(context);
   }
 
+  /// Resolves the effective placeholder alignment for a link widget.
+  ///
+  /// Checks TextfOptions hierarchy. Defaults to [PlaceholderAlignment.baseline] if not found.
+  PlaceholderAlignment resolveLinkAlignment() {
+    return _nearestOptions?.getEffectiveLinkAlignment(context) ?? PlaceholderAlignment.baseline;
+  }
+
   /// Creates an [InlineSpan] representing a single script fragment.
   ///
   /// The returned span encapsulates the visual styling, semantics, and any
