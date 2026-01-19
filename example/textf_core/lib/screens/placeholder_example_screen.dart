@@ -45,7 +45,7 @@ Textf(
     ),
     WidgetSpan(
       alignment: PlaceholderAlignment.middle,
-      child: Image.asset('.../bird.png'),
+      child: Image.asset('bird.png'),
     ),
   ],
 )''',
@@ -83,7 +83,7 @@ Textf(
   inlineSpans: [
     WidgetSpan(
       alignment: PlaceholderAlignment.middle,
-      child: Image.asset('.../bird.gif'),
+      child: Image.asset('bird.gif'),
     ),
   ],
 )''',
@@ -142,7 +142,7 @@ TextfOptions(
   child: Textf(
     'Visit [Flutter {0}](https://flutter.dev) to learn more.',
     inlineSpans: [
-      WidgetSpan(child: Image.asset('.../rocket.png')),
+      WidgetSpan(child: Image.asset('bird.png')),
     ],
   ),
 )''',
@@ -159,7 +159,7 @@ TextfOptions(
                     WidgetSpan(
                       alignment: PlaceholderAlignment.middle,
                       child: Image.asset(
-                        'assets/img/rocket.png',
+                        'assets/img/bird.png',
                         width: 24,
                         height: 24,
                       ),
