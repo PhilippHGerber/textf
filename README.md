@@ -29,6 +29,7 @@ The name "Textf" is inspired by the C standard library function `printf` (print 
 * **Flutter-native** – Uses the familiar Text API for seamless integration
 * **Zero dependencies** – No external packages required
 * **Interactive links** – Built-in link support with customizable styles and hover effects
+* **Widget Interpolation** – Insert any widget into text using named placeholders
 
 Perfect for chat applications, comment sections, UI elements, and any scenario where simple inline formatting is all you need.
 
@@ -38,7 +39,7 @@ Add Textf to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  textf: ^1.0.0
+  textf: ^1.1.0
 ```
 
 Then run:
@@ -91,34 +92,29 @@ Textf supports the following inline formatting syntax, similar to a subset of Ma
 | Link          | `[text](url)`                | [Example Link](https://example.com) |
 | Superscript   | `^superscript^`              | ^superscript^                       |
 | Subscript     | `~subscript~`                | ~subscript~                         |
-| Placeholder   | `{0}`, `{1}`, etc.           | Inserted Widgets/Spans              |
+| Placeholder   | `{key}`                      | Inserted Widgets/Spans              |
 
 ---
 
 ### Widget Placeholders
 
-You can insert any `InlineSpan` (such as a `WidgetSpan` or `TextSpan`) into your text using placeholders`{n}`, where`n` corresponds to the index in the `inlineSpans` list. This acts like string interpolation but for UI components.
+You can insert any `InlineSpan` (such as a `WidgetSpan` or `TextSpan`) into your text using named placeholders `{key}`. This acts like string interpolation but for UI components.
 
 ```dart
 Textf(
-  'Press the {0} button to add a {1}.',
-  inlineSpans: [
-    WidgetSpan(
-      alignment: PlaceholderAlignment.middle,
-      child: Icon(Icons.add_circle, color: Colors.blue),
-    ),
-    WidgetSpan(
-      alignment: PlaceholderAlignment.middle,
-      child: Image.asset('assets/bird.gif'),
-    ),
-  ],
+  'Built with {flutter} and {dart}. Made with {love}.',
+  placeholders: {
+    'flutter': WidgetSpan(child: Image.asset('flutter.png')),
+    'dart':    WidgetSpan(child: Image.asset('dart.png')),
+    'love':    WidgetSpan(child: Icon(Icons.favorite, color: Colors.red)),
+  },
 )
 ```
 
-* **Syntax:** Use curly braces with an integer index: `{0}`, `{1}`, `{15}`.
-* **Safety:** If an index is out of bounds or the list is null, the literal text (e.g., `"{5}"`) is displayed instead of crashing.
-* **Nesting:** Placeholders work inside formatting (e.g., `**{0}**` makes the inserted span bold) and inside links (e.g., `[Click {0}](url)`).
-* **Escaping:** To display a literal `{0}`, escape the opening brace: `\{0}`.
+* **Syntax:** Use curly braces with an alphanumeric key: `{icon}`, `{my_image}`, `{step1}`.
+* **Safety:** If a key is missing from the `placeholders` map, the literal text (e.g., `"{missing}"`) is displayed instead of crashing.
+* **Nesting:** Placeholders work inside formatting (e.g., `**{icon}**`) and inside links (e.g., `[Click {icon}](url)`).
+* **Escaping:** To display a literal `{key}`, escape the opening brace: `\{key}`.
 
 ---
 
@@ -257,7 +253,7 @@ Performance benchmarks show Textf maintains smooth rendering (60+ FPS) even with
 * ✅ Interactive styling with `TextfOptions`
 * ✅ RTL language support
 * ✅ Theme-aware defaults
-* ✅ Widget Placeholders `{n}`
+* ✅ Widget Placeholders `{key}`
 
 ## When to Use Text*f*
 

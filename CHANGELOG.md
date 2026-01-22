@@ -6,12 +6,11 @@ All notable changes to the `textf` package will be documented in this file.
 
 ### Added
 
-* **Widget Placeholders:** Added support for inserting arbitrary Flutter widgets (via `InlineSpan`) into formatted text using `{n}` syntax.  (PR #5, thanks @admin-kinora)
+* **Named Widget Placeholders:** You can now insert arbitrary Flutter widgets (via `InlineSpan`) into formatted text using `{key}` syntax and the `placeholders` map. (based on PR #5, thanks @admin-kinora)
 
-### Changed
+### Fixed
 
-* **Tokenizer Upgrade:** Updated the internal tokenizer to efficiently recognize `{number}` patterns and brace escaping.
-* **Escaping:** The `{` and `}` characters can now be escaped using a backslash (e.g., `\{0\}`) to force literal rendering.
+* **Escaping:** Improved escaping logic for braces to allow literal `{` characters when preceded by a backslash.
 
 ## 1.0.0
 
