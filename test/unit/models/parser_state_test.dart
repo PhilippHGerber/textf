@@ -115,7 +115,7 @@ void main() {
         matchingPairs: {},
         styleResolver: mockResolver,
       );
-      state.textBuffer = 'Plain text';
+      state.textBuffer.write('Plain text');
 
       // ACT
       state.flushText(mockContext);
@@ -142,7 +142,7 @@ void main() {
         matchingPairs: {},
         styleResolver: mockResolver,
       );
-      state.textBuffer = 'Bold text';
+      state.textBuffer.write('Bold text');
       state.formatStack.add(
         const FormatStackEntry(index: 0, matchingIndex: 1, type: TokenType.boldMarker),
       );
@@ -185,7 +185,7 @@ void main() {
         matchingPairs: {},
         styleResolver: mockResolver,
       );
-      state.textBuffer = 'Nested style';
+      state.textBuffer.write('Nested style');
       // Simulate a nested state: **_Text_**
       state.formatStack.add(
         const FormatStackEntry(index: 0, matchingIndex: 3, type: TokenType.boldMarker),
