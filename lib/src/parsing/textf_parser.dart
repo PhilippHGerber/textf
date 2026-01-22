@@ -10,6 +10,13 @@ import 'components/pairing_resolver.dart';
 import 'components/placeholder_handler.dart';
 import 'textf_tokenizer.dart';
 
+/// Container for cached parsing results.
+class _ParsedCacheEntry {
+  _ParsedCacheEntry(this.tokens, this.matchingPairs);
+  final List<Token> tokens;
+  final Map<int, int> matchingPairs;
+}
+
 /// Parser for formatted text that converts formatting markers into styled text spans.
 ///
 /// The [TextfParser] processes tokenized text, identifies matching formatting markers,
@@ -23,7 +30,8 @@ import 'textf_tokenizer.dart';
 /// - Handles malformed formatting by treating unpaired markers as plain text.
 /// - Escaped character support (handled by the tokenizer).
 /// - Support for [link text](url) with nested formatting inside links.
-/// - Support for widget placeholders via {0} syntax.
+/// - Support for widget placeholders via {key} syntax.
+/// - Performance: Caches tokens and formatting pairs for frequently used text.
 class TextfParser {
   /// Creates a new [TextfParser] instance.
   ///
@@ -35,6 +43,13 @@ class TextfParser {
 
   /// TextfTokenizer instance used to break down text into tokens.
   final TextfTokenizer _tokenizer;
+
+  /// Cache for tokens and pairing results.
+  /// Uses a LinkedHashMap to implement a simple LRU cache.
+  static final _cache = <String, _ParsedCacheEntry>{};
+
+  /// Maximum number of entries in the parser cache.
+  static const _maxCacheSize = 200;
 
   /// Parses formatted text into a list of styled [InlineSpan] objects.
   ///
@@ -50,7 +65,7 @@ class TextfParser {
   ///    - Skips tokens that have already been processed (e.g., as part of a link or format pair).
   ///    - Appends plain text tokens (`TokenType.text`) to the `ParserState`'s text buffer.
   ///    - If a `TokenType.linkStart` (`[`) is encountered, delegates processing to `LinkHandler`.
-  ///    - If a `TokenType.placeholder` (`{n}`) is encountered, delegates to `PlaceholderHandler`.
+  ///    - If a `TokenType.placeholder` (`{key}`) is encountered, delegates to `PlaceholderHandler`.
   ///    - If a formatting marker token is found, handles stack operations via `FormatHandler`.
   ///    - Treats any other unexpected token types encountered during the loop as plain text.
   /// 7. After iterating through all tokens, flushes any remaining text in the `ParserState`'s
@@ -60,7 +75,7 @@ class TextfParser {
   /// - [text]: The input string potentially containing formatting markers.
   /// - [context]: The current build context, required for theme and options lookup by the `TextfStyleResolver`.
   /// - [baseStyle]: The base text style to apply to unformatted text segments and as the foundation for styled segments.
-  /// - [inlineSpans]: Optional list of spans to insert into placeholders like `{0}`.
+  /// - [placeholders]: Optional map of spans to substitute into placeholders like `{icon}`.
   ///
   /// Returns a list of [InlineSpan] objects representing the styled text.
   List<InlineSpan> parse(
@@ -68,7 +83,7 @@ class TextfParser {
     BuildContext context,
     TextStyle baseStyle, {
     TextScaler? textScaler,
-    List<InlineSpan>? inlineSpans,
+    Map<String, InlineSpan>? placeholders,
   }) {
     // Fast path for empty text
     if (text.isEmpty) {
@@ -83,14 +98,30 @@ class TextfParser {
       return <InlineSpan>[TextSpan(text: text, style: baseStyle)];
     }
 
-    // 1. Tokenize
-    final tokens = _tokenizer.tokenize(text);
+    // --- Cache Lookup & Update ---
+    // Move to ends (most recent) if exists, or tokenize if miss.
+    final cached = _cache.remove(text);
+    final List<Token> tokens;
+    final Map<int, int> validPairs;
 
-    // 2. Style Resolver
+    if (cached != null) {
+      tokens = cached.tokens;
+      validPairs = cached.matchingPairs;
+    } else {
+      // 1. Tokenize
+      tokens = _tokenizer.tokenize(text);
+      // 2. Pairing
+      validPairs = PairingResolver.identifyPairs(tokens);
+    }
+
+    // Update Cache (LRU: add to end)
+    _cache[text] = _ParsedCacheEntry(tokens, validPairs);
+    if (_cache.length > _maxCacheSize) {
+      _cache.remove(_cache.keys.first);
+    }
+
+    // 3. Style Resolver
     final resolver = TextfStyleResolver(context);
-
-    // 3. Pairing
-    final validPairs = PairingResolver.identifyPairs(tokens);
 
     // 4. State
     final state = ParserState(
@@ -99,7 +130,7 @@ class TextfParser {
       matchingPairs: validPairs,
       styleResolver: resolver,
       textScaler: textScaler,
-      inlineSpans: inlineSpans,
+      placeholders: placeholders,
     );
 
     // 5. Optimized Process Loop
@@ -145,7 +176,7 @@ class TextfParser {
       // 1. TokenType.text
       // 2. Unpaired/Invalid Formatting Markers
       // 3. Broken/Partial Link tokens
-      state.textBuffer += token.value;
+      state.textBuffer.write(token.value);
       i++;
     }
 

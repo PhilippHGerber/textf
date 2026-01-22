@@ -86,12 +86,12 @@ class LinkHandler {
 
     if (containsFormattingMarkers) {
       final innerParser = TextfParser();
-      // Pass the inlineSpans down to allow placeholders inside links
+      // Pass the placeholders down to allow substitution inside links
       childrenSpans = innerParser.parse(
         rawLinkText,
         context,
         finalLinkStyle,
-        inlineSpans: state.inlineSpans,
+        placeholders: state.placeholders,
       );
       spanText = null;
     } else {
@@ -195,7 +195,7 @@ class LinkHandler {
         // Wait, the Tokenizer DOES NOT recursively tokenize inside [].
         // It captures "linkText" as a single TEXT token or sequence.
         // RE-CHECKING TOKENIZER: The tokenizer emits ONE text token for the link content.
-        // So `tokens[index + 1]` will be TokenType.text even if it contains "{0}".
+        // So `tokens[index + 1]` will be TokenType.text even if it contains "{icon}".
         // The LinkHandler THEN re-tokenizes that string.
         // So this logic remains correct:
         tokens[index + _linkTextOffset].type == TokenType.text &&

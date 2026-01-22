@@ -3,6 +3,7 @@ import 'dart:ui' as ui show TextHeightBehavior;
 import 'package:flutter/material.dart';
 
 import '../../parsing/textf_parser.dart';
+import '../textf_options.dart';
 
 /// Internal StatefulWidget that handles parsing, styling resolution via the parser,
 /// and hot reload notification. It bridges the Textf widget parameters with
@@ -25,7 +26,7 @@ class TextfRenderer extends StatefulWidget {
     required this.textWidthBasis,
     required this.textHeightBehavior,
     required this.selectionColor,
-    this.inlineSpans,
+    this.placeholders,
     super.key,
   });
 
@@ -76,8 +77,8 @@ class TextfRenderer extends StatefulWidget {
   /// {@macro flutter.widgets.basic.selectionColor}
   final Color? selectionColor;
 
-  /// The list of [InlineSpan] objects to insert into placeholders (e.g., {0}).
-  final List<InlineSpan>? inlineSpans;
+  /// The map of [InlineSpan] objects to insert into placeholders (e.g., {icon}).
+  final Map<String, InlineSpan>? placeholders;
 
   @override
   State<TextfRenderer> createState() => TextfRendererState();
@@ -85,32 +86,97 @@ class TextfRenderer extends StatefulWidget {
 
 /// The state class for [TextfRenderer] that builds the text widget
 class TextfRendererState extends State<TextfRenderer> {
+  /// Cached list of spans from the last parse.
+  List<InlineSpan>? _cachedSpans;
+
+  /// Cache keys to detect if inputs have changed.
+  String? _lastData;
+  TextStyle? _lastStyle;
+  TextScaler? _lastScaler;
+  Map<String, InlineSpan>? _lastPlaceholders;
+  PlaceholderAlignment? _lastLinkAlignment;
+  TextAlign? _lastTextAlign;
+  TextDirection? _lastTextDirection;
+  bool? _lastSoftWrap;
+  TextOverflow? _lastOverflow;
+  int? _lastMaxLines;
+  TextWidthBasis? _lastTextWidthBasis;
+
   @override
   Widget build(BuildContext context) {
     // Determine the effective base text style for parsing.
-    // It considers the widget's explicit style and the ambient DefaultTextStyle.
     final DefaultTextStyle defaultTextStyle = DefaultTextStyle.of(context);
     final TextStyle currentBaseStyle = widget.style ?? defaultTextStyle.style;
     final TextScaler effectiveScaler = widget.textScaler ?? MediaQuery.textScalerOf(context);
 
-    // Invoke the parser. The parser instance (widget.parser) is expected
-    // to handle the creation and usage of TextfStyleResolver internally
-    // using the provided context.
+    // Get any specific TextfOptions that might affect parsing/styling results.
+    // linkAlignment is currently the only one resolved during parsing components.
+    final TextfOptions? options = TextfOptions.maybeOf(context);
+    final PlaceholderAlignment? linkAlignment = options?.linkAlignment;
+
+    // --- Memoization Check ---
+    final List<InlineSpan>? cachedSpans = _cachedSpans;
+    if (cachedSpans != null &&
+        _lastData == widget.data &&
+        _lastStyle == currentBaseStyle &&
+        _lastScaler == effectiveScaler &&
+        _lastPlaceholders == widget.placeholders &&
+        _lastLinkAlignment == linkAlignment &&
+        _lastTextAlign == widget.textAlign &&
+        _lastTextDirection == widget.textDirection &&
+        _lastSoftWrap == widget.softWrap &&
+        _lastOverflow == widget.overflow &&
+        _lastMaxLines == widget.maxLines &&
+        _lastTextWidthBasis == widget.textWidthBasis) {
+      return DefaultTextStyle.merge(
+        textAlign: widget.textAlign,
+        softWrap: widget.softWrap,
+        overflow: widget.overflow,
+        maxLines: widget.maxLines,
+        textWidthBasis: widget.textWidthBasis,
+        child: _buildRichText(cachedSpans, effectiveScaler),
+      );
+    }
+
+    // Invoke the parser.
     final List<InlineSpan> spans = widget.parser.parse(
       widget.data,
-      context, // Pass the current BuildContext, needed by the style resolver within the parser.
+      context,
       currentBaseStyle,
       textScaler: effectiveScaler,
-      inlineSpans: widget.inlineSpans,
+      placeholders: widget.placeholders,
     );
 
-    // Render the parsed spans using Text.rich.
-    // Pass all the standard Text properties through.
+    final Widget result = _buildRichText(spans, effectiveScaler);
+
+    // Update cache
+    _cachedSpans = spans;
+    _lastData = widget.data;
+    _lastStyle = currentBaseStyle;
+    _lastScaler = effectiveScaler;
+    _lastPlaceholders = widget.placeholders;
+    _lastLinkAlignment = linkAlignment;
+    _lastTextAlign = widget.textAlign;
+    _lastTextDirection = widget.textDirection;
+    _lastSoftWrap = widget.softWrap;
+    _lastOverflow = widget.overflow;
+    _lastMaxLines = widget.maxLines;
+    _lastTextWidthBasis = widget.textWidthBasis;
+
+    return DefaultTextStyle.merge(
+      textAlign: widget.textAlign,
+      softWrap: widget.softWrap,
+      overflow: widget.overflow,
+      maxLines: widget.maxLines,
+      textWidthBasis: widget.textWidthBasis,
+      child: result,
+    );
+  }
+
+  /// Helper to build the actual Text.rich widget.
+  Widget _buildRichText(List<InlineSpan> spans, TextScaler effectiveScaler) {
     return Text.rich(
       TextSpan(
-        // The root TextSpan's style is taken from the explicit widget style.
-        // If widget.style is null, Text.rich implicitly uses DefaultTextStyle.
-        // The `currentBaseStyle` was used by the parser for *calculating* child styles.
         style: widget.style,
         children: spans,
       ),

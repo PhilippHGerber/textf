@@ -17,14 +17,13 @@ import 'internal/textf_renderer.dart';
 /// * `*italic*` or `_italic_` for *italic* text
 /// * `***bold and italic***` or `___bold and italic___` for ***bold and italic*** text
 /// * `~~strikethrough~~` for ~~strikethrough~~ text
-/// * ^^superscript^^ for superscript text
-/// * ,,subscript,, for subscript text
+/// * `^superscript^` for superscript text
+/// * `~subscript~` for subscript text
 /// * `` `code` `` for `code` text
 /// * `[link text](url)` for [links](https://example.com)
-/// * `{n}` placeholders for inserting [InlineSpan]s (e.g., WidgetSpan) via [inlineSpans].
+/// * `{key}` placeholders for inserting [InlineSpan]s (e.g., WidgetSpan) via [placeholders].
 ///
 /// Links support nested formatting such as `[**bold** link](url)`.
-
 ///
 /// ## Usage example
 /// ```dart
@@ -34,11 +33,25 @@ import 'internal/textf_renderer.dart';
 /// )
 /// ```
 ///
+/// ## Widget Interpolation
+/// You can insert arbitrary widgets or spans into the text using named placeholders.
+/// Keys must be alphanumeric (A-Z, a-z, 0-9) or underscores (_).
+///
+/// ```dart
+/// Textf(
+///   'Built with {flutter} and {dart}.',
+///   placeholders: {
+///     'flutter': WidgetSpan(child: Icon(Icons.flutter_dash)),
+///     'dart': WidgetSpan(child: Icon(Icons.code)),
+///   },
+/// )
+/// ```
+///
 /// ## Limitations
 /// - Maximum nesting depth of 2 formatting levels
 /// - When nesting, use different marker types (e.g., **bold with _italic_**)
 /// - No support for block elements (headings, lists, quotes, etc.)
-/// - No support for images (unless inserted via {n} placeholder)
+/// - No support for images (unless inserted via {key} placeholder)
 /// - Designed for inline formatting only, not full Markdown rendering
 ///
 /// To escape formatting characters use a backslash: `\*not italic\*`
@@ -79,7 +92,7 @@ class Textf extends StatelessWidget {
     this.textWidthBasis,
     this.textHeightBehavior,
     this.selectionColor,
-    this.inlineSpans,
+    this.placeholders,
   });
 
   /// The text to display with formatting
@@ -124,21 +137,21 @@ class Textf extends StatelessWidget {
   /// The color to use when painting the selection
   final Color? selectionColor;
 
-  /// A list of [InlineSpan] objects to insert into the text at placeholder positions.
+  /// A map of [InlineSpan] objects to insert into the text at placeholder positions.
   ///
-  /// Placeholders are denoted by `{n}` in the [data] string, where `n` is the
-  /// zero-based index of the span in this list.
+  /// Placeholders are denoted by `{key}` in the [data] string, where `key` corresponds
+  /// to a key in this map. Keys must consist of alphanumeric characters or underscores.
   ///
   /// Example:
   /// ```dart
   /// Textf(
-  ///   'Press {0} to continue',
-  ///   inlineSpans: [
-  ///     WidgetSpan(child: Icon(Icons.add)),
-  ///   ],
+  ///   'Status: {status_icon}',
+  ///   placeholders: {
+  ///     'status_icon': WidgetSpan(child: Icon(Icons.check)),
+  ///   },
   /// )
   /// ```
-  final List<InlineSpan>? inlineSpans;
+  final Map<String, InlineSpan>? placeholders;
 
   // Private static instance for default usage
   static final TextfParser _defaultParser = TextfParser();
@@ -167,7 +180,7 @@ class Textf extends StatelessWidget {
       textWidthBasis: textWidthBasis,
       textHeightBehavior: textHeightBehavior,
       selectionColor: selectionColor,
-      inlineSpans: inlineSpans,
+      placeholders: placeholders,
     );
   }
 }

@@ -6,7 +6,7 @@ import '../models/token_type.dart';
 /// Tokenizes text into formatting markers, placeholders, and content segments.
 ///
 /// The TextfTokenizer breaks down input text into a sequence of [Token] objects that
-/// represent either formatting markers (like bold, italic), placeholders (like {0}),
+/// represent either formatting markers (like bold, italic), placeholders (like {icon}),
 /// or regular text content.
 ///
 /// This class is optimized for performance with a character-by-character approach
@@ -16,7 +16,7 @@ class TextfTokenizer {
   ///
   /// This method processes the text character by character, identifying:
   /// - Formatting markers: **, __, *, _, ~~, `, ++, ==, ^, ~
-  /// - Placeholders: {n} (where n is a digit sequence)
+  /// - Placeholders: {key} (alphanumeric and underscores)
   /// - Links: [text](url)
   /// - Regular text
   ///
@@ -33,23 +33,10 @@ class TextfTokenizer {
         tokens.add(
           Token(
             TokenType.text,
-            // The `avoid_substring` lint is ignored here for specific, performance-critical reasons.
-            // This tokenizer works by iterating through the string's UTF-16 code units and
-            // tracking positions (`start`, `end`) as code unit indices, not as grapheme clusters
-            // (user-perceived characters).
-            //
-            // 1. **Consistency**: The entire tokenizer's logic, including its loop counters and
-            //    marker detection, is based on UTF-16 code unit indices. Using `substring`, which
-            //    also operates on these indices, ensures perfect alignment and correctness within
-            //    this specific algorithm.
-            //
-            // 2. **Safety**: Since `start` and `end` are guaranteed by the tokenizer's logic to
+            // Since `start` and `end` are guaranteed by the tokenizer's logic to
             //    never fall within the middle of a multi-byte character sequence (they always
             //    point to the boundaries between characters or markers), using `substring` is
             //    safe in this context and will not slice characters apart.
-            //
-            // For these reasons, `substring` is the correct and necessary choice for this low-level
-            // parsing task, despite the general validity of the linting rule for UI-level text manipulation.
             // ignore: avoid-substring
             text.substring(start, end),
             start,
@@ -183,7 +170,7 @@ class TextfTokenizer {
           pos += 2;
           textStart = pos;
         } else {
-          // Single plus treated as plain text, will be handled by final pos increment
+          // Single plus treated as plain text
           pos++;
         }
       } else if (currentChar == kEquals) {
@@ -209,14 +196,14 @@ class TextfTokenizer {
           textStart = pos;
         }
       } else if (currentChar == kOpenBrace) {
-        // Check for placeholder {n}
+        // Check for placeholder {key}
         addTextToken(textStart, pos);
         final int? nextPos = _tryParsePlaceholder(text, codeUnits, length, pos, tokens);
         if (nextPos != null) {
           pos = nextPos;
           textStart = pos;
         } else {
-          // Not a valid placeholder (e.g. {a} or { 1 }), treat as plain text '{'
+          // Not a valid placeholder (e.g. {a b} or {}), treat as plain text '{'
           tokens.add(Token(TokenType.text, '{', pos, 1));
           pos++;
           textStart = pos;
@@ -340,14 +327,16 @@ class TextfTokenizer {
     return urlEnd + 1;
   }
 
-  /// Attempts to parse a widget placeholder `{n}`.
+  /// Attempts to parse a widget placeholder `{key}`.
   ///
   /// Returns the position after the closing brace if successful,
   /// otherwise returns null.
   ///
-  /// Valid format: `{` followed by one or more digits, followed immediately by `}`.
-  /// Examples: `{0}`, `{12}`, `{999}`.
-  /// Invalid examples: `{}`, `{ 1}`, `{1 }`, `{a}`, `{1,2}`.
+  /// Valid format: `{` followed by alphanumeric characters or underscores,
+  /// followed immediately by `}`. Spaces are NOT allowed.
+  ///
+  /// Examples: `{0}`, `{icon}`, `{my_icon}`, `{Icon1}`.
+  /// Invalid examples: `{}`, `{ icon}`, `{a b}`, `{key.name}`.
   int? _tryParsePlaceholder(
     String text,
     List<int> codeUnits,
@@ -356,34 +345,39 @@ class TextfTokenizer {
     List<Token> tokens,
   ) {
     int pos = startPos + 1; // Move past '{'
-    final int digitStart = pos;
+    final int keyStart = pos;
 
     while (pos < length) {
       final int char = codeUnits[pos];
 
-      // Check for digits (0-9)
-      if (char >= 0x30 && char <= 0x39) {
+      // Check for allowed characters: 0-9, A-Z, _, a-z
+      // 0x30-0x39: 0-9
+      // 0x41-0x5A: A-Z
+      // 0x5F: _
+      // 0x61-0x7A: a-z
+      if ((char >= 0x30 && char <= 0x39) ||
+          (char >= 0x41 && char <= 0x5A) ||
+          char == 0x5F ||
+          (char >= 0x61 && char <= 0x7A)) {
         pos++;
         continue;
       }
 
       // Check for closing brace
       if (char == kCloseBrace) {
-        // Must have at least one digit between braces
-        if (pos == digitStart) {
+        // Must have at least one character between braces
+        if (pos == keyStart) {
           return null; // Empty {} is treated as text
         }
 
         // Successfully parsed a placeholder
-        // Store the digits as the value for easy parsing later
-
-        // substring is safe, because digitStart and pos are validated
+        // Store the key string as the value for lookup later
         // ignore: avoid-substring
-        final String digits = text.substring(digitStart, pos);
+        final String key = text.substring(keyStart, pos);
         tokens.add(
           Token(
             TokenType.placeholder,
-            digits,
+            key,
             startPos,
             (pos + 1) - startPos,
           ),
@@ -391,7 +385,7 @@ class TextfTokenizer {
         return pos + 1;
       }
 
-      // Any other character (space, letter, comma) invalidates the placeholder
+      // Any other character (space, period, hyphen, emoji) invalidates the placeholder
       return null;
     }
 
