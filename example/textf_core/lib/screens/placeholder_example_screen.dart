@@ -37,23 +37,23 @@ class PlaceholderExampleScreen extends StatelessWidget {
                   'Seamlessly inject custom Flutter widgets directly into your formatted text flow.',
               code: '''
 Textf(
-  'Hello! This is a star icon: {0}. And this is a ~~cat~~ bird: {1}',
-  inlineSpans: [
-    WidgetSpan(
+  'Hello! This is a star icon: {star}. And this is a ~~cat~~ bird: {bird}',
+  placeholders: {
+    'star': WidgetSpan(
       alignment: PlaceholderAlignment.middle,
       child: Icon(Icons.star, color: Colors.amber),
     ),
-    WidgetSpan(
+    'bird': WidgetSpan(
       alignment: PlaceholderAlignment.middle,
       child: Image.asset('bird.png'),
     ),
-  ],
+  },
 )''',
               child: Textf(
-                'Hello! This is a star icon: {0}. And this is a ~~cat~~ bird: {1}',
+                'Hello! This is a star icon: {star}. And this is a ~~cat~~ bird: {bird}',
                 style: const TextStyle(fontSize: 18),
-                inlineSpans: [
-                  const WidgetSpan(
+                placeholders: {
+                  'star': WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: Icon(
                       Icons.star,
@@ -61,7 +61,7 @@ Textf(
                       size: 24,
                     ),
                   ),
-                  WidgetSpan(
+                  'bird': WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: Image.asset(
                       'assets/img/bird.png',
@@ -69,7 +69,7 @@ Textf(
                       height: 32,
                     ),
                   ),
-                ],
+                },
               ),
             ),
             const SizedBox(height: 24),
@@ -79,19 +79,19 @@ Textf(
                   'Support for animated GIFs and other media assets, allowing for more dynamic content.',
               code: '''
 Textf(
-  'Witness the flight of the bird: {0}',
-  inlineSpans: [
-    WidgetSpan(
+  'Witness the flight of the bird: {bird}',
+  placeholders: {
+    'bird': WidgetSpan(
       alignment: PlaceholderAlignment.middle,
       child: Image.asset('bird.gif'),
     ),
-  ],
+  },
 )''',
               child: Textf(
-                'Witness the flight of the bird: {0}',
+                'Witness the flight of the bird: {bird}',
                 style: const TextStyle(fontSize: 18),
-                inlineSpans: [
-                  WidgetSpan(
+                placeholders: {
+                  'bird': WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: Image.asset(
                       'assets/img/bird.gif',
@@ -99,7 +99,7 @@ Textf(
                       height: 48,
                     ),
                   ),
-                ],
+                },
               ),
             ),
             const SizedBox(height: 24),
@@ -109,18 +109,21 @@ Textf(
                   'Inserted spans automatically inherit the formatting of the surrounding text, such as **bold** or _italic_ styles.',
               code: '''
 Textf(
-  'This is **bold {0}** and _italic {1}_.',
-  inlineSpans: [
-    TextSpan(text: " [ICON] "), // Inherits Bold
-    WidgetSpan(child: Image.asset('../coffee.png')), // Inherits Italic context
-  ],
+  'This is **bold {icon}** and _italic {coffee}_.',
+  placeholders: {
+    'icon': const TextSpan(text: "[ICON]"),
+    'coffee': WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: Image.asset('coffee.png'),
+    ),
+  },
 )''',
               child: Textf(
-                'This is **bold {0}** and _italic {1}_.',
+                'This is **bold {icon}** and _italic {coffee}_.',
                 style: const TextStyle(fontSize: 18),
-                inlineSpans: [
-                  const TextSpan(text: " [ICON] "),
-                  WidgetSpan(
+                placeholders: {
+                  'icon': const TextSpan(text: "[ICON]"),
+                  'coffee': WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: Image.asset(
                       'assets/img/coffee.png',
@@ -128,7 +131,7 @@ Textf(
                       height: 24,
                     ),
                   ),
-                ],
+                },
               ),
             ),
             const SizedBox(height: 24),
@@ -140,10 +143,10 @@ Textf(
 TextfOptions(
   onLinkTap: (url, _) => print(url),
   child: Textf(
-    'Visit [Flutter {0}](https://flutter.dev) to learn more.',
-    inlineSpans: [
-      WidgetSpan(child: Image.asset('bird.png')),
-    ],
+    'Visit [Flutter {bird}](https://flutter.dev) to learn more.',
+    placeholders: {
+      'bird': WidgetSpan(child: Image.asset('bird.png')),
+    },
   ),
 )''',
               child: TextfOptions(
@@ -153,10 +156,10 @@ TextfOptions(
                   );
                 },
                 child: Textf(
-                  'Visit [Flutter {0}](https://flutter.dev) to learn more.',
+                  'Visit [Flutter {bird}](https://flutter.dev) to learn more.',
                   style: const TextStyle(fontSize: 18),
-                  inlineSpans: [
-                    WidgetSpan(
+                  placeholders: {
+                    'bird': WidgetSpan(
                       alignment: PlaceholderAlignment.middle,
                       child: Image.asset(
                         'assets/img/bird.png',
@@ -164,7 +167,7 @@ TextfOptions(
                         height: 24,
                       ),
                     ),
-                  ],
+                  },
                 ),
               ),
             ),
@@ -175,9 +178,9 @@ TextfOptions(
                   'Build complex inline elements like badges, tags, or status indicators using standard Flutter widgets.',
               code: '''
 Textf(
-  'The user {0} has been successfully verified.',
-  inlineSpans: [
-    WidgetSpan(
+  'The user {admin} has been successfully verified.',
+  placeholders: {
+    'admin': WidgetSpan(
       alignment: PlaceholderAlignment.middle,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -188,13 +191,13 @@ Textf(
         child: Text('ADMIN', style: TextStyle(color: Colors.white, fontSize: 12)),
       ),
     ),
-  ],
+  },
 )''',
               child: Textf(
-                'The user {0} has been successfully verified.',
+                'The user {admin} has been successfully verified.',
                 style: const TextStyle(fontSize: 18),
-                inlineSpans: [
-                  WidgetSpan(
+                placeholders: {
+                  'admin': WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -212,7 +215,7 @@ Textf(
                       ),
                     ),
                   ),
-                ],
+                },
               ),
             ),
           ],

@@ -97,10 +97,10 @@ class HomeScreen extends StatelessWidget {
             _buildExampleTile(
               context,
               Textf(
-                '{0} Placeholder Example',
-                inlineSpans: [
+                '{new} Placeholder Example',
+                placeholders: {
                   // Badge "new"
-                  WidgetSpan(
+                  'new': WidgetSpan(
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
@@ -116,7 +116,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                ],
+                },
               ),
               const Text('Inject widgets like Icons and Images inline'),
               PlaceholderExampleScreen(

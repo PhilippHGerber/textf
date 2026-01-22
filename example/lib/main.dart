@@ -152,20 +152,29 @@ class ShowcaseScreen extends StatelessWidget {
             // SECTION 5: Placeholders for InlineSpans
             // ─────────────────────────────────────────────────────────────
             _sectionHeader('5. Placeholders for InlineSpans'),
+            Textf(
+              'Built with {flutter} and {dart}. Made with {love}.',
+              placeholders: {
+                "flutter": WidgetSpan(child: Image.asset('assets/flutter.png', width: 18, height: 18)),
+                "dart": WidgetSpan(child: Image.asset('assets/dart.png', width: 18, height: 18)),
+                "love": WidgetSpan(child: Icon(Icons.favorite, color: Colors.red)),
+              },
+            ),
+            const SizedBox(height: 16),
 
             const Textf(
-              'Press the {0} button to add a {1}.',
-              inlineSpans: [
-                WidgetSpan(
+              'Press the {button} button to add a {user}.',
+              placeholders: {
+                'button': WidgetSpan(
                   alignment: PlaceholderAlignment.middle,
                   child: Icon(Icons.add_circle, color: Colors.blue),
                 ),
                 // Icon of a user
-                WidgetSpan(
+                'user': WidgetSpan(
                   alignment: PlaceholderAlignment.middle,
                   child: Icon(Icons.person, color: Colors.green),
                 ),
-              ],
+              },
             ),
 
             const SizedBox(height: 24),
