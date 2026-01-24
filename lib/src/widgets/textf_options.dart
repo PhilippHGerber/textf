@@ -399,27 +399,33 @@ class TextfOptions extends InheritedWidget {
     return _findFirstAncestorValue(context, (o) => o.linkAlignment);
   }
 
+  /// Checks if this instance has the same style-related properties as [other].
+  bool hasSameStyle(TextfOptions other) {
+    if (identical(this, other)) return true;
+
+    return other.onLinkTap == onLinkTap &&
+        other.onLinkHover == onLinkHover &&
+        other.linkMouseCursor == linkMouseCursor &&
+        other.linkStyle == linkStyle &&
+        other.linkAlignment == linkAlignment &&
+        other.linkHoverStyle == linkHoverStyle &&
+        other.boldStyle == boldStyle &&
+        other.italicStyle == italicStyle &&
+        other.boldItalicStyle == boldItalicStyle &&
+        other.strikethroughStyle == strikethroughStyle &&
+        other.codeStyle == codeStyle &&
+        other.strikethroughThickness == strikethroughThickness &&
+        other.underlineStyle == underlineStyle &&
+        other.highlightStyle == highlightStyle &&
+        other.superscriptStyle == superscriptStyle &&
+        other.subscriptStyle == subscriptStyle &&
+        other.superscriptBaselineFactor == superscriptBaselineFactor &&
+        other.subscriptBaselineFactor == subscriptBaselineFactor &&
+        other.scriptFontSizeFactor == scriptFontSizeFactor;
+  }
+
   @override
   bool updateShouldNotify(TextfOptions oldWidget) {
-    // Comparing only the properties of this specific instance.
-    return onLinkTap != oldWidget.onLinkTap ||
-        onLinkHover != oldWidget.onLinkHover ||
-        linkStyle != oldWidget.linkStyle ||
-        linkAlignment != oldWidget.linkAlignment ||
-        linkHoverStyle != oldWidget.linkHoverStyle ||
-        linkMouseCursor != oldWidget.linkMouseCursor ||
-        boldStyle != oldWidget.boldStyle ||
-        italicStyle != oldWidget.italicStyle ||
-        boldItalicStyle != oldWidget.boldItalicStyle ||
-        strikethroughStyle != oldWidget.strikethroughStyle ||
-        codeStyle != oldWidget.codeStyle ||
-        strikethroughThickness != oldWidget.strikethroughThickness ||
-        underlineStyle != oldWidget.underlineStyle ||
-        highlightStyle != oldWidget.highlightStyle ||
-        superscriptStyle != oldWidget.superscriptStyle ||
-        subscriptStyle != oldWidget.subscriptStyle ||
-        superscriptBaselineFactor != oldWidget.superscriptBaselineFactor ||
-        subscriptBaselineFactor != oldWidget.subscriptBaselineFactor ||
-        scriptFontSizeFactor != oldWidget.scriptFontSizeFactor;
+    return !hasSameStyle(oldWidget);
   }
 }

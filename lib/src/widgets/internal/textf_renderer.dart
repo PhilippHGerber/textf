@@ -1,5 +1,6 @@
 import 'dart:ui' as ui show TextHeightBehavior;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../parsing/textf_parser.dart';
@@ -94,40 +95,54 @@ class TextfRendererState extends State<TextfRenderer> {
   TextStyle? _lastStyle;
   TextScaler? _lastScaler;
   Map<String, InlineSpan>? _lastPlaceholders;
-  PlaceholderAlignment? _lastLinkAlignment;
   TextAlign? _lastTextAlign;
   TextDirection? _lastTextDirection;
   bool? _lastSoftWrap;
   TextOverflow? _lastOverflow;
   int? _lastMaxLines;
   TextWidthBasis? _lastTextWidthBasis;
+  ThemeData? _lastTheme;
+  TextfOptions? _lastOptions;
 
   @override
   Widget build(BuildContext context) {
-    // Determine the effective base text style for parsing.
+    final theme = Theme.of(context);
+    final options = TextfOptions.maybeOf(context);
+
     final DefaultTextStyle defaultTextStyle = DefaultTextStyle.of(context);
     final TextStyle currentBaseStyle = widget.style ?? defaultTextStyle.style;
     final TextScaler effectiveScaler = widget.textScaler ?? MediaQuery.textScalerOf(context);
 
-    // Get any specific TextfOptions that might affect parsing/styling results.
-    // linkAlignment is currently the only one resolved during parsing components.
-    final TextfOptions? options = TextfOptions.maybeOf(context);
-    final PlaceholderAlignment? linkAlignment = options?.linkAlignment;
-
     // --- Memoization Check ---
     final List<InlineSpan>? cachedSpans = _cachedSpans;
+
+    // 1. Check placeholders
+    final bool placeholdersMatch = mapEquals(_lastPlaceholders, widget.placeholders);
+
+    // 2. Check Options (Fixing Critical Flaw)
+    // We check if it is the same instance OR if it logically equals the last one.
+    final bool optionsMatch = (_lastOptions == options) ||
+        (_lastOptions != null && options != null && options.hasSameStyle(_lastOptions!));
+
+    // 3. Check Theme (Optimization)
+    // Instead of comparing the full heavy ThemeData object, we accept identity check for now
+    // to avoid deep comparison cost, but strictly speaking, this can be improved later.
+    final bool themeMatch = _lastTheme == theme;
+
     if (cachedSpans != null &&
+        placeholdersMatch &&
+        optionsMatch &&
+        themeMatch &&
         _lastData == widget.data &&
         _lastStyle == currentBaseStyle &&
         _lastScaler == effectiveScaler &&
-        _lastPlaceholders == widget.placeholders &&
-        _lastLinkAlignment == linkAlignment &&
         _lastTextAlign == widget.textAlign &&
         _lastTextDirection == widget.textDirection &&
         _lastSoftWrap == widget.softWrap &&
         _lastOverflow == widget.overflow &&
         _lastMaxLines == widget.maxLines &&
         _lastTextWidthBasis == widget.textWidthBasis) {
+      // Cache Hit!
       return DefaultTextStyle.merge(
         textAlign: widget.textAlign,
         softWrap: widget.softWrap,
@@ -138,7 +153,7 @@ class TextfRendererState extends State<TextfRenderer> {
       );
     }
 
-    // Invoke the parser.
+    // --- Cache Miss: Re-parse ---
     final List<InlineSpan> spans = widget.parser.parse(
       widget.data,
       context,
@@ -149,13 +164,14 @@ class TextfRendererState extends State<TextfRenderer> {
 
     final Widget result = _buildRichText(spans, effectiveScaler);
 
-    // Update cache
+    // Update Cache
     _cachedSpans = spans;
     _lastData = widget.data;
     _lastStyle = currentBaseStyle;
     _lastScaler = effectiveScaler;
     _lastPlaceholders = widget.placeholders;
-    _lastLinkAlignment = linkAlignment;
+    _lastTheme = theme;
+    _lastOptions = options;
     _lastTextAlign = widget.textAlign;
     _lastTextDirection = widget.textDirection;
     _lastSoftWrap = widget.softWrap;

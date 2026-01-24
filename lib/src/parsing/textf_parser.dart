@@ -46,10 +46,23 @@ class TextfParser {
 
   /// Cache for tokens and pairing results.
   /// Uses a LinkedHashMap to implement a simple LRU cache.
-  static final _cache = <String, _ParsedCacheEntry>{};
+  static final Map<String, _ParsedCacheEntry> _cache = <String, _ParsedCacheEntry>{};
 
   /// Maximum number of entries in the parser cache.
-  static const _maxCacheSize = 200;
+  static const int _maxCacheSize = 200;
+
+  /// Maximum length of a string to be considered for caching.
+  /// Strings longer than this are parsed on-demand to prevent memory bloating.
+  static const int _maxCacheKeyLength = 1000;
+
+  /// Clears the internal parser cache.
+  ///
+  /// This should primarily be used during testing to ensure state isolation,
+  /// or in low-memory situations.
+  @visibleForTesting
+  static void clearCache() {
+    _cache.clear();
+  }
 
   /// Parses formatted text into a list of styled [InlineSpan] objects.
   ///
@@ -99,25 +112,37 @@ class TextfParser {
     }
 
     // --- Cache Lookup & Update ---
-    // Move to ends (most recent) if exists, or tokenize if miss.
-    final cached = _cache.remove(text);
     final List<Token> tokens;
     final Map<int, int> validPairs;
 
-    if (cached != null) {
-      tokens = cached.tokens;
-      validPairs = cached.matchingPairs;
-    } else {
-      // 1. Tokenize
-      tokens = _tokenizer.tokenize(text);
-      // 2. Pairing
-      validPairs = PairingResolver.identifyPairs(tokens);
-    }
+    // Only attempt caching if the text length is within reasonable limits.
+    // Extremely long strings are parsed on-demand to avoid memory issues.
+    if (text.length <= _maxCacheKeyLength) {
+      // Move to ends (most recent) if exists, or tokenize if miss.
+      final cached = _cache.remove(text);
 
-    // Update Cache (LRU: add to end)
-    _cache[text] = _ParsedCacheEntry(tokens, validPairs);
-    if (_cache.length > _maxCacheSize) {
-      _cache.remove(_cache.keys.first);
+      if (cached != null) {
+        tokens = cached.tokens;
+        validPairs = cached.matchingPairs;
+        // Re-insert to mark as recently used
+        _cache[text] = cached;
+      } else {
+        // 1. Tokenize
+        tokens = _tokenizer.tokenize(text);
+        // 2. Pairing
+        validPairs = PairingResolver.identifyPairs(tokens);
+
+        // Update Cache (LRU: add to end)
+        _cache[text] = _ParsedCacheEntry(tokens, validPairs);
+        if (_cache.length > _maxCacheSize) {
+          // Remove the oldest entry (first key)
+          _cache.remove(_cache.keys.first);
+        }
+      }
+    } else {
+      // Too long to cache, just process directly
+      tokens = _tokenizer.tokenize(text);
+      validPairs = PairingResolver.identifyPairs(tokens);
     }
 
     // 3. Style Resolver
