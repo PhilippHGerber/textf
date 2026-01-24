@@ -116,6 +116,8 @@ Textf(
 * **Nesting:** Placeholders work inside formatting (e.g., `**{icon}**`) and inside links (e.g., `[Click {icon}](url)`).
 * **Escaping:** To display a literal `{key}`, escape the opening brace: `\{key}`.
 
+> **⚠️ Important:**
+> For optimal performance with placeholders, **define your InlineSpans as const or final variables outside the build method** to ensure cache hits.
 ---
 
 ### Links `[text](url)`
