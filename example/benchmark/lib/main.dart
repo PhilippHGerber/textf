@@ -15,8 +15,8 @@ class BenchmarkConfig {
   static const int totalItems = 1000;
   static const int framesToCapture = 300; // ~5 seconds at 60fps
   static const int corpusSize = 200;
-  static const int minSegments = 4; // Making text longer as requested
-  static const int maxSegments = 8;
+  static const int minSegments = 10;
+  static const int maxSegments = 20;
 
   static const int largeStringLength = 1000;
   static const Duration animationDuration = Duration(seconds: 5);
@@ -120,16 +120,13 @@ class ScrollingScenario extends BenchmarkScenario {
               ),
             );
           case BenchmarkTarget.rich:
-            // Very basic approximation of what Textf would produce
+            // Improved rich text baseline: Just the text for now,
+            // as manually recreating the exact Textf tree is complex.
+            // At least we remove the forced 3-icon overhead.
             return Center(
               key: ValueKey('rich_$index'),
               child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(text: text),
-                    ...icons.values,
-                  ],
-                ),
+                TextSpan(text: text),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -145,6 +142,9 @@ class AnimationScenario extends BenchmarkScenario {
   String get name => 'Animated Large Text';
 
   final String largeText = _generateLargeText();
+
+  /// Pre-parsed baseline for RICH target to show layout cost without parsing cost.
+  static List<InlineSpan>? _richBaselineSpans;
 
   static String _generateLargeText() {
     final buffer = StringBuffer();
@@ -171,10 +171,54 @@ class AnimationScenario extends BenchmarkScenario {
           child: Textf(largeText, style: style),
         );
       case BenchmarkTarget.raw:
-      case BenchmarkTarget.rich:
         return SingleChildScrollView(
           child: Text(largeText, style: style),
         );
+      case BenchmarkTarget.rich:
+        return SingleChildScrollView(
+          child: Text.rich(
+            TextSpan(
+              style: style,
+              children: _richBaselineSpans,
+            ),
+          ),
+        );
+    }
+  }
+}
+
+class OptionsRebuildScenario extends BenchmarkScenario {
+  @override
+  String get name => 'Options Rebuild (Cache Stress)';
+
+  // Generate a heavy string to make the cost of re-parsing obvious
+  final String heavyText =
+      List.generate(100, (i) => 'Item $i: **Bold**, *Italic*, [Link](https://google.com)')
+          .join('\n');
+
+  @override
+  Widget build(BuildContext context, BenchmarkTarget target, int offset) {
+    // We simulate an animation value to ensure the parent rebuilds
+    // but the actual TextfOptions styles remain CONSTANT.
+
+    // We construct styles here to simulate "new instances" every frame
+    final dynamicBoldStyle = TextStyle(fontWeight: FontWeight.bold, color: Colors.red);
+
+    switch (target) {
+      case BenchmarkTarget.textf:
+        return Center(
+          child: TextfOptions(
+            // NEW INSTANCE every frame, but SAME content
+            boldStyle: dynamicBoldStyle,
+            child: SingleChildScrollView(
+              child: Textf(heavyText),
+            ),
+          ),
+        );
+      case BenchmarkTarget.raw:
+        return const Center(child: Text('Raw not applicable for Options test'));
+      case BenchmarkTarget.rich:
+        return const Center(child: Text('Rich not applicable for Options test'));
     }
   }
 }
@@ -207,6 +251,7 @@ class _BenchmarkHomeState extends State<BenchmarkHome> with SingleTickerProvider
   final List<BenchmarkScenario> _scenarios = [
     ScrollingScenario(),
     AnimationScenario(),
+    OptionsRebuildScenario(),
   ];
 
   final List<BenchmarkResult> _results = [];
@@ -413,7 +458,7 @@ class _ScenarioResultGroup extends StatelessWidget {
                 columns: const [
                   DataColumn(label: Text('Target')),
                   DataColumn(label: Text('Med (ms)')),
-                  // DataColumn(label: Text('Max (ms)')),
+                  DataColumn(label: Text('Max (ms)')),
                   DataColumn(label: Text('µs/W')),
                 ],
                 rows: results.map((r) {
@@ -426,7 +471,7 @@ class _ScenarioResultGroup extends StatelessWidget {
                         ),
                       ),
                       DataCell(Text(r.medianBuildTimeMs.toStringAsFixed(3))),
-                      // DataCell(Text(r.maxBuildTimeMs.toStringAsFixed(3))),
+                      DataCell(Text(r.maxBuildTimeMs.toStringAsFixed(3))),
                       DataCell(
                         Text(r.microsPerWidget > 0 ? r.microsPerWidget.toStringAsFixed(1) : '-'),
                       ),
