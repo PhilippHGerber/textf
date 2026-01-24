@@ -124,10 +124,19 @@ class TextfRendererState extends State<TextfRenderer> {
     final bool optionsMatch = (_lastOptions == options) ||
         (_lastOptions != null && options != null && options.hasSameStyle(_lastOptions!));
 
-    // 3. Check Theme (Optimization)
-    // Instead of comparing the full heavy ThemeData object, we accept identity check for now
-    // to avoid deep comparison cost, but strictly speaking, this can be improved later.
-    final bool themeMatch = _lastTheme == theme;
+    // 3. Check Theme
+    // Compare only the ColorScheme properties that TextfStyleResolver uses:
+    // - primary: link color/decoration
+    // - onSurfaceVariant: code text color
+    // - surfaceContainer: code background color
+    // This avoids unnecessary re-parses when unrelated theme properties change,
+    // while still correctly invalidating when theme-derived styles would differ.
+    final ThemeData? lastTheme = _lastTheme;
+    final bool themeMatch = lastTheme == theme ||
+        (lastTheme != null &&
+            lastTheme.colorScheme.primary == theme.colorScheme.primary &&
+            lastTheme.colorScheme.onSurfaceVariant == theme.colorScheme.onSurfaceVariant &&
+            lastTheme.colorScheme.surfaceContainer == theme.colorScheme.surfaceContainer);
 
     if (cachedSpans != null &&
         placeholdersMatch &&
