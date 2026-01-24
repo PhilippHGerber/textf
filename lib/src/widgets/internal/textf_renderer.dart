@@ -121,8 +121,9 @@ class TextfRendererState extends State<TextfRenderer> {
 
     // 2. Check Options (Fixing Critical Flaw)
     // We check if it is the same instance OR if it logically equals the last one.
-    final bool optionsMatch = (_lastOptions == options) ||
-        (_lastOptions != null && options != null && options.hasSameStyle(_lastOptions!));
+    final TextfOptions? lastOptions = _lastOptions;
+    final bool optionsMatch = (lastOptions == options) ||
+        (lastOptions != null && options != null && options.hasSameStyle(lastOptions));
 
     // 3. Check Theme
     // Compare only the ColorScheme properties that TextfStyleResolver uses:
