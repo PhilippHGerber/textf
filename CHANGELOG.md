@@ -4,13 +4,24 @@ All notable changes to the `textf` package will be documented in this file.
 
 ## Next Release
 
-### Added
+### Breaking Changes
 
-* **Named Widget Placeholders:** You can now insert arbitrary Flutter widgets (via `InlineSpan`) into formatted text using `{key}` syntax and the `placeholders` map. (based on PR #5, thanks @admin-kinora)
+* **Style Inheritance Refactor:** Refactored `TextfOptions` and `DefaultStyles` to correctly merge styles down the widget tree by passing the `baseStyle` through the resolution chain. This ensures that properties like `fontSize` or `decoration` are correctly inherited and merged, fixing issues where child styles might blindly override parent styles or miss context.
 
 ### Fixed
 
 * **Escaping:** Improved escaping logic for braces to allow literal `{` characters when preceded by a backslash.
+
+### Added
+
+* **Named Widget Placeholders:** You can now insert arbitrary Flutter widgets (via `InlineSpan`) into formatted text using `{key}` syntax and the `placeholders` map. (based on PR #5, thanks @admin-kinora)
+
+### Improved
+
+* **Smart Caching System:** Implemented a robust internal caching layer within the renderer. `Textf` now retains previously parsed `InlineSpan` trees across widget rebuilds, preventing expensive re-parsing when the text content hasn't changed.
+* **Performance Optimization:** The widget now intelligently detects changes in `TextfOptions`, `ThemeData`, and `TextScaler`. It re-uses cached results even when parent widgets rebuild, provided the actual formatting configuration remains logically equivalent. This drastically reduces CPU overhead during animations and list scrolling.
+* **Internal Optimization:** Refactored `TextfParser` to use `StringBuffer` for text accumulation, improving performance for large text blocks.
+* **Link Handling:** Updated `LinkHandler` to correctly inherit styles using the new resolution logic.
 
 ## 1.0.0
 
