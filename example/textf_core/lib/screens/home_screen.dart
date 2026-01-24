@@ -7,6 +7,7 @@ import 'complex_formatting_screen.dart';
 import 'nested_formatting_screen.dart';
 import 'placeholder_example_screen.dart';
 import 'screenshot_screen.dart';
+import 'theme_cache_test_screen.dart';
 import 'theme_example_screen.dart';
 import 'url_example_screen.dart';
 
@@ -28,6 +29,21 @@ class HomeScreen extends StatelessWidget {
         ? Icons.light_mode_outlined // Icon to show when it's dark (will switch to light)
         : Icons.dark_mode_outlined; // Icon to show when it's light (will switch to dark)
 
+    const WidgetSpan badgeNew = WidgetSpan(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.green,
+          borderRadius: BorderRadius.all(Radius.circular(4)),
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(left: 6, right: 6, top: 3, bottom: 2),
+          child: Text(
+            'NEW',
+            style: TextStyle(color: Colors.white, fontSize: 11),
+          ),
+        ),
+      ),
+    );
     return Scaffold(
       appBar: AppBar(
         title: const Text('Textf Examples'),
@@ -99,23 +115,7 @@ class HomeScreen extends StatelessWidget {
               Textf(
                 '{new} Placeholder Example',
                 placeholders: {
-                  // Badge "new"
-                  'new': WidgetSpan(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: Colors.green,
-                      ),
-                      child: Text(
-                        'new',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
+                  'new': badgeNew,
                 },
               ),
               const Text('Inject widgets like Icons and Images inline'),
@@ -123,6 +123,17 @@ class HomeScreen extends StatelessWidget {
                 currentThemeMode: currentThemeMode,
                 toggleThemeMode: toggleThemeMode,
               ),
+            ),
+            _buildExampleTile(
+              context,
+              const Textf(
+                '{new} Theme Cache Examples',
+                placeholders: {
+                  'new': badgeNew,
+                },
+              ),
+              const Text('Show Caching'),
+              ThemeCacheTestScreen(),
             ),
             _buildExampleTile(
               context,

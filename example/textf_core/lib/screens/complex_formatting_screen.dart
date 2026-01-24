@@ -55,6 +55,7 @@ Textf(
               code: '''
 TextfOptions(
   underlineStyle: TextStyle(
+    decoration: TextDecoration.underline,
     decorationColor: Colors.deepOrange,
     decorationStyle: TextDecorationStyle.dotted,
     decorationThickness: 2,
@@ -76,9 +77,10 @@ TextfOptions(
 )''',
               child: TextfOptions(
                 underlineStyle: const TextStyle(
+                  decoration: TextDecoration.underline,
                   decorationColor: Colors.deepOrange,
                   decorationStyle: TextDecorationStyle.dotted,
-                  decorationThickness: 2,
+                  decorationThickness: 3,
                 ),
                 highlightStyle: TextStyle(
                   backgroundColor: Colors.tealAccent.withValues(alpha: .4),

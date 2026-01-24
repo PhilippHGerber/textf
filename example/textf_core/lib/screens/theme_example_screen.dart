@@ -49,12 +49,12 @@ class ThemeExampleScreen extends StatelessWidget {
             description: 'Links ([text](url)) use the theme\'s primary color by default.',
             code: '''
 Textf(
-  'Visit the [Flutter website](https://flutter.dev) '
+  '==Visit== the [Flutter website](https://flutter.dev) '
   'or the [Dart website](https://dart.dev).'
 )
             ''',
             child: Textf(
-              'Visit the [Flutter website](https://flutter.dev) or the [Dart website](https://dart.dev).',
+              '==Visit== the [Flutter website](https://flutter.dev) or the [Dart website](https://dart.dev).',
               // Use a slightly larger font size for better visibility
               style: Theme.of(context).textTheme.bodyLarge,
             ),
