@@ -57,9 +57,10 @@ class TextfParser {
 
   /// Clears the internal parser cache.
   ///
-  /// This should primarily be used during testing to ensure state isolation,
-  /// or in low-memory situations.
-  @visibleForTesting
+  /// Call this method to free memory in low-memory situations,
+  /// or when navigating away from text-heavy screens.
+  ///
+  /// The cache will automatically rebuild as text is parsed.
   static void clearCache() {
     _cache.clear();
   }

@@ -153,6 +153,12 @@ class Textf extends StatelessWidget {
   /// ```
   final Map<String, InlineSpan>? placeholders;
 
+  /// Clears the internal parser cache to free memory.
+  ///
+  /// Call this in low-memory situations or when navigating
+  /// away from text-heavy screens. The cache rebuilds automatically.
+  static void clearCache() => TextfParser.clearCache();
+
   // Private static instance for default usage
   static final TextfParser _defaultParser = TextfParser();
 
