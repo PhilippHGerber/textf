@@ -335,5 +335,273 @@ void main() {
         reason: 'TextAlign should be propagated via DefaultTextStyle',
       );
     });
+
+    testWidgets('Cache persists when Parent rebuilds with identical TextfOptions values',
+        (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextfOptions(
+            boldStyle: const TextStyle(fontWeight: FontWeight.bold),
+            child: TextfRenderer(
+              data: 'Text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        ),
+      );
+
+      expect(spyParser.parseCallCount, 1);
+
+      // Rebuild the tree. This creates a NEW TextfOptions instance,
+      // but with the SAME boldStyle value.
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextfOptions(
+            boldStyle: const TextStyle(fontWeight: FontWeight.bold),
+            child: TextfRenderer(
+              data: 'Text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        spyParser.parseCallCount,
+        1,
+        reason: 'Should not re-parse if Options value is identical',
+      );
+    });
+
+    testWidgets('linkAlignment change triggers re-parse', (tester) async {
+      // 1. Initial Build with baseline alignment
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextfOptions(
+            linkAlignment: PlaceholderAlignment.baseline,
+            onLinkTap: (_, __) {},
+            child: TextfRenderer(
+              data: '[Link](https://example.com)',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        ),
+      );
+      expect(spyParser.parseCallCount, 1);
+
+      // 2. Change linkAlignment -> Should trigger re-parse
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextfOptions(
+            linkAlignment: PlaceholderAlignment.middle, // Changed
+            onLinkTap: (_, __) {},
+            child: TextfRenderer(
+              data: '[Link](https://example.com)',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        spyParser.parseCallCount,
+        2,
+        reason: 'Parser SHOULD be called again when linkAlignment changes',
+      );
+    });
+
+    testWidgets('Cache persists when Theme instance changes but relevant colors are identical',
+        (tester) async {
+      // Two different ThemeData instances with SAME relevant colors
+      final theme1 = ThemeData(
+        colorScheme: const ColorScheme.light(
+          primary: Colors.blue,
+          onSurfaceVariant: Colors.grey,
+          surfaceContainerHighest: Colors.white,
+        ),
+      );
+
+      final theme2 = ThemeData(
+        colorScheme: const ColorScheme.light(
+          primary: Colors.blue, // Same
+          onSurfaceVariant: Colors.grey, // Same
+          surfaceContainerHighest: Colors.white, // Same
+          // But different tertiary (irrelevant to Textf)
+          tertiary: Colors.purple,
+        ),
+      );
+
+      // Sanity check: these are different instances
+      expect(identical(theme1, theme2), isFalse);
+
+      // 1. Initial build with theme1
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme1,
+          home: TextfRenderer(
+            data: '**Bold** and `code` and [link](https://example.com)',
+            style: const TextStyle(fontSize: 10),
+            parser: spyParser,
+            strutStyle: null,
+            textAlign: null,
+            textDirection: null,
+            locale: null,
+            softWrap: null,
+            overflow: null,
+            textScaler: null,
+            maxLines: null,
+            semanticsLabel: null,
+            textWidthBasis: null,
+            textHeightBehavior: null,
+            selectionColor: null,
+          ),
+        ),
+      );
+      expect(spyParser.parseCallCount, 1);
+
+      // 2. Rebuild with theme2 (different instance, same relevant colors)
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme2,
+          home: TextfRenderer(
+            data: '**Bold** and `code` and [link](https://example.com)',
+            style: const TextStyle(fontSize: 10),
+            parser: spyParser,
+            strutStyle: null,
+            textAlign: null,
+            textDirection: null,
+            locale: null,
+            softWrap: null,
+            overflow: null,
+            textScaler: null,
+            maxLines: null,
+            semanticsLabel: null,
+            textWidthBasis: null,
+            textHeightBehavior: null,
+            selectionColor: null,
+          ),
+        ),
+      );
+
+      // Should NOT re-parse because relevant colors are identical
+      expect(
+        spyParser.parseCallCount,
+        1,
+        reason: 'Should not re-parse when only irrelevant theme properties change',
+      );
+    });
+
+    testWidgets('Cache invalidates when Theme relevant colors change', (tester) async {
+      final theme1 = ThemeData(
+        colorScheme: const ColorScheme.light(
+          primary: Colors.blue,
+          onSurfaceVariant: Colors.grey,
+          surfaceContainer: Colors.white,
+        ),
+      );
+
+      final theme2 = ThemeData(
+        colorScheme: const ColorScheme.light(
+          primary: Colors.red, // Different!
+          onSurfaceVariant: Colors.grey,
+          surfaceContainer: Colors.white,
+        ),
+      );
+
+      // Simple wrapper without MaterialApp's theme animation
+      Widget buildWithTheme(ThemeData theme) {
+        return Theme(
+          data: theme,
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: MediaQuery(
+              data: const MediaQueryData(),
+              child: TextfRenderer(
+                data: '[link](https://example.com)',
+                style: const TextStyle(fontSize: 10),
+                parser: spyParser,
+                strutStyle: null,
+                textAlign: null,
+                textDirection: null,
+                locale: null,
+                softWrap: null,
+                overflow: null,
+                textScaler: null,
+                maxLines: null,
+                semanticsLabel: null,
+                textWidthBasis: null,
+                textHeightBehavior: null,
+                selectionColor: null,
+              ),
+            ),
+          ),
+        );
+      }
+
+      // 1. Initial build with theme1
+      await tester.pumpWidget(buildWithTheme(theme1));
+      expect(spyParser.parseCallCount, 1);
+
+      // 2. Switch to theme2 (different primary color)
+      await tester.pumpWidget(buildWithTheme(theme2));
+
+      expect(
+        spyParser.parseCallCount,
+        2,
+        reason: 'Should re-parse when theme primary color changes',
+      );
+    });
   });
 }

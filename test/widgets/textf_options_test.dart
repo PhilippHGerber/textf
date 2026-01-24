@@ -538,5 +538,113 @@ void main() {
       expect(resolved!.linkStyle?.fontSize, specificBaseStyle.fontSize); // from base
       expect(resolved!.linkStyle?.fontFamily, specificBaseStyle.fontFamily); // from base
     });
+    group('TextDecoration Merging Logic', () {
+      testWidgets('Partial Overlap: Child subset decoration does not remove parent decoration',
+          (tester) async {
+        // SCENARIO:
+        // Parent has: underline | lineThrough
+        // Child specifies: underline
+        //
+        // EXPECTED: Result is underline | lineThrough (parent's lineThrough is preserved)
+        // Standard merge would see child's 'underline' as a complete override of parent's decoration.
+
+        _ResolvedOptions? resolved;
+        final parentDeco = TextDecoration.combine([
+          TextDecoration.underline,
+          TextDecoration.lineThrough,
+        ]);
+        const childDeco = TextDecoration.underline;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: TextfOptions(
+              linkStyle: TextStyle(decoration: parentDeco, color: Colors.blue),
+              child: TextfOptions(
+                linkStyle: const TextStyle(decoration: childDeco), // Color inherited
+                child: Builder(
+                  builder: (context) {
+                    resolved = _ResolvedOptions.fromContext(context, baseStyle);
+                    return const SizedBox();
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(resolved, isNotNull);
+        expect(
+          resolved!.linkStyle?.decoration,
+          parentDeco, // Should still have BOTH
+          reason: "Child's 'underline' should not remove Parent's 'lineThrough'.",
+        );
+      });
+
+      testWidgets('Additive: Child new decoration combines with parent decoration', (tester) async {
+        // SCENARIO:
+        // Parent has: underline
+        // Child specifies: lineThrough
+        //
+        // EXPECTED: Result is underline | lineThrough
+
+        _ResolvedOptions? resolved;
+        const parentDeco = TextDecoration.underline;
+        const childDeco = TextDecoration.lineThrough;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: TextfOptions(
+              linkStyle: const TextStyle(decoration: parentDeco, color: Colors.blue),
+              child: TextfOptions(
+                linkStyle: const TextStyle(decoration: childDeco),
+                child: Builder(
+                  builder: (context) {
+                    resolved = _ResolvedOptions.fromContext(context, baseStyle);
+                    return const SizedBox();
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(resolved, isNotNull);
+        expect(
+          resolved!.linkStyle?.decoration,
+          TextDecoration.combine([parentDeco, childDeco]),
+          reason: 'Decorations should be combined.',
+        );
+      });
+
+      testWidgets('Explicit None: Child decoration.none removes all parent decorations',
+          (tester) async {
+        _ResolvedOptions? resolved;
+        const parentDeco = TextDecoration.underline;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: TextfOptions(
+              linkStyle: const TextStyle(decoration: parentDeco, color: Colors.blue),
+              child: TextfOptions(
+                linkStyle: const TextStyle(decoration: TextDecoration.none),
+                child: Builder(
+                  builder: (context) {
+                    resolved = _ResolvedOptions.fromContext(context, baseStyle);
+                    return const SizedBox();
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(resolved, isNotNull);
+        expect(
+          resolved!.linkStyle?.decoration,
+          TextDecoration.none,
+          reason: "Child's TextDecoration.none should clear parent decorations.",
+        );
+      });
+    });
   });
 }
