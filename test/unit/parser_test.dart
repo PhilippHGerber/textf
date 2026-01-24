@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:textf/src/parsing/textf_parser.dart';
 import 'package:textf/textf.dart';
 
 void main() {
