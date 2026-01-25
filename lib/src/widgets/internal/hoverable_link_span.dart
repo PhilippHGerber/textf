@@ -128,9 +128,17 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
   }
 
   @override
+  void didUpdateWidget(covariant HoverableLinkSpan oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Dispose the old recognizer if it's different from the new one.
+    // This prevents memory leaks when the widget rebuilds with a new recognizer
+    if (oldWidget.tapRecognizer != widget.tapRecognizer) {
+      oldWidget.tapRecognizer?.dispose();
+    }
+  }
+
+  @override
   void dispose() {
-    // We strictly own the recognizer passed to us by the parser,
-    // so we must dispose of it to avoid memory leaks.
     widget.tapRecognizer?.dispose();
     super.dispose();
   }
