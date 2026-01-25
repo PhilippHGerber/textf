@@ -215,7 +215,9 @@ class TextfStyleResolver {
         padding: padding,
         child: Text.rich(
           TextSpan(text: text, style: style),
-          // Allow natural scaling here! Do not use noScaling.
+          // Disable scaling here to prevent double-scaling.
+          // The parent RichText already applies the scaler
+          // to WidgetSpan dimensions.
           textScaler: TextScaler.noScaling,
         ),
       ),

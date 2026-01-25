@@ -160,9 +160,8 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
     // is effectively dead. A GestureDetector on the Text widget works perfectly
     // because WidgetSpans are treated as atomic boxes.
     Widget content = Text.rich(
-      TextSpan(
-        children: styledSpans,
-      ),
+      TextSpan(children: styledSpans),
+      textScaler: TextScaler.noScaling,
     );
 
     final tapRecognizer = widget.tapRecognizer;
