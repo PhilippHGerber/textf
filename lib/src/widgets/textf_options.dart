@@ -467,53 +467,65 @@ class TextfOptions extends InheritedWidget {
     // Single pass: root → nearest
     for (final opt in hierarchy.reversed) {
       // Mergeable: accumulate
-      if (opt.boldStyle != null) {
-        boldStyle = boldStyle == null ? opt.boldStyle : _mergeStyles(boldStyle, opt.boldStyle!);
+      final optBold = opt.boldStyle;
+      if (optBold != null) {
+        boldStyle = boldStyle == null ? optBold : _mergeStyles(boldStyle, optBold);
       }
-      if (opt.italicStyle != null) {
-        italicStyle =
-            italicStyle == null ? opt.italicStyle : _mergeStyles(italicStyle, opt.italicStyle!);
+
+      final optItalic = opt.italicStyle;
+      if (optItalic != null) {
+        italicStyle = italicStyle == null ? optItalic : _mergeStyles(italicStyle, optItalic);
       }
-      if (opt.boldItalicStyle != null) {
-        boldItalicStyle = boldItalicStyle == null
-            ? opt.boldItalicStyle
-            : _mergeStyles(boldItalicStyle, opt.boldItalicStyle!);
+
+      final optBoldItalic = opt.boldItalicStyle;
+      if (optBoldItalic != null) {
+        boldItalicStyle =
+            boldItalicStyle == null ? optBoldItalic : _mergeStyles(boldItalicStyle, optBoldItalic);
       }
-      if (opt.strikethroughStyle != null) {
-        strikethroughStyle = strikethroughStyle == null
-            ? opt.strikethroughStyle
-            : _mergeStyles(strikethroughStyle, opt.strikethroughStyle!);
+
+      final optStrike = opt.strikethroughStyle;
+      if (optStrike != null) {
+        strikethroughStyle =
+            strikethroughStyle == null ? optStrike : _mergeStyles(strikethroughStyle, optStrike);
       }
-      if (opt.codeStyle != null) {
-        codeStyle = codeStyle == null ? opt.codeStyle : _mergeStyles(codeStyle, opt.codeStyle!);
+
+      final optCode = opt.codeStyle;
+      if (optCode != null) {
+        codeStyle = codeStyle == null ? optCode : _mergeStyles(codeStyle, optCode);
       }
-      if (opt.underlineStyle != null) {
-        underlineStyle = underlineStyle == null
-            ? opt.underlineStyle
-            : _mergeStyles(underlineStyle, opt.underlineStyle!);
+
+      final optUnderline = opt.underlineStyle;
+      if (optUnderline != null) {
+        underlineStyle =
+            underlineStyle == null ? optUnderline : _mergeStyles(underlineStyle, optUnderline);
       }
-      if (opt.highlightStyle != null) {
-        highlightStyle = highlightStyle == null
-            ? opt.highlightStyle
-            : _mergeStyles(highlightStyle, opt.highlightStyle!);
+
+      final optHighlight = opt.highlightStyle;
+      if (optHighlight != null) {
+        highlightStyle =
+            highlightStyle == null ? optHighlight : _mergeStyles(highlightStyle, optHighlight);
       }
-      if (opt.superscriptStyle != null) {
-        superscriptStyle = superscriptStyle == null
-            ? opt.superscriptStyle
-            : _mergeStyles(superscriptStyle, opt.superscriptStyle!);
+
+      final optSuper = opt.superscriptStyle;
+      if (optSuper != null) {
+        superscriptStyle =
+            superscriptStyle == null ? optSuper : _mergeStyles(superscriptStyle, optSuper);
       }
-      if (opt.subscriptStyle != null) {
-        subscriptStyle = subscriptStyle == null
-            ? opt.subscriptStyle
-            : _mergeStyles(subscriptStyle, opt.subscriptStyle!);
+
+      final optSub = opt.subscriptStyle;
+      if (optSub != null) {
+        subscriptStyle = subscriptStyle == null ? optSub : _mergeStyles(subscriptStyle, optSub);
       }
-      if (opt.linkStyle != null) {
-        linkStyle = linkStyle == null ? opt.linkStyle : _mergeStyles(linkStyle, opt.linkStyle!);
+
+      final optLink = opt.linkStyle;
+      if (optLink != null) {
+        linkStyle = linkStyle == null ? optLink : _mergeStyles(linkStyle, optLink);
       }
-      if (opt.linkHoverStyle != null) {
-        linkHoverStyle = linkHoverStyle == null
-            ? opt.linkHoverStyle
-            : _mergeStyles(linkHoverStyle, opt.linkHoverStyle!);
+
+      final optLinkHover = opt.linkHoverStyle;
+      if (optLinkHover != null) {
+        linkHoverStyle =
+            linkHoverStyle == null ? optLinkHover : _mergeStyles(linkHoverStyle, optLinkHover);
       }
 
       // Non-mergeable: overwrite (last value = nearest)
