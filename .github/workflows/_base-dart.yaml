@@ -1,0 +1,110 @@
+name: "[base] Dart"
+
+on:
+  workflow_call:
+    inputs:
+      path:
+        required: false
+        type: string
+        default: '.'
+
+jobs:
+  is-flutter:
+    uses: ./.github/workflows/_base-has_flutter.yaml
+    with:
+      path: ${{ inputs.path }}
+
+  check-tests:
+    name: "check tests"
+    runs-on: ubuntu-latest
+    needs: is-flutter
+    if: needs.is-flutter.outputs.is_flutter == '0'
+    outputs:
+      do_tests: ${{ steps.check-tests.outputs.do_tests }}
+    steps:
+      - uses: actions/checkout@v5
+      # Skip if no test directory
+      - id: check-tests
+        run: |
+          if [ ! -d "${{ inputs.path }}/test" ]; then
+            echo "No test directory found, skipping tests.";
+            do_tests=0
+          else
+            echo "Test directory found, will run tests.";
+            do_tests=1
+          fi
+          echo "do_tests=$do_tests" >> $GITHUB_OUTPUT
+
+  install:
+    name: "install"
+    runs-on: ubuntu-latest
+    needs: [ is-flutter ]
+    if: needs.is-flutter.outputs.is_flutter == '0'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+  format:
+    name: "format"
+    runs-on: ubuntu-latest
+    needs: install
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: "Get dependencies"
+        run: dart pub get
+        working-directory: ${{ inputs.path }}
+
+      - name: "dart format"
+        run: |
+          echo "Checking Dart formatting...\nFiles displayed below:"
+          dart format -o none --set-exit-if-changed ./lib/
+          if [ -d "${{ inputs.path }}/test" ]; then dart format -o none --set-exit-if-changed ./test/; fi
+          echo "No formatting issues found."
+        working-directory: ${{ inputs.path }}
+
+  analyze:
+    name: "analyze"
+    runs-on: ubuntu-latest
+    needs: install
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: "Get dependencies"
+        run: dart pub get
+        working-directory: ${{ inputs.path }}
+
+      - name: Run analysis
+        run: |
+          dart analyze --fatal-warnings ./lib/
+          if [ -d "${{ inputs.path }}/test" ]; then dart analyze --fatal-warnings ./test/; fi
+        working-directory: ${{ inputs.path }}
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [install, check-tests]
+    if: needs.check-tests.outputs.do_tests == 1
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: "Get dependencies"
+        run: dart pub get
+        working-directory: ${{ inputs.path }}
+
+      - name: Run tests
+        run: dart test --reporter=expanded 
+        working-directory: ${{ inputs.path }}

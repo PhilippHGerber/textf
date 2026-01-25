@@ -1,0 +1,40 @@
+name: "textf_example_build"
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+      - "release/**"
+    paths:
+      - "example/**/*.dart"
+      - "example/**/*.yaml"
+      - .github/workflows/_base-dart.yaml
+      - .github/workflows/_base-flutter.yaml
+      - .github/workflows/example.yaml
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dart:
+    strategy:
+      matrix:
+        example: [textf_core]
+    name: "${{ matrix.example }}"
+    uses: ./.github/workflows/_base-dart.yaml
+    with:
+      path: "example/${{ matrix.example }}"
+
+  flutter:
+    strategy:
+      matrix:
+        example: [textf_core]
+    name: "${{ matrix.example }}"
+    uses: ./.github/workflows/_base-flutter.yaml
+    with:
+      path: "example/${{ matrix.example }}"

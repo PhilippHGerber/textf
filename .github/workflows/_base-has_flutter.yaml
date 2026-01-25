@@ -1,0 +1,39 @@
+# filepath: /Users/jamie/Work/OSS/dart-package-template/.github/workflows/_base-has_flutter.yaml
+name: "[base] Has Flutter"
+
+on:
+  workflow_call:
+    inputs:
+      path:
+        required: false
+        type: string
+        default: "."
+    outputs:
+      is_flutter:
+        description: "1 if pubspec.yaml uses Flutter SDK, else 0"
+        value: ${{ jobs.check.outputs.is_flutter }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      is_flutter: ${{ steps.detect.outputs.is_flutter }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: detect
+        name: Detect Flutter SDK
+        run: |
+          PUBSPEC="${{ inputs.path }}/pubspec.yaml"
+          if [ ! -f "$PUBSPEC" ]; then
+            echo "pubspec.yaml not found."
+            echo "is_flutter=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if grep -q "sdk: flutter" "$PUBSPEC"; then
+            echo "Flutter SDK dependency detected."
+            echo "is_flutter=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "Flutter SDK not detected."
+            echo "is_flutter=0" >> "$GITHUB_OUTPUT"
+          fi

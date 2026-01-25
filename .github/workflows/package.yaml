@@ -1,0 +1,76 @@
+name: "textf_build_and_test"
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+      - "release/**"
+    paths:
+      - "**.dart"
+      - "./*.yaml"
+      - .github/workflows/_base-dart.yaml
+      - .github/workflows/_base-flutter.yaml
+      - .github/workflows/package.yaml
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# call the base workflow with the package path
+jobs:
+  is-flutter:
+    uses: ./.github/workflows/_base-has_flutter.yaml
+    with:
+      path: "."
+
+  dart:
+    needs: is-flutter
+    if: needs.is-flutter.outputs.is_flutter == '0'
+    uses: ./.github/workflows/_base-dart.yaml
+    with:
+      path: "."
+
+  flutter:
+    needs: is-flutter
+    if: needs.is-flutter.outputs.is_flutter == '1'
+    uses: ./.github/workflows/_base-flutter.yaml
+    with:
+      path: "."
+
+  publish:
+    runs-on: ubuntu-latest
+    # Needs is-flutter and dart or flutter job to complete successfully, only skipped if either is failed, but not skipped
+    needs: [is-flutter, dart, flutter]
+    if: ${{ always() && (needs.dart.result == 'success' || needs.flutter.result == 'success') && (needs.dart.result != 'failure' && needs.flutter.result != 'failure') && (github.event_name == 'release' && github.event.action == 'published' || github.ref == 'refs/heads/main') }}
+    steps:
+      - uses: actions/checkout@v5
+
+      # --- DART ---
+      - name: Setup Dart
+        if: needs.is-flutter.outputs.is_flutter == '0'
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Get dependencies (Dart)
+        if: needs.is-flutter.outputs.is_flutter == '0'
+        run: dart pub get
+
+      # --- FLUTTER ---
+      - name: Setup Flutter
+        if: needs.is-flutter.outputs.is_flutter == '1'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get dependencies (Flutter)
+        if: needs.is-flutter.outputs.is_flutter == '1'
+        run: flutter pub get
+
+      - name: Publish to pub.dev (dry run)
+        run: dart pub publish --dry-run
