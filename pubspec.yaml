@@ -33,7 +33,7 @@ screenshots:
     path: pub/textf_basic.webp
   - description: "Superscript & Subscript"
     path: pub/textf_script.webp
-  - description: "Links"
+  - description: "Textf Links"
     path: pub/textf_links.webp
   - description: "Placeholders"
     path: pub/textf_placeholders.webp
