@@ -470,7 +470,7 @@ void main() {
         colorScheme: const ColorScheme.light(
           primary: Colors.blue,
           onSurfaceVariant: Colors.grey,
-          surfaceContainerHighest: Colors.white,
+          surfaceContainer: Colors.white,
         ),
       );
 
@@ -478,7 +478,7 @@ void main() {
         colorScheme: const ColorScheme.light(
           primary: Colors.blue, // Same
           onSurfaceVariant: Colors.grey, // Same
-          surfaceContainerHighest: Colors.white, // Same
+          surfaceContainer: Colors.white, // Same
           // But different tertiary (irrelevant to Textf)
           tertiary: Colors.purple,
         ),
@@ -602,6 +602,60 @@ void main() {
         spyParser.parseCallCount,
         2,
         reason: 'Should re-parse when theme primary color changes',
+      );
+    });
+
+    testWidgets('Cache invalidates when ancestor (non-nearest) TextfOptions changes',
+        (tester) async {
+      Widget buildTree({required Color grandparentBoldColor}) {
+        return Theme(
+          data: ThemeData.light(),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: MediaQuery(
+              data: const MediaQueryData(),
+              child: TextfOptions(
+                // Grandparent - provides boldStyle
+                boldStyle: TextStyle(color: grandparentBoldColor),
+                child: TextfOptions(
+                  // Parent (nearest) - provides italicStyle only
+                  italicStyle: const TextStyle(fontStyle: FontStyle.italic),
+                  child: TextfRenderer(
+                    data: '**bold**',
+                    style: const TextStyle(fontSize: 10),
+                    parser: spyParser,
+                    strutStyle: null,
+                    textAlign: null,
+                    textDirection: null,
+                    locale: null,
+                    softWrap: null,
+                    overflow: null,
+                    textScaler: null,
+                    maxLines: null,
+                    semanticsLabel: null,
+                    textWidthBasis: null,
+                    textHeightBehavior: null,
+                    selectionColor: null,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // 1. Initial: grandparent boldStyle is blue
+      await tester.pumpWidget(buildTree(grandparentBoldColor: Colors.blue));
+      expect(spyParser.parseCallCount, 1);
+
+      // 2. Change grandparent boldStyle to red (nearest TextfOptions unchanged)
+      await tester.pumpWidget(buildTree(grandparentBoldColor: Colors.red));
+
+      // Should re-parse because effective boldStyle changed
+      expect(
+        spyParser.parseCallCount,
+        2,
+        reason: 'Should re-parse when ancestor TextfOptions changes',
       );
     });
   });
