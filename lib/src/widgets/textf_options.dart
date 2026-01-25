@@ -428,4 +428,149 @@ class TextfOptions extends InheritedWidget {
   bool updateShouldNotify(TextfOptions oldWidget) {
     return !hasSameStyle(oldWidget);
   }
+
+  /// Computes a hash of all resolved TextfOptions values with a single tree walk.
+  ///
+  /// Performance: O(Depth) tree walk + O(Depth) property iteration.
+  /// This is much faster than calling getEffective... for each property,
+  /// which would be O(Properties × Depth).
+  static int computeResolvedHash(BuildContext context, TextStyle baseStyle) {
+    final List<TextfOptions> hierarchy = _getAncestorOptions(context);
+
+    if (hierarchy.isEmpty) return 0;
+
+    // === MERGEABLE STYLES ===
+    // Accumulated from root → nearest (hierarchy.reversed)
+    TextStyle? boldStyle;
+    TextStyle? italicStyle;
+    TextStyle? boldItalicStyle;
+    TextStyle? strikethroughStyle;
+    TextStyle? codeStyle;
+    TextStyle? underlineStyle;
+    TextStyle? highlightStyle;
+    TextStyle? superscriptStyle;
+    TextStyle? subscriptStyle;
+    TextStyle? linkStyle;
+    TextStyle? linkHoverStyle;
+
+    // === NON-MERGEABLE (NEAREST WINS) ===
+    // Overwritten from root → nearest, so final value = nearest
+    MouseCursor? linkMouseCursor;
+    PlaceholderAlignment? linkAlignment;
+    double? strikethroughThickness;
+    double? superscriptBaselineFactor;
+    double? subscriptBaselineFactor;
+    double? scriptFontSizeFactor;
+    void Function(String, String)? onLinkTap;
+    void Function(String, String, {required bool isHovering})? onLinkHover;
+
+    // Single pass: root → nearest
+    for (final opt in hierarchy.reversed) {
+      // Mergeable: accumulate
+      if (opt.boldStyle != null) {
+        boldStyle = boldStyle == null ? opt.boldStyle : _mergeStyles(boldStyle, opt.boldStyle!);
+      }
+      if (opt.italicStyle != null) {
+        italicStyle =
+            italicStyle == null ? opt.italicStyle : _mergeStyles(italicStyle, opt.italicStyle!);
+      }
+      if (opt.boldItalicStyle != null) {
+        boldItalicStyle = boldItalicStyle == null
+            ? opt.boldItalicStyle
+            : _mergeStyles(boldItalicStyle, opt.boldItalicStyle!);
+      }
+      if (opt.strikethroughStyle != null) {
+        strikethroughStyle = strikethroughStyle == null
+            ? opt.strikethroughStyle
+            : _mergeStyles(strikethroughStyle, opt.strikethroughStyle!);
+      }
+      if (opt.codeStyle != null) {
+        codeStyle = codeStyle == null ? opt.codeStyle : _mergeStyles(codeStyle, opt.codeStyle!);
+      }
+      if (opt.underlineStyle != null) {
+        underlineStyle = underlineStyle == null
+            ? opt.underlineStyle
+            : _mergeStyles(underlineStyle, opt.underlineStyle!);
+      }
+      if (opt.highlightStyle != null) {
+        highlightStyle = highlightStyle == null
+            ? opt.highlightStyle
+            : _mergeStyles(highlightStyle, opt.highlightStyle!);
+      }
+      if (opt.superscriptStyle != null) {
+        superscriptStyle = superscriptStyle == null
+            ? opt.superscriptStyle
+            : _mergeStyles(superscriptStyle, opt.superscriptStyle!);
+      }
+      if (opt.subscriptStyle != null) {
+        subscriptStyle = subscriptStyle == null
+            ? opt.subscriptStyle
+            : _mergeStyles(subscriptStyle, opt.subscriptStyle!);
+      }
+      if (opt.linkStyle != null) {
+        linkStyle = linkStyle == null ? opt.linkStyle : _mergeStyles(linkStyle, opt.linkStyle!);
+      }
+      if (opt.linkHoverStyle != null) {
+        linkHoverStyle = linkHoverStyle == null
+            ? opt.linkHoverStyle
+            : _mergeStyles(linkHoverStyle, opt.linkHoverStyle!);
+      }
+
+      // Non-mergeable: overwrite (last value = nearest)
+      if (opt.linkMouseCursor != null) linkMouseCursor = opt.linkMouseCursor;
+      if (opt.linkAlignment != null) linkAlignment = opt.linkAlignment;
+      if (opt.strikethroughThickness != null) strikethroughThickness = opt.strikethroughThickness;
+      if (opt.superscriptBaselineFactor != null) {
+        superscriptBaselineFactor = opt.superscriptBaselineFactor;
+      }
+      if (opt.subscriptBaselineFactor != null) {
+        subscriptBaselineFactor = opt.subscriptBaselineFactor;
+      }
+      if (opt.scriptFontSizeFactor != null) scriptFontSizeFactor = opt.scriptFontSizeFactor;
+      if (opt.onLinkTap != null) onLinkTap = opt.onLinkTap;
+      if (opt.onLinkHover != null) onLinkHover = opt.onLinkHover;
+    }
+
+    // Merge accumulated styles onto baseStyle for final comparison
+    final effectiveBold = boldStyle != null ? _mergeStyles(baseStyle, boldStyle) : null;
+    final effectiveItalic = italicStyle != null ? _mergeStyles(baseStyle, italicStyle) : null;
+    final effectiveBoldItalic =
+        boldItalicStyle != null ? _mergeStyles(baseStyle, boldItalicStyle) : null;
+    final effectiveStrike =
+        strikethroughStyle != null ? _mergeStyles(baseStyle, strikethroughStyle) : null;
+    final effectiveCode = codeStyle != null ? _mergeStyles(baseStyle, codeStyle) : null;
+    final effectiveUnderline =
+        underlineStyle != null ? _mergeStyles(baseStyle, underlineStyle) : null;
+    final effectiveHighlight =
+        highlightStyle != null ? _mergeStyles(baseStyle, highlightStyle) : null;
+    final effectiveSuperscript =
+        superscriptStyle != null ? _mergeStyles(baseStyle, superscriptStyle) : null;
+    final effectiveSubscript =
+        subscriptStyle != null ? _mergeStyles(baseStyle, subscriptStyle) : null;
+    final effectiveLink = linkStyle != null ? _mergeStyles(baseStyle, linkStyle) : null;
+    final effectiveLinkHover =
+        linkHoverStyle != null ? _mergeStyles(baseStyle, linkHoverStyle) : null;
+
+    return Object.hash(
+      effectiveBold,
+      effectiveItalic,
+      effectiveBoldItalic,
+      effectiveStrike,
+      effectiveCode,
+      effectiveUnderline,
+      effectiveHighlight,
+      effectiveSuperscript,
+      effectiveSubscript,
+      effectiveLink,
+      effectiveLinkHover,
+      linkMouseCursor,
+      linkAlignment,
+      strikethroughThickness,
+      superscriptBaselineFactor,
+      subscriptBaselineFactor,
+      scriptFontSizeFactor,
+      onLinkTap,
+      onLinkHover,
+    );
+  }
 }

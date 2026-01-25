@@ -102,12 +102,11 @@ class TextfRendererState extends State<TextfRenderer> {
   int? _lastMaxLines;
   TextWidthBasis? _lastTextWidthBasis;
   ThemeData? _lastTheme;
-  TextfOptions? _lastOptions;
+  int? _lastOptionsHash;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final options = TextfOptions.maybeOf(context);
 
     final DefaultTextStyle defaultTextStyle = DefaultTextStyle.of(context);
     final TextStyle currentBaseStyle = widget.style ?? defaultTextStyle.style;
@@ -120,16 +119,14 @@ class TextfRendererState extends State<TextfRenderer> {
     final bool placeholdersMatch = mapEquals(_lastPlaceholders, widget.placeholders);
 
     // 2. Check Options (Fixing Critical Flaw)
-    // We check if it is the same instance OR if it logically equals the last one.
-    final TextfOptions? lastOptions = _lastOptions;
-    final bool optionsMatch = (lastOptions == options) ||
-        (lastOptions != null && options != null && options.hasSameStyle(lastOptions));
+    final int currentOptionsHash = TextfOptions.computeResolvedHash(context, currentBaseStyle);
 
     // 3. Check Theme
     // Compare only the ColorScheme properties that TextfStyleResolver uses:
     // - primary: link color/decoration
     // - onSurfaceVariant: code text color
     // - surfaceContainer: code background color
+    // - brightness: overall light/dark mode
     // This avoids unnecessary re-parses when unrelated theme properties change,
     // while still correctly invalidating when theme-derived styles would differ.
     final ThemeData? lastTheme = _lastTheme;
@@ -137,12 +134,13 @@ class TextfRendererState extends State<TextfRenderer> {
         (lastTheme != null &&
             lastTheme.colorScheme.primary == theme.colorScheme.primary &&
             lastTheme.colorScheme.onSurfaceVariant == theme.colorScheme.onSurfaceVariant &&
-            lastTheme.colorScheme.surfaceContainer == theme.colorScheme.surfaceContainer);
+            lastTheme.colorScheme.surfaceContainer == theme.colorScheme.surfaceContainer &&
+            lastTheme.colorScheme.brightness == theme.colorScheme.brightness);
 
     if (cachedSpans != null &&
         placeholdersMatch &&
-        optionsMatch &&
         themeMatch &&
+        _lastOptionsHash == currentOptionsHash &&
         _lastData == widget.data &&
         _lastStyle == currentBaseStyle &&
         _lastScaler == effectiveScaler &&
@@ -181,7 +179,7 @@ class TextfRendererState extends State<TextfRenderer> {
     _lastScaler = effectiveScaler;
     _lastPlaceholders = widget.placeholders;
     _lastTheme = theme;
-    _lastOptions = options;
+    _lastOptionsHash = currentOptionsHash;
     _lastTextAlign = widget.textAlign;
     _lastTextDirection = widget.textDirection;
     _lastSoftWrap = widget.softWrap;
