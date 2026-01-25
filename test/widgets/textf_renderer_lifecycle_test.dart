@@ -1,4 +1,6 @@
-// ignore_for_file: no-magic-number, avoid-late-keyword
+// ignore_for_file: no-magic-number, avoid-late-keyword, no-empty-block, avoid_redundant_argument_values, avoid_redundant_argument_values
+
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -657,6 +659,1012 @@ void main() {
         2,
         reason: 'Should re-parse when ancestor TextfOptions changes',
       );
+    });
+
+    testWidgets('Cache persists when callbacks are stable references', (tester) async {
+      // Define stable callback references outside the build
+      void handleTap(String url, String text) {}
+      void handleHover(String url, String text, {required bool isHovering}) {}
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextfOptions(
+            onLinkTap: handleTap,
+            onLinkHover: handleHover,
+            child: TextfRenderer(
+              data: '[Link](https://example.com)',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        ),
+      );
+      expect(spyParser.parseCallCount, 1);
+
+      // Rebuild with SAME callback references
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextfOptions(
+            onLinkTap: handleTap,
+            onLinkHover: handleHover,
+            child: TextfRenderer(
+              data: '[Link](https://example.com)',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        spyParser.parseCallCount,
+        1,
+        reason: 'Stable callback references should not invalidate cache',
+      );
+    });
+
+    testWidgets('Cache invalidates when inline callbacks change (expected v1.1 behavior)',
+        (tester) async {
+      // First build with inline callback
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextfOptions(
+            onLinkTap: (url, text) {}, // Inline closure #1
+            child: TextfRenderer(
+              data: '[Link](https://example.com)',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        ),
+      );
+      expect(spyParser.parseCallCount, 1);
+
+      // Rebuild with new inline callback (different instance)
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextfOptions(
+            onLinkTap: (url, text) {}, // Inline closure #2 - NEW instance
+            child: TextfRenderer(
+              data: '[Link](https://example.com)',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        ),
+      );
+
+      // This documents the CURRENT behavior in v1.1:
+      // Inline closures create new instances, which changes the hash and invalidates cache.
+      // This is expected but suboptimal - users should use stable references for best performance.
+      // See Option B in the roadmap for the v1.2 architectural fix.
+      expect(
+        spyParser.parseCallCount,
+        2,
+        reason: 'Inline callbacks create new instances, invalidating cache (v1.1 known limitation)',
+      );
+    });
+
+    group('textHeightBehavior Cache Invalidation', () {
+      testWidgets('Cache invalidates when textHeightBehavior changes', (tester) async {
+        const behavior1 = ui.TextHeightBehavior(
+            // applyHeightToFirstAscent: true,
+            // applyHeightToLastDescent: true,
+            );
+        const behavior2 = ui.TextHeightBehavior(
+          applyHeightToFirstAscent: false,
+          applyHeightToLastDescent: false,
+        );
+
+        // 1. Initial build with behavior1
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: behavior1, // Initial behavior
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1, reason: 'Initial build should parse');
+
+        // 2. Rebuild with behavior2 (different)
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: behavior2, // Changed behavior
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          2,
+          reason: 'Parser SHOULD be called again when textHeightBehavior changes',
+        );
+      });
+
+      testWidgets('Cache invalidates when textHeightBehavior changes from null to value',
+          (tester) async {
+        const behavior = ui.TextHeightBehavior(
+          applyHeightToFirstAscent: false,
+          // applyHeightToLastDescent: true,
+        );
+
+        // 1. Initial build with null
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null, // Initially null
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1);
+
+        // 2. Rebuild with a value
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: behavior, // Now has value
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          2,
+          reason: 'Parser SHOULD be called when textHeightBehavior changes from null to value',
+        );
+      });
+
+      testWidgets('Cache invalidates when textHeightBehavior changes from value to null',
+          (tester) async {
+        const behavior = ui.TextHeightBehavior(
+          // applyHeightToFirstAscent: true,
+          applyHeightToLastDescent: false,
+        );
+
+        // 1. Initial build with value
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: behavior, // Initially has value
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1);
+
+        // 2. Rebuild with null
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null, // Now null
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          2,
+          reason: 'Parser SHOULD be called when textHeightBehavior changes from value to null',
+        );
+      });
+
+      testWidgets('Cache persists when textHeightBehavior is identical', (tester) async {
+        const behavior = ui.TextHeightBehavior(
+            // applyHeightToFirstAscent: true,
+            // applyHeightToLastDescent: true,
+            );
+
+        // 1. Initial build
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: behavior,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1);
+
+        // 2. Rebuild with identical behavior (same const instance)
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: behavior, // Same instance
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          1,
+          reason: 'Parser should NOT be called when textHeightBehavior is unchanged',
+        );
+      });
+
+      testWidgets('Cache persists when textHeightBehavior has equal values (different instance)',
+          (tester) async {
+        // Two different instances with same values
+        const behavior1 = ui.TextHeightBehavior(
+          // applyHeightToFirstAscent: true,
+          applyHeightToLastDescent: false,
+        );
+        const behavior2 = ui.TextHeightBehavior(
+          // applyHeightToFirstAscent: true,
+          applyHeightToLastDescent: false,
+        );
+
+        // Sanity check: these should be equal but may be different instances
+        expect(behavior1, equals(behavior2));
+
+        // 1. Initial build
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: behavior1,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1);
+
+        // 2. Rebuild with equal but potentially different instance
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: behavior2,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          1,
+          reason: 'Parser should NOT be called when textHeightBehavior values are equal',
+        );
+      });
+    });
+
+// -----------------------------------------------------------------------------
+// ISSUE #2: locale Cache Invalidation Tests
+// -----------------------------------------------------------------------------
+
+    group('locale Cache Invalidation', () {
+      testWidgets('Cache invalidates when locale changes', (tester) async {
+        const locale1 = Locale('en', 'US');
+        const locale2 = Locale('de', 'DE');
+
+        // 1. Initial build with locale1
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale1, // Initial locale
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1, reason: 'Initial build should parse');
+
+        // 2. Rebuild with locale2 (different)
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale2, // Changed locale
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          2,
+          reason: 'Parser SHOULD be called again when locale changes',
+        );
+      });
+
+      testWidgets('Cache invalidates when locale changes from null to value', (tester) async {
+        const locale = Locale('fr', 'FR');
+
+        // 1. Initial build with null
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null, // Initially null
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1);
+
+        // 2. Rebuild with a value
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale, // Now has value
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          2,
+          reason: 'Parser SHOULD be called when locale changes from null to value',
+        );
+      });
+
+      testWidgets('Cache invalidates when locale changes from value to null', (tester) async {
+        const locale = Locale('ja', 'JP');
+
+        // 1. Initial build with value
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale, // Initially has value
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1);
+
+        // 2. Rebuild with null
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: null, // Now null
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          2,
+          reason: 'Parser SHOULD be called when locale changes from value to null',
+        );
+      });
+
+      testWidgets('Cache invalidates when only language code changes', (tester) async {
+        const locale1 = Locale('en');
+        const locale2 = Locale('es');
+
+        // 1. Initial build
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale1,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1);
+
+        // 2. Rebuild with different language code
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale2,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          2,
+          reason: 'Parser SHOULD be called when language code changes',
+        );
+      });
+
+      testWidgets('Cache invalidates when only country code changes', (tester) async {
+        const locale1 = Locale('en', 'US');
+        const locale2 = Locale('en', 'GB');
+
+        // 1. Initial build
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale1,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1);
+
+        // 2. Rebuild with different country code (same language)
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale2,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          2,
+          reason: 'Parser SHOULD be called when country code changes',
+        );
+      });
+
+      testWidgets('Cache persists when locale is identical', (tester) async {
+        const locale = Locale('zh', 'CN');
+
+        // 1. Initial build
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1);
+
+        // 2. Rebuild with identical locale (same const instance)
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale, // Same instance
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          1,
+          reason: 'Parser should NOT be called when locale is unchanged',
+        );
+      });
+
+      testWidgets('Cache persists when locale has equal values (different instance)',
+          (tester) async {
+        // Two different instances with same values
+        const locale1 = Locale('ar', 'SA');
+        const locale2 = Locale('ar', 'SA');
+
+        // Sanity check: these should be equal
+        expect(locale1, equals(locale2));
+
+        // 1. Initial build
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale1,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1);
+
+        // 2. Rebuild with equal but different instance
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale2,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          1,
+          reason: 'Parser should NOT be called when locale values are equal',
+        );
+      });
+
+      testWidgets('Cache invalidates for RTL locale change (regression test for i18n)',
+          (tester) async {
+        // This specifically tests RTL support which is advertised
+        const ltrLocale = Locale('en', 'US');
+        const rtlLocale = Locale('ar', 'SA'); // Arabic - RTL
+
+        // 1. Initial build with LTR locale
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test **bold** text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: ltrLocale,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1);
+
+        // 2. Switch to RTL locale
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test **bold** text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: rtlLocale,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: null,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          2,
+          reason: 'Parser SHOULD be called when switching between LTR and RTL locales',
+        );
+      });
+    });
+
+// -----------------------------------------------------------------------------
+// COMBINED TEST: Both properties change simultaneously
+// -----------------------------------------------------------------------------
+
+    group('Combined textHeightBehavior and locale Cache Invalidation', () {
+      testWidgets('Cache invalidates when both textHeightBehavior and locale change',
+          (tester) async {
+        const behavior1 = ui.TextHeightBehavior(
+            // applyHeightToFirstAscent: true
+            );
+        const behavior2 = ui.TextHeightBehavior(applyHeightToFirstAscent: false);
+        const locale1 = Locale('en');
+        const locale2 = Locale('de');
+
+        // 1. Initial build
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale1,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: behavior1,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(spyParser.parseCallCount, 1);
+
+        // 2. Change both properties
+        await tester.pumpWidget(
+          _wrap(
+            TextfRenderer(
+              data: 'Test text',
+              style: const TextStyle(fontSize: 10),
+              parser: spyParser,
+              strutStyle: null,
+              textAlign: null,
+              textDirection: null,
+              locale: locale2,
+              softWrap: null,
+              overflow: null,
+              textScaler: null,
+              maxLines: null,
+              semanticsLabel: null,
+              textWidthBasis: null,
+              textHeightBehavior: behavior2,
+              selectionColor: null,
+            ),
+          ),
+        );
+
+        expect(
+          spyParser.parseCallCount,
+          2,
+          reason: 'Parser should be called when multiple properties change',
+        );
+      });
     });
   });
 }
