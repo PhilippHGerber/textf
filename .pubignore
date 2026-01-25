@@ -1,5 +1,6 @@
-# Development/test directories
-
+.github/
+.dart_tool/
+*.g.dart
 /build/
 **build/
 pubspec.lock
@@ -7,12 +8,8 @@ coverage/
 lcov.info
 llmifierrc.yaml
 llms.txt
-
 /images/
-llmifierrc.yaml
-llms.txt
-
-/benchmark/
+/example/benchmark/
 /example/textf_core/
 /example/textf_flex/
 /example/widgetbook_textf/
