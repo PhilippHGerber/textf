@@ -9,6 +9,7 @@ lcov.info
 llmifierrc.yaml
 llms.txt
 /images/
+/example/assets/
 /example/benchmark/
 /example/textf_core/
 /example/textf_flex/
