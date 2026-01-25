@@ -103,6 +103,8 @@ class TextfRendererState extends State<TextfRenderer> {
   TextWidthBasis? _lastTextWidthBasis;
   ThemeData? _lastTheme;
   int? _lastOptionsHash;
+  ui.TextHeightBehavior? _lastTextHeightBehavior;
+  Locale? _lastLocale;
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +151,9 @@ class TextfRendererState extends State<TextfRenderer> {
         _lastSoftWrap == widget.softWrap &&
         _lastOverflow == widget.overflow &&
         _lastMaxLines == widget.maxLines &&
-        _lastTextWidthBasis == widget.textWidthBasis) {
+        _lastTextWidthBasis == widget.textWidthBasis &&
+        _lastTextHeightBehavior == widget.textHeightBehavior &&
+        _lastLocale == widget.locale) {
       // Cache Hit!
       return DefaultTextStyle.merge(
         textAlign: widget.textAlign,
@@ -186,6 +190,8 @@ class TextfRendererState extends State<TextfRenderer> {
     _lastOverflow = widget.overflow;
     _lastMaxLines = widget.maxLines;
     _lastTextWidthBasis = widget.textWidthBasis;
+    _lastTextHeightBehavior = widget.textHeightBehavior;
+    _lastLocale = widget.locale;
 
     return DefaultTextStyle.merge(
       textAlign: widget.textAlign,
