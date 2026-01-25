@@ -31,29 +31,35 @@ class _ScalingReproScreenState extends State<ScalingReproScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            TextfOptions(
-              child: Container(
-                decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-                padding: const EdgeInsets.all(8),
-                child: SelectionArea(
-                  child: Textf(
-                    ' **hello** ==world== \n'
-                    ' E = mc^2^ \n'
-                    ' H~2~O \n'
-                    ' a^log~a~b^ \n'
-                    ' This is a ~~cat~~ bird {bird} \n',
-                    style: TextStyle(fontSize: _fontSize),
-                    textScaler: TextScaler.linear(_textScaleFactor),
-                    placeholders: {
-                      'bird': WidgetSpan(
-                        alignment: PlaceholderAlignment.middle,
-                        child: Image.asset(
-                          'assets/img/bird.gif',
-                          width: _fontSize * 2,
-                          height: _fontSize * 2,
+            MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(_textScaleFactor),
+              ),
+              child: TextfOptions(
+                child: Container(
+                  decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+                  padding: const EdgeInsets.all(8),
+                  child: SelectionArea(
+                    child: Textf(
+                      ' **hello** ==world== \n'
+                      ' E = mc^2^ \n'
+                      ' H~2~O \n'
+                      ' a^log~a~b^ \n'
+                      ' Link [Flutter](https://flutter.dev) \n'
+                      ' This is a ~~cat~~ bird {bird} \n',
+                      style: TextStyle(fontSize: _fontSize),
+                      // textScaler: TextScaler.linear(_textScaleFactor),
+                      placeholders: {
+                        'bird': WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Image.asset(
+                            'assets/img/bird.gif',
+                            width: _fontSize * 2,
+                            height: _fontSize * 2,
+                          ),
                         ),
-                      ),
-                    },
+                      },
+                    ),
                   ),
                 ),
               ),

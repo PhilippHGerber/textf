@@ -33,6 +33,11 @@ class ShowcaseScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final flutterLogo =
+        Image.asset('assets/flutter.png', width: 18, height: 18);
+    final dartLogo = Image.asset('assets/dart.png', width: 18, height: 18);
+    const loveIcon = Icon(Icons.favorite, color: Colors.red);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Textf Features')),
       body: SingleChildScrollView(
@@ -155,9 +160,9 @@ class ShowcaseScreen extends StatelessWidget {
             Textf(
               'Built with {flutter} and {dart}. Made with {love}.',
               placeholders: {
-                "flutter": WidgetSpan(child: Image.asset('assets/flutter.png', width: 18, height: 18)),
-                "dart": WidgetSpan(child: Image.asset('assets/dart.png', width: 18, height: 18)),
-                "love": WidgetSpan(child: Icon(Icons.favorite, color: Colors.red)),
+                'flutter': WidgetSpan(child: flutterLogo),
+                'dart': WidgetSpan(child: dartLogo),
+                'love': const WidgetSpan(child: loveIcon),
               },
             ),
             const SizedBox(height: 16),

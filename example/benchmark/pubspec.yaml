@@ -7,10 +7,10 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
-  flex_color_scheme: ^8.2.0
+  flex_color_scheme: ^8.4.0
   flutter:
     sdk: flutter
-  textf: ^1.0.0
+  textf: ^1.1.0
 
 dev_dependencies:
   flutter_test:

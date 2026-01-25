@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart'; // Import kDebugMode
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:super_clipboard/super_clipboard.dart';
 import 'package:textf/textf.dart'; // Import TextfOptions
 
 // Helper extension for cleaner null checks (optional)
@@ -186,38 +185,6 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
     }
   }
 
-  Future<void> _copyImageToClipboard() async {
-    if (_imageBytes == null) return;
-    try {
-      final clipboard = SystemClipboard.instance;
-      if (clipboard == null) {
-        throw Exception("Clipboard instance is not available.");
-      }
-      final item = DataWriterItem();
-      item.add(Formats.png(_imageBytes!));
-      await clipboard.write([item]);
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Image copied to clipboard'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        print("Copy image failed: $e");
-      }
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to copy image: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
   Future<void> _showImageOptions() async {
     if (_imageBytes == null) return;
 
@@ -228,14 +195,6 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                leading: const Icon(Icons.copy),
-                title: const Text('Copy to Clipboard'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _copyImageToClipboard();
-                },
-              ),
               ListTile(
                 leading: const Icon(Icons.share),
                 title: const Text('Share Image'),

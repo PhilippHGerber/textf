@@ -1,32 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:syntax_highlight/syntax_highlight.dart';
 
 import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize the highlighter
-  await Highlighter.initialize(['dart']);
-
-  // Load themes
-  final lightTheme = await HighlighterTheme.loadLightTheme();
-  final darkTheme = await HighlighterTheme.loadDarkTheme();
-
-  HighlighterThemes.initialize(lightTheme, darkTheme);
-
   runApp(const TextfExampleApp());
-}
-
-class HighlighterThemes {
-  static late final HighlighterTheme light;
-  static late final HighlighterTheme dark;
-
-  static void initialize(HighlighterTheme lightTheme, HighlighterTheme darkTheme) {
-    light = lightTheme;
-    dark = darkTheme;
-  }
 }
 
 class TextfExampleApp extends StatefulWidget {

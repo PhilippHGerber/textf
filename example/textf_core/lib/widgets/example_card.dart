@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:syntax_highlight/syntax_highlight.dart';
-
-import '../main.dart'; // Import to access HighlighterThemes
 
 class ExampleCard extends StatelessWidget {
   final String title;
@@ -21,16 +18,6 @@ class ExampleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final brightness = theme.brightness;
-
-    // Use pre-loaded themes
-    final highlighterTheme =
-        brightness == Brightness.dark ? HighlighterThemes.dark : HighlighterThemes.light;
-
-    final highlighter = Highlighter(
-      language: 'dart',
-      theme: highlighterTheme,
-    );
 
     return Card(
       child: Padding(
@@ -60,7 +47,9 @@ class ExampleCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text.rich(
-                        highlighter.highlight(code.trim()),
+                        TextSpan(
+                          text: code,
+                        ),
                         style: const TextStyle(
                           fontFamily: 'RobotoMono',
                           fontSize: 12,
