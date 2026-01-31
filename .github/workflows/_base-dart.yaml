@@ -106,5 +106,29 @@ jobs:
         working-directory: ${{ inputs.path }}
 
       - name: Run tests
-        run: dart test --reporter=expanded 
+        run: |
+          dart pub global activate coverage
+          dart test --coverage=coverage --reporter=expanded
+          dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --packages=.dart_tool/package_config.json --report-on=lib
         working-directory: ${{ inputs.path }}
+
+      - name: Generate Coverage Summary
+        run: |
+          # Calculate PCT from lcov.info
+          PCT=$(awk -F: '/^LH:/{lh+=$2} /^LF:/{lf+=$2} END {if (lf>0) printf "%.2f", (lh/lf)*100; else print "0"}' coverage/lcov.info)
+          echo "{\"total\": {\"lines\": {\"pct\": $PCT}}}" > coverage/coverage-summary.json
+        working-directory: ${{ inputs.path }}
+
+      - name: Create Coverage Badges
+        if: github.ref == 'refs/heads/main'
+        uses: jaywcjlove/coverage-badges-cli@main
+        with:
+          source: ${{ inputs.path }}/coverage/coverage-summary.json
+          output: badges/coverage.svg
+
+      - name: Deploy Badge
+        if: github.ref == 'refs/heads/main'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: badges
+          folder: badges

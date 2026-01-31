@@ -1,5 +1,8 @@
 name: "tests"
 
+permissions:
+  contents: write
+
 on:
   pull_request:
   push:
@@ -15,6 +18,7 @@ on:
       - .github/workflows/package.yaml
   release:
     types: [published]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
