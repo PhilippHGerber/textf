@@ -41,9 +41,13 @@ jobs:
   flutter:
     needs: is-flutter
     if: needs.is-flutter.outputs.is_flutter == '1'
+    strategy:
+      matrix:
+        flutter-version: ['']
     uses: ./.github/workflows/_base-flutter.yaml
     with:
       path: "."
+      flutter-version: ${{ matrix.flutter-version }}
 
   publish:
     runs-on: ubuntu-latest

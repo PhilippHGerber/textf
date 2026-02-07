@@ -7,6 +7,11 @@ on:
         required: false
         type: string
         default: "."
+      flutter-version:
+        description: "Flutter version to use (empty = latest stable)"
+        required: false
+        type: string
+        default: ""
 
 jobs:
   is-flutter:
@@ -44,6 +49,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ inputs.flutter-version || '' }}
           channel: stable
           cache: true
 
@@ -60,6 +66,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ inputs.flutter-version || '' }}
           channel: stable
           cache: true
 
@@ -83,6 +90,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ inputs.flutter-version || '' }}
           channel: stable
           cache: true
 
@@ -103,6 +111,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ inputs.flutter-version || '' }}
           channel: stable
           cache: true
 
@@ -115,6 +124,7 @@ jobs:
         working-directory: ${{ inputs.path }}
 
       - name: Generate Coverage Summary
+        if: inputs.flutter-version == ''
         run: |
           # Calculate PCT from lcov.info
           PCT=$(awk -F: '/^LH:/{lh+=$2} /^LF:/{lf+=$2} END {if (lf>0) printf "%.2f", (lh/lf)*100; else print "0"}' coverage/lcov.info)
@@ -122,14 +132,14 @@ jobs:
         working-directory: ${{ inputs.path }}
 
       - name: Create Coverage Badges
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && inputs.flutter-version == ''
         uses: jaywcjlove/coverage-badges-cli@main
         with:
           source: ${{ inputs.path }}/coverage/coverage-summary.json
           output: badges/coverage.svg
 
       - name: Deploy Badge
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && inputs.flutter-version == ''
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: badges
