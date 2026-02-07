@@ -1,6 +1,6 @@
 # Text*f*
 
-[![pub package](https://img.shields.io/pub/v/textf.svg?label=pub.dev&labelColor=333940&logo=flutter&color=00589B)](https://pub.dev/packages/textf) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![style: very good analysis](https://img.shields.io/badge/Style-very_good_analysis-B22C89.svg)](https://pub.dev/packages/very_good_analysis) [![tests](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml/badge.svg)](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml) [![coverage](https://raw.githubusercontent.com/PhilippHGerber/textf/badges/coverage.svg)](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml)
+[![pub package](https://img.shields.io/pub/v/textf.svg?label=pub.dev&labelColor=333940&logo=flutter&color=00589B)](https://pub.dev/packages/textf) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![style: very good analysis](https://img.shields.io/badge/Style-very_good_analysis-B22C89.svg)](https://pub.dev/packages/very_good_analysis) [![tests](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml/badge.svg)](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml) [![coverage](https://raw.githubusercontent.com/PhilippHGerber/textf/refs/heads/badges/coverage.svg)](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml)
 
 Markdown-like text styling for inline text — fully compatible with Flutter's `Text` widget.
 
