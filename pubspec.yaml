@@ -2,14 +2,14 @@ name: textf
 description: >
   Markdown-like text styling for inline text — fully compatible with Flutter’s `Text` widget.
   Easily replace Text with Textf to add simple formatting.
-version: 1.1.0
+version: 1.1.1
 homepage: https://github.com/PhilippHGerber/textf
 repository: https://github.com/PhilippHGerber/textf
 issue_tracker: https://github.com/PhilippHGerber/textf/issues
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
-  flutter: ">=3.0.0"
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.27.0"
 
 dependencies:
   flutter:

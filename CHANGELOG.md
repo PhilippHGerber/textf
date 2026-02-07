@@ -2,6 +2,12 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 1.1.1
+
+### Changed
+
+* **SDK Constraint:** Tightened environment constraints to `sdk: >=3.5.0` / `flutter: >=3.27.0` to accurately reflect the minimum versions required.
+
 ## 1.1.0
 
 ### Breaking Changes
