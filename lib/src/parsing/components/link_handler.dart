@@ -191,13 +191,9 @@ class LinkHandler {
         (tokens[index + _linkTextOffset].type == TokenType.text ||
             tokens[index + _linkTextOffset].type ==
                 TokenType.placeholder) && // Allow placeholders in position check?
-        // Actually, token[1] is just "text" or tokens depending on tokenizer.
-        // Wait, the Tokenizer DOES NOT recursively tokenize inside [].
-        // It captures "linkText" as a single TEXT token or sequence.
-        // RE-CHECKING TOKENIZER: The tokenizer emits ONE text token for the link content.
-        // So `tokens[index + 1]` will be TokenType.text even if it contains "{icon}".
-        // The LinkHandler THEN re-tokenizes that string.
-        // So this logic remains correct:
+        // The outer tokenizer emits link text as a single TokenType.text token,
+        // even if it contains placeholders like "{icon}". LinkHandler re-tokenizes
+        // the link text internally to support nested formatting and placeholders.
         tokens[index + _linkTextOffset].type == TokenType.text &&
         tokens[index + _linkSeparatorOffset].type == TokenType.linkSeparator &&
         tokens[index + _linkUrlOffset].type == TokenType.text &&
