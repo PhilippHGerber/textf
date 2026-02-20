@@ -28,6 +28,11 @@ class TextfStyleResolver {
   final ThemeData _theme;
   final TextfOptions? _nearestOptions;
 
+  // Padding is doubled because PlaceholderAlignment.middle centers the widget
+  // on the line baseline. To shift the visual center by `offsetY`, the padding
+  // on the corresponding side must be 2× the desired offset.
+  static const double _scriptMiddleAlignmentPaddingFactor = 2;
+
   /// Resolves the final TextStyle for a given token type and base style.
   ///
   /// Use this for standard formatting types like bold, italic, code, strikethrough,
@@ -202,10 +207,8 @@ class TextfStyleResolver {
     // Because we align to 'middle', adding 20px padding moves the visual center by 10px.
     // Therefore, padding = offset * 2.
     final EdgeInsetsGeometry padding = isSuperscript
-        // ignore: no-magic-number
-        ? EdgeInsets.only(bottom: offsetY.abs() * 2)
-        // ignore: no-magic-number
-        : EdgeInsets.only(top: offsetY.abs() * 2);
+        ? EdgeInsets.only(bottom: offsetY.abs() * _scriptMiddleAlignmentPaddingFactor)
+        : EdgeInsets.only(top: offsetY.abs() * _scriptMiddleAlignmentPaddingFactor);
 
     return WidgetSpan(
       // Aligning to middle keeps the widget anchored to the line center,
