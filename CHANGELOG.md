@@ -2,6 +2,13 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## Next Release
+
+## 1.1.2
+
+* Extensions of dartdoc in multiple files.
+* Code cleanup.
+
 ## 1.1.1
 
 ### Changed

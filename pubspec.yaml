@@ -2,7 +2,7 @@ name: textf
 description: >
   Markdown-like inline formatting and clickable links — a drop-in replacement for Flutter's `Text` widget.
   Bold, italic, code, links, highlights, super/subscript. Zero dependencies.
-version: 1.1.1
+version: 1.1.2
 homepage: https://github.com/PhilippHGerber/textf
 repository: https://github.com/PhilippHGerber/textf
 issue_tracker: https://github.com/PhilippHGerber/textf/issues
