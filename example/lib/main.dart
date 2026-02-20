@@ -33,8 +33,11 @@ class ShowcaseScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final flutterLogo =
-        Image.asset('assets/flutter.png', width: 18, height: 18);
+    final flutterLogo = Image.asset(
+      'assets/flutter.png',
+      width: 18,
+      height: 18,
+    );
     final dartLogo = Image.asset('assets/dart.png', width: 18, height: 18);
     const loveIcon = Icon(Icons.favorite, color: Colors.red);
 
@@ -363,7 +366,8 @@ class ShowcaseScreen extends StatelessWidget {
                 final isDark = Theme.of(context).brightness == Brightness.dark;
                 return TextfOptions(
                   highlightStyle: TextStyle(
-                    backgroundColor: isDark //
+                    backgroundColor:
+                        isDark //
                         ? Colors.yellow.shade700.withAlpha(30)
                         : Colors.yellow.shade200,
                   ),
