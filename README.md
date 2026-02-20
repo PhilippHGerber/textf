@@ -29,14 +29,8 @@ Textf('Hello **Flutter**. Build for ==any screen==!');
 
 Add Textf to your `pubspec.yaml`:
 
-```yaml
-dependencies:
-  textf: ^1.1.0
-```
-
-Then run:
-
-```bash
+```sh
+flutter pub add textf
 flutter pub get
 ```
 
@@ -111,10 +105,10 @@ Textf(
 
 **Key points:**
 
-- Keys must be alphanumeric or underscores: `{icon}`, `{my_image}`, `{step1}`
-- Missing keys render as literal text (e.g., `{missing}`) — no crashes
-- Works inside formatting: `**{icon}**` and links: `[Click {icon}](url)`
-- Escape with backslash: `\{key}` renders as `{key}`
+* Keys must be alphanumeric or underscores: `{icon}`, `{my_image}`, `{step1}`
+* Missing keys render as literal text (e.g., `{missing}`) — no crashes
+* Works inside formatting: `**{icon}**` and links: `[Click {icon}](url)`
+* Escape with backslash: `\{key}` renders as `{key}`
 
 ---
 
@@ -208,10 +202,10 @@ SelectionArea(
 
 Textf is designed for performance:
 
-- **O(N) Linear Parsing** — Single-pass tokenization scales linearly with text length
-- **Smart Caching** — Parsed results are cached and reused across rebuilds
-- **Intelligent Invalidation** — Cache only clears when text, style, theme, or options actually change
-- **Memory Efficient** — LRU cache with configurable limits prevents memory bloat
+* **O(N) Linear Parsing** — Single-pass tokenization scales linearly with text length
+* **Smart Caching** — Parsed results are cached and reused across rebuilds
+* **Intelligent Invalidation** — Cache only clears when text, style, theme, or options actually change
+* **Memory Efficient** — LRU cache with configurable limits prevents memory bloat
 
 ### Cache Management
 
@@ -255,18 +249,18 @@ The name "Textf" is inspired by C's `printf` (print formatted). Similarly, `Text
 
 ## Features
 
-- ✅ Bold, Italic, Bold+Italic
-- ✅ Strikethrough, Underline, Highlight
-- ✅ Inline Code with theme-aware styling
-- ✅ Superscript and Subscript
-- ✅ Links with hover effects and callbacks
-- ✅ Widget Placeholders via `{key}` syntax
-- ✅ Nested formatting (up to 2 levels)
-- ✅ Customizable styles via `TextfOptions`
-- ✅ Theme-aware defaults
-- ✅ RTL language support
-- ✅ Smart caching for performance
-- ✅ Full `Text` widget API compatibility
+* ✅ Bold, Italic, Bold+Italic
+* ✅ Strikethrough, Underline, Highlight
+* ✅ Inline Code with theme-aware styling
+* ✅ Superscript and Subscript
+* ✅ Links with hover effects and callbacks
+* ✅ Widget Placeholders via `{key}` syntax
+* ✅ Nested formatting (up to 2 levels)
+* ✅ Customizable styles via `TextfOptions`
+* ✅ Theme-aware defaults
+* ✅ RTL language support
+* ✅ Smart caching for performance
+* ✅ Full `Text` widget API compatibility
 
 ---
 
@@ -284,18 +278,18 @@ The name "Textf" is inspired by C's `printf` (print formatted). Similarly, `Text
 
 **✅ Use Textf for:**
 
-- Chat messages and comments
-- UI labels and captions
-- Internationalized strings with formatting
-- Performance-critical text rendering
-- Simple inline formatting needs
+* Chat messages and comments
+* UI labels and captions
+* Internationalized strings with formatting
+* Performance-critical text rendering
+* Simple inline formatting needs
 
 **❌ Don't use Textf for:**
 
-- Full Markdown documents
-- HTML rendering
-- Content with headings, lists, or tables
-- Documents requiring text selection across links
+* Full Markdown documents
+* HTML rendering
+* Content with headings, lists, or tables
+* Documents requiring text selection across links
 
 ---
 
