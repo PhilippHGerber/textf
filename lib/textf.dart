@@ -2,10 +2,26 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-/// A lightweight text widget library for simple inline formatting.
+/// A lightweight text widget library for simple inline Markdown-like formatting.
 ///
-/// This library provides the Textf widget which supports basic
-/// markdown-like formatting for text in Flutter applications.
+/// ## Exports
+///
+/// - [Textf]: A drop-in replacement for Flutter's [Text] widget that supports
+///   inline formatting markers for bold, italic, code, links, highlights,
+///   superscript, subscript, and widget placeholders.
+///
+/// - [TextfOptions]: An [InheritedWidget] for configuring formatting styles,
+///   link callbacks, and script geometry for all descendant [Textf] widgets.
+///
+/// ## Example
+///
+/// ```dart
+/// import 'package:textf/textf.dart';
+///
+/// Textf('Hello **bold** *italic* `code` [link](https://example.com)');
+/// ```
+/// @docImport 'package:flutter/material.dart';
+/// @docImport 'textf.dart';
 library;
 
 export 'src/widgets/textf.dart';
