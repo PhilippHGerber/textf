@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/format_stack_entry.dart';
 import 'package:textf/src/models/parser_state.dart';
-import 'package:textf/src/models/token_type.dart';
+import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 
 // ---- Mock class for TextfStyleResolver ----
 // This class simulates the behavior of the real resolver, allowing us to
 // test ParserState in isolation. We can tell it which TextStyle to return
-// for a given TokenType.
+// for a given FormatMarkerType.
 // ignore: prefer-match-file-name
 class _MockTextfStyleResolver implements TextfStyleResolver {
   _MockTextfStyleResolver(this.context);
@@ -17,15 +17,15 @@ class _MockTextfStyleResolver implements TextfStyleResolver {
   @override
   final BuildContext context;
 
-  final Map<TokenType, TextStyle> _styleMap = {};
+  final Map<FormatMarkerType, TextStyle> _styleMap = {};
 
   // A method to configure the mock for a specific test.
-  void whenResolveStyle(TokenType type, TextStyle styleToReturn) {
+  void whenResolveStyle(FormatMarkerType type, TextStyle styleToReturn) {
     _styleMap[type] = styleToReturn;
   }
 
   @override
-  TextStyle resolveStyle(TokenType type, TextStyle baseStyle) {
+  TextStyle resolveStyle(FormatMarkerType type, TextStyle baseStyle) {
     final style = _styleMap[type];
     if (style != null) {
       // Simulate the real resolver's behavior: the option style is
@@ -132,9 +132,9 @@ void main() {
       // ARRANGE
       final (mockContext, mockResolver) = await setupTest(tester);
 
-      // Configure the mock to return a bold style for boldMarker.
+      // Configure the mock to return a bold style for bold.
       const boldStyle = TextStyle(fontWeight: FontWeight.bold);
-      mockResolver.whenResolveStyle(TokenType.boldMarker, boldStyle);
+      mockResolver.whenResolveStyle(FormatMarkerType.bold, boldStyle);
 
       final state = ParserState(
         tokens: [],
@@ -144,7 +144,7 @@ void main() {
       );
       state.textBuffer.write('Bold text');
       state.formatStack.add(
-        const FormatStackEntry(index: 0, matchingIndex: 1, type: TokenType.boldMarker),
+        const FormatStackEntry(index: 0, matchingIndex: 1, type: FormatMarkerType.bold),
       );
 
       // ACT
@@ -176,8 +176,8 @@ void main() {
       const boldStyle = TextStyle(fontWeight: FontWeight.bold);
       const italicStyle =
           TextStyle(fontStyle: FontStyle.italic, color: Colors.red); // Overrides color
-      mockResolver.whenResolveStyle(TokenType.boldMarker, boldStyle);
-      mockResolver.whenResolveStyle(TokenType.italicMarker, italicStyle);
+      mockResolver.whenResolveStyle(FormatMarkerType.bold, boldStyle);
+      mockResolver.whenResolveStyle(FormatMarkerType.italic, italicStyle);
 
       final state = ParserState(
         tokens: [],
@@ -188,10 +188,10 @@ void main() {
       state.textBuffer.write('Nested style');
       // Simulate a nested state: **_Text_**
       state.formatStack.add(
-        const FormatStackEntry(index: 0, matchingIndex: 3, type: TokenType.boldMarker),
+        const FormatStackEntry(index: 0, matchingIndex: 3, type: FormatMarkerType.bold),
       );
       state.formatStack.add(
-        const FormatStackEntry(index: 1, matchingIndex: 2, type: TokenType.italicMarker),
+        const FormatStackEntry(index: 1, matchingIndex: 2, type: FormatMarkerType.italic),
       );
 
       // ACT

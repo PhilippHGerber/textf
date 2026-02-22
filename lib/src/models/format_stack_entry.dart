@@ -1,4 +1,4 @@
-import 'token_type.dart';
+import 'textf_token.dart';
 
 /// Helper class for tracking format stack entries during parsing.
 ///
@@ -21,7 +21,7 @@ class FormatStackEntry {
   final int matchingIndex;
 
   /// Type of the formatting marker.
-  final TokenType type;
+  final FormatMarkerType type;
 
   @override
   String toString() => 'FormatStackEntry($type, $index -> $matchingIndex)';

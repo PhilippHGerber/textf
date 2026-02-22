@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
-import 'package:textf/src/models/token_type.dart';
+import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/textf_options.dart';
 
@@ -103,49 +103,49 @@ void main() {
         expect(resolver, isNotNull);
       });
 
-      testWidgets('resolveStyle for boldMarker uses DefaultStyles.boldStyle', (tester) async {
+      testWidgets('resolveStyle for bold uses DefaultStyles.boldStyle', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
-        final resolved = resolver.resolveStyle(TokenType.boldMarker, baseStyle);
+        final resolved = resolver.resolveStyle(FormatMarkerType.bold, baseStyle);
         expect(resolved.fontWeight, FontWeight.bold);
         expect(resolved.fontSize, baseStyle.fontSize);
         expect(resolved.color, baseStyle.color);
       });
 
-      testWidgets('resolveStyle for italicMarker uses DefaultStyles.italicStyle', (tester) async {
+      testWidgets('resolveStyle for italic uses DefaultStyles.italicStyle', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
-        final resolved = resolver.resolveStyle(TokenType.italicMarker, baseStyle);
+        final resolved = resolver.resolveStyle(FormatMarkerType.italic, baseStyle);
         expect(resolved.fontStyle, FontStyle.italic);
         expect(resolved.fontSize, baseStyle.fontSize);
       });
 
-      testWidgets('resolveStyle for boldItalicMarker uses DefaultStyles.boldItalicStyle',
+      testWidgets('resolveStyle for boldItalic uses DefaultStyles.boldItalicStyle',
           (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
-        final resolved = resolver.resolveStyle(TokenType.boldItalicMarker, baseStyle);
+        final resolved = resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle);
         expect(resolved.fontWeight, FontWeight.bold);
         expect(resolved.fontStyle, FontStyle.italic);
         expect(resolved.fontSize, baseStyle.fontSize);
       });
 
       testWidgets(
-          'resolveStyle for strikeMarker uses DefaultStyles.strikethroughStyle with default thickness',
+          'resolveStyle for strikethrough uses DefaultStyles.strikethroughStyle with default thickness',
           (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
-        final resolved = resolver.resolveStyle(TokenType.strikeMarker, baseStyle);
+        final resolved = resolver.resolveStyle(FormatMarkerType.strikethrough, baseStyle);
         expect(resolved.decoration, TextDecoration.lineThrough);
         expect(resolved.decorationThickness, DefaultStyles.defaultStrikethroughThickness);
         expect(resolved.decorationColor, baseStyle.color); // Inherits base color for decoration
         expect(resolved.fontSize, baseStyle.fontSize);
       });
 
-      testWidgets('resolveStyle for codeMarker uses theme-based default', (tester) async {
+      testWidgets('resolveStyle for code uses theme-based default', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
-        final resolved = resolver.resolveStyle(TokenType.codeMarker, baseStyle);
+        final resolved = resolver.resolveStyle(FormatMarkerType.code, baseStyle);
         expect(resolved.fontFamily, 'monospace');
         expect(resolved.fontFamilyFallback, DefaultStyles.defaultCodeFontFamilyFallback);
         expect(resolved.backgroundColor, lightTheme.colorScheme.surfaceContainer);
@@ -153,20 +153,20 @@ void main() {
         expect(resolved.fontSize, baseStyle.fontSize); // Base font size
       });
 
-      testWidgets('resolveStyle for underlineMarker uses DefaultStyles.underlineStyle',
+      testWidgets('resolveStyle for underline uses DefaultStyles.underlineStyle',
           (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
-        final resolved = resolver.resolveStyle(TokenType.underlineMarker, baseStyle);
+        final resolved = resolver.resolveStyle(FormatMarkerType.underline, baseStyle);
         expect(resolved.decoration, TextDecoration.underline);
         expect(resolved.decorationColor, baseStyle.color);
         expect(resolved.fontSize, baseStyle.fontSize);
       });
 
-      testWidgets('resolveStyle for highlightMarker uses theme-based default', (tester) async {
+      testWidgets('resolveStyle for highlight uses theme-based default', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
-        final resolved = resolver.resolveStyle(TokenType.highlightMarker, baseStyle);
+        final resolved = resolver.resolveStyle(FormatMarkerType.highlight, baseStyle);
         expect(resolved.backgroundColor, isNotNull);
         expect(resolved.backgroundColor, isNot(baseStyle.backgroundColor));
         expect(resolved.fontSize, baseStyle.fontSize);
@@ -245,29 +245,30 @@ void main() {
         child: const SizedBox.shrink(),
       );
 
-      testWidgets('resolveStyle for boldMarker uses TextfOptions', (tester) async {
+      testWidgets('resolveStyle for bold uses TextfOptions', (tester) async {
         final testContextWithOptions = await pumpWithContext(tester, options: options);
         final resolverWithOptions = TextfStyleResolver(testContextWithOptions);
-        final resolved = resolverWithOptions.resolveStyle(TokenType.boldMarker, baseStyle);
+        final resolved = resolverWithOptions.resolveStyle(FormatMarkerType.bold, baseStyle);
         expect(resolved.fontWeight, optionBoldStyle.fontWeight);
         expect(resolved.color, optionBoldStyle.color);
         expect(resolved.fontSize, baseStyle.fontSize);
       });
 
-      testWidgets('resolveStyle for italicMarker uses TextfOptions', (tester) async {
+      testWidgets('resolveStyle for italic uses TextfOptions', (tester) async {
         final testContextWithOptions = await pumpWithContext(tester, options: options);
         final resolverWithOptions = TextfStyleResolver(testContextWithOptions);
-        final resolved = resolverWithOptions.resolveStyle(TokenType.italicMarker, baseStyle);
+        final resolved = resolverWithOptions.resolveStyle(FormatMarkerType.italic, baseStyle);
         expect(resolved.fontStyle, optionItalicStyle.fontStyle);
         expect(resolved.color, optionItalicStyle.color);
         expect(resolved.fontSize, baseStyle.fontSize);
       });
 
-      testWidgets('resolveStyle for strikeMarker uses TextfOptions.strikethroughStyle',
+      testWidgets('resolveStyle for strikethrough uses TextfOptions.strikethroughStyle',
           (tester) async {
         final testContextWithOptions = await pumpWithContext(tester, options: options);
         final resolverWithOptions = TextfStyleResolver(testContextWithOptions);
-        final resolved = resolverWithOptions.resolveStyle(TokenType.strikeMarker, baseStyle);
+        final resolved =
+            resolverWithOptions.resolveStyle(FormatMarkerType.strikethrough, baseStyle);
         // Now it should have the decoration from optionStrikeStyle
         expect(resolved.decoration, optionStrikeStyle.decoration); // CORRECTED EXPECTATION
         expect(resolved.decorationColor, optionStrikeStyle.decorationColor);
@@ -275,7 +276,7 @@ void main() {
       });
 
       testWidgets(
-          'resolveStyle for strikeMarker uses TextfOptions.strikethroughThickness if style is null',
+          'resolveStyle for strikethrough uses TextfOptions.strikethroughThickness if style is null',
           (tester) async {
         const optionsWithThickness = TextfOptions(
           strikethroughThickness: optionStrikeThickness,
@@ -284,16 +285,16 @@ void main() {
         final context = await pumpWithContext(tester, options: optionsWithThickness);
         final resolver = TextfStyleResolver(context);
 
-        final resolved = resolver.resolveStyle(TokenType.strikeMarker, baseStyle);
+        final resolved = resolver.resolveStyle(FormatMarkerType.strikethrough, baseStyle);
         expect(resolved.decoration, TextDecoration.lineThrough);
         expect(resolved.decorationThickness, optionStrikeThickness);
         expect(resolved.decorationColor, baseStyle.color);
       });
 
-      testWidgets('resolveStyle for codeMarker uses TextfOptions', (tester) async {
+      testWidgets('resolveStyle for code uses TextfOptions', (tester) async {
         final testContextWithOptions = await pumpWithContext(tester, options: options);
         final resolverWithOptions = TextfStyleResolver(testContextWithOptions);
-        final resolved = resolverWithOptions.resolveStyle(TokenType.codeMarker, baseStyle);
+        final resolved = resolverWithOptions.resolveStyle(FormatMarkerType.code, baseStyle);
         expect(resolved.backgroundColor, optionCodeStyle.backgroundColor);
         expect(resolved.fontFamily, optionCodeStyle.fontFamily);
         expect(resolved.color, baseStyle.color);
@@ -399,7 +400,7 @@ void main() {
         final resolver = TextfStyleResolver(context);
 
         // --- ASSERT BOLD STYLE (MERGED) ---
-        final resolvedBold = resolver.resolveStyle(TokenType.boldMarker, baseStyle);
+        final resolvedBold = resolver.resolveStyle(FormatMarkerType.bold, baseStyle);
         // The fontWeight should come from the child (it overrides the parent).
         expect(resolvedBold.fontWeight, childBoldStyle.fontWeight);
         // The color should be inherited from the parent (since the child didn't specify one).
@@ -411,7 +412,7 @@ void main() {
         expect(resolvedBold.fontSize, baseStyle.fontSize); // Inherited from baseStyle.
 
         // --- ASSERT ITALIC STYLE (MERGED) ---
-        final resolvedItalic = resolver.resolveStyle(TokenType.italicMarker, baseStyle);
+        final resolvedItalic = resolver.resolveStyle(FormatMarkerType.italic, baseStyle);
         // It should have properties from both parent and child.
         expect(
           resolvedItalic.color,
@@ -460,7 +461,7 @@ void main() {
           reason: "Color should be from baseStyle as parentLinkStyle didn't set it.",
         );
 
-        final resolvedItalic = resolver.resolveStyle(TokenType.italicMarker, baseStyle);
+        final resolvedItalic = resolver.resolveStyle(FormatMarkerType.italic, baseStyle);
         expect(resolvedItalic.color, Colors.cyan);
       });
 
@@ -474,12 +475,12 @@ void main() {
         final context = await pumpWithContext(tester, parentOptions: parent, options: child);
         final resolver = TextfStyleResolver(context);
 
-        final resolvedCode = resolver.resolveStyle(TokenType.codeMarker, baseStyle);
+        final resolvedCode = resolver.resolveStyle(FormatMarkerType.code, baseStyle);
         expect(resolvedCode.fontFamily, 'monospace');
         expect(resolvedCode.backgroundColor, lightTheme.colorScheme.surfaceContainer);
         expect(resolvedCode.color, lightTheme.colorScheme.onSurfaceVariant);
 
-        final resolvedHighlight = resolver.resolveStyle(TokenType.highlightMarker, baseStyle);
+        final resolvedHighlight = resolver.resolveStyle(FormatMarkerType.highlight, baseStyle);
         expect(resolvedHighlight.backgroundColor, isNotNull);
       });
     });
@@ -499,7 +500,7 @@ void main() {
         final context = await pumpWithContext(tester, options: options);
         final resolver = TextfStyleResolver(context);
 
-        final resolvedBold = resolver.resolveStyle(TokenType.boldMarker, specificBaseStyle);
+        final resolvedBold = resolver.resolveStyle(FormatMarkerType.bold, specificBaseStyle);
         expect(resolvedBold.fontWeight, FontWeight.w900);
         expect(resolvedBold.fontSize, specificBaseStyle.fontSize);
         expect(resolvedBold.fontFamily, specificBaseStyle.fontFamily);
@@ -515,7 +516,7 @@ void main() {
         final context = await pumpWithContext(tester, options: options);
         final resolver = TextfStyleResolver(context);
 
-        final resolvedBold = resolver.resolveStyle(TokenType.boldMarker, baseStyle);
+        final resolvedBold = resolver.resolveStyle(FormatMarkerType.bold, baseStyle);
         expect(resolvedBold.fontWeight, FontWeight.w900);
         expect(resolvedBold.color, Colors.green);
         expect(resolvedBold.fontSize, baseStyle.fontSize);
@@ -539,7 +540,7 @@ void main() {
 
         // Code
         final resolvedCode =
-            resolver.resolveStyle(TokenType.codeMarker, baseStyle); // baseStyle is black
+            resolver.resolveStyle(FormatMarkerType.code, baseStyle); // baseStyle is black
         expect(
           resolvedCode.color,
           lightTheme.colorScheme.onSurfaceVariant,
@@ -558,7 +559,7 @@ void main() {
 
         // Bold
         final resolvedBold =
-            resolver.resolveStyle(TokenType.boldMarker, baseStyle); // baseStyle is black
+            resolver.resolveStyle(FormatMarkerType.bold, baseStyle); // baseStyle is black
         expect(
           resolvedBold.color,
           baseStyle.color,
@@ -568,7 +569,7 @@ void main() {
         expect(resolvedBold.fontSize, baseStyle.fontSize);
 
         // Italic
-        final resolvedItalic = resolver.resolveStyle(TokenType.italicMarker, baseStyle);
+        final resolvedItalic = resolver.resolveStyle(FormatMarkerType.italic, baseStyle);
         expect(
           resolvedItalic.color,
           baseStyle.color,

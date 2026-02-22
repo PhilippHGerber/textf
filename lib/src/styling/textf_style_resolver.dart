@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/default_styles.dart';
 import '../core/textf_limits.dart';
-import '../models/token_type.dart';
+import '../models/textf_token.dart';
 import '../widgets/textf_options.dart'; // Needed for options lookup
 
 /// A class responsible for resolving the final TextStyle for formatted text segments.
@@ -30,21 +30,21 @@ class TextfStyleResolver {
   final TextfOptions? _nearestOptions;
 
 
-  /// Resolves the final TextStyle for a given token type and base style.
+  /// Resolves the final TextStyle for a given format marker type and base style.
   ///
   /// Use this for standard formatting types like bold, italic, code, strikethrough,
   /// underline, highlight.
   /// For links, use `resolveLinkStyle` and `resolveLinkHoverStyle`.
   ///
-  /// - [type]: The type of formatting marker (e.g., `TokenType.boldMarker`).
+  /// - [type]: The type of formatting marker (e.g., `FormatMarkerType.bold`).
   /// - [baseStyle]: The style of the text segment *before* applying this format.
   ///
   /// Returns the final `TextStyle` to be applied.
-  TextStyle resolveStyle(TokenType type, TextStyle baseStyle) {
+  TextStyle resolveStyle(FormatMarkerType type, TextStyle baseStyle) {
     // Handle script font size adjustment first
     TextStyle effectiveBaseStyle = baseStyle;
 
-    if (type == TokenType.superscriptMarker || type == TokenType.subscriptMarker) {
+    if (type == FormatMarkerType.superscript || type == FormatMarkerType.subscript) {
       // Resolve the scale factor (Option -> Default)
       final double scaleFactor = _nearestOptions?.getEffectiveScriptFontSizeFactor(context) ??
           DefaultStyles.scriptFontSizeFactor;
@@ -66,13 +66,13 @@ class TextfStyleResolver {
     } else {
       // Precedence 3 & 4: No TextfOptions override found, use Theme or Default fallback
       switch (type) {
-        case TokenType.boldMarker:
+        case FormatMarkerType.bold:
           return DefaultStyles.boldStyle(baseStyle); // Relative default
-        case TokenType.italicMarker:
+        case FormatMarkerType.italic:
           return DefaultStyles.italicStyle(baseStyle); // Relative default
-        case TokenType.boldItalicMarker:
+        case FormatMarkerType.boldItalic:
           return DefaultStyles.boldItalicStyle(baseStyle); // Relative default
-        case TokenType.strikeMarker:
+        case FormatMarkerType.strikethrough:
           // No full style override from options, use default effect.
           // Check if a specific thickness is provided via options.
           final double? thicknessOption =
@@ -86,25 +86,16 @@ class TextfStyleResolver {
             baseStyle,
             thickness: finalThickness,
           );
-        case TokenType.codeMarker:
+        case FormatMarkerType.code:
           return _getThemeBasedCodeStyle(baseStyle); // Theme-based default
-        case TokenType.underlineMarker:
+        case FormatMarkerType.underline:
           return DefaultStyles.underlineStyle(baseStyle); // Relative default
-        case TokenType.highlightMarker:
+        case FormatMarkerType.highlight:
           return _getThemeBasedHighlightStyle(baseStyle); // Theme-based default
-        case TokenType.superscriptMarker:
+        case FormatMarkerType.superscript:
           return effectiveBaseStyle;
-        case TokenType.subscriptMarker:
+        case FormatMarkerType.subscript:
           return effectiveBaseStyle;
-        // Link styles are handled separately by resolveLinkStyle/resolveLinkHoverStyle
-        case TokenType.linkStart:
-        case TokenType.linkText:
-        case TokenType.linkSeparator:
-        case TokenType.linkUrl:
-        case TokenType.linkEnd:
-        case TokenType.text:
-        case TokenType.placeholder:
-          return baseStyle; // No formatting applied
       }
     }
   }
@@ -228,40 +219,31 @@ class TextfStyleResolver {
 
   /// Internal helper to retrieve the effective style from TextfOptions hierarchy.
   /// Returns null if no option is defined for the given type.
-  TextStyle? _getEffectiveStyleFromOptions(TokenType type, TextStyle baseStyle) {
+  TextStyle? _getEffectiveStyleFromOptions(FormatMarkerType type, TextStyle baseStyle) {
     final TextfOptions? options = _nearestOptions;
     if (options == null) return null;
 
     // Call the appropriate getter on the TextfOptions instance.
     // These methods handle the ancestor lookup internally.
     switch (type) {
-      case TokenType.boldMarker:
+      case FormatMarkerType.bold:
         return options.getEffectiveBoldStyle(context, baseStyle);
-      case TokenType.italicMarker:
+      case FormatMarkerType.italic:
         return options.getEffectiveItalicStyle(context, baseStyle);
-      case TokenType.boldItalicMarker:
+      case FormatMarkerType.boldItalic:
         return options.getEffectiveBoldItalicStyle(context, baseStyle);
-      case TokenType.strikeMarker:
+      case FormatMarkerType.strikethrough:
         return options.getEffectiveStrikethroughStyle(context, baseStyle);
-      case TokenType.codeMarker:
+      case FormatMarkerType.code:
         return options.getEffectiveCodeStyle(context, baseStyle);
-      case TokenType.underlineMarker:
+      case FormatMarkerType.underline:
         return options.getEffectiveUnderlineStyle(context, baseStyle);
-      case TokenType.highlightMarker:
+      case FormatMarkerType.highlight:
         return options.getEffectiveHighlightStyle(context, baseStyle);
-      case TokenType.superscriptMarker:
+      case FormatMarkerType.superscript:
         return options.getEffectiveSuperscriptStyle(context, baseStyle);
-      case TokenType.subscriptMarker:
+      case FormatMarkerType.subscript:
         return options.getEffectiveSubscriptStyle(context, baseStyle);
-      // Link styles are handled by resolveLinkStyle/resolveLinkHoverStyle directly
-      case TokenType.linkStart:
-      case TokenType.linkText:
-      case TokenType.linkSeparator:
-      case TokenType.linkUrl:
-      case TokenType.linkEnd:
-      case TokenType.text:
-      case TokenType.placeholder:
-        return null; // No specific option style for these types
     }
   }
 

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/formatting_utils.dart';
 import '../core/textf_limits.dart';
 import '../models/format_stack_entry.dart';
-import '../models/token_type.dart';
+import '../models/textf_token.dart';
 import '../parsing/components/pairing_resolver.dart';
 import '../parsing/textf_tokenizer.dart';
 import '../styling/textf_style_resolver.dart';
@@ -11,7 +11,7 @@ import '../styling/textf_style_resolver.dart';
 /// Container for cached tokenization and pairing results.
 class _CacheEntry {
   _CacheEntry(this.tokens, this.matchingPairs);
-  final List<Token> tokens;
+  final List<TextfToken> tokens;
   final Map<int, int> matchingPairs;
 }
 
@@ -112,7 +112,7 @@ class TextfSpanBuilder {
     }
 
     // --- Cache Lookup & Update ---
-    final List<Token> tokens;
+    final List<TextfToken> tokens;
     final Map<int, int> validPairs;
 
     if (text.length <= TextfLimits.maxCacheKeyLength) {
@@ -190,19 +190,19 @@ class TextfSpanBuilder {
       final token = tokens[i];
 
       // --- Placeholder Handling (render as literal text with braces) ---
-      if (token.type == TokenType.placeholder) {
+      if (token is PlaceholderToken) {
         // The tokenizer stores only the key (e.g., "icon"), so we
         // reconstruct the original "{icon}" syntax for display.
         textBuffer
           ..write('{')
-          ..write(token.value)
+          ..write(token.key)
           ..write('}');
         i++;
         continue;
       }
 
       // --- Link Handling (render as styled text spans) ---
-      if (token.type == TokenType.linkStart) {
+      if (token is LinkStartToken) {
         final int? nextIndex = _processLinkAsText(
           tokens: tokens,
           index: i,
@@ -224,7 +224,7 @@ class TextfSpanBuilder {
       }
 
       // --- Formatting Marker Handling ---
-      if (token.type.isFormattingMarker) {
+      if (token is FormatMarkerToken) {
         if (validPairs.containsKey(i)) {
           final int matchingIndex = validPairs[i]!;
 
@@ -236,7 +236,7 @@ class TextfSpanBuilder {
               FormatStackEntry(
                 index: i,
                 matchingIndex: matchingIndex,
-                type: token.type,
+                type: token.markerType,
               ),
             );
           } else {
@@ -263,7 +263,20 @@ class TextfSpanBuilder {
       }
 
       // --- Plain Text ---
-      textBuffer.write(token.value);
+      switch (token) {
+        case TextToken(:final value):
+          textBuffer.write(value);
+        case FormatMarkerToken(:final value):
+          textBuffer.write(value);
+        case LinkStartToken():
+          textBuffer.write('[');
+        case LinkSeparatorToken():
+          textBuffer.write('](');
+        case LinkEndToken():
+          textBuffer.write(')');
+        case PlaceholderToken(:final key):
+          textBuffer.write('{$key}');
+      }
       i++;
     }
 
@@ -317,7 +330,7 @@ class TextfSpanBuilder {
   /// Returns the index after the link structure if valid, or `null` if the
   /// tokens at [index] do not form a complete `[text](url)` link.
   static int? _processLinkAsText({
-    required List<Token> tokens,
+    required List<TextfToken> tokens,
     required int index,
     required List<TextSpan> spans,
     required StringBuffer textBuffer,
@@ -337,8 +350,10 @@ class TextfSpanBuilder {
     // Flush any preceding text with current formatting.
     flushText();
 
-    final linkText = tokens[index + _linkTextOffset].value;
-    final linkUrl = tokens[index + _linkUrlOffset].value;
+    final linkTextToken = tokens[index + _linkTextOffset] as TextToken;
+    final linkUrlToken = tokens[index + _linkUrlOffset] as TextToken;
+    final linkText = linkTextToken.value;
+    final linkUrl = linkUrlToken.value;
 
     // Resolve link styling based on the current inherited style.
     final linkStyle = resolver.resolveLinkStyle(currentStyle());
@@ -367,15 +382,15 @@ class TextfSpanBuilder {
   }
 
   /// Checks if tokens starting at [index] form a complete `[text](url)`.
-  static bool _isCompleteLink(List<Token> tokens, int index) {
+  static bool _isCompleteLink(List<TextfToken> tokens, int index) {
     if (index + _linkEndOffset >= tokens.length) {
       return false;
     }
 
-    return tokens[index].type == TokenType.linkStart &&
-        tokens[index + _linkTextOffset].type == TokenType.text &&
-        tokens[index + _linkSeparatorOffset].type == TokenType.linkSeparator &&
-        tokens[index + _linkUrlOffset].type == TokenType.text &&
-        tokens[index + _linkEndOffset].type == TokenType.linkEnd;
+    return tokens[index] is LinkStartToken &&
+        tokens[index + _linkTextOffset] is TextToken &&
+        tokens[index + _linkSeparatorOffset] is LinkSeparatorToken &&
+        tokens[index + _linkUrlOffset] is TextToken &&
+        tokens[index + _linkEndOffset] is LinkEndToken;
   }
 }

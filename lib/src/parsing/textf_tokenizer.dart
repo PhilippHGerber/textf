@@ -1,18 +1,18 @@
 // ignore_for_file: no-magic-number
 
 import '../core/constants.dart';
-import '../models/token_type.dart';
+import '../models/textf_token.dart';
 
 /// Tokenizes text into formatting markers, placeholders, and content segments.
 ///
-/// The TextfTokenizer breaks down input text into a sequence of [Token] objects that
+/// The TextfTokenizer breaks down input text into a sequence of [TextfToken] objects that
 /// represent either formatting markers (like bold, italic), placeholders (like {icon}),
 /// or regular text content.
 ///
 /// This class is optimized for performance with a character-by-character approach
 /// and special handling for escape sequences.
 class TextfTokenizer {
-  /// Tokenizes the input text into a list of [Token] objects.
+  /// Tokenizes the input text into a list of [TextfToken] objects.
   ///
   /// This method processes the text character by character, identifying:
   /// - Formatting markers: **, __, *, _, ~~, `, ++, ==, ^, ~
@@ -21,8 +21,8 @@ class TextfTokenizer {
   /// - Regular text
   ///
   /// Escaped characters (preceded by \) are treated as literal text.
-  List<Token> tokenize(String text) {
-    final tokens = <Token>[];
+  List<TextfToken> tokenize(String text) {
+    final tokens = <TextfToken>[];
     int pos = 0;
     int textStart = 0;
     final int length = text.length;
@@ -31,16 +31,15 @@ class TextfTokenizer {
     void addTextToken(int start, int end) {
       if (end > start) {
         tokens.add(
-          Token(
-            TokenType.text,
+          TextToken(
             // Since `start` and `end` are guaranteed by the tokenizer's logic to
             //    never fall within the middle of a multi-byte character sequence (they always
             //    point to the boundaries between characters or markers), using `substring` is
             //    safe in this context and will not slice characters apart.
             // ignore: avoid-substring
             text.substring(start, end),
-            start,
-            end - start,
+            position: start,
+            length: end - start,
           ),
         );
       }
@@ -74,11 +73,10 @@ class TextfTokenizer {
           addTextToken(textStart, pos);
           // Just add the escaped character as normal text
           tokens.add(
-            Token(
-              TokenType.text,
+            TextToken(
               String.fromCharCode(nextChar),
-              pos + 1, // Position of the character itself
-              1, // Length of the character itself
+              position: pos + 1, // Position of the character itself
+              length: 1, // Length of the character itself
             ),
           );
           pos += 2; // Skip escape character and the escaped character
@@ -94,21 +92,23 @@ class TextfTokenizer {
             codeUnits[pos + 1] == kAsterisk &&
             codeUnits[pos + 2] == kAsterisk) {
           addTextToken(textStart, pos);
-          tokens.add(Token(TokenType.boldItalicMarker, '***', pos, 3));
+          tokens.add(
+            FormatMarkerToken(FormatMarkerType.boldItalic, '***', position: pos, length: 3),
+          );
           pos += 3;
           textStart = pos;
         }
         // Check for bold (**)
         else if (pos + 1 < length && codeUnits[pos + 1] == kAsterisk) {
           addTextToken(textStart, pos);
-          tokens.add(Token(TokenType.boldMarker, '**', pos, 2));
+          tokens.add(FormatMarkerToken(FormatMarkerType.bold, '**', position: pos, length: 2));
           pos += 2;
           textStart = pos;
         }
         // Italic (*)
         else {
           addTextToken(textStart, pos);
-          tokens.add(Token(TokenType.italicMarker, '*', pos, 1));
+          tokens.add(FormatMarkerToken(FormatMarkerType.italic, '*', position: pos, length: 1));
           pos++;
           textStart = pos;
         }
@@ -118,21 +118,23 @@ class TextfTokenizer {
             codeUnits[pos + 1] == kUnderscore &&
             codeUnits[pos + 2] == kUnderscore) {
           addTextToken(textStart, pos);
-          tokens.add(Token(TokenType.boldItalicMarker, '___', pos, 3));
+          tokens.add(
+            FormatMarkerToken(FormatMarkerType.boldItalic, '___', position: pos, length: 3),
+          );
           pos += 3;
           textStart = pos;
         }
         // Check for bold (__)
         else if (pos + 1 < length && codeUnits[pos + 1] == kUnderscore) {
           addTextToken(textStart, pos);
-          tokens.add(Token(TokenType.boldMarker, '__', pos, 2));
+          tokens.add(FormatMarkerToken(FormatMarkerType.bold, '__', position: pos, length: 2));
           pos += 2;
           textStart = pos;
         }
         // Italic (_)
         else {
           addTextToken(textStart, pos);
-          tokens.add(Token(TokenType.italicMarker, '_', pos, 1));
+          tokens.add(FormatMarkerToken(FormatMarkerType.italic, '_', position: pos, length: 1));
           pos++;
           textStart = pos;
         }
@@ -140,33 +142,41 @@ class TextfTokenizer {
         // Check for strikethrough (~~)
         if (pos + 1 < length && codeUnits[pos + 1] == kTilde) {
           addTextToken(textStart, pos);
-          tokens.add(Token(TokenType.strikeMarker, '~~', pos, 2));
+          tokens.add(
+            FormatMarkerToken(FormatMarkerType.strikethrough, '~~', position: pos, length: 2),
+          );
           pos += 2;
           textStart = pos;
         } else {
           // Single tilde for subscript
           addTextToken(textStart, pos);
-          tokens.add(Token(TokenType.subscriptMarker, '~', pos, 1));
+          tokens.add(
+            FormatMarkerToken(FormatMarkerType.subscript, '~', position: pos, length: 1),
+          );
           pos++;
           textStart = pos;
         }
       } else if (currentChar == kCaret) {
         // Caret for superscript
         addTextToken(textStart, pos);
-        tokens.add(Token(TokenType.superscriptMarker, '^', pos, 1));
+        tokens.add(
+          FormatMarkerToken(FormatMarkerType.superscript, '^', position: pos, length: 1),
+        );
         pos++;
         textStart = pos;
       } else if (currentChar == kBacktick) {
         // Inline code (`)
         addTextToken(textStart, pos);
-        tokens.add(Token(TokenType.codeMarker, '`', pos, 1));
+        tokens.add(FormatMarkerToken(FormatMarkerType.code, '`', position: pos, length: 1));
         pos++;
         textStart = pos;
       } else if (currentChar == kPlus) {
         // Check for underline (++)
         if (pos + 1 < length && codeUnits[pos + 1] == kPlus) {
           addTextToken(textStart, pos);
-          tokens.add(Token(TokenType.underlineMarker, '++', pos, 2));
+          tokens.add(
+            FormatMarkerToken(FormatMarkerType.underline, '++', position: pos, length: 2),
+          );
           pos += 2;
           textStart = pos;
         } else {
@@ -177,7 +187,9 @@ class TextfTokenizer {
         // Check for highlight (==)
         if (pos + 1 < length && codeUnits[pos + 1] == kEquals) {
           addTextToken(textStart, pos);
-          tokens.add(Token(TokenType.highlightMarker, '==', pos, 2));
+          tokens.add(
+            FormatMarkerToken(FormatMarkerType.highlight, '==', position: pos, length: 2),
+          );
           pos += 2;
           textStart = pos;
         } else {
@@ -191,7 +203,7 @@ class TextfTokenizer {
           pos = nextPos;
           textStart = pos;
         } else {
-          tokens.add(Token(TokenType.text, '[', pos, 1));
+          tokens.add(TextToken('[', position: pos, length: 1));
           pos++;
           textStart = pos;
         }
@@ -204,7 +216,7 @@ class TextfTokenizer {
           textStart = pos;
         } else {
           // Not a valid placeholder (e.g. {a b} or {}), treat as plain text '{'
-          tokens.add(Token(TokenType.text, '{', pos, 1));
+          tokens.add(TextToken('{', position: pos, length: 1));
           pos++;
           textStart = pos;
         }
@@ -230,7 +242,7 @@ class TextfTokenizer {
     List<int> codeUnits,
     int length,
     int startPos,
-    List<Token> tokens,
+    List<TextfToken> tokens,
   ) {
     int pos = startPos + 1; // Move past '['
 
@@ -302,27 +314,25 @@ class TextfTokenizer {
 
     // Successfully parsed a full link structure. Add tokens.
     tokens
-      ..add(Token(TokenType.linkStart, '[', startPos, 1))
+      ..add(LinkStartToken(position: startPos, length: 1))
       ..add(
-        Token(
-          TokenType.text,
+        TextToken(
           // ignore: avoid-substring
           text.substring(linkTextStart, linkTextEnd),
-          linkTextStart,
-          linkTextEnd - linkTextStart,
+          position: linkTextStart,
+          length: linkTextEnd - linkTextStart,
         ),
       )
-      ..add(Token(TokenType.linkSeparator, '](', linkTextEnd, 2))
+      ..add(LinkSeparatorToken(position: linkTextEnd, length: 2))
       ..add(
-        Token(
-          TokenType.text,
+        TextToken(
           // ignore: avoid-substring
           text.substring(urlStart, urlEnd),
-          urlStart,
-          urlEnd - urlStart,
+          position: urlStart,
+          length: urlEnd - urlStart,
         ),
       )
-      ..add(Token(TokenType.linkEnd, ')', urlEnd, 1));
+      ..add(LinkEndToken(position: urlEnd, length: 1));
 
     return urlEnd + 1;
   }
@@ -342,7 +352,7 @@ class TextfTokenizer {
     List<int> codeUnits,
     int length,
     int startPos,
-    List<Token> tokens,
+    List<TextfToken> tokens,
   ) {
     int pos = startPos + 1; // Move past '{'
     final int keyStart = pos;
@@ -371,15 +381,13 @@ class TextfTokenizer {
         }
 
         // Successfully parsed a placeholder
-        // Store the key string as the value for lookup later
         // ignore: avoid-substring
         final String key = text.substring(keyStart, pos);
         tokens.add(
-          Token(
-            TokenType.placeholder,
+          PlaceholderToken(
             key,
-            startPos,
-            (pos + 1) - startPos,
+            position: startPos,
+            length: (pos + 1) - startPos,
           ),
         );
         return pos + 1;

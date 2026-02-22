@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/format_stack_entry.dart';
 import '../../models/parser_state.dart';
-import '../../models/token_type.dart';
+import '../../models/textf_token.dart';
 
 /// Handles the processing of placeholder tokens (e.g., {icon}) during parsing.
 ///
@@ -16,10 +16,10 @@ class PlaceholderHandler {
   static void processPlaceholder(
     BuildContext context,
     ParserState state,
-    Token token,
+    PlaceholderToken token,
   ) {
-    // 1. The token value is the key (e.g., "icon" from "{icon}").
-    final String key = token.value;
+    // 1. The token key is the identifier (e.g., "icon" from "{icon}").
+    final String key = token.key;
 
     // Capture the map locally.
     final Map<String, InlineSpan>? placeholders = state.placeholders;
@@ -69,10 +69,10 @@ class PlaceholderHandler {
   }
 
   /// Handles invalid placeholders by treating them as literal text.
-  static void _handleFallback(ParserState state, Token token) {
+  static void _handleFallback(ParserState state, PlaceholderToken token) {
     // Reconstruct the brace syntax. The tokenizer stripped the braces
     // to store the key value.
-    // e.g. token.value is "icon", we append "{icon}" to the buffer.
-    state.textBuffer.write('{${token.value}}');
+    // e.g. token.key is "icon", we append "{icon}" to the buffer.
+    state.textBuffer.write('{${token.key}}');
   }
 }

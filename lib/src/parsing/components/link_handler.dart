@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/parser_state.dart';
-import '../../models/token_type.dart';
+import '../../models/textf_token.dart';
 import '../../widgets/internal/hoverable_link_span.dart';
 import '../textf_parser.dart';
 import '../textf_tokenizer.dart';
@@ -46,8 +46,8 @@ class LinkHandler {
     // --- Valid Link Processing ---
 
     // Extract raw text and URL
-    final linkTextToken = tokens[index + _linkTextOffset];
-    final linkUrlToken = tokens[index + _linkUrlOffset];
+    final linkTextToken = tokens[index + _linkTextOffset] as TextToken;
+    final linkUrlToken = tokens[index + _linkUrlOffset] as TextToken;
     final rawLinkText = linkTextToken.value;
     final rawLinkUrl = linkUrlToken.value;
     final normalizedUrl = normalizeUrl(rawLinkUrl);
@@ -81,8 +81,7 @@ class LinkHandler {
     final linkTextTokens = tokenizerForLinkText.tokenize(rawLinkText);
 
     // Check if the link text contains any non-text tokens (markers or placeholders)
-    final bool containsFormattingMarkers =
-        linkTextTokens.any((token) => token.type != TokenType.text);
+    final bool containsFormattingMarkers = linkTextTokens.any((token) => token is! TextToken);
 
     if (containsFormattingMarkers) {
       final innerParser = TextfParser();
@@ -181,22 +180,19 @@ class LinkHandler {
   }
 
   /// Checks if tokens starting at `index` form a complete `[text](url)` structure.
-  static bool _isCompleteLink(List<Token> tokens, int index) {
+  static bool _isCompleteLink(List<TextfToken> tokens, int index) {
     // Needs 5 tokens: linkStart, text, linkSeparator, urlText, linkEnd
     if (index + _linkEndOffset >= tokens.length) {
       return false;
     }
 
-    return tokens[index].type == TokenType.linkStart &&
-        (tokens[index + _linkTextOffset].type == TokenType.text ||
-            tokens[index + _linkTextOffset].type ==
-                TokenType.placeholder) && // Allow placeholders in position check?
-        // The outer tokenizer emits link text as a single TokenType.text token,
+    return tokens[index] is LinkStartToken &&
+        // The outer tokenizer emits link text as a single TextToken,
         // even if it contains placeholders like "{icon}". LinkHandler re-tokenizes
         // the link text internally to support nested formatting and placeholders.
-        tokens[index + _linkTextOffset].type == TokenType.text &&
-        tokens[index + _linkSeparatorOffset].type == TokenType.linkSeparator &&
-        tokens[index + _linkUrlOffset].type == TokenType.text &&
-        tokens[index + _linkEndOffset].type == TokenType.linkEnd;
+        tokens[index + _linkTextOffset] is TextToken &&
+        tokens[index + _linkSeparatorOffset] is LinkSeparatorToken &&
+        tokens[index + _linkUrlOffset] is TextToken &&
+        tokens[index + _linkEndOffset] is LinkEndToken;
   }
 }

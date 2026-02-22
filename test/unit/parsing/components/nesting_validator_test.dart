@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:textf/src/models/token_type.dart';
+import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/parsing/components/nesting_validator.dart';
 import 'package:textf/src/parsing/textf_tokenizer.dart';
 
@@ -25,11 +25,11 @@ void main() {
         final candidatePairs = <int, int>{};
         // This is a simplified version of PairingResolver._identifySimplePairs
         // to get the initial candidates for validation.
-        final stacks = <TokenType, List<int>>{};
+        final stacks = <FormatMarkerType, List<int>>{};
         for (int i = 0; i < tokens.length; i++) {
           final token = tokens[i];
-          if (!token.type.isFormattingMarker) continue;
-          final stack = stacks.putIfAbsent(token.type, () => []);
+          if (token is! FormatMarkerToken) continue;
+          final stack = stacks.putIfAbsent(token.markerType, () => []);
           if (stack.isEmpty) {
             stack.add(i);
           } else {
@@ -47,7 +47,9 @@ void main() {
         validatedPairs.forEach((key, value) {
           // Add each pair only once to the set for comparison (from opener to closer).
           if (key < value) {
-            actualValidPairs.add('${tokens[key].value} -> ${tokens[value].value}');
+            actualValidPairs.add(
+              '${(tokens[key] as FormatMarkerToken).value} -> ${(tokens[value] as FormatMarkerToken).value}',
+            );
           }
         });
 

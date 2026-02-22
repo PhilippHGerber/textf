@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
-import 'package:textf/src/models/token_type.dart';
+import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 
 void main() {
@@ -32,7 +32,7 @@ void main() {
       final context = await pumpWithoutOptions(tester);
       final resolver = TextfStyleResolver(context);
 
-      final result = resolver.resolveStyle(TokenType.boldMarker, baseStyle);
+      final result = resolver.resolveStyle(FormatMarkerType.bold, baseStyle);
 
       expect(result.fontWeight, FontWeight.bold);
       expect(result.fontSize, baseStyle.fontSize);
@@ -42,7 +42,7 @@ void main() {
       final context = await pumpWithoutOptions(tester);
       final resolver = TextfStyleResolver(context);
 
-      final result = resolver.resolveStyle(TokenType.italicMarker, baseStyle);
+      final result = resolver.resolveStyle(FormatMarkerType.italic, baseStyle);
 
       expect(result.fontStyle, FontStyle.italic);
     });
@@ -51,7 +51,7 @@ void main() {
       final context = await pumpWithoutOptions(tester);
       final resolver = TextfStyleResolver(context);
 
-      final result = resolver.resolveStyle(TokenType.boldItalicMarker, baseStyle);
+      final result = resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle);
 
       expect(result.fontWeight, FontWeight.bold);
       expect(result.fontStyle, FontStyle.italic);
@@ -61,7 +61,7 @@ void main() {
       final context = await pumpWithoutOptions(tester);
       final resolver = TextfStyleResolver(context);
 
-      final result = resolver.resolveStyle(TokenType.strikeMarker, baseStyle);
+      final result = resolver.resolveStyle(FormatMarkerType.strikethrough, baseStyle);
 
       expect(result.decoration, TextDecoration.lineThrough);
       expect(
@@ -74,7 +74,7 @@ void main() {
       final context = await pumpWithoutOptions(tester);
       final resolver = TextfStyleResolver(context);
 
-      final result = resolver.resolveStyle(TokenType.codeMarker, baseStyle);
+      final result = resolver.resolveStyle(FormatMarkerType.code, baseStyle);
 
       expect(result.fontFamily, 'monospace');
       expect(result.backgroundColor, isNotNull);
@@ -84,7 +84,7 @@ void main() {
       final context = await pumpWithoutOptions(tester);
       final resolver = TextfStyleResolver(context);
 
-      final result = resolver.resolveStyle(TokenType.underlineMarker, baseStyle);
+      final result = resolver.resolveStyle(FormatMarkerType.underline, baseStyle);
 
       expect(result.decoration, TextDecoration.underline);
     });
@@ -93,7 +93,7 @@ void main() {
       final context = await pumpWithoutOptions(tester);
       final resolver = TextfStyleResolver(context);
 
-      final result = resolver.resolveStyle(TokenType.highlightMarker, baseStyle);
+      final result = resolver.resolveStyle(FormatMarkerType.highlight, baseStyle);
 
       expect(result.backgroundColor, isNotNull);
     });
@@ -102,7 +102,7 @@ void main() {
       final context = await pumpWithoutOptions(tester);
       final resolver = TextfStyleResolver(context);
 
-      final result = resolver.resolveStyle(TokenType.superscriptMarker, baseStyle);
+      final result = resolver.resolveStyle(FormatMarkerType.superscript, baseStyle);
 
       expect(
         result.fontSize,
@@ -114,7 +114,7 @@ void main() {
       final context = await pumpWithoutOptions(tester);
       final resolver = TextfStyleResolver(context);
 
-      final result = resolver.resolveStyle(TokenType.subscriptMarker, baseStyle);
+      final result = resolver.resolveStyle(FormatMarkerType.subscript, baseStyle);
 
       expect(
         result.fontSize,
@@ -143,17 +143,6 @@ void main() {
       // Hover typically uses a variant of the primary color
       expect(result.decoration, TextDecoration.underline);
       expect(result.color, isNotNull);
-    });
-
-    testWidgets('returns baseStyle for non-formatting token types', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
-
-      final textResult = resolver.resolveStyle(TokenType.text, baseStyle);
-      final placeholderResult = resolver.resolveStyle(TokenType.placeholder, baseStyle);
-
-      expect(textResult, baseStyle);
-      expect(placeholderResult, baseStyle);
     });
 
     testWidgets('resolves link mouse cursor to default', (tester) async {

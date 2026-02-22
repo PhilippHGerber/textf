@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:textf/src/models/token_type.dart';
+import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
 import 'package:textf/src/parsing/textf_tokenizer.dart';
 
@@ -11,7 +11,7 @@ class MockTokenizer extends TextfTokenizer {
   int callCount = 0;
 
   @override
-  List<Token> tokenize(String text) {
+  List<TextfToken> tokenize(String text) {
     callCount++;
     return super.tokenize(text);
   }

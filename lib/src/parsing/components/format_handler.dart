@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/format_stack_entry.dart';
 import '../../models/parser_state.dart';
-import '../../models/token_type.dart';
+import '../../models/textf_token.dart';
 
 /// Handles the processing of formatting tokens (bold, italic, etc.) during parsing.
 ///
@@ -29,7 +29,7 @@ class FormatHandler {
     BuildContext context,
     ParserState state,
     int index,
-    Token token,
+    FormatMarkerToken token,
   ) {
     // Find the index of the matching counterpart.
     final int? matchingIndex = state.matchingPairs[index];
@@ -55,7 +55,7 @@ class FormatHandler {
     BuildContext context,
     ParserState state,
     int index,
-    Token token,
+    FormatMarkerToken token,
     int matchingIndex,
   ) {
     // Flush preceding text with previous style
@@ -66,7 +66,7 @@ class FormatHandler {
       FormatStackEntry(
         index: index,
         matchingIndex: matchingIndex,
-        type: token.type,
+        type: token.markerType,
       ),
     );
   }

@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
-import 'package:textf/src/models/token_type.dart';
+import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/textf_options.dart';
 
@@ -349,7 +349,7 @@ void main() {
       );
 
       // --- ASSERT INHERITED ITALIC STYLE ---
-      final resolvedItalicStyle = resolver.resolveStyle(TokenType.italicMarker, baseStyle);
+      final resolvedItalicStyle = resolver.resolveStyle(FormatMarkerType.italic, baseStyle);
       expect(
         resolvedItalicStyle.color,
         rootItalicStyle.color,
@@ -406,7 +406,7 @@ void main() {
       final resolver = TextfStyleResolver(context);
 
       // --- 1. Assert properties specified ONLY in Child ---
-      final resolvedItalic = resolver.resolveStyle(TokenType.italicMarker, baseStyle);
+      final resolvedItalic = resolver.resolveStyle(FormatMarkerType.italic, baseStyle);
       expect(resolvedItalic.fontStyle, childItalicStyle.fontStyle);
       expect(resolvedItalic.backgroundColor, childItalicStyle.backgroundColor);
       expect(resolver.resolveOnLinkHover(), childOnHover);
@@ -425,7 +425,7 @@ void main() {
       );
 
       // --- 3. Assert properties inherited from Parent because Child did not specify them ---
-      final resolvedBold = resolver.resolveStyle(TokenType.boldMarker, baseStyle);
+      final resolvedBold = resolver.resolveStyle(FormatMarkerType.bold, baseStyle);
       expect(resolvedBold.fontWeight, rootBoldStyle.fontWeight);
       expect(resolvedBold.color, rootBoldStyle.color);
       expect(resolver.resolveOnLinkTap(), rootOnTap);

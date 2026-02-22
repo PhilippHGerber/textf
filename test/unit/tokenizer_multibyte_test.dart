@@ -3,7 +3,7 @@
 // ignore_for_file: no-magic-number
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:textf/src/models/token_type.dart';
+import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/parsing/textf_tokenizer.dart';
 
 void main() {
@@ -20,57 +20,54 @@ void main() {
     // This test would fail if `characters.getRange` were used instead.
     test('Correctly tokenizes link text with a simple emoji', () {
       // ARRANGE
-      const text = 'Link with [Hello 👋](http://example.com)';
+      const text = 'Link with [Hello \u{1F44B}](http://example.com)';
       final tokens = tokenizer.tokenize(text);
 
       // ASSERT
-      // Expected tokens: 'Link with ', '[', 'Hello 👋', '](', 'http://example.com', ')'
+      // Expected tokens: 'Link with ', '[', 'Hello \u{1F44B}', '](', 'http://example.com', ')'
       expect(tokens.length, 6, reason: 'Should produce 6 distinct tokens');
 
       // Verify the type and value of each token
-      expect(tokens.first.type, TokenType.text);
-      expect(tokens.first.value, 'Link with ');
+      expect(tokens.first, isA<TextToken>());
+      expect((tokens.first as TextToken).value, 'Link with ');
 
-      expect(tokens[1].type, TokenType.linkStart);
-      expect(tokens[1].value, '[');
+      expect(tokens[1], isA<LinkStartToken>());
 
       // --- CRITICAL ASSERTION for Link Text ---
       expect(
-        tokens[2].type,
-        TokenType.text,
+        tokens[2],
+        isA<TextToken>(),
         reason: 'The link display text should be a text token',
       );
       expect(
-        tokens[2].value,
-        'Hello 👋',
+        (tokens[2] as TextToken).value,
+        'Hello \u{1F44B}',
         reason: 'The extracted link text with emoji must be correct',
       );
 
-      expect(tokens[3].type, TokenType.linkSeparator);
-      expect(tokens[3].value, '](');
+      expect(tokens[3], isA<LinkSeparatorToken>());
 
-      expect(tokens[4].type, TokenType.text, reason: 'The URL should be a text token');
-      expect(tokens[4].value, 'http://example.com');
+      expect(tokens[4], isA<TextToken>(), reason: 'The URL should be a text token');
+      expect((tokens[4] as TextToken).value, 'http://example.com');
 
-      expect(tokens[5].type, TokenType.linkEnd);
-      expect(tokens[5].value, ')');
+      expect(tokens[5], isA<LinkEndToken>());
     });
 
     // This test validates the correct handling of a URL containing multi-byte characters.
     test('Correctly tokenizes a link URL with a simple emoji', () {
       // ARRANGE
-      const text = '[Link to Emoji URL](http://example.com/page-with-😊)';
+      const text = '[Link to Emoji URL](http://example.com/page-with-\u{1F60A})';
       final tokens = tokenizer.tokenize(text);
 
       // ASSERT
-      // Expected: '[', 'Link to Emoji URL', '](', 'http://example.com/page-with-😊', ')'
+      // Expected: '[', 'Link to Emoji URL', '](', 'http://example.com/page-with-\u{1F60A}', ')'
       expect(tokens.length, 5);
 
       // --- CRITICAL ASSERTION for Link URL ---
-      expect(tokens[3].type, TokenType.text, reason: 'The URL part should be a text token');
+      expect(tokens[3], isA<TextToken>(), reason: 'The URL part should be a text token');
       expect(
-        tokens[3].value,
-        'http://example.com/page-with-😊',
+        (tokens[3] as TextToken).value,
+        'http://example.com/page-with-\u{1F60A}',
         reason: 'The extracted URL with emoji must be correct',
       );
     });
@@ -79,17 +76,17 @@ void main() {
     // further stress-test the index calculations.
     test('Correctly tokenizes link text with a complex emoji', () {
       // ARRANGE
-      const text = '[Family emoji 👨‍👩‍👧‍👦 link](url)';
+      const text = '[Family emoji \u{1F468}\u200D\u{1F469}\u200D\u{1F467}\u200D\u{1F466} link](url)';
       final tokens = tokenizer.tokenize(text);
 
       // ASSERT
       expect(tokens.length, 5);
 
       // --- CRITICAL ASSERTION for Complex Emoji in Link Text ---
-      expect(tokens[1].type, TokenType.text);
+      expect(tokens[1], isA<TextToken>());
       expect(
-        tokens[1].value,
-        'Family emoji 👨‍👩‍👧‍👦 link',
+        (tokens[1] as TextToken).value,
+        'Family emoji \u{1F468}\u200D\u{1F469}\u200D\u{1F467}\u200D\u{1F466} link',
         reason: 'The extracted text with a complex family emoji must be correct',
       );
     });
@@ -98,24 +95,24 @@ void main() {
     // when emojis are at the very beginning and end of the link text.
     test('Correctly tokenizes link text surrounded by emojis', () {
       // ARRANGE
-      const text = '[👋Surrounded👍](url)';
+      const text = '[\u{1F44B}Surrounded\u{1F44D}](url)';
       final tokens = tokenizer.tokenize(text);
 
       // ASSERT
       expect(tokens.length, 5);
 
       // --- CRITICAL ASSERTION for Surrounded Text ---
-      expect(tokens[1].type, TokenType.text);
+      expect(tokens[1], isA<TextToken>());
       expect(
-        tokens[1].value,
-        '👋Surrounded👍',
+        (tokens[1] as TextToken).value,
+        '\u{1F44B}Surrounded\u{1F44D}',
         reason: 'The extracted text surrounded by emojis must be correct',
       );
     });
 
     test('Correctly tokenizes plain text with emojis outside of links', () {
       // ARRANGE
-      const text = 'Plain text with emoji in it 😊. And another one 🚀.';
+      const text = 'Plain text with emoji in it \u{1F60A}. And another one \u{1F680}.';
       final tokens = tokenizer.tokenize(text);
 
       // ASSERT
@@ -123,8 +120,8 @@ void main() {
       // which contains the `substring` call, works correctly for general text as well.
       // Since there are no formatting markers, it should produce a single text token.
       expect(tokens.length, 1);
-      expect(tokens.first.type, TokenType.text);
-      expect(tokens.first.value, text, reason: 'The entire string should be one text token');
+      expect(tokens.first, isA<TextToken>());
+      expect((tokens.first as TextToken).value, text, reason: 'The entire string should be one text token');
     });
   });
 }

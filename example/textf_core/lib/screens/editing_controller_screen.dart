@@ -126,7 +126,7 @@ class _EditingControllerScreenState extends State<EditingControllerScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Textf('Textf ^_1.2.0-dev.0_^'),
+        title: const Textf('Textf ^_1.2.0-dev.1_^'),
         actions: [
           IconButton(
             icon: Icon(themeIcon),

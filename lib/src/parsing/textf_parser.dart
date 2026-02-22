@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/formatting_utils.dart';
 import '../core/textf_limits.dart';
 import '../models/parser_state.dart';
-import '../models/token_type.dart';
+import '../models/textf_token.dart';
 import '../styling/textf_style_resolver.dart';
 import 'components/format_handler.dart';
 import 'components/link_handler.dart';
@@ -14,7 +14,7 @@ import 'textf_tokenizer.dart';
 /// Container for cached parsing results.
 class _ParsedCacheEntry {
   _ParsedCacheEntry(this.tokens, this.matchingPairs);
-  final List<Token> tokens;
+  final List<TextfToken> tokens;
   final Map<int, int> matchingPairs;
 }
 
@@ -72,10 +72,10 @@ class TextfParser {
   ///    the style resolver, the current text buffer, active style stack, and processed token indices.
   /// 6. Iterates through the tokens:
   ///    - Skips tokens that have already been processed (e.g., as part of a link or format pair).
-  ///    - Appends plain text tokens (`TokenType.text`) to the `ParserState`'s text buffer.
-  ///    - If a `TokenType.linkStart` (`[`) is encountered, delegates processing to `LinkHandler`.
-  ///    - If a `TokenType.placeholder` (`{key}`) is encountered, delegates to `PlaceholderHandler`.
-  ///    - If a formatting marker token is found, handles stack operations via `FormatHandler`.
+  ///    - Appends plain text tokens ([TextToken]) to the `ParserState`'s text buffer.
+  ///    - If a [LinkStartToken] is encountered, delegates processing to `LinkHandler`.
+  ///    - If a [PlaceholderToken] is encountered, delegates to `PlaceholderHandler`.
+  ///    - If a [FormatMarkerToken] is found, handles stack operations via `FormatHandler`.
   ///    - Treats any other unexpected token types encountered during the loop as plain text.
   /// 7. After iterating through all tokens, flushes any remaining text in the `ParserState`'s
   ///    buffer using the current style context via `state.flushText()`.
@@ -108,7 +108,7 @@ class TextfParser {
     }
 
     // --- Cache Lookup & Update ---
-    final List<Token> tokens;
+    final List<TextfToken> tokens;
     final Map<int, int> validPairs;
 
     // Only attempt caching if the text length is within reasonable limits.
@@ -160,14 +160,14 @@ class TextfParser {
       final token = tokens[i];
 
       // --- Placeholder Handling ---
-      if (token.type == TokenType.placeholder) {
+      if (token is PlaceholderToken) {
         PlaceholderHandler.processPlaceholder(context, state, token);
         i++;
         continue;
       }
 
       // --- Link Handling ---
-      if (token.type == TokenType.linkStart) {
+      if (token is LinkStartToken) {
         // Attempt to process a link.
         final int? nextIndex = LinkHandler.processLink(context, state, i);
         if (nextIndex != null) {
@@ -180,7 +180,7 @@ class TextfParser {
       }
 
       // --- Formatting Handling ---
-      if (token.type.isFormattingMarker) {
+      if (token is FormatMarkerToken) {
         if (state.matchingPairs.containsKey(i)) {
           // This token is part of a valid format pair.
           FormatHandler.processFormat(context, state, i, token);
@@ -194,10 +194,23 @@ class TextfParser {
 
       // --- Plain Text Handling ---
       // Accumulate content into the buffer. This applies to:
-      // 1. TokenType.text
-      // 2. Unpaired/Invalid Formatting Markers
+      // 1. TextToken
+      // 2. Unpaired/Invalid FormatMarkerTokens
       // 3. Broken/Partial Link tokens
-      state.textBuffer.write(token.value);
+      switch (token) {
+        case TextToken(:final value):
+          state.textBuffer.write(value);
+        case FormatMarkerToken(:final value):
+          state.textBuffer.write(value);
+        case LinkStartToken():
+          state.textBuffer.write('[');
+        case LinkSeparatorToken():
+          state.textBuffer.write('](');
+        case LinkEndToken():
+          state.textBuffer.write(')');
+        case PlaceholderToken(:final key):
+          state.textBuffer.write('{$key}');
+      }
       i++;
     }
 

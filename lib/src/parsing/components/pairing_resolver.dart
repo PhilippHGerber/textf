@@ -1,4 +1,4 @@
-import '../../models/token_type.dart';
+import '../../models/textf_token.dart';
 import 'nesting_validator.dart';
 
 /// Identifies matching pairs of formatting markers in a token list.
@@ -17,7 +17,7 @@ class PairingResolver {
   ///
   /// @param tokens The list of tokens to analyze
   /// @return A map where keys are token indices and values are their matching pair indices
-  static Map<int, int> identifyPairs(List<Token> tokens) {
+  static Map<int, int> identifyPairs(List<TextfToken> tokens) {
     final Map<int, int> pairs = {};
 
     // First pass: identify simple pairs by type
@@ -34,18 +34,18 @@ class PairingResolver {
   ///
   /// @param tokens The list of tokens to analyze
   /// @param pairs The map to populate with identified pairs
-  static void _identifySimplePairs(List<Token> tokens, Map<int, int> pairs) {
-    // Stack of opening markers for each type
-    final Map<TokenType, List<int>> openingStacks = {
-      TokenType.boldMarker: [],
-      TokenType.italicMarker: [],
-      TokenType.boldItalicMarker: [],
-      TokenType.strikeMarker: [],
-      TokenType.codeMarker: [],
-      TokenType.underlineMarker: [],
-      TokenType.highlightMarker: [],
-      TokenType.superscriptMarker: [],
-      TokenType.subscriptMarker: [],
+  static void _identifySimplePairs(List<TextfToken> tokens, Map<int, int> pairs) {
+    // Stack of opening markers for each format type
+    final Map<FormatMarkerType, List<int>> openingStacks = {
+      FormatMarkerType.bold: [],
+      FormatMarkerType.italic: [],
+      FormatMarkerType.boldItalic: [],
+      FormatMarkerType.strikethrough: [],
+      FormatMarkerType.code: [],
+      FormatMarkerType.underline: [],
+      FormatMarkerType.highlight: [],
+      FormatMarkerType.superscript: [],
+      FormatMarkerType.subscript: [],
     };
 
     // First pass - pair markers based on type
@@ -54,14 +54,12 @@ class PairingResolver {
 
       // Only consider formatting markers for pairing.
       // Text tokens and link-specific tokens are ignored here.
-      if (!token.type.isFormattingMarker) {
+      if (token is! FormatMarkerToken) {
         continue;
       }
 
-      // Get the stack for the current token's type.
-      // If the token type is not in openingStacks (e.g., an unknown formatting marker),
-      // it will be skipped, which is the desired behavior.
-      final stack = openingStacks[token.type];
+      // Get the stack for the current token's marker type.
+      final stack = openingStacks[token.markerType];
       if (stack == null) continue; // Should not happen for known formatting markers
 
       if (stack.isEmpty) {

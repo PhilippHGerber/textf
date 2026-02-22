@@ -1,5 +1,5 @@
 import '../../core/textf_limits.dart';
-import '../../models/token_type.dart';
+import '../../models/textf_token.dart';
 
 /// Validates proper nesting of formatting markers.
 ///
@@ -30,7 +30,7 @@ class NestingValidator {
   /// @param candidatePairs The initial pairs identified by the pairing resolver
   /// @return A map of validated pairs with invalid ones removed
   static Map<int, int> validatePairs(
-    List<Token> tokens,
+    List<TextfToken> tokens,
     Map<int, int> candidatePairs,
   ) {
     final Map<int, int> validatedPairs = Map.of(candidatePairs);
@@ -41,7 +41,7 @@ class NestingValidator {
     for (int i = 0; i < tokens.length; i++) {
       final token = tokens[i];
 
-      if (token.type == TokenType.text) continue;
+      if (token is TextToken) continue;
 
       final matchingIndex = candidatePairs[i];
       if (matchingIndex == null) continue; // Skip unpaired markers
