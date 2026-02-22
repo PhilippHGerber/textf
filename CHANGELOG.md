@@ -2,7 +2,17 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
-## Next Release
+## 1.2.0 (Unreleased)
+
+### Added
+
+* **`TextfExt` String Extension** — Create `Textf` widgets directly from strings with `'Hello **bold**'.textf()`. All `Textf` constructor parameters are supported.
+* **`TextfEditingController`** — A drop-in `TextEditingController` that renders live-formatted text inside `TextField` and `TextFormField`.
+  * Supports all textf formatting types: bold, italic, strikethrough, underline, highlight, code, superscript, subscript, and links.
+  * Formatting markers stay visible with dimmed styling for correct cursor positioning.
+  * Respects `TextfOptions` from the widget tree for custom styles.
+  * IME composing region support.
+  * `MarkerVisibility` mode: choose between always-visible markers or smart-hide (markers only visible when cursor is inside the formatted span).
 
 ## 1.1.2
 
