@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/formatting_utils.dart';
+import '../core/textf_limits.dart';
 import '../models/format_stack_entry.dart';
 import '../models/token_type.dart';
 import '../parsing/components/pairing_resolver.dart';
@@ -50,11 +51,6 @@ class TextfSpanBuilder {
   /// LRU cache for tokenization and pairing results.
   static final Map<String, _CacheEntry> _cache = <String, _CacheEntry>{};
 
-  /// Maximum number of entries in the cache.
-  static const int _maxCacheSize = 200;
-
-  /// Maximum length of a string eligible for caching.
-  static const int _maxCacheKeyLength = 1000;
 
   // Link token structure offsets (mirrors LinkHandler constants).
   static const int _linkTextOffset = 1;
@@ -119,7 +115,7 @@ class TextfSpanBuilder {
     final List<Token> tokens;
     final Map<int, int> validPairs;
 
-    if (text.length <= _maxCacheKeyLength) {
+    if (text.length <= TextfLimits.maxCacheKeyLength) {
       final cached = _cache.remove(text);
 
       if (cached != null) {
@@ -131,7 +127,7 @@ class TextfSpanBuilder {
         validPairs = PairingResolver.identifyPairs(tokens);
 
         _cache[text] = _CacheEntry(tokens, validPairs);
-        if (_cache.length > _maxCacheSize) {
+        if (_cache.length > TextfLimits.maxCacheEntries) {
           _cache.remove(_cache.keys.first);
         }
       }

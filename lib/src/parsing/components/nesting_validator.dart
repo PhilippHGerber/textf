@@ -1,3 +1,4 @@
+import '../../core/textf_limits.dart';
 import '../../models/token_type.dart';
 
 /// Validates proper nesting of formatting markers.
@@ -16,7 +17,7 @@ class NestingValidator {
   ///
   /// When the nesting depth exceeds this limit, additional formatting markers
   /// are treated as plain text to maintain predictable rendering behavior.
-  static const int maxDepth = 2;
+  static const int maxDepth = TextfLimits.maxNestingDepth;
 
   /// Validates proper nesting of formatting markers and returns valid pairs.
   ///

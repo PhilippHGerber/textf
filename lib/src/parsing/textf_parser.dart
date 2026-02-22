@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/formatting_utils.dart';
+import '../core/textf_limits.dart';
 import '../models/parser_state.dart';
 import '../models/token_type.dart';
 import '../styling/textf_style_resolver.dart';
@@ -48,12 +49,6 @@ class TextfParser {
   /// Uses a LinkedHashMap to implement a simple LRU cache.
   static final Map<String, _ParsedCacheEntry> _cache = <String, _ParsedCacheEntry>{};
 
-  /// Maximum number of entries in the parser cache.
-  static const int _maxCacheSize = 200;
-
-  /// Maximum length of a string to be considered for caching.
-  /// Strings longer than this are parsed on-demand to prevent memory bloating.
-  static const int _maxCacheKeyLength = 1000;
 
   /// Clears the internal parser cache.
   ///
@@ -118,7 +113,7 @@ class TextfParser {
 
     // Only attempt caching if the text length is within reasonable limits.
     // Extremely long strings are parsed on-demand to avoid memory issues.
-    if (text.length <= _maxCacheKeyLength) {
+    if (text.length <= TextfLimits.maxCacheKeyLength) {
       // Move to ends (most recent) if exists, or tokenize if miss.
       final cached = _cache.remove(text);
 
@@ -135,7 +130,7 @@ class TextfParser {
 
         // Update Cache (LRU: add to end)
         _cache[text] = _ParsedCacheEntry(tokens, validPairs);
-        if (_cache.length > _maxCacheSize) {
+        if (_cache.length > TextfLimits.maxCacheEntries) {
           // Remove the oldest entry (first key)
           _cache.remove(_cache.keys.first);
         }
