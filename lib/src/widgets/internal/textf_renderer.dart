@@ -6,6 +6,27 @@ import 'package:flutter/material.dart';
 import '../../parsing/textf_parser.dart';
 import '../textf_options.dart';
 
+/// Cache key record for [TextfRendererState].
+///
+/// Groups all scalar/structural widget inputs into a single record so that
+/// cache-hit detection is a single `==` comparison instead of 12 individual
+/// field checks. [Map] and [ThemeData] are excluded because they lack
+/// structural equality or use an intentional smart comparison.
+typedef _RendererCacheKey = ({
+  String data,
+  TextStyle baseStyle,
+  TextScaler textScaler,
+  TextAlign? textAlign,
+  TextDirection? textDirection,
+  bool? softWrap,
+  TextOverflow? overflow,
+  int? maxLines,
+  TextWidthBasis? textWidthBasis,
+  ui.TextHeightBehavior? textHeightBehavior,
+  Locale? locale,
+  int optionsHash,
+});
+
 /// Internal StatefulWidget that handles parsing, styling resolution via the parser,
 /// and hot reload notification. It bridges the Textf widget parameters with
 /// the parsing and rendering logic provided by the TextfParser.
@@ -90,21 +111,14 @@ class TextfRendererState extends State<TextfRenderer> {
   /// Cached list of spans from the last parse.
   List<InlineSpan>? _cachedSpans;
 
-  /// Cache keys to detect if inputs have changed.
-  String? _lastData;
-  TextStyle? _lastStyle;
-  TextScaler? _lastScaler;
+  /// Composite cache key for all scalar/structural widget inputs.
+  _RendererCacheKey? _lastKey;
+
+  /// Kept separate: [Map] lacks structural equality.
   Map<String, InlineSpan>? _lastPlaceholders;
-  TextAlign? _lastTextAlign;
-  TextDirection? _lastTextDirection;
-  bool? _lastSoftWrap;
-  TextOverflow? _lastOverflow;
-  int? _lastMaxLines;
-  TextWidthBasis? _lastTextWidthBasis;
+
+  /// Kept separate: uses an intentional smart 4-property comparison.
   ThemeData? _lastTheme;
-  int? _lastOptionsHash;
-  ui.TextHeightBehavior? _lastTextHeightBehavior;
-  Locale? _lastLocale;
 
   @override
   Widget build(BuildContext context) {
@@ -139,21 +153,25 @@ class TextfRendererState extends State<TextfRenderer> {
             lastTheme.colorScheme.surfaceContainer == theme.colorScheme.surfaceContainer &&
             lastTheme.colorScheme.brightness == theme.colorScheme.brightness);
 
+    final currentKey = (
+      data: widget.data,
+      baseStyle: currentBaseStyle,
+      textScaler: effectiveScaler,
+      textAlign: widget.textAlign,
+      textDirection: widget.textDirection,
+      softWrap: widget.softWrap,
+      overflow: widget.overflow,
+      maxLines: widget.maxLines,
+      textWidthBasis: widget.textWidthBasis,
+      textHeightBehavior: widget.textHeightBehavior,
+      locale: widget.locale,
+      optionsHash: currentOptionsHash,
+    );
+
     if (cachedSpans != null &&
         placeholdersMatch &&
         themeMatch &&
-        _lastOptionsHash == currentOptionsHash &&
-        _lastData == widget.data &&
-        _lastStyle == currentBaseStyle &&
-        _lastScaler == effectiveScaler &&
-        _lastTextAlign == widget.textAlign &&
-        _lastTextDirection == widget.textDirection &&
-        _lastSoftWrap == widget.softWrap &&
-        _lastOverflow == widget.overflow &&
-        _lastMaxLines == widget.maxLines &&
-        _lastTextWidthBasis == widget.textWidthBasis &&
-        _lastTextHeightBehavior == widget.textHeightBehavior &&
-        _lastLocale == widget.locale) {
+        currentKey == _lastKey) {
       // Cache Hit!
       return DefaultTextStyle.merge(
         textAlign: widget.textAlign,
@@ -178,20 +196,9 @@ class TextfRendererState extends State<TextfRenderer> {
 
     // Update Cache
     _cachedSpans = spans;
-    _lastData = widget.data;
-    _lastStyle = currentBaseStyle;
-    _lastScaler = effectiveScaler;
+    _lastKey = currentKey;
     _lastPlaceholders = widget.placeholders;
     _lastTheme = theme;
-    _lastOptionsHash = currentOptionsHash;
-    _lastTextAlign = widget.textAlign;
-    _lastTextDirection = widget.textDirection;
-    _lastSoftWrap = widget.softWrap;
-    _lastOverflow = widget.overflow;
-    _lastMaxLines = widget.maxLines;
-    _lastTextWidthBasis = widget.textWidthBasis;
-    _lastTextHeightBehavior = widget.textHeightBehavior;
-    _lastLocale = widget.locale;
 
     return DefaultTextStyle.merge(
       textAlign: widget.textAlign,
