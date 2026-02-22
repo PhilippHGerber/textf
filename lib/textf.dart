@@ -13,6 +13,9 @@
 /// - [TextfOptions]: An [InheritedWidget] for configuring formatting styles,
 ///   link callbacks, and script geometry for all descendant [Textf] widgets.
 ///
+/// - [TextfEditingController]: A [TextEditingController] that renders
+///   textf-formatted text inside [TextField] and [TextFormField] widgets.
+///
 /// ## Example
 ///
 /// ```dart
@@ -24,5 +27,7 @@
 /// @docImport 'textf.dart';
 library;
 
+export 'src/editing/marker_visibility.dart';
+export 'src/editing/textf_editing_controller.dart';
 export 'src/widgets/textf.dart';
 export 'src/widgets/textf_options.dart';
