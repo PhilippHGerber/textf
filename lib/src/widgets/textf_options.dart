@@ -1,62 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Merges two [TextStyle] objects with intelligent [TextDecoration] handling.
-///
-/// Unlike the standard [TextStyle.merge], this function prevents:
-/// 1. Accidental removal of decorations: If the base has `underline | lineThrough`
-///    and options adds `underline`, the result remains `underline | lineThrough`
-///    (instead of being downgraded to just `underline`).
-/// 2. Duplicate decorations: It checks if the decoration is already present
-///    before combining.
-///
-/// - [baseStyle]: The style inherited from the parent/theme.
-/// - [optionsStyle]: The style defined in the current [TextfOptions].
-TextStyle _mergeStyles(TextStyle baseStyle, TextStyle optionsStyle) {
-  // Use standard merge for properties like color, fontSize, fontWeight, etc.
-  // This lets Flutter handle the heavy lifting for most attributes.
-  final TextStyle merged = baseStyle.merge(optionsStyle);
-
-  final TextDecoration? baseDeco = baseStyle.decoration;
-  final TextDecoration? optionDeco = optionsStyle.decoration;
-
-  // Case 1: Options explicitly set decoration to 'none'.
-  // We want to remove all decorations. 'merged' already has this from the standard merge.
-  if (optionDeco == TextDecoration.none) {
-    return merged;
-  }
-
-  // Case 2: Options don't specify any decoration (null).
-  // We want to keep the base decoration. 'merged' already inherited baseDeco.
-  if (optionDeco == null) {
-    return merged;
-  }
-
-  // Case 3: Both styles have active decorations. We need custom logic.
-  if (baseDeco != null && baseDeco != TextDecoration.none) {
-    // Check if the base decoration already "contains" the option's decoration.
-    // TextDecoration treats combinations as a bitmask.
-    // If true:
-    //    The option is adding a decoration that already exists (e.g., adding
-    //    'underline' to text that is already 'underline' or 'underline + lineThrough').
-    //
-    //    Standard merge would overwrite 'baseDeco' with 'optionDeco', potentially
-    //    losing other flags (like 'lineThrough').
-    //    We must restore 'baseDeco' to preserve those other flags.
-    // If false:
-    //    The option adds a completely new decoration (e.g., adding 'lineThrough'
-    //    to text that is only 'underlined').
-    //    Combine them so both appear.
-    return baseDeco.contains(optionDeco)
-        ? merged.copyWith(decoration: baseDeco)
-        : merged.copyWith(
-            decoration: TextDecoration.combine([baseDeco, optionDeco]),
-          );
-  }
-
-  // Case 4: Base has no decoration, but Option does.
-  // 'merged' already has 'optionDeco'.
-  return merged;
-}
+import '../core/textf_style_utils.dart';
 
 /// Configuration options for Textf widgets within a specific scope.
 ///
@@ -254,7 +198,7 @@ class TextfOptions extends InheritedWidget {
     for (final options in reversedHierarchy) {
       final TextStyle? localStyle = getter(options);
       if (localStyle != null) {
-        finalStyle = finalStyle == null ? localStyle : _mergeStyles(finalStyle, localStyle);
+        finalStyle = finalStyle == null ? localStyle : mergeTextStyles(finalStyle, localStyle);
       }
     }
     return finalStyle;
@@ -284,38 +228,38 @@ class TextfOptions extends InheritedWidget {
   /// Resolves the final merged `boldStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveBoldStyle(BuildContext context, TextStyle baseStyle) {
     final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.boldStyle);
-    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
+    return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `italicStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveItalicStyle(BuildContext context, TextStyle baseStyle) {
     final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.italicStyle);
-    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
+    return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `boldItalicStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveBoldItalicStyle(BuildContext context, TextStyle baseStyle) {
     final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.boldItalicStyle);
-    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
+    return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `strikethroughStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveStrikethroughStyle(BuildContext context, TextStyle baseStyle) {
     final TextStyle? optionsStyle =
         _getMergedStyleFromHierarchy(context, (o) => o.strikethroughStyle);
-    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
+    return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `codeStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveCodeStyle(BuildContext context, TextStyle baseStyle) {
     final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.codeStyle);
-    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
+    return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `linkStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveLinkStyle(BuildContext context, TextStyle baseStyle) {
     final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.linkStyle);
-    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
+    return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `linkHoverStyle` and merges it onto the final `normalLinkStyle`.
@@ -323,32 +267,32 @@ class TextfOptions extends InheritedWidget {
     final TextStyle? hoverOptionsStyle =
         _getMergedStyleFromHierarchy(context, (o) => o.linkHoverStyle);
     if (hoverOptionsStyle == null) return null;
-    return _mergeStyles(normalLinkStyle, hoverOptionsStyle);
+    return mergeTextStyles(normalLinkStyle, hoverOptionsStyle);
   }
 
   /// Resolves the final merged `underlineStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveUnderlineStyle(BuildContext context, TextStyle baseStyle) {
     final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.underlineStyle);
-    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
+    return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `highlightStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveHighlightStyle(BuildContext context, TextStyle baseStyle) {
     final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.highlightStyle);
-    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
+    return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `superscriptStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveSuperscriptStyle(BuildContext context, TextStyle baseStyle) {
     final TextStyle? optionsStyle =
         _getMergedStyleFromHierarchy(context, (o) => o.superscriptStyle);
-    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
+    return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `subscriptStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveSubscriptStyle(BuildContext context, TextStyle baseStyle) {
     final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.subscriptStyle);
-    return optionsStyle == null ? null : _mergeStyles(baseStyle, optionsStyle);
+    return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the nearest `superscriptBaselineFactor` from the hierarchy.
@@ -469,63 +413,63 @@ class TextfOptions extends InheritedWidget {
       // Mergeable: accumulate
       final optBold = opt.boldStyle;
       if (optBold != null) {
-        boldStyle = boldStyle == null ? optBold : _mergeStyles(boldStyle, optBold);
+        boldStyle = boldStyle == null ? optBold : mergeTextStyles(boldStyle, optBold);
       }
 
       final optItalic = opt.italicStyle;
       if (optItalic != null) {
-        italicStyle = italicStyle == null ? optItalic : _mergeStyles(italicStyle, optItalic);
+        italicStyle = italicStyle == null ? optItalic : mergeTextStyles(italicStyle, optItalic);
       }
 
       final optBoldItalic = opt.boldItalicStyle;
       if (optBoldItalic != null) {
         boldItalicStyle =
-            boldItalicStyle == null ? optBoldItalic : _mergeStyles(boldItalicStyle, optBoldItalic);
+            boldItalicStyle == null ? optBoldItalic : mergeTextStyles(boldItalicStyle, optBoldItalic);
       }
 
       final optStrike = opt.strikethroughStyle;
       if (optStrike != null) {
         strikethroughStyle =
-            strikethroughStyle == null ? optStrike : _mergeStyles(strikethroughStyle, optStrike);
+            strikethroughStyle == null ? optStrike : mergeTextStyles(strikethroughStyle, optStrike);
       }
 
       final optCode = opt.codeStyle;
       if (optCode != null) {
-        codeStyle = codeStyle == null ? optCode : _mergeStyles(codeStyle, optCode);
+        codeStyle = codeStyle == null ? optCode : mergeTextStyles(codeStyle, optCode);
       }
 
       final optUnderline = opt.underlineStyle;
       if (optUnderline != null) {
         underlineStyle =
-            underlineStyle == null ? optUnderline : _mergeStyles(underlineStyle, optUnderline);
+            underlineStyle == null ? optUnderline : mergeTextStyles(underlineStyle, optUnderline);
       }
 
       final optHighlight = opt.highlightStyle;
       if (optHighlight != null) {
         highlightStyle =
-            highlightStyle == null ? optHighlight : _mergeStyles(highlightStyle, optHighlight);
+            highlightStyle == null ? optHighlight : mergeTextStyles(highlightStyle, optHighlight);
       }
 
       final optSuper = opt.superscriptStyle;
       if (optSuper != null) {
         superscriptStyle =
-            superscriptStyle == null ? optSuper : _mergeStyles(superscriptStyle, optSuper);
+            superscriptStyle == null ? optSuper : mergeTextStyles(superscriptStyle, optSuper);
       }
 
       final optSub = opt.subscriptStyle;
       if (optSub != null) {
-        subscriptStyle = subscriptStyle == null ? optSub : _mergeStyles(subscriptStyle, optSub);
+        subscriptStyle = subscriptStyle == null ? optSub : mergeTextStyles(subscriptStyle, optSub);
       }
 
       final optLink = opt.linkStyle;
       if (optLink != null) {
-        linkStyle = linkStyle == null ? optLink : _mergeStyles(linkStyle, optLink);
+        linkStyle = linkStyle == null ? optLink : mergeTextStyles(linkStyle, optLink);
       }
 
       final optLinkHover = opt.linkHoverStyle;
       if (optLinkHover != null) {
         linkHoverStyle =
-            linkHoverStyle == null ? optLinkHover : _mergeStyles(linkHoverStyle, optLinkHover);
+            linkHoverStyle == null ? optLinkHover : mergeTextStyles(linkHoverStyle, optLinkHover);
       }
 
       // Non-mergeable: overwrite (last value = nearest)
@@ -544,24 +488,24 @@ class TextfOptions extends InheritedWidget {
     }
 
     // Merge accumulated styles onto baseStyle for final comparison
-    final effectiveBold = boldStyle != null ? _mergeStyles(baseStyle, boldStyle) : null;
-    final effectiveItalic = italicStyle != null ? _mergeStyles(baseStyle, italicStyle) : null;
+    final effectiveBold = boldStyle != null ? mergeTextStyles(baseStyle, boldStyle) : null;
+    final effectiveItalic = italicStyle != null ? mergeTextStyles(baseStyle, italicStyle) : null;
     final effectiveBoldItalic =
-        boldItalicStyle != null ? _mergeStyles(baseStyle, boldItalicStyle) : null;
+        boldItalicStyle != null ? mergeTextStyles(baseStyle, boldItalicStyle) : null;
     final effectiveStrike =
-        strikethroughStyle != null ? _mergeStyles(baseStyle, strikethroughStyle) : null;
-    final effectiveCode = codeStyle != null ? _mergeStyles(baseStyle, codeStyle) : null;
+        strikethroughStyle != null ? mergeTextStyles(baseStyle, strikethroughStyle) : null;
+    final effectiveCode = codeStyle != null ? mergeTextStyles(baseStyle, codeStyle) : null;
     final effectiveUnderline =
-        underlineStyle != null ? _mergeStyles(baseStyle, underlineStyle) : null;
+        underlineStyle != null ? mergeTextStyles(baseStyle, underlineStyle) : null;
     final effectiveHighlight =
-        highlightStyle != null ? _mergeStyles(baseStyle, highlightStyle) : null;
+        highlightStyle != null ? mergeTextStyles(baseStyle, highlightStyle) : null;
     final effectiveSuperscript =
-        superscriptStyle != null ? _mergeStyles(baseStyle, superscriptStyle) : null;
+        superscriptStyle != null ? mergeTextStyles(baseStyle, superscriptStyle) : null;
     final effectiveSubscript =
-        subscriptStyle != null ? _mergeStyles(baseStyle, subscriptStyle) : null;
-    final effectiveLink = linkStyle != null ? _mergeStyles(baseStyle, linkStyle) : null;
+        subscriptStyle != null ? mergeTextStyles(baseStyle, subscriptStyle) : null;
+    final effectiveLink = linkStyle != null ? mergeTextStyles(baseStyle, linkStyle) : null;
     final effectiveLinkHover =
-        linkHoverStyle != null ? _mergeStyles(baseStyle, linkHoverStyle) : null;
+        linkHoverStyle != null ? mergeTextStyles(baseStyle, linkHoverStyle) : null;
 
     return Object.hash(
       effectiveBold,

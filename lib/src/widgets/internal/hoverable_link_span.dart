@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/textf_style_utils.dart';
+
 /// An internal StatefulWidget used by Textf's LinkHandler to render interactive links
 /// that can visually change style on hover.
 ///
@@ -81,37 +83,8 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
       final TextStyle innerSpanOriginalStyle = span.style ?? widget.normalStyle;
       final TextStyle targetLinkAppearance = _isHovering ? widget.hoverStyle : widget.normalStyle;
 
-      // 1. Determine Decoration (Merge logic)
-      TextDecoration? finalDecoration;
-      final TextDecoration? linkBaseDecoration = targetLinkAppearance.decoration;
-      final TextDecoration? innerExistingDecoration = innerSpanOriginalStyle.decoration;
-
-      if (linkBaseDecoration != null && linkBaseDecoration != TextDecoration.none) {
-        // ignore: prefer-conditional-expressions
-        if (innerExistingDecoration != null && innerExistingDecoration != TextDecoration.none) {
-          finalDecoration = !innerExistingDecoration.contains(linkBaseDecoration)
-              ? TextDecoration.combine([innerExistingDecoration, linkBaseDecoration])
-              : innerExistingDecoration;
-        } else {
-          finalDecoration = linkBaseDecoration;
-        }
-      } else {
-        finalDecoration = innerExistingDecoration;
-      }
-
-      // 2. Determine Decoration Color and Thickness
-      final Color? finalDecorationColor =
-          targetLinkAppearance.decorationColor ?? innerSpanOriginalStyle.decorationColor;
-      final double? finalDecorationThickness =
-          targetLinkAppearance.decorationThickness ?? innerSpanOriginalStyle.decorationThickness;
-
-      // 3. Construct the merged style
-      final TextStyle finalSpanStyle = innerSpanOriginalStyle.copyWith(
-        color: targetLinkAppearance.color ?? innerSpanOriginalStyle.color,
-        decoration: finalDecoration,
-        decorationColor: finalDecorationColor,
-        decorationThickness: finalDecorationThickness,
-      );
+      final TextStyle finalSpanStyle =
+          applyLinkStyleToSpan(innerSpanOriginalStyle, targetLinkAppearance);
 
       return TextSpan(
         text: span.text,
