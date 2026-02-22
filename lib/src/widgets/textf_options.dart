@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/textf_style_utils.dart';
+import 'internal/textf_options_resolver.dart' as resolver;
 
 /// Configuration options for Textf widgets within a specific scope.
 ///
@@ -142,6 +143,11 @@ class TextfOptions extends InheritedWidget {
   /// If null, defaults to `DefaultStyles.scriptFontSizeFactor` (0.6).
   final double? scriptFontSizeFactor;
 
+  /// Custom alignment for link widgets.
+  ///
+  /// Defaults to [PlaceholderAlignment.baseline] if not specified.
+  final PlaceholderAlignment? linkAlignment;
+
   /// Finds the nearest [TextfOptions] ancestor in the widget tree.
   ///
   /// Returns null if no ancestor is found. This establishes a dependency on the
@@ -163,156 +169,104 @@ class TextfOptions extends InheritedWidget {
     return result;
   }
 
-  // ===== STATIC HELPERS FOR STYLE RESOLUTION LOGIC =====
-
-  /// Gathers all [TextfOptions] widgets from the current context upwards.
-  /// The returned list is ordered from the nearest ancestor to the furthest.
-  static List<TextfOptions> _getAncestorOptions(BuildContext context) {
-    final List<TextfOptions> optionsHierarchy = [];
-    context.visitAncestorElements((element) {
-      if (element.widget is TextfOptions) {
-        optionsHierarchy.add(element.widget as TextfOptions);
-      }
-      return true; // Continue visiting all the way to the root.
-    });
-    return optionsHierarchy;
-  }
-
-  /// Merges a specific [TextStyle] property from the entire options hierarchy.
-  ///
-  /// It achieves this by reversing the ancestor list (to start from the
-  /// top-most parent) and iteratively merging styles downwards.
-  static TextStyle? _getMergedStyleFromHierarchy(
-    BuildContext context,
-    TextStyle? Function(TextfOptions) getter,
-  ) {
-    final List<TextfOptions> hierarchy = _getAncestorOptions(context);
-    if (hierarchy.isEmpty) {
-      return null;
-    }
-
-    // Reverse the list to start from the top-most ancestor and merge down.
-    final Iterable<TextfOptions> reversedHierarchy = hierarchy.reversed;
-    TextStyle? finalStyle;
-
-    for (final options in reversedHierarchy) {
-      final TextStyle? localStyle = getter(options);
-      if (localStyle != null) {
-        finalStyle = finalStyle == null ? localStyle : mergeTextStyles(finalStyle, localStyle);
-      }
-    }
-    return finalStyle;
-  }
-
-  /// Finds the first non-null value for a given property by searching up
-  /// the widget tree (from nearest to furthest).
-  ///
-  /// This is used for non-mergeable properties like callbacks and enums where
-  /// a "nearest wins" strategy is appropriate.
-  static T? _findFirstAncestorValue<T>(
-    BuildContext context,
-    T? Function(TextfOptions) getter,
-  ) {
-    final List<TextfOptions> hierarchy = _getAncestorOptions(context);
-    for (final options in hierarchy) {
-      final T? value = getter(options);
-      if (value != null) {
-        return value; // Found the nearest value, stop searching.
-      }
-    }
-    return null; // Reached the top with no value found.
-  }
-
   // ===== EFFECTIVE GETTERS (Used by TextfStyleResolver) =====
 
   /// Resolves the final merged `boldStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveBoldStyle(BuildContext context, TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.boldStyle);
+    final TextStyle? optionsStyle =
+        resolver.getMergedStyleFromHierarchy(context, (o) => o.boldStyle);
     return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `italicStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveItalicStyle(BuildContext context, TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.italicStyle);
+    final TextStyle? optionsStyle =
+        resolver.getMergedStyleFromHierarchy(context, (o) => o.italicStyle);
     return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `boldItalicStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveBoldItalicStyle(BuildContext context, TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.boldItalicStyle);
+    final TextStyle? optionsStyle =
+        resolver.getMergedStyleFromHierarchy(context, (o) => o.boldItalicStyle);
     return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `strikethroughStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveStrikethroughStyle(BuildContext context, TextStyle baseStyle) {
     final TextStyle? optionsStyle =
-        _getMergedStyleFromHierarchy(context, (o) => o.strikethroughStyle);
+        resolver.getMergedStyleFromHierarchy(context, (o) => o.strikethroughStyle);
     return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `codeStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveCodeStyle(BuildContext context, TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.codeStyle);
+    final TextStyle? optionsStyle =
+        resolver.getMergedStyleFromHierarchy(context, (o) => o.codeStyle);
     return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `linkStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveLinkStyle(BuildContext context, TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.linkStyle);
+    final TextStyle? optionsStyle =
+        resolver.getMergedStyleFromHierarchy(context, (o) => o.linkStyle);
     return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `linkHoverStyle` and merges it onto the final `normalLinkStyle`.
   TextStyle? getEffectiveLinkHoverStyle(BuildContext context, TextStyle normalLinkStyle) {
     final TextStyle? hoverOptionsStyle =
-        _getMergedStyleFromHierarchy(context, (o) => o.linkHoverStyle);
+        resolver.getMergedStyleFromHierarchy(context, (o) => o.linkHoverStyle);
     if (hoverOptionsStyle == null) return null;
     return mergeTextStyles(normalLinkStyle, hoverOptionsStyle);
   }
 
   /// Resolves the final merged `underlineStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveUnderlineStyle(BuildContext context, TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.underlineStyle);
+    final TextStyle? optionsStyle =
+        resolver.getMergedStyleFromHierarchy(context, (o) => o.underlineStyle);
     return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `highlightStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveHighlightStyle(BuildContext context, TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.highlightStyle);
+    final TextStyle? optionsStyle =
+        resolver.getMergedStyleFromHierarchy(context, (o) => o.highlightStyle);
     return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `superscriptStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveSuperscriptStyle(BuildContext context, TextStyle baseStyle) {
     final TextStyle? optionsStyle =
-        _getMergedStyleFromHierarchy(context, (o) => o.superscriptStyle);
+        resolver.getMergedStyleFromHierarchy(context, (o) => o.superscriptStyle);
     return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the final merged `subscriptStyle` from the hierarchy and merges it onto `baseStyle`.
   TextStyle? getEffectiveSubscriptStyle(BuildContext context, TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _getMergedStyleFromHierarchy(context, (o) => o.subscriptStyle);
+    final TextStyle? optionsStyle =
+        resolver.getMergedStyleFromHierarchy(context, (o) => o.subscriptStyle);
     return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Resolves the nearest `superscriptBaselineFactor` from the hierarchy.
   double? getEffectiveSuperscriptBaselineFactor(BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.superscriptBaselineFactor);
+    return resolver.findFirstAncestorValue(context, (o) => o.superscriptBaselineFactor);
   }
 
   /// Resolves the nearest `subscriptBaselineFactor` from the hierarchy.
   double? getEffectiveSubscriptBaselineFactor(BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.subscriptBaselineFactor);
+    return resolver.findFirstAncestorValue(context, (o) => o.subscriptBaselineFactor);
   }
 
   /// Resolves the nearest `scriptFontSizeFactor` from the hierarchy.
   double? getEffectiveScriptFontSizeFactor(BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.scriptFontSizeFactor);
+    return resolver.findFirstAncestorValue(context, (o) => o.scriptFontSizeFactor);
   }
 
   /// Resolves the nearest `onLinkTap` callback from the hierarchy.
   void Function(String url, String displayText)? getEffectiveOnLinkTap(BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.onLinkTap);
+    return resolver.findFirstAncestorValue(context, (o) => o.onLinkTap);
   }
 
   /// Resolves the nearest `onLinkHover` callback from the hierarchy.
@@ -320,27 +274,22 @@ class TextfOptions extends InheritedWidget {
       getEffectiveOnLinkHover(
     BuildContext context,
   ) {
-    return _findFirstAncestorValue(context, (o) => o.onLinkHover);
+    return resolver.findFirstAncestorValue(context, (o) => o.onLinkHover);
   }
 
   /// Resolves the nearest `linkMouseCursor` from the hierarchy.
   MouseCursor? getEffectiveLinkMouseCursor(BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.linkMouseCursor);
+    return resolver.findFirstAncestorValue(context, (o) => o.linkMouseCursor);
   }
 
   /// Resolves the nearest `strikethroughThickness` from the hierarchy.
   double? getEffectiveStrikethroughThickness(BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.strikethroughThickness);
+    return resolver.findFirstAncestorValue(context, (o) => o.strikethroughThickness);
   }
-
-  /// Custom alignment for link widgets.
-  ///
-  /// Defaults to [PlaceholderAlignment.baseline] if not specified.
-  final PlaceholderAlignment? linkAlignment;
 
   /// Resolves the nearest `linkAlignment` from the hierarchy.
   PlaceholderAlignment? getEffectiveLinkAlignment(BuildContext context) {
-    return _findFirstAncestorValue(context, (o) => o.linkAlignment);
+    return resolver.findFirstAncestorValue(context, (o) => o.linkAlignment);
   }
 
   /// Checks if this instance has the same style-related properties as [other].
@@ -377,156 +326,8 @@ class TextfOptions extends InheritedWidget {
   ///
   /// Performance: O(Depth) tree walk + O(Depth) property iteration.
   /// This is much faster than calling getEffective... for each property,
-  /// which would be O(Properties × Depth).
+  /// which would be O(Properties x Depth).
   static int computeResolvedHash(BuildContext context, TextStyle baseStyle) {
-    final List<TextfOptions> hierarchy = _getAncestorOptions(context);
-
-    if (hierarchy.isEmpty) return 0;
-
-    // === MERGEABLE STYLES ===
-    // Accumulated from root → nearest (hierarchy.reversed)
-    TextStyle? boldStyle;
-    TextStyle? italicStyle;
-    TextStyle? boldItalicStyle;
-    TextStyle? strikethroughStyle;
-    TextStyle? codeStyle;
-    TextStyle? underlineStyle;
-    TextStyle? highlightStyle;
-    TextStyle? superscriptStyle;
-    TextStyle? subscriptStyle;
-    TextStyle? linkStyle;
-    TextStyle? linkHoverStyle;
-
-    // === NON-MERGEABLE (NEAREST WINS) ===
-    // Overwritten from root → nearest, so final value = nearest
-    MouseCursor? linkMouseCursor;
-    PlaceholderAlignment? linkAlignment;
-    double? strikethroughThickness;
-    double? superscriptBaselineFactor;
-    double? subscriptBaselineFactor;
-    double? scriptFontSizeFactor;
-    void Function(String, String)? onLinkTap;
-    void Function(String, String, {required bool isHovering})? onLinkHover;
-
-    // Single pass: root → nearest
-    for (final opt in hierarchy.reversed) {
-      // Mergeable: accumulate
-      final optBold = opt.boldStyle;
-      if (optBold != null) {
-        boldStyle = boldStyle == null ? optBold : mergeTextStyles(boldStyle, optBold);
-      }
-
-      final optItalic = opt.italicStyle;
-      if (optItalic != null) {
-        italicStyle = italicStyle == null ? optItalic : mergeTextStyles(italicStyle, optItalic);
-      }
-
-      final optBoldItalic = opt.boldItalicStyle;
-      if (optBoldItalic != null) {
-        boldItalicStyle =
-            boldItalicStyle == null ? optBoldItalic : mergeTextStyles(boldItalicStyle, optBoldItalic);
-      }
-
-      final optStrike = opt.strikethroughStyle;
-      if (optStrike != null) {
-        strikethroughStyle =
-            strikethroughStyle == null ? optStrike : mergeTextStyles(strikethroughStyle, optStrike);
-      }
-
-      final optCode = opt.codeStyle;
-      if (optCode != null) {
-        codeStyle = codeStyle == null ? optCode : mergeTextStyles(codeStyle, optCode);
-      }
-
-      final optUnderline = opt.underlineStyle;
-      if (optUnderline != null) {
-        underlineStyle =
-            underlineStyle == null ? optUnderline : mergeTextStyles(underlineStyle, optUnderline);
-      }
-
-      final optHighlight = opt.highlightStyle;
-      if (optHighlight != null) {
-        highlightStyle =
-            highlightStyle == null ? optHighlight : mergeTextStyles(highlightStyle, optHighlight);
-      }
-
-      final optSuper = opt.superscriptStyle;
-      if (optSuper != null) {
-        superscriptStyle =
-            superscriptStyle == null ? optSuper : mergeTextStyles(superscriptStyle, optSuper);
-      }
-
-      final optSub = opt.subscriptStyle;
-      if (optSub != null) {
-        subscriptStyle = subscriptStyle == null ? optSub : mergeTextStyles(subscriptStyle, optSub);
-      }
-
-      final optLink = opt.linkStyle;
-      if (optLink != null) {
-        linkStyle = linkStyle == null ? optLink : mergeTextStyles(linkStyle, optLink);
-      }
-
-      final optLinkHover = opt.linkHoverStyle;
-      if (optLinkHover != null) {
-        linkHoverStyle =
-            linkHoverStyle == null ? optLinkHover : mergeTextStyles(linkHoverStyle, optLinkHover);
-      }
-
-      // Non-mergeable: overwrite (last value = nearest)
-      if (opt.linkMouseCursor != null) linkMouseCursor = opt.linkMouseCursor;
-      if (opt.linkAlignment != null) linkAlignment = opt.linkAlignment;
-      if (opt.strikethroughThickness != null) strikethroughThickness = opt.strikethroughThickness;
-      if (opt.superscriptBaselineFactor != null) {
-        superscriptBaselineFactor = opt.superscriptBaselineFactor;
-      }
-      if (opt.subscriptBaselineFactor != null) {
-        subscriptBaselineFactor = opt.subscriptBaselineFactor;
-      }
-      if (opt.scriptFontSizeFactor != null) scriptFontSizeFactor = opt.scriptFontSizeFactor;
-      if (opt.onLinkTap != null) onLinkTap = opt.onLinkTap;
-      if (opt.onLinkHover != null) onLinkHover = opt.onLinkHover;
-    }
-
-    // Merge accumulated styles onto baseStyle for final comparison
-    final effectiveBold = boldStyle != null ? mergeTextStyles(baseStyle, boldStyle) : null;
-    final effectiveItalic = italicStyle != null ? mergeTextStyles(baseStyle, italicStyle) : null;
-    final effectiveBoldItalic =
-        boldItalicStyle != null ? mergeTextStyles(baseStyle, boldItalicStyle) : null;
-    final effectiveStrike =
-        strikethroughStyle != null ? mergeTextStyles(baseStyle, strikethroughStyle) : null;
-    final effectiveCode = codeStyle != null ? mergeTextStyles(baseStyle, codeStyle) : null;
-    final effectiveUnderline =
-        underlineStyle != null ? mergeTextStyles(baseStyle, underlineStyle) : null;
-    final effectiveHighlight =
-        highlightStyle != null ? mergeTextStyles(baseStyle, highlightStyle) : null;
-    final effectiveSuperscript =
-        superscriptStyle != null ? mergeTextStyles(baseStyle, superscriptStyle) : null;
-    final effectiveSubscript =
-        subscriptStyle != null ? mergeTextStyles(baseStyle, subscriptStyle) : null;
-    final effectiveLink = linkStyle != null ? mergeTextStyles(baseStyle, linkStyle) : null;
-    final effectiveLinkHover =
-        linkHoverStyle != null ? mergeTextStyles(baseStyle, linkHoverStyle) : null;
-
-    return Object.hash(
-      effectiveBold,
-      effectiveItalic,
-      effectiveBoldItalic,
-      effectiveStrike,
-      effectiveCode,
-      effectiveUnderline,
-      effectiveHighlight,
-      effectiveSuperscript,
-      effectiveSubscript,
-      effectiveLink,
-      effectiveLinkHover,
-      linkMouseCursor,
-      linkAlignment,
-      strikethroughThickness,
-      superscriptBaselineFactor,
-      subscriptBaselineFactor,
-      scriptFontSizeFactor,
-      onLinkTap,
-      onLinkHover,
-    );
+    return resolver.computeOptionsResolvedHash(context, baseStyle);
   }
 }
