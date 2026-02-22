@@ -51,7 +51,6 @@ class TextfSpanBuilder {
   /// LRU cache for tokenization and pairing results.
   static final Map<String, _CacheEntry> _cache = <String, _CacheEntry>{};
 
-
   // Link token structure offsets (mirrors LinkHandler constants).
   static const int _linkTextOffset = 1;
   static const int _linkSeparatorOffset = 2;

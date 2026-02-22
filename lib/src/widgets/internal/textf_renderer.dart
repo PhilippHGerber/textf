@@ -168,7 +168,8 @@ class TextfRendererState extends State<TextfRenderer> {
       optionsHash: currentOptionsHash,
     );
 
-    if (cachedSpans != null &&
+    if (cachedSpans != null //
+        &&
         placeholdersMatch &&
         themeMatch &&
         currentKey == _lastKey) {

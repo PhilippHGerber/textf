@@ -123,7 +123,6 @@ class HomeScreen extends StatelessWidget {
                 toggleThemeMode: toggleThemeMode,
               ),
             ),
-
             _buildExampleTile(
               context,
               Textf(

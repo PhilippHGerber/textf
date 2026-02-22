@@ -49,7 +49,6 @@ class TextfParser {
   /// Uses a LinkedHashMap to implement a simple LRU cache.
   static final Map<String, _ParsedCacheEntry> _cache = <String, _ParsedCacheEntry>{};
 
-
   /// Clears the internal parser cache.
   ///
   /// Call this method to free memory in low-memory situations,

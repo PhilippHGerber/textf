@@ -120,8 +120,7 @@ void main() {
         expect(resolved.fontSize, baseStyle.fontSize);
       });
 
-      testWidgets('resolveStyle for boldItalic uses DefaultStyles.boldItalicStyle',
-          (tester) async {
+      testWidgets('resolveStyle for boldItalic uses DefaultStyles.boldItalicStyle', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
         final resolved = resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle);
@@ -153,8 +152,7 @@ void main() {
         expect(resolved.fontSize, baseStyle.fontSize); // Base font size
       });
 
-      testWidgets('resolveStyle for underline uses DefaultStyles.underlineStyle',
-          (tester) async {
+      testWidgets('resolveStyle for underline uses DefaultStyles.underlineStyle', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
         final resolved = resolver.resolveStyle(FormatMarkerType.underline, baseStyle);

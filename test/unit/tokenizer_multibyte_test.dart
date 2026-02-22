@@ -76,7 +76,8 @@ void main() {
     // further stress-test the index calculations.
     test('Correctly tokenizes link text with a complex emoji', () {
       // ARRANGE
-      const text = '[Family emoji \u{1F468}\u200D\u{1F469}\u200D\u{1F467}\u200D\u{1F466} link](url)';
+      const text =
+          '[Family emoji \u{1F468}\u200D\u{1F469}\u200D\u{1F467}\u200D\u{1F466} link](url)';
       final tokens = tokenizer.tokenize(text);
 
       // ASSERT
@@ -121,7 +122,8 @@ void main() {
       // Since there are no formatting markers, it should produce a single text token.
       expect(tokens.length, 1);
       expect(tokens.first, isA<TextToken>());
-      expect((tokens.first as TextToken).value, text, reason: 'The entire string should be one text token');
+      expect((tokens.first as TextToken).value, text,
+          reason: 'The entire string should be one text token');
     });
   });
 }

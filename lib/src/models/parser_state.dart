@@ -81,10 +81,8 @@ class ParserState {
     final String text = textBuffer.toString();
     final currentStyle = getCurrentStyle(context);
 
-    final bool isSuperscript =
-        formatStack.any((e) => e.type == FormatMarkerType.superscript);
-    final bool isSubscript =
-        formatStack.any((e) => e.type == FormatMarkerType.subscript);
+    final bool isSuperscript = formatStack.any((e) => e.type == FormatMarkerType.superscript);
+    final bool isSubscript = formatStack.any((e) => e.type == FormatMarkerType.subscript);
 
     if (isSuperscript || isSubscript) {
       spans.add(

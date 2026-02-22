@@ -29,7 +29,6 @@ class TextfStyleResolver {
   final ThemeData _theme;
   final TextfOptions? _nearestOptions;
 
-
   /// Resolves the final TextStyle for a given format marker type and base style.
   ///
   /// Use this for standard formatting types like bold, italic, code, strikethrough,

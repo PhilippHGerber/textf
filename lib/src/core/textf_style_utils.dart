@@ -84,8 +84,7 @@ TextStyle applyLinkStyleToSpan(TextStyle spanStyle, TextStyle linkAppearance) {
   }
 
   // 2. Determine Decoration Color and Thickness
-  final Color? finalDecorationColor =
-      linkAppearance.decorationColor ?? spanStyle.decorationColor;
+  final Color? finalDecorationColor = linkAppearance.decorationColor ?? spanStyle.decorationColor;
   final double? finalDecorationThickness =
       linkAppearance.decorationThickness ?? spanStyle.decorationThickness;
 

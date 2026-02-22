@@ -396,7 +396,8 @@ void main() {
 
     group('Edge Cases', () {
       test('Unicode characters', () {
-        final tokens = tokenizer.tokenize('Unicode: **\u4F60\u597D** and *\u8868\u60C5\u7B26\u53F7* ~~\u5220\u9664\u7EBF~~');
+        final tokens = tokenizer.tokenize(
+            'Unicode: **\u4F60\u597D** and *\u8868\u60C5\u7B26\u53F7* ~~\u5220\u9664\u7EBF~~');
         expect(tokens.length, 12);
         expect(tokens[2], isA<TextToken>());
         expect((tokens[2] as TextToken).value, '\u4F60\u597D');
