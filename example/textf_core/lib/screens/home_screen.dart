@@ -4,6 +4,7 @@ import 'package:textf/textf.dart';
 
 import 'basic_formatting_screen.dart';
 import 'complex_formatting_screen.dart';
+import 'editing_controller_screen.dart';
 import 'nested_formatting_screen.dart';
 import 'placeholder_example_screen.dart';
 import 'screenshot_screen.dart';
@@ -58,7 +59,20 @@ class HomeScreen extends StatelessWidget {
       body: SelectionArea(
         child: ListView(
           children: [
-            // Add tile for the new Theme Example Screen
+            _buildExampleTile(
+              context,
+              Textf(
+                '{new} TextfEditingController',
+                placeholders: {
+                  'new': badgeNew,
+                },
+              ),
+              const Text('Live formatting in TextField & TextFormField'),
+              EditingControllerScreen(
+                currentThemeMode: currentThemeMode,
+                toggleThemeMode: toggleThemeMode,
+              ),
+            ),
             _buildExampleTile(
               context,
               const Text('Theme Examples'),
