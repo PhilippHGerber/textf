@@ -139,9 +139,9 @@ class TextfSpanBuilder {
     final resolver = TextfStyleResolver(context);
 
     // --- Marker styles ---
-    final activeMarkerStyle = _resolveMarkerStyle(baseStyle);
+    final activeMarkerStyle = _resolveMarkerStyle(baseStyle, context);
     final inactiveMarkerStyle = cursorPosition != null
-        ? _resolveInactiveMarkerStyle(baseStyle, markerOpacity)
+        ? _resolveInactiveMarkerStyle(baseStyle, markerOpacity, context)
         : activeMarkerStyle;
 
     // --- Processing State ---
@@ -286,15 +286,15 @@ class TextfSpanBuilder {
   }
 
   /// Creates a dimmed style for formatting markers.
-  static TextStyle _resolveMarkerStyle(TextStyle baseStyle) {
-    final effectiveColor = baseStyle.color;
-    if (effectiveColor != null) {
-      return baseStyle.copyWith(
-        color: effectiveColor.withValues(alpha: _markerOpacity),
-      );
-    }
+  ///
+  /// Falls back to `Theme.of(context).colorScheme.onSurface` when
+  /// [baseStyle] carries no explicit color, ensuring correct appearance
+  /// on both light and dark themes.
+  TextStyle _resolveMarkerStyle(TextStyle baseStyle, BuildContext context) {
+    final effectiveColor =
+        baseStyle.color ?? Theme.of(context).colorScheme.onSurface;
     return baseStyle.copyWith(
-      color: const Color(0xFF000000).withValues(alpha: _markerOpacity),
+      color: effectiveColor.withValues(alpha: _markerOpacity),
     );
   }
 
@@ -303,9 +303,13 @@ class TextfSpanBuilder {
   /// When [opacity] is `0.0`, markers are fully hidden with near-zero font
   /// size. When between `0.0` and `1.0`, markers fade with interpolated alpha
   /// at normal font size (paint-only change, no relayout).
-  static TextStyle _resolveInactiveMarkerStyle(
+  ///
+  /// Falls back to `Theme.of(context).colorScheme.onSurface` when
+  /// [baseStyle] carries no explicit color.
+  TextStyle _resolveInactiveMarkerStyle(
     TextStyle baseStyle,
     double opacity,
+    BuildContext context,
   ) {
     if (opacity == 0.0) {
       // Fully hidden: collapse to near-zero size + transparent.
@@ -318,7 +322,8 @@ class TextfSpanBuilder {
       );
     }
     // Animating: normal font size, interpolated alpha.
-    final effectiveColor = baseStyle.color ?? const Color(0xFF000000);
+    final effectiveColor =
+        baseStyle.color ?? Theme.of(context).colorScheme.onSurface;
     return baseStyle.copyWith(
       color: effectiveColor.withValues(alpha: opacity * _markerOpacity),
     );
