@@ -37,6 +37,14 @@ class _CacheEntry {
 /// - **Placeholders** `{key}`: Rendered as literal text (no substitution).
 /// - **Super/subscript** `^text^` / `~text~`: Font size is reduced but no
 ///   vertical offset is applied (stays on baseline).
+///
+/// **Cache note:** The internal LRU cache (`_cache`) is `static` and shared
+/// across all `TextfSpanBuilder` instances. The cache key is the raw text
+/// string only. If you construct multiple instances with different custom
+/// tokenizers, the first to cache a given string will determine the result
+/// for all instances. In practice this is not a concern because
+/// `TextfEditingController` uses a single shared instance. Revisit if a
+/// second tokenizer is ever introduced.
 class TextfSpanBuilder {
   /// Creates a new [TextfSpanBuilder] instance.
   ///
@@ -273,6 +281,9 @@ class TextfSpanBuilder {
           textBuffer.write('](');
         case LinkEndToken():
           textBuffer.write(')');
+        // Dead code: PlaceholderToken is handled before the switch
+        // via the early `if` guard at the top of the loop. This case
+        // exists only to satisfy Dart's exhaustive sealed-class switch.
         case PlaceholderToken(:final key):
           textBuffer.write('{$key}');
       }
@@ -293,8 +304,12 @@ class TextfSpanBuilder {
   TextStyle _resolveMarkerStyle(TextStyle baseStyle, BuildContext context) {
     final effectiveColor =
         baseStyle.color ?? Theme.of(context).colorScheme.onSurface;
-    return baseStyle.copyWith(
+    // Only carry color and fontSize from baseStyle. fontWeight, fontStyle,
+    // and other typographic properties are intentionally reset so that markers
+    // always appear as lightweight dim metadata, regardless of ambient style.
+    return TextStyle(
       color: effectiveColor.withValues(alpha: _markerOpacity),
+      fontSize: baseStyle.fontSize,
     );
   }
 
@@ -311,21 +326,25 @@ class TextfSpanBuilder {
     double opacity,
     BuildContext context,
   ) {
-    if (opacity == 0.0) {
+    if (opacity <= 0.0) {
       // Fully hidden: collapse to near-zero size + transparent.
       // Negative letterSpacing collapses residual glyph advance widths,
       // preventing visible gaps when many characters are hidden (e.g. URLs).
-      return baseStyle.copyWith(
-        color: const Color(0x00000000),
+      // Use <= rather than == to catch near-zero computed values from
+      // CurvedAnimation (e.g. 2.2e-16) that would otherwise skip this path.
+      return const TextStyle(
+        color: Color(0x00000000),
         fontSize: _hiddenFontSize,
         letterSpacing: -_hiddenFontSize * _hiddenLetterSpacingFactor,
       );
     }
     // Animating: normal font size, interpolated alpha.
+    // Only carry color and fontSize — see _resolveMarkerStyle for rationale.
     final effectiveColor =
         baseStyle.color ?? Theme.of(context).colorScheme.onSurface;
-    return baseStyle.copyWith(
+    return TextStyle(
       color: effectiveColor.withValues(alpha: opacity * _markerOpacity),
+      fontSize: baseStyle.fontSize,
     );
   }
 
@@ -333,6 +352,12 @@ class TextfSpanBuilder {
   ///
   /// Returns the index after the link structure if valid, or `null` if the
   /// tokens at [index] do not form a complete `[text](url)` link.
+  ///
+  /// **Limitation:** Only plain-text link text is supported. The link text
+  /// token must be a single [TextToken]. A link like `[*italic* text](url)`
+  /// or `[text {placeholder}](url)` fails the completeness check and falls
+  /// through to individual token rendering, producing garbled output with
+  /// stray `[](` characters. Extend [_isCompleteLink] to fix this.
   static int? _processLinkAsText({
     required List<TextfToken> tokens,
     required int index,

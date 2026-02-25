@@ -216,6 +216,10 @@ class TextfEditingController extends TextEditingController {
           afterText,
           context,
           effectiveStyle,
+          // cursorPos - composing.end is negative when the cursor is before
+          // composing.end (i.e. in beforeText or composingText). No token
+          // position in afterText can be negative, so all afterText markers
+          // are treated as inactive — which is the correct behaviour.
           cursorPosition: cursorPos != null ? cursorPos - composing.end : null,
           markerOpacity: markerOpacity,
         ),
