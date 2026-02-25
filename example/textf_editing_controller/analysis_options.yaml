@@ -1,0 +1,10 @@
+include: package:flutter_lints/flutter.yaml
+
+formatter:
+  page_width: 100
+  trailing_commas: preserve
+
+linter:
+  rules:
+    require_trailing_commas: true
+    prefer_relative_imports: true

@@ -125,10 +125,11 @@ class TextfEditingController extends TextEditingController {
     }
 
     // Resolve cursor position for smart-hide mode.
-    final int? cursorPos =
-        markerVisibility == MarkerVisibility.whenActive && value.selection.isValid
-            ? value.selection.baseOffset
-            : null;
+    // When whenActive but no valid selection (e.g. no focus), use -1 so all
+    // markers are treated as inactive (hidden at markerOpacity).
+    final int? cursorPos = markerVisibility == MarkerVisibility.whenActive
+        ? (value.selection.isValid ? value.selection.baseOffset : -1)
+        : null;
 
     // No composing region — parse the full text.
     if (!withComposing || !value.composing.isValid || value.composing.isCollapsed) {
