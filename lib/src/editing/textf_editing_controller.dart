@@ -67,14 +67,15 @@ class TextfEditingController extends TextEditingController {
   /// Creates a [TextfEditingController] with optional initial text.
   TextfEditingController({
     super.text,
-    this.markerVisibility = MarkerVisibility.always,
-  });
+    MarkerVisibility markerVisibility = MarkerVisibility.always,
+  }) : _markerVisibility = markerVisibility;
 
   /// Creates a [TextfEditingController] from a [TextEditingValue].
   TextfEditingController.fromValue(
     super.value, {
-    this.markerVisibility = MarkerVisibility.always,
-  }) : super.fromValue();
+    MarkerVisibility markerVisibility = MarkerVisibility.always,
+  })  : _markerVisibility = markerVisibility,
+        super.fromValue();
 
   static final TextfSpanBuilder _spanBuilder = TextfSpanBuilder();
 
@@ -84,7 +85,16 @@ class TextfEditingController extends TextEditingController {
   /// dimmed styling (default). When set to [MarkerVisibility.whenActive],
   /// only markers surrounding the cursor are visible; others are hidden
   /// based on [markerOpacity].
-  MarkerVisibility markerVisibility;
+  ///
+  /// Setting this property calls [notifyListeners] automatically.
+  MarkerVisibility get markerVisibility => _markerVisibility;
+  MarkerVisibility _markerVisibility;
+
+  set markerVisibility(MarkerVisibility value) {
+    if (_markerVisibility == value) return;
+    _markerVisibility = value;
+    notifyListeners();
+  }
 
   /// Opacity for inactive markers when [markerVisibility] is
   /// [MarkerVisibility.whenActive].
@@ -93,9 +103,20 @@ class TextfEditingController extends TextEditingController {
   /// - `0.0`: markers are fully hidden (collapsed to near-zero font size).
   /// - Values between `0.0` and `1.0` produce a smooth fade effect.
   ///
+  /// Values outside `[0.0, 1.0]` are clamped automatically.
+  /// Setting this property calls [notifyListeners] automatically.
+  ///
   /// This value is typically driven by an external [AnimationController]
   /// in the widget that owns this controller.
-  double markerOpacity = 1;
+  double get markerOpacity => _markerOpacity;
+  double _markerOpacity = 1;
+
+  set markerOpacity(double value) {
+    final clamped = value.clamp(0.0, 1.0);
+    if (_markerOpacity == clamped) return;
+    _markerOpacity = clamped;
+    notifyListeners();
+  }
 
   /// Clears the internal span builder cache.
   ///
@@ -103,10 +124,11 @@ class TextfEditingController extends TextEditingController {
   /// The cache will automatically rebuild as text is parsed.
   static void clearCache() => TextfSpanBuilder.clearCache();
 
-  /// Forces a rebuild of the text spans.
+  /// Forces a rebuild of the text spans without changing state.
   ///
-  /// Call this after changing [markerOpacity] to update the displayed text.
-  /// This is typically called from an [AnimationController] listener.
+  /// The [markerOpacity] and [markerVisibility] setters already call
+  /// [notifyListeners] automatically. Use this only when you need a
+  /// rebuild triggered by external state not tracked by this controller.
   void invalidate() {
     notifyListeners();
   }
@@ -125,7 +147,7 @@ class TextfEditingController extends TextEditingController {
     }
 
     // Resolve cursor position for smart-hide mode.
-    // When whenActive but no valid selection (e.g. no focus), use -1 so all
+    // When whenActive but no valid selection (e.g. no focus), use null so all
     // markers are treated as inactive (hidden at markerOpacity).
     final int? cursorPos = markerVisibility == MarkerVisibility.whenActive
         ? (value.selection.isValid ? value.selection.extentOffset : null)
