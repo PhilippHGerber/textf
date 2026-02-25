@@ -34,7 +34,7 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
           '• ~~Strikethrough~~ and ++Underline++\n'
           '• ==Highlighting== and `inline code` blocks\n\n'
           'Try nesting: **Bold with *italic* styles** or '
-          'combine ==highlighted `code`==.\n\n'
+          'combine ==highlighted *italic* or **bold**==.\n\n'
           'Check out the [Documentation](https://pub.dev/packages/textf) '
           'for more details.',
     );
