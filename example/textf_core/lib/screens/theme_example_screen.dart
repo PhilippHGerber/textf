@@ -17,9 +17,11 @@ class ThemeExampleScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
-    final String themeName = currentBrightness == Brightness.dark ? "Dark" : "Light";
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
+    final String themeName =
+        currentBrightness == Brightness.dark ? "Dark" : "Light";
 
     return Scaffold(
       appBar: AppBar(
@@ -46,7 +48,8 @@ class ThemeExampleScreen extends StatelessWidget {
           const Divider(height: 20),
           ExampleCard(
             title: 'Default Link Styling',
-            description: 'Links ([text](url)) use the theme\'s primary color by default.',
+            description:
+                'Links ([text](url)) use the theme\'s primary color by default.',
             code: '''
 Textf(
   '==Visit== the [Flutter website](https://flutter.dev) '
@@ -62,7 +65,8 @@ Textf(
           const SizedBox(height: 16),
           ExampleCard(
             title: 'Default Code Styling',
-            description: 'Inline code (`code`) uses theme-appropriate background and text colors.',
+            description:
+                'Inline code (`code`) uses theme-appropriate background and text colors.',
             code: '''
 Textf(
   'Check the `pubspec.yaml` and the `main.dart` files.'
@@ -77,7 +81,8 @@ Textf(
           const SizedBox(height: 16),
           ExampleCard(
             title: 'Mixed Default Styles',
-            description: 'Combine default link and code styles within regular text.',
+            description:
+                'Combine default link and code styles within regular text.',
             code: '''
 Textf(
   'Refer to `TextfStyleResolver` in the [source code](https://github.com/PhilippHGerber/textf).'

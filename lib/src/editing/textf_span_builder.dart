@@ -302,8 +302,7 @@ class TextfSpanBuilder {
   /// [baseStyle] carries no explicit color, ensuring correct appearance
   /// on both light and dark themes.
   TextStyle _resolveMarkerStyle(TextStyle baseStyle, BuildContext context) {
-    final effectiveColor =
-        baseStyle.color ?? Theme.of(context).colorScheme.onSurface;
+    final effectiveColor = baseStyle.color ?? Theme.of(context).colorScheme.onSurface;
     // Only carry color and fontSize from baseStyle. fontWeight, fontStyle,
     // and other typographic properties are intentionally reset so that markers
     // always appear as lightweight dim metadata, regardless of ambient style.
@@ -340,8 +339,7 @@ class TextfSpanBuilder {
     }
     // Animating: normal font size, interpolated alpha.
     // Only carry color and fontSize — see _resolveMarkerStyle for rationale.
-    final effectiveColor =
-        baseStyle.color ?? Theme.of(context).colorScheme.onSurface;
+    final effectiveColor = baseStyle.color ?? Theme.of(context).colorScheme.onSurface;
     return TextStyle(
       color: effectiveColor.withValues(alpha: opacity * _markerOpacity),
       fontSize: baseStyle.fontSize,

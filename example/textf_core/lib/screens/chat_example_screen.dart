@@ -18,8 +18,9 @@ class ChatExampleScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Add theme icon logic
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
 
     return Scaffold(
       appBar: AppBar(
@@ -117,15 +118,17 @@ class ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context); // Get theme
     // Use theme colors for bubbles
-    final bubbleColor =
-        isMe ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHighest;
+    final bubbleColor = isMe
+        ? theme.colorScheme.primaryContainer
+        : theme.colorScheme.surfaceContainerHighest;
     // Determine appropriate text color based on bubble color for contrast
     final textColor = isMe
         ? theme.colorScheme.onPrimaryContainer
         : theme.colorScheme.onSurfaceVariant; // Or onSurface
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Adjusted padding
+      padding: const EdgeInsets.symmetric(
+          horizontal: 12, vertical: 8), // Adjusted padding
       decoration: BoxDecoration(
         color: bubbleColor, // Use theme color
         borderRadius: BorderRadius.only(
@@ -159,7 +162,8 @@ class _ChatExampleState extends State<ChatExample> {
       isMe: true,
     ),
     ChatMessage(
-      message: 'Yes! I found the section about **widget rebuilds** particularly _insightful_.',
+      message:
+          'Yes! I found the section about **widget rebuilds** particularly _insightful_.',
       isMe: false,
     ),
     ChatMessage(
@@ -215,7 +219,8 @@ class _ChatExampleState extends State<ChatExample> {
             // Use theme color for list background
             color: theme.colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: .5)),
+            border: Border.all(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: .5)),
           ),
           child: ListView.builder(
             padding: const EdgeInsets.all(8.0),
@@ -227,7 +232,9 @@ class _ChatExampleState extends State<ChatExample> {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4.0),
                 child: Align(
-                  alignment: message.isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: message.isMe
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 250),
                     child: ChatBubble(
@@ -250,7 +257,8 @@ class _ChatExampleState extends State<ChatExample> {
                 controller: _textController,
                 focusNode: _focusNode,
                 decoration: InputDecoration(
-                  hintText: 'Type message (**bold**, _italic_, `code`, [link](url))...',
+                  hintText:
+                      'Type message (**bold**, _italic_, `code`, [link](url))...',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide(
@@ -269,7 +277,8 @@ class _ChatExampleState extends State<ChatExample> {
                     // Border when focused
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide(
-                      color: theme.colorScheme.primary, // Highlight with primary color
+                      color: theme
+                          .colorScheme.primary, // Highlight with primary color
                       width: 1.5,
                     ),
                   ),
@@ -280,7 +289,8 @@ class _ChatExampleState extends State<ChatExample> {
                   isDense: true, // Make it more compact
                 ),
                 onSubmitted: _handleSubmitted,
-                textInputAction: TextInputAction.send, // Action button on keyboard
+                textInputAction:
+                    TextInputAction.send, // Action button on keyboard
                 onTapOutside: (event) {
                   // Dismiss keyboard on tap outside
                   FocusScope.of(context).unfocus();

@@ -18,8 +18,9 @@ class BasicFormattingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine the icon based on the current theme mode
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Basic Formatting'),
@@ -79,7 +80,8 @@ class BasicFormattingScreen extends StatelessWidget {
             SizedBox(height: 16),
             ExampleCard(
               title: 'Code',
-              description: 'Use backticks for inline code (theme-aware default)',
+              description:
+                  'Use backticks for inline code (theme-aware default)',
               code: "Textf('This is `code` text')",
               child: Textf('This is `code` text'),
             ),

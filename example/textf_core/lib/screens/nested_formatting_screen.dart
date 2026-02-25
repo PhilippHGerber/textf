@@ -16,8 +16,9 @@ class NestedFormattingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine the icon based on the current theme mode
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nested Formatting'),
@@ -35,7 +36,8 @@ class NestedFormattingScreen extends StatelessWidget {
           children: const [
             ExampleCard(
               title: 'Bold with Italic',
-              description: 'Bold text containing italic text (using different markers)',
+              description:
+                  'Bold text containing italic text (using different markers)',
               code: 'Textf(\n  \'**Bold with _italic_ inside**\',\n)',
               child: Textf(
                 '**Bold with _italic_ inside**',
@@ -44,7 +46,8 @@ class NestedFormattingScreen extends StatelessWidget {
             SizedBox(height: 16),
             ExampleCard(
               title: 'Italic with Bold',
-              description: 'Italic text containing bold text (using different markers)',
+              description:
+                  'Italic text containing bold text (using different markers)',
               code: 'Textf(\n  \'*Italic with __bold__ inside*\',\n)',
               child: Textf(
                 '*Italic with __bold__ inside*',

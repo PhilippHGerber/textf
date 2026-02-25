@@ -86,7 +86,8 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
     // _launchUrl(url); // Optional auto-launch
   }
 
-  void _handleLinkHover(String url, String rawDisplayText, {required bool isHovering}) {
+  void _handleLinkHover(String url, String rawDisplayText,
+      {required bool isHovering}) {
     if (!mounted) return;
     // Optimization: Only update state/overlay if hover status or URL changes,
     // or if we are definitely starting to hover over a valid URL.
@@ -188,23 +189,27 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
         if (!launched) {
           // Handle case where launchUrl returns false despite canLaunchUrl being true
           messenger.showSnackBar(
-            _buildUrlSnackBar('Could not open $url', Icons.warning_amber, Colors.orange.shade700),
+            _buildUrlSnackBar('Could not open $url', Icons.warning_amber,
+                Colors.orange.shade700),
           );
         }
       } else {
         messenger.showSnackBar(
-          _buildUrlSnackBar('Cannot open URL: $url', Icons.error_outline, Colors.red.shade700),
+          _buildUrlSnackBar('Cannot open URL: $url', Icons.error_outline,
+              Colors.red.shade700),
         );
       }
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
-        _buildUrlSnackBar('Error opening URL: $e', Icons.error_outline, Colors.red.shade700),
+        _buildUrlSnackBar(
+            'Error opening URL: $e', Icons.error_outline, Colors.red.shade700),
       );
     }
   }
 
-  SnackBar _buildUrlSnackBar(String message, IconData icon, Color backgroundColor) {
+  SnackBar _buildUrlSnackBar(
+      String message, IconData icon, Color backgroundColor) {
     // ... (SnackBar builder remains the same)
     return SnackBar(
       content: Row(
@@ -226,8 +231,9 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
   Widget build(BuildContext context) {
     // Determine the icon based on the current theme mode
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
     return Scaffold(
       appBar: AppBar(
         title: const Text('URL Examples'),
@@ -275,7 +281,8 @@ Textf(
             // --- URL with Hover Effect Example ---
             const ExampleCard(
               title: 'URL with Hover Effect',
-              description: 'Demonstrates URL hover interaction (hover to see URL at bottom)',
+              description:
+                  'Demonstrates URL hover interaction (hover to see URL at bottom)',
               code: '''
 TextfOptions(
   linkStyle: TextStyle(
@@ -351,7 +358,8 @@ Textf(
             const ExampleCard(
               // THIS SHOULD NOW WORK FOR CLICK TOO
               title: 'Nested Formatting in URL Text',
-              description: 'URL display text with nested formatting (bold > italic)',
+              description:
+                  'URL display text with nested formatting (bold > italic)',
               code: '''
 Textf(
   'Link with [**nested _italic_ style**](https://example.net)',

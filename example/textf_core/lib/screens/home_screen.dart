@@ -27,8 +27,10 @@ class HomeScreen extends StatelessWidget {
     // Determine the icon based on the current theme mode
     final Brightness currentBrightness = Theme.of(context).brightness;
     final IconData themeIcon = currentBrightness == Brightness.dark
-        ? Icons.light_mode_outlined // Icon to show when it's dark (will switch to light)
-        : Icons.dark_mode_outlined; // Icon to show when it's light (will switch to dark)
+        ? Icons
+            .light_mode_outlined // Icon to show when it's dark (will switch to light)
+        : Icons
+            .dark_mode_outlined; // Icon to show when it's light (will switch to dark)
 
     const WidgetSpan badgeNew = WidgetSpan(
       child: DecoratedBox(
@@ -86,7 +88,8 @@ class HomeScreen extends StatelessWidget {
             _buildExampleTile(
               context,
               const Text('Basic Formatting'),
-              const Text('Simple examples of bold, italic, strikethrough, and code formatting'),
+              const Text(
+                  'Simple examples of bold, italic, strikethrough, and code formatting'),
               BasicFormattingScreen(
                 // Pass down theme info
                 currentThemeMode: currentThemeMode,
@@ -173,7 +176,8 @@ class HomeScreen extends StatelessWidget {
     return Card(
       // Use theme card settings
       // margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6), // Reduced vertical margin
+      margin: const EdgeInsets.symmetric(
+          horizontal: 16, vertical: 6), // Reduced vertical margin
       child: ListTile(
         title: title,
         subtitle: subtitle,

@@ -57,9 +57,12 @@ class ScrollingScenario extends BenchmarkScenario {
 
   final List<String> corpus = _generateCorpus();
   final Map<String, InlineSpan> icons = {
-    'star': const WidgetSpan(child: Icon(Icons.star, size: 16, color: Colors.amber)),
-    'favorite': const WidgetSpan(child: Icon(Icons.favorite, size: 16, color: Colors.red)),
-    'info': const WidgetSpan(child: Icon(Icons.info, size: 16, color: Colors.blue)),
+    'star': const WidgetSpan(
+        child: Icon(Icons.star, size: 16, color: Colors.amber)),
+    'favorite': const WidgetSpan(
+        child: Icon(Icons.favorite, size: 16, color: Colors.red)),
+    'info':
+        const WidgetSpan(child: Icon(Icons.info, size: 16, color: Colors.blue)),
   };
 
   static List<String> _generateCorpus() {
@@ -79,7 +82,8 @@ class ScrollingScenario extends BenchmarkScenario {
     ];
     return List.generate(BenchmarkConfig.corpusSize, (index) {
       final buffer = StringBuffer();
-      int segments = random.nextInt(BenchmarkConfig.maxSegments - BenchmarkConfig.minSegments) +
+      int segments = random.nextInt(
+              BenchmarkConfig.maxSegments - BenchmarkConfig.minSegments) +
           BenchmarkConfig.minSegments;
       for (int i = 0; i < segments; i++) {
         buffer.write(parts[random.nextInt(parts.length)]);
@@ -148,7 +152,13 @@ class AnimationScenario extends BenchmarkScenario {
 
   static String _generateLargeText() {
     final buffer = StringBuffer();
-    final parts = ['Normal ', '**Bold** ', '*Italic* ', '~~Strike~~ ', '[Link](url) '];
+    final parts = [
+      'Normal ',
+      '**Bold** ',
+      '*Italic* ',
+      '~~Strike~~ ',
+      '[Link](url) '
+    ];
     final random = Random(42);
     while (buffer.length < BenchmarkConfig.largeStringLength) {
       buffer.write(parts[random.nextInt(parts.length)]);
@@ -192,9 +202,9 @@ class OptionsRebuildScenario extends BenchmarkScenario {
   String get name => 'Options Rebuild (Cache Stress)';
 
   // Generate a heavy string to make the cost of re-parsing obvious
-  final String heavyText =
-      List.generate(100, (i) => 'Item $i: **Bold**, *Italic*, [Link](https://google.com)')
-          .join('\n');
+  final String heavyText = List.generate(
+          100, (i) => 'Item $i: **Bold**, *Italic*, [Link](https://google.com)')
+      .join('\n');
 
   @override
   Widget build(BuildContext context, BenchmarkTarget target, int offset) {
@@ -202,7 +212,8 @@ class OptionsRebuildScenario extends BenchmarkScenario {
     // but the actual TextfOptions styles remain CONSTANT.
 
     // We construct styles here to simulate "new instances" every frame
-    final dynamicBoldStyle = TextStyle(fontWeight: FontWeight.bold, color: Colors.red);
+    final dynamicBoldStyle =
+        TextStyle(fontWeight: FontWeight.bold, color: Colors.red);
 
     switch (target) {
       case BenchmarkTarget.textf:
@@ -218,7 +229,8 @@ class OptionsRebuildScenario extends BenchmarkScenario {
       case BenchmarkTarget.raw:
         return const Center(child: Text('Raw not applicable for Options test'));
       case BenchmarkTarget.rich:
-        return const Center(child: Text('Rich not applicable for Options test'));
+        return const Center(
+            child: Text('Rich not applicable for Options test'));
     }
   }
 }
@@ -247,7 +259,8 @@ class BenchmarkHome extends StatefulWidget {
   State<BenchmarkHome> createState() => _BenchmarkHomeState();
 }
 
-class _BenchmarkHomeState extends State<BenchmarkHome> with SingleTickerProviderStateMixin {
+class _BenchmarkHomeState extends State<BenchmarkHome>
+    with SingleTickerProviderStateMixin {
   final List<BenchmarkScenario> _scenarios = [
     ScrollingScenario(),
     AnimationScenario(),
@@ -305,7 +318,8 @@ class _BenchmarkHomeState extends State<BenchmarkHome> with SingleTickerProvider
     });
   }
 
-  Future<void> _runScenario(BenchmarkScenario scenario, BenchmarkTarget target) async {
+  Future<void> _runScenario(
+      BenchmarkScenario scenario, BenchmarkTarget target) async {
     setState(() {
       _currentScenario = scenario;
       _currentTarget = target;
@@ -375,7 +389,8 @@ class _BenchmarkHomeState extends State<BenchmarkHome> with SingleTickerProvider
             Expanded(
               flex: 1,
               child: Container(
-                decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!)),
+                decoration:
+                    BoxDecoration(border: Border.all(color: Colors.grey[300]!)),
                 child: Stack(
                   children: [
                     _currentScenario!.build(context, _currentTarget!, _offset),
@@ -387,7 +402,8 @@ class _BenchmarkHomeState extends State<BenchmarkHome> with SingleTickerProvider
                         color: Colors.black54,
                         child: Text(
                           '${_currentScenario!.name} - ${_currentTarget.toString().split('.').last.toUpperCase()}\nFrames: ${_frameTimes.length} / ${BenchmarkConfig.framesToCapture}',
-                          style: const TextStyle(color: Colors.white, fontSize: 11),
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 11),
                         ),
                       ),
                     ),
@@ -428,8 +444,8 @@ class _Dashboard extends StatelessWidget {
             padding: EdgeInsets.only(bottom: 16),
             child: LinearProgressIndicator(),
           ),
-        ...grouped.entries
-            .map((entry) => _ScenarioResultGroup(name: entry.key, results: entry.value)),
+        ...grouped.entries.map((entry) =>
+            _ScenarioResultGroup(name: entry.key, results: entry.value)),
       ],
     );
   }
@@ -473,7 +489,9 @@ class _ScenarioResultGroup extends StatelessWidget {
                       DataCell(Text(r.medianBuildTimeMs.toStringAsFixed(3))),
                       DataCell(Text(r.maxBuildTimeMs.toStringAsFixed(3))),
                       DataCell(
-                        Text(r.microsPerWidget > 0 ? r.microsPerWidget.toStringAsFixed(1) : '-'),
+                        Text(r.microsPerWidget > 0
+                            ? r.microsPerWidget.toStringAsFixed(1)
+                            : '-'),
                       ),
                     ],
                   );
