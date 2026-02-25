@@ -23,8 +23,73 @@ class PairingResolver {
     // First pass: identify simple pairs by type
     _identifySimplePairs(tokens, pairs);
 
+    // Second pass: remove pairs that cross code-span boundaries or are
+    // entirely inside a code span, so they cannot corrupt code pair validity.
+    _removeCodeBoundaryCrossingPairs(tokens, pairs);
+
     // Validate nesting and remove invalid pairs
     return NestingValidator.validatePairs(tokens, pairs);
+  }
+
+  /// Removes non-code pairs that cross a code-span boundary or lie entirely
+  /// inside a code span.
+  ///
+  /// [_identifySimplePairs] uses independent per-type stacks, so a marker of
+  /// another format type that sits inside a code span can be paired with a
+  /// marker outside the span. When [NestingValidator] later detects the
+  /// crossing, it invalidates *both* pairs — including the code pair itself,
+  /// which causes the code span to disappear from the rendered output.
+  ///
+  /// This pass removes the offending non-code pairs *before* they reach
+  /// [NestingValidator], so the code pair is never threatened.
+  ///
+  /// Two cases are handled for each non-code pair `(open, close)`:
+  /// - **Crossing:** exactly one end falls strictly inside a code range →
+  ///   the pair straddles the code boundary and is removed.
+  /// - **Interior:** both ends fall strictly inside the same code range →
+  ///   formatting markers inside code are intentionally suppressed and the
+  ///   pair is removed.
+  static void _removeCodeBoundaryCrossingPairs(
+    List<TextfToken> tokens,
+    Map<int, int> pairs,
+  ) {
+    // Collect all code-span ranges (token-index intervals) from the candidate pairs.
+    final List<(int, int)> codeRanges = [];
+    for (final MapEntry<int, int> entry in pairs.entries) {
+      final int open = entry.key;
+      final int close = entry.value;
+      if (open >= close) continue; // process open→close direction only
+      final token = tokens[open];
+      if (token is FormatMarkerToken && token.markerType == FormatMarkerType.code) {
+        codeRanges.add((open, close));
+      }
+    }
+
+    if (codeRanges.isEmpty) return;
+
+    // Find all non-code pairs that are affected by at least one code range.
+    final List<int> toRemove = [];
+    for (final MapEntry<int, int> entry in pairs.entries) {
+      final int open = entry.key;
+      final int close = entry.value;
+      if (open >= close) continue;
+      final token = tokens[open];
+      if (token is! FormatMarkerToken || token.markerType == FormatMarkerType.code) continue;
+
+      for (final (int codeOpen, int codeClose) in codeRanges) {
+        final bool openInside = open > codeOpen && open < codeClose;
+        final bool closeInside = close > codeOpen && close < codeClose;
+        if (openInside || closeInside) {
+          // Crossing pair (only one end inside) or interior pair (both inside).
+          toRemove
+            ..add(open)
+            ..add(close);
+          break;
+        }
+      }
+    }
+
+    toRemove.forEach(pairs.remove);
   }
 
   /// Identifies simple pairs of matching markers based on token type.
