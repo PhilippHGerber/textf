@@ -128,7 +128,7 @@ class TextfEditingController extends TextEditingController {
     // When whenActive but no valid selection (e.g. no focus), use -1 so all
     // markers are treated as inactive (hidden at markerOpacity).
     final int? cursorPos = markerVisibility == MarkerVisibility.whenActive
-        ? (value.selection.isValid ? value.selection.baseOffset : -1)
+        ? (value.selection.isValid ? value.selection.extentOffset : null)
         : null;
 
     // No composing region — parse the full text.
