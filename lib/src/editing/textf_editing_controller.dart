@@ -148,83 +148,79 @@ class TextfEditingController extends TextEditingController {
     }
 
     // Resolve cursor position for smart-hide mode.
-    // When whenActive but no valid selection (e.g. no focus), use null so all
-    // markers are treated as inactive (hidden at markerOpacity).
     final int? cursorPos = markerVisibility == MarkerVisibility.whenActive
         ? (value.selection.isValid ? value.selection.extentOffset : null)
         : null;
 
-    // No composing region — parse the full text.
+    // 1. ALWAYS parse the entire text as a single unit first.
+    // This ensures all formatting pairs, links, and nesting are resolved correctly.
+    final List<InlineSpan> fullSpans = _spanBuilder.build(
+      text,
+      context,
+      effectiveStyle,
+      cursorPosition: cursorPos,
+      markerOpacity: markerOpacity,
+    );
+
+    // 2. If no composing region is active, just return the parsed spans.
     if (!withComposing || !value.composing.isValid || value.composing.isCollapsed) {
-      final spans = _spanBuilder.build(
-        text,
-        context,
-        effectiveStyle,
-        cursorPosition: cursorPos,
-        markerOpacity: markerOpacity,
-      );
-      return TextSpan(style: effectiveStyle, children: spans);
+      return TextSpan(style: effectiveStyle, children: fullSpans);
     }
 
-    // With composing region: split into before / composing / after segments.
-    // Each segment is parsed independently. The composing segment gets an
-    // additional underline decoration to indicate active IME composition.
-    //
-    // Note: If a formatting marker straddles the composing boundary, it becomes
-    // unpaired in both segments and renders as plain text. This is acceptable
-    // because composing regions are transient IME states.
+    // 3. With composing region: inject the IME underline into the spans.
+    // We iterate through the flat list of spans and "slice" any TextSpan
+    // that overlaps with the composing range.
     final TextRange composing = value.composing;
-    // TextEditingValue.composing uses code unit offsets, matching substring.
-    // ignore: avoid-substring
-    final String beforeText = text.substring(0, composing.start);
-    final String composingText =
-        // ignore: avoid-substring
-        text.substring(composing.start, composing.end);
-    // ignore: avoid-substring
-    final String afterText = text.substring(composing.end);
-
     final List<InlineSpan> children = <InlineSpan>[];
+    const TextStyle composingStyle = TextStyle(decoration: TextDecoration.underline);
 
-    if (beforeText.isNotEmpty) {
-      children.addAll(
-        _spanBuilder.build(
-          beforeText,
-          context,
-          effectiveStyle,
-          cursorPosition: cursorPos,
-          markerOpacity: markerOpacity,
-        ),
-      );
-    }
+    int currentOffset = 0;
 
-    // Composing text gets underline decoration merged on top.
-    final composingStyle = effectiveStyle.merge(
-      const TextStyle(decoration: TextDecoration.underline),
-    );
-    children.addAll(
-      _spanBuilder.build(
-        composingText,
-        context,
-        composingStyle,
-        cursorPosition: cursorPos != null ? cursorPos - composing.start : null,
-        markerOpacity: markerOpacity,
-      ),
-    );
+    for (final InlineSpan span in fullSpans) {
+      final int spanLength = span is TextSpan ? (span.text?.length ?? 0) : 1;
+      final int spanStart = currentOffset;
+      final int spanEnd = currentOffset + spanLength;
 
-    if (afterText.isNotEmpty) {
-      children.addAll(
-        _spanBuilder.build(
-          afterText,
-          context,
-          effectiveStyle,
-          // cursorPos - composing.end is negative when the cursor is before
-          // composing.end (i.e. in beforeText or composingText). No token
-          // position in afterText can be negative, so all afterText markers
-          // are treated as inactive — which is the correct behaviour.
-          cursorPosition: cursorPos != null ? cursorPos - composing.end : null,
-          markerOpacity: markerOpacity,
-        ),
-      );
+      if (spanEnd <= composing.start || spanStart >= composing.end) {
+        // Span is completely outside the composing range
+        children.add(span);
+      } else {
+        // Span overlaps with the composing range
+        if (span is TextSpan) {
+          final String spanText = span.text!;
+
+          // Calculate local intersection indices
+          final int startInSpan = (composing.start > spanStart) ? composing.start - spanStart : 0;
+          final int endInSpan = (composing.end < spanEnd) ? composing.end - spanStart : spanLength;
+
+          // Segment before composing
+          if (startInSpan > 0) {
+            // ignore: avoid-substring
+            children.add(TextSpan(text: spanText.substring(0, startInSpan), style: span.style));
+          }
+
+          // Segment currently composing (inject underline)
+          if (endInSpan > startInSpan) {
+            final TextStyle mergedStyle = span.style?.merge(composingStyle) ?? composingStyle;
+            // ignore: avoid-substring
+            children.add(
+              TextSpan(text: spanText.substring(startInSpan, endInSpan), style: mergedStyle),
+            );
+          }
+
+          // Segment after composing
+          if (endInSpan < spanLength) {
+            // ignore: avoid-substring
+            children.add(TextSpan(text: spanText.substring(endInSpan), style: span.style));
+          }
+        } else if (span is WidgetSpan) {
+          // WidgetSpans (used for preview mode scripts) are atomic.
+          // They take up 1 char space. We just pass them through.
+          children.add(span);
+        }
+      }
+
+      currentOffset += spanLength;
     }
 
     return TextSpan(style: effectiveStyle, children: children);
