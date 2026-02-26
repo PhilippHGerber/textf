@@ -4,6 +4,18 @@ All notable changes to the `textf` package will be documented in this file.
 
 ## 1.2.0 (Unreleased)
 
+### Breaking Changes
+
+* **Strict formatting rules (flanking):** Formatting markers now follow CommonMark-style flanking rules.
+  * **Openers** (e.g. `*text`) must not be followed by whitespace.
+  * **Closers** (e.g. `text*`) must not be preceded by whitespace.
+  * This fixes issues with bullet points (`* Item`) and math expressions (`2 * 3`) mistakenly triggering italic/bold formatting.
+  * *Migration:* If you previously used loose formatting like `* spaced text *`, update it to `*spaced text*`.
+
+### Fixed
+
+* Fixed a bug where a leading bullet-point `*` (e.g. `* ==*NEW*==`) would pair with an inner formatting marker, corrupting the rendered output.
+
 ### Added
 
 * **`TextfExt` String Extension** — Create `Textf` widgets directly from strings with `'Hello **bold**'.textf()`. All `Textf` constructor parameters are supported.

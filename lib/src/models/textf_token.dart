@@ -63,6 +63,8 @@ final class FormatMarkerToken extends TextfToken {
     this.value, {
     required super.position,
     required super.length,
+    this.canOpen = true,
+    this.canClose = true,
   });
 
   /// The specific formatting type this marker represents.
@@ -71,8 +73,21 @@ final class FormatMarkerToken extends TextfToken {
   /// The raw marker characters (e.g., `**`, `~~`).
   final String value;
 
+  /// Whether this marker can act as an opening delimiter.
+  ///
+  /// True when the character immediately after the marker run is not whitespace
+  /// and the marker is not at end-of-string.
+  final bool canOpen;
+
+  /// Whether this marker can act as a closing delimiter.
+  ///
+  /// True when the character immediately before the marker run is not whitespace
+  /// and the marker is not at start-of-string.
+  final bool canClose;
+
   @override
-  String toString() => 'FormatMarkerToken($markerType, "$value" at $position)';
+  String toString() => 'FormatMarkerToken($markerType, "$value" at $position, '
+      'canOpen: $canOpen, canClose: $canClose)';
 }
 
 /// Opening square bracket `[` that begins a link structure.

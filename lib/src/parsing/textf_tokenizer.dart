@@ -92,8 +92,16 @@ class TextfTokenizer {
             codeUnits[pos + 1] == kAsterisk &&
             codeUnits[pos + 2] == kAsterisk) {
           addTextToken(textStart, pos);
+          final flags = _flankingFlags(codeUnits, pos, 3, length);
           tokens.add(
-            FormatMarkerToken(FormatMarkerType.boldItalic, '***', position: pos, length: 3),
+            FormatMarkerToken(
+              FormatMarkerType.boldItalic,
+              '***',
+              position: pos,
+              length: 3,
+              canOpen: flags.canOpen,
+              canClose: flags.canClose,
+            ),
           );
           pos += 3;
           textStart = pos;
@@ -101,14 +109,34 @@ class TextfTokenizer {
         // Check for bold (**)
         else if (pos + 1 < length && codeUnits[pos + 1] == kAsterisk) {
           addTextToken(textStart, pos);
-          tokens.add(FormatMarkerToken(FormatMarkerType.bold, '**', position: pos, length: 2));
+          final flags = _flankingFlags(codeUnits, pos, 2, length);
+          tokens.add(
+            FormatMarkerToken(
+              FormatMarkerType.bold,
+              '**',
+              position: pos,
+              length: 2,
+              canOpen: flags.canOpen,
+              canClose: flags.canClose,
+            ),
+          );
           pos += 2;
           textStart = pos;
         }
         // Italic (*)
         else {
           addTextToken(textStart, pos);
-          tokens.add(FormatMarkerToken(FormatMarkerType.italic, '*', position: pos, length: 1));
+          final flags = _flankingFlags(codeUnits, pos, 1, length);
+          tokens.add(
+            FormatMarkerToken(
+              FormatMarkerType.italic,
+              '*',
+              position: pos,
+              length: 1,
+              canOpen: flags.canOpen,
+              canClose: flags.canClose,
+            ),
+          );
           pos++;
           textStart = pos;
         }
@@ -118,8 +146,16 @@ class TextfTokenizer {
             codeUnits[pos + 1] == kUnderscore &&
             codeUnits[pos + 2] == kUnderscore) {
           addTextToken(textStart, pos);
+          final flags = _flankingFlags(codeUnits, pos, 3, length);
           tokens.add(
-            FormatMarkerToken(FormatMarkerType.boldItalic, '___', position: pos, length: 3),
+            FormatMarkerToken(
+              FormatMarkerType.boldItalic,
+              '___',
+              position: pos,
+              length: 3,
+              canOpen: flags.canOpen,
+              canClose: flags.canClose,
+            ),
           );
           pos += 3;
           textStart = pos;
@@ -127,14 +163,34 @@ class TextfTokenizer {
         // Check for bold (__)
         else if (pos + 1 < length && codeUnits[pos + 1] == kUnderscore) {
           addTextToken(textStart, pos);
-          tokens.add(FormatMarkerToken(FormatMarkerType.bold, '__', position: pos, length: 2));
+          final flags = _flankingFlags(codeUnits, pos, 2, length);
+          tokens.add(
+            FormatMarkerToken(
+              FormatMarkerType.bold,
+              '__',
+              position: pos,
+              length: 2,
+              canOpen: flags.canOpen,
+              canClose: flags.canClose,
+            ),
+          );
           pos += 2;
           textStart = pos;
         }
         // Italic (_)
         else {
           addTextToken(textStart, pos);
-          tokens.add(FormatMarkerToken(FormatMarkerType.italic, '_', position: pos, length: 1));
+          final flags = _flankingFlags(codeUnits, pos, 1, length);
+          tokens.add(
+            FormatMarkerToken(
+              FormatMarkerType.italic,
+              '_',
+              position: pos,
+              length: 1,
+              canOpen: flags.canOpen,
+              canClose: flags.canClose,
+            ),
+          );
           pos++;
           textStart = pos;
         }
@@ -142,16 +198,32 @@ class TextfTokenizer {
         // Check for strikethrough (~~)
         if (pos + 1 < length && codeUnits[pos + 1] == kTilde) {
           addTextToken(textStart, pos);
+          final flags = _flankingFlags(codeUnits, pos, 2, length);
           tokens.add(
-            FormatMarkerToken(FormatMarkerType.strikethrough, '~~', position: pos, length: 2),
+            FormatMarkerToken(
+              FormatMarkerType.strikethrough,
+              '~~',
+              position: pos,
+              length: 2,
+              canOpen: flags.canOpen,
+              canClose: flags.canClose,
+            ),
           );
           pos += 2;
           textStart = pos;
         } else {
           // Single tilde for subscript
           addTextToken(textStart, pos);
+          final flags = _flankingFlags(codeUnits, pos, 1, length);
           tokens.add(
-            FormatMarkerToken(FormatMarkerType.subscript, '~', position: pos, length: 1),
+            FormatMarkerToken(
+              FormatMarkerType.subscript,
+              '~',
+              position: pos,
+              length: 1,
+              canOpen: flags.canOpen,
+              canClose: flags.canClose,
+            ),
           );
           pos++;
           textStart = pos;
@@ -159,23 +231,49 @@ class TextfTokenizer {
       } else if (currentChar == kCaret) {
         // Caret for superscript
         addTextToken(textStart, pos);
+        final flags = _flankingFlags(codeUnits, pos, 1, length);
         tokens.add(
-          FormatMarkerToken(FormatMarkerType.superscript, '^', position: pos, length: 1),
+          FormatMarkerToken(
+            FormatMarkerType.superscript,
+            '^',
+            position: pos,
+            length: 1,
+            canOpen: flags.canOpen,
+            canClose: flags.canClose,
+          ),
         );
         pos++;
         textStart = pos;
       } else if (currentChar == kBacktick) {
         // Inline code (`)
         addTextToken(textStart, pos);
-        tokens.add(FormatMarkerToken(FormatMarkerType.code, '`', position: pos, length: 1));
+        final flags = _flankingFlags(codeUnits, pos, 1, length);
+        tokens.add(
+          FormatMarkerToken(
+            FormatMarkerType.code,
+            '`',
+            position: pos,
+            length: 1,
+            canOpen: flags.canOpen,
+            canClose: flags.canClose,
+          ),
+        );
         pos++;
         textStart = pos;
       } else if (currentChar == kPlus) {
         // Check for underline (++)
         if (pos + 1 < length && codeUnits[pos + 1] == kPlus) {
           addTextToken(textStart, pos);
+          final flags = _flankingFlags(codeUnits, pos, 2, length);
           tokens.add(
-            FormatMarkerToken(FormatMarkerType.underline, '++', position: pos, length: 2),
+            FormatMarkerToken(
+              FormatMarkerType.underline,
+              '++',
+              position: pos,
+              length: 2,
+              canOpen: flags.canOpen,
+              canClose: flags.canClose,
+            ),
           );
           pos += 2;
           textStart = pos;
@@ -187,8 +285,16 @@ class TextfTokenizer {
         // Check for highlight (==)
         if (pos + 1 < length && codeUnits[pos + 1] == kEquals) {
           addTextToken(textStart, pos);
+          final flags = _flankingFlags(codeUnits, pos, 2, length);
           tokens.add(
-            FormatMarkerToken(FormatMarkerType.highlight, '==', position: pos, length: 2),
+            FormatMarkerToken(
+              FormatMarkerType.highlight,
+              '==',
+              position: pos,
+              length: 2,
+              canOpen: flags.canOpen,
+              canClose: flags.canClose,
+            ),
           );
           pos += 2;
           textStart = pos;
@@ -231,6 +337,33 @@ class TextfTokenizer {
 
     addTextToken(textStart, pos);
     return tokens;
+  }
+
+  /// Returns whether [codeUnit] is an ASCII whitespace character
+  /// (space, tab, LF, or CR).
+  bool _isWhitespace(int codeUnit) =>
+      codeUnit == 0x20 || codeUnit == 0x09 || codeUnit == 0x0A || codeUnit == 0x0D;
+
+  /// Computes left- and right-flanking flags for a marker run.
+  ///
+  /// * [pos] — start of the marker in [codeUnits].
+  /// * [tokenLength] — number of characters in the marker run.
+  /// * [totalLength] — total length of the source string.
+  ///
+  /// `canOpen` is true when the first character after the run is not
+  /// whitespace (and the run does not end at EOF).
+  /// `canClose` is true when the character immediately before the run is not
+  /// whitespace (and the run does not start at SOF).
+  ({bool canOpen, bool canClose}) _flankingFlags(
+    List<int> codeUnits,
+    int pos,
+    int tokenLength,
+    int totalLength,
+  ) {
+    final canOpen =
+        (pos + tokenLength < totalLength) && !_isWhitespace(codeUnits[pos + tokenLength]);
+    final canClose = (pos > 0) && !_isWhitespace(codeUnits[pos - 1]);
+    return (canOpen: canOpen, canClose: canClose);
   }
 
   /// Attempts to parse a Markdown-style link `[text](url)`.

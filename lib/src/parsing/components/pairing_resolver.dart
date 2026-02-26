@@ -127,17 +127,19 @@ class PairingResolver {
       final stack = openingStacks[token.markerType];
       if (stack == null) continue; // Should not happen for known formatting markers
 
-      if (stack.isEmpty) {
-        // No opening marker of this type on the stack yet - treat this as an opening marker.
-        stack.add(i);
-      } else {
-        // An opening marker of this type exists on the stack - pair it with this closing marker.
+      if (stack.isNotEmpty && token.canClose) {
+        // An opener exists and this token can close — pair them.
         final int openingIndex = stack.removeLast();
 
         // Record the pair (bidirectionally)
         pairs[openingIndex] = i;
         pairs[i] = openingIndex;
+      } else if (token.canOpen) {
+        // No opener to close, or this token cannot close — treat as an opener.
+        stack.add(i);
       }
+      // If neither canOpen nor canClose (e.g. a bullet-point `*` or a math
+      // operator), leave the token unpaired so it renders as literal text.
     }
     // At this point, any markers remaining on the stacks in `openingStacks`
     // are unpaired opening markers. They will not be included in the `pairs` map.

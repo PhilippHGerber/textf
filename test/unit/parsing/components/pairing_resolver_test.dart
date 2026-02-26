@@ -101,5 +101,41 @@ void main() {
         expect(resolvedPairs('`*bold* and **more**`'), {'` -> `'});
       });
     });
+
+    group('flanking rules', () {
+      test('bullet asterisk produces no pairs', () {
+        // '* Item' — * has canOpen=false (space follows) and canClose=false (SOF)
+        expect(resolvedPairs('* Item'), isEmpty);
+      });
+
+      test('math expression asterisks produce no pairs', () {
+        // '2 * 3 * 4' — both * are flanked by spaces on both sides
+        expect(resolvedPairs('2 * 3 * 4'), isEmpty);
+      });
+
+      test('bug case: bullet does not pair with inner italic marker', () {
+        // '* ==*NEW*==' — the bullet * at pos 0 has canOpen=false,
+        // so only the inner *NEW* and the == markers form pairs.
+        expect(resolvedPairs('* ==*NEW*=='), {'== -> ==', '* -> *'});
+      });
+
+      test('loose markers with surrounding spaces produce no pairs', () {
+        // '* loose italic *' — both * are flanked by spaces
+        expect(resolvedPairs('* loose italic *'), isEmpty);
+      });
+
+      test('tight italic still pairs normally', () {
+        expect(resolvedPairs('*tight*'), {'* -> *'});
+      });
+
+      test('tight bold still pairs normally', () {
+        expect(resolvedPairs('**bold**'), {'** -> **'});
+      });
+
+      test('subscript in non-whitespace context still pairs', () {
+        // 'H~2~O' — both ~ have non-whitespace neighbors
+        expect(resolvedPairs('H~2~O'), {'~ -> ~'});
+      });
+    });
   });
 }

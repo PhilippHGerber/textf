@@ -134,5 +134,80 @@ void main() {
         expect(tokens.any((t) => t is PlaceholderToken), isFalse);
       });
     });
+
+    group('Flanking flags', () {
+      FormatMarkerToken markerAt(List<TextfToken> tokens, int position) =>
+          tokens.firstWhere(
+            (t) => t is FormatMarkerToken && t.position == position,
+          ) as FormatMarkerToken;
+
+      test('bullet asterisk at SOF followed by space: canOpen=false, canClose=false', () {
+        final tokens = tokenizer.tokenize('* Item');
+        final marker = markerAt(tokens, 0);
+        expect(marker.canOpen, isFalse);
+        expect(marker.canClose, isFalse);
+      });
+
+      test('math asterisk surrounded by spaces: canOpen=false, canClose=false', () {
+        final tokens = tokenizer.tokenize('2 * 3');
+        final marker = markerAt(tokens, 2);
+        expect(marker.canOpen, isFalse);
+        expect(marker.canClose, isFalse);
+      });
+
+      test('opening italic: canOpen=true, canClose=false', () {
+        // '*text*' — first * at pos 0: SOF → canClose=false, 't' follows → canOpen=true
+        final tokens = tokenizer.tokenize('*text*');
+        final first = markerAt(tokens, 0);
+        expect(first.canOpen, isTrue);
+        expect(first.canClose, isFalse);
+      });
+
+      test('closing italic: canClose=true, canOpen=false', () {
+        // '*text*' — second * at pos 5: 't' precedes → canClose=true, EOF → canOpen=false
+        final tokens = tokenizer.tokenize('*text*');
+        final second = markerAt(tokens, 5);
+        expect(second.canClose, isTrue);
+        expect(second.canOpen, isFalse);
+      });
+
+      test('opening bold: canOpen=true, canClose=false', () {
+        final tokens = tokenizer.tokenize('**bold**');
+        final first = markerAt(tokens, 0);
+        expect(first.canOpen, isTrue);
+        expect(first.canClose, isFalse);
+      });
+
+      test('closing bold: canClose=true, canOpen=false', () {
+        final tokens = tokenizer.tokenize('**bold**');
+        final second = markerAt(tokens, 6);
+        expect(second.canClose, isTrue);
+        expect(second.canOpen, isFalse);
+      });
+
+      test('mid-word asterisk: canOpen=true, canClose=true', () {
+        // 'text*more' — * at pos 4: 't' precedes, 'm' follows
+        final tokens = tokenizer.tokenize('text*more');
+        final marker = markerAt(tokens, 4);
+        expect(marker.canOpen, isTrue);
+        expect(marker.canClose, isTrue);
+      });
+
+      test('asterisk preceded by space: canOpen=true, canClose=false', () {
+        // 'text *more' — * at pos 5: space precedes → canClose=false
+        final tokens = tokenizer.tokenize('text *more');
+        final marker = markerAt(tokens, 5);
+        expect(marker.canOpen, isTrue);
+        expect(marker.canClose, isFalse);
+      });
+
+      test('asterisk followed by space: canClose=true, canOpen=false', () {
+        // 'text* more' — * at pos 4: space follows → canOpen=false
+        final tokens = tokenizer.tokenize('text* more');
+        final marker = markerAt(tokens, 4);
+        expect(marker.canClose, isTrue);
+        expect(marker.canOpen, isFalse);
+      });
+    });
   });
 }
