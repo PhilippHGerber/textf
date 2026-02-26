@@ -54,6 +54,13 @@ class _MockTextfStyleResolver implements TextfStyleResolver {
   PlaceholderAlignment resolveLinkAlignment() => throw UnimplementedError();
 
   @override
+  EdgeInsetsGeometry resolveScriptPadding({
+    required TextStyle style,
+    required bool isSuperscript,
+  }) =>
+      throw UnimplementedError();
+
+  @override
   InlineSpan createScriptSpan({
     required String text,
     required TextStyle style,

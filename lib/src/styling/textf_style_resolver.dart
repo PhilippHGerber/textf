@@ -170,14 +170,22 @@ class TextfStyleResolver {
   ///
   /// Returns an [InlineSpan] that encodes the resolved styling and behavior for
   /// the script fragment.
-  InlineSpan createScriptSpan({
-    required String text,
+
+  /// displacement, respecting any overrides in the [TextfOptions] hierarchy.
+  ///
+  /// Superscript uses bottom padding (pushes text up when aligned to middle).
+  /// Subscript uses top padding (pushes text down).
+  ///
+  /// The padding magnitude is `fontSize × offsetFactor × 2`, where the `× 2`
+  /// comes from [TextfLimits.scriptAlignmentPaddingFactor] (because
+  /// [PlaceholderAlignment.middle] centers the widget, so shifting the visual
+  /// center by `offset` requires `2 × offset` padding).
+  EdgeInsetsGeometry resolveScriptPadding({
     required TextStyle style,
     required bool isSuperscript,
   }) {
     final double fontSize = style.fontSize ?? DefaultStyles.defaultFontSize;
 
-    // Resolve the geometry factor (Option -> Default)
     final double? optionFactor = isSuperscript
         ? _nearestOptions?.getEffectiveSuperscriptBaselineFactor(context)
         : _nearestOptions?.getEffectiveSubscriptBaselineFactor(context);
@@ -187,15 +195,28 @@ class TextfStyleResolver {
             ? DefaultStyles.superscriptBaselineFactor
             : DefaultStyles.subscriptBaselineFactor);
 
-    // Calculate the visual offset required
     final double offsetY = fontSize * offsetFactor;
 
-    // We use Padding to move the text.
-    // Because we align to 'middle', adding 20px padding moves the visual center by 10px.
-    // Therefore, padding = offset * 2.
-    final EdgeInsetsGeometry padding = isSuperscript
+    return isSuperscript
         ? EdgeInsets.only(bottom: offsetY.abs() * TextfLimits.scriptAlignmentPaddingFactor)
         : EdgeInsets.only(top: offsetY.abs() * TextfLimits.scriptAlignmentPaddingFactor);
+  }
+
+  /// Creates an [InlineSpan] representing a single script fragment.
+  ///
+  /// The returned span uses [WidgetSpan] with [PlaceholderAlignment.middle]
+  /// and directional [Padding] (resolved via [resolveScriptPadding]) to
+  /// vertically displace the text. The child [Text.rich] uses
+  /// [TextScaler.noScaling] to prevent double-scaling.
+  InlineSpan createScriptSpan({
+    required String text,
+    required TextStyle style,
+    required bool isSuperscript,
+  }) {
+    final EdgeInsetsGeometry padding = resolveScriptPadding(
+      style: style,
+      isSuperscript: isSuperscript,
+    );
 
     return WidgetSpan(
       // Aligning to middle keeps the widget anchored to the line center,

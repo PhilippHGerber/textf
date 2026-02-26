@@ -15,28 +15,34 @@ class _CacheEntry {
   final Map<int, int> matchingPairs;
 }
 
-/// Builds a list of [TextSpan] objects from formatted text.
+/// Builds a list of [InlineSpan] objects from formatted text.
 ///
-/// Unlike `TextfParser`, which produces [InlineSpan] (including [WidgetSpan])
-/// for use in read-only [Text.rich] widgets, this builder produces only
-/// [TextSpan] children. This makes it suitable for use inside
-/// [TextEditingController.buildTextSpan] where [WidgetSpan] is not supported.
+/// Produces [TextSpan] children for most format types, and per-character
+/// [WidgetSpan] children for superscript / subscript when in preview mode
+/// (cursor outside the formatted span with markers fully hidden). This makes
+/// it suitable for use inside [TextEditingController.buildTextSpan].
 ///
-/// **Critical invariant:** The total character count of all returned spans
-/// always equals the length of the input text. This ensures 1:1
-/// cursor-to-character mapping in text fields.
+/// **Critical invariant:** The total character-slot count of all returned
+/// spans always equals the length of the input text. Each [TextSpan]
+/// contributes its `text.length` slots; each [WidgetSpan] contributes
+/// exactly 1 slot. This ensures 1:1 cursor-to-character mapping in text
+/// fields.
 ///
 /// All characters — including formatting markers — are present in the output.
 /// Markers are rendered with a dimmed style, while the content between them
 /// gets the resolved formatting style.
 ///
-/// Features that normally produce [WidgetSpan] are handled as follows:
+/// Features that normally produce [WidgetSpan] in the read-only widget are
+/// handled as follows:
 ///
 /// - **Links** `[text](url)`: All characters visible. Link text gets link
 ///   styling; brackets, parens, and URL get a dimmed style.
 /// - **Placeholders** `{key}`: Rendered as literal text (no substitution).
-/// - **Super/subscript** `^text^` / `~text~`: Font size is reduced but no
-///   vertical offset is applied (stays on baseline).
+/// - **Super/subscript** `^text^` / `~text~`: In preview mode (cursor
+///   outside, markers fully hidden), each character gets its own [WidgetSpan]
+///   with vertical displacement matching the read-only `Textf` widget. When
+///   the cursor is inside the span or markers are still visible (animating),
+///   falls back to [TextSpan] with reduced font size on the baseline.
 ///
 /// **Cache note:** The internal LRU cache (`_cache`) is `static` and shared
 /// across all `TextfSpanBuilder` instances. The cache key is the raw text
@@ -83,7 +89,7 @@ class TextfSpanBuilder {
     _cache.clear();
   }
 
-  /// Builds a list of [TextSpan] from formatted text.
+  /// Builds a list of [InlineSpan] from formatted text.
   ///
   /// Every character in the input [text] appears in the output spans,
   /// ensuring 1:1 cursor-to-character mapping. Formatting markers are
@@ -98,10 +104,12 @@ class TextfSpanBuilder {
   ///   all markers (default behavior).
   /// - [markerOpacity]: Controls the opacity of inactive markers during
   ///   animation. `1.0` means use the default dimmed style, `0.0` means
-  ///   fully hidden (collapsed to near-zero font size).
+  ///   fully hidden (collapsed to near-zero font size). For super/subscript,
+  ///   `0.0` also activates per-character [WidgetSpan] preview mode with
+  ///   vertical displacement.
   ///
-  /// Returns a list of [TextSpan] objects.
-  List<TextSpan> build(
+  /// Returns a list of [InlineSpan] objects ([TextSpan] and [WidgetSpan]).
+  List<InlineSpan> build(
     String text,
     BuildContext context,
     TextStyle baseStyle, {
@@ -110,12 +118,12 @@ class TextfSpanBuilder {
   }) {
     // Fast path for empty text
     if (text.isEmpty) {
-      return <TextSpan>[];
+      return <InlineSpan>[];
     }
 
     // Fast path for plain text without any potential formatting markers
     if (!FormattingUtils.hasFormatting(text)) {
-      return <TextSpan>[TextSpan(text: text, style: baseStyle)];
+      return <InlineSpan>[TextSpan(text: text, style: baseStyle)];
     }
 
     // --- Cache Lookup & Update ---
@@ -153,9 +161,19 @@ class TextfSpanBuilder {
         : activeMarkerStyle;
 
     // --- Processing State ---
-    final List<TextSpan> spans = <TextSpan>[];
+    final List<InlineSpan> spans = <InlineSpan>[];
     final StringBuffer textBuffer = StringBuffer();
     final List<FormatStackEntry> formatStack = <FormatStackEntry>[];
+
+    // Tracks opening-marker indices of ALL active script pairs (super/sub).
+    // Used by flushText to always emit per-character WidgetSpans with vertical
+    // displacement, regardless of cursor position or markerOpacity.
+    final Set<int> scriptPairs = <int>{};
+
+    // Subset of scriptPairs whose markers are currently in preview mode
+    // (cursor outside the span, markerOpacity <= 0). In preview mode the
+    // markers themselves become hidden SizedBox.shrink WidgetSpans.
+    final Set<int> scriptPreviewPairs = <int>{};
 
     // Helper: resolve the current effective style from the format stack.
     TextStyle currentStyle() {
@@ -167,10 +185,78 @@ class TextfSpanBuilder {
       return style;
     }
 
-    // Helper: flush accumulated text buffer as a TextSpan.
+    // Helper: check whether a script pair's MARKERS should be hidden
+    // (preview mode). Content always uses WidgetSpan regardless.
+    //
+    // Preview mode activates only when:
+    //  1. cursorPosition != null (MarkerVisibility.whenActive)
+    //  2. markerOpacity <= 0   (markers fully hidden, avoids visual snap)
+    //  3. Cursor is outside [openPos, closeEnd]
+    bool isScriptPreviewMode(int openIndex, int closeIndex) {
+      if (cursorPosition == null || markerOpacity > 0) return false;
+      final openPos = tokens[openIndex].position;
+      final closeEnd = tokens[closeIndex].position + tokens[closeIndex].length;
+      return !(cursorPosition >= openPos && cursorPosition <= closeEnd);
+    }
+
+    // Helper: true when the format stack contains ANY active script entry.
+    // Used by flushText to always emit WidgetSpans for script content.
+    bool inScriptZone() {
+      return scriptPairs.isNotEmpty &&
+          formatStack.any(
+            (e) => _isScriptType(e.type) && scriptPairs.contains(e.index),
+          );
+    }
+
+    // Helper: true when the format stack contains a script entry in preview.
+    // Used by emitMarker to decide whether inner markers should be hidden.
+    bool inScriptPreviewZone() {
+      return scriptPreviewPairs.isNotEmpty &&
+          formatStack.any(
+            (e) => _isScriptType(e.type) && scriptPreviewPairs.contains(e.index),
+          );
+    }
+
+    // Helper: flush accumulated text buffer.
+    //
+    // When inside any script zone, emits one WidgetSpan per character with
+    // vertical displacement (via Padding + PlaceholderAlignment.middle). This
+    // makes super/subscript content appear correctly raised/lowered in all
+    // modes — always-visible markers, animating, and fully-hidden alike.
+    // Outside script zones, emits a single TextSpan as before.
     void flushText() {
       if (textBuffer.isEmpty) return;
-      spans.add(TextSpan(text: textBuffer.toString(), style: currentStyle()));
+
+      if (inScriptZone()) {
+        final scriptEntry = formatStack.firstWhere(
+          (e) => _isScriptType(e.type) && scriptPairs.contains(e.index),
+        );
+        final bool isSuperscript = scriptEntry.type == FormatMarkerType.superscript;
+        final TextStyle style = currentStyle();
+        final EdgeInsetsGeometry padding = resolver.resolveScriptPadding(
+          style: style,
+          isSuperscript: isSuperscript,
+        );
+        final String content = textBuffer.toString();
+        for (var c = 0; c < content.length; c++) {
+          spans.add(
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Padding(
+                padding: padding,
+                child: Text(
+                  content[c],
+                  style: style,
+                  textScaler: TextScaler.noScaling,
+                ),
+              ),
+            ),
+          );
+        }
+      } else {
+        spans.add(TextSpan(text: textBuffer.toString(), style: currentStyle()));
+      }
+
       textBuffer.clear();
     }
 
@@ -186,9 +272,18 @@ class TextfSpanBuilder {
     }
 
     // Helper: flush text buffer and emit a marker span.
+    //
+    // When inside a script preview zone, inner markers (e.g. ** inside ^..^)
+    // become hidden WidgetSpans — one per marker character.
     void emitMarker(String markerText, TextStyle style) {
       flushText();
-      spans.add(TextSpan(text: markerText, style: style));
+      if (inScriptPreviewZone()) {
+        for (var c = 0; c < markerText.length; c++) {
+          spans.add(const WidgetSpan(child: SizedBox.shrink()));
+        }
+      } else {
+        spans.add(TextSpan(text: markerText, style: style));
+      }
     }
 
     // --- Process Loop ---
@@ -236,9 +331,28 @@ class TextfSpanBuilder {
           final int matchingIndex = validPairs[i]!;
 
           if (matchingIndex > i) {
-            // Opening marker: emit marker, push format.
-            final style = markerStyleForPair(i, matchingIndex);
-            emitMarker(token.value, style);
+            // Opening marker.
+            if (_isScriptType(token.markerType)) {
+              // Track this script pair so flushText emits WidgetSpans.
+              scriptPairs.add(i);
+              if (isScriptPreviewMode(i, matchingIndex)) {
+                // Preview mode: hide the marker itself too.
+                flushText();
+                for (var c = 0; c < token.value.length; c++) {
+                  spans.add(const WidgetSpan(child: SizedBox.shrink()));
+                }
+                scriptPreviewPairs.add(i);
+              } else {
+                // Visible marker TextSpan (edit mode or always-visible).
+                final style = markerStyleForPair(i, matchingIndex);
+                emitMarker(token.value, style);
+              }
+            } else {
+              // Non-script opening marker: normal TextSpan.
+              final style = markerStyleForPair(i, matchingIndex);
+              emitMarker(token.value, style);
+            }
+
             formatStack.add(
               FormatStackEntry(
                 index: i,
@@ -249,7 +363,8 @@ class TextfSpanBuilder {
           } else {
             // Closing marker: flush formatted text, pop, emit marker.
             flushText();
-            final style = markerStyleForPair(matchingIndex, i);
+            final bool isPreview = scriptPreviewPairs.contains(matchingIndex);
+
             int stackIndexToRemove = -1;
             for (int j = formatStack.length - 1; j >= 0; j--) {
               if (formatStack[j].index == matchingIndex) {
@@ -260,8 +375,30 @@ class TextfSpanBuilder {
             if (stackIndexToRemove != -1) {
               formatStack.removeAt(stackIndexToRemove);
             }
-            // Emit closing marker (after popping the format).
-            spans.add(TextSpan(text: token.value, style: style));
+
+            if (isPreview) {
+              // Script preview: hidden WidgetSpan per marker char.
+              for (var c = 0; c < token.value.length; c++) {
+                spans.add(const WidgetSpan(child: SizedBox.shrink()));
+              }
+              scriptPreviewPairs.remove(matchingIndex);
+              scriptPairs.remove(matchingIndex);
+            } else if (_isScriptType(token.markerType)) {
+              // Script closing marker (non-preview): visible TextSpan.
+              final style = markerStyleForPair(matchingIndex, i);
+              spans.add(TextSpan(text: token.value, style: style));
+              scriptPairs.remove(matchingIndex);
+            } else if (inScriptPreviewZone()) {
+              // Non-script closing marker inside a script preview zone
+              // (e.g. ** closing inside ^..^): emit hidden WidgetSpans.
+              for (var c = 0; c < token.value.length; c++) {
+                spans.add(const WidgetSpan(child: SizedBox.shrink()));
+              }
+            } else {
+              // Normal: emit closing marker TextSpan.
+              final style = markerStyleForPair(matchingIndex, i);
+              spans.add(TextSpan(text: token.value, style: style));
+            }
           }
           i++;
           continue;
@@ -359,7 +496,7 @@ class TextfSpanBuilder {
   static int? _processLinkAsText({
     required List<TextfToken> tokens,
     required int index,
-    required List<TextSpan> spans,
+    required List<InlineSpan> spans,
     required StringBuffer textBuffer,
     required TextStyle baseStyle,
     required TextStyle activeMarkerStyle,
@@ -420,4 +557,8 @@ class TextfSpanBuilder {
         tokens[index + _linkUrlOffset] is TextToken &&
         tokens[index + _linkEndOffset] is LinkEndToken;
   }
+
+  /// Returns `true` for superscript or subscript marker types.
+  static bool _isScriptType(FormatMarkerType type) =>
+      type == FormatMarkerType.superscript || type == FormatMarkerType.subscript;
 }

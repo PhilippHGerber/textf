@@ -329,5 +329,87 @@ void main() {
         expect(TextfEditingController.clearCache, returnsNormally);
       });
     });
+
+    group('Super/Subscript Preview Mode', () {
+      testWidgets('buildTextSpan emits WidgetSpans for superscript when cursor outside',
+          (tester) async {
+        controller = TextfEditingController(
+          text: 'E=mc^2^',
+          markerVisibility: MarkerVisibility.whenActive,
+        )..markerOpacity = 0;
+        late TextSpan result;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                // Place cursor at position 0 (outside ^2^)
+                controller.selection = const TextSelection.collapsed(offset: 0);
+                result = controller.buildTextSpan(
+                  context: context,
+                  style: const TextStyle(fontSize: 16),
+                  withComposing: false,
+                );
+                return Container();
+              },
+            ),
+          ),
+        );
+
+        expect(result.children, isNotNull);
+        // Should contain WidgetSpans for the ^2^ region
+        final widgetSpans = result.children!.whereType<WidgetSpan>().toList();
+        expect(widgetSpans, isNotEmpty);
+        // Each WidgetSpan contributes 1 slot; total slots must equal text length
+        var totalSlots = 0;
+        for (final child in result.children!) {
+          if (child is TextSpan) {
+            totalSlots += child.text?.length ?? 0;
+          } else if (child is WidgetSpan) {
+            totalSlots += 1;
+          }
+        }
+        expect(totalSlots, 'E=mc^2^'.length);
+      });
+
+      testWidgets('buildTextSpan: cursor inside uses TextSpan markers, WidgetSpan content',
+          (tester) async {
+        controller = TextfEditingController(
+          text: 'H~2~O',
+          markerVisibility: MarkerVisibility.whenActive,
+        )..markerOpacity = 0;
+        late TextSpan result;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                // Place cursor at position 2 (inside ~2~)
+                controller.selection = const TextSelection.collapsed(offset: 2);
+                result = controller.buildTextSpan(
+                  context: context,
+                  style: const TextStyle(fontSize: 16),
+                  withComposing: false,
+                );
+                return Container();
+              },
+            ),
+          ),
+        );
+
+        expect(result.children, isNotNull);
+        // Cursor inside → markers are visible TextSpan, content is WidgetSpan
+        // for vertical displacement (subscript). The "2" character = 1 WidgetSpan.
+        final widgetSpans = result.children!.whereType<WidgetSpan>().toList();
+        expect(widgetSpans, isNotEmpty);
+        // Total slots must equal text length
+        var totalSlots = 0;
+        for (final child in result.children!) {
+          if (child is TextSpan) totalSlots += child.text?.length ?? 0;
+          if (child is WidgetSpan) totalSlots += 1;
+        }
+        expect(totalSlots, 'H~2~O'.length);
+      });
+    });
   });
 }

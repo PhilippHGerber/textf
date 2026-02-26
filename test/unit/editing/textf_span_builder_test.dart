@@ -1,9 +1,16 @@
 // ignore_for_file: no-magic-number, avoid-non-null-assertion, avoid-late-keyword
+// ignore_for_file: prefer-match-file-name
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/editing/textf_span_builder.dart';
 import 'package:textf/textf.dart';
+
+/// Extension to access [TextSpan.text] on [InlineSpan] for test assertions.
+/// Returns `null` for non-[TextSpan] spans (e.g. [WidgetSpan]).
+extension _TestTextAccess on InlineSpan {
+  String? get text => this is TextSpan ? (this as TextSpan).text : null;
+}
 
 void main() {
   group('TextfSpanBuilder', () {
@@ -29,11 +36,22 @@ void main() {
       );
     }
 
-    /// Verifies that the total character count of all spans equals the
+    /// Verifies that the total character-slot count of all spans equals the
     /// original text length. This is the critical invariant for cursor
     /// positioning in text fields.
-    int totalSpanLength(List<TextSpan> spans) {
-      return spans.fold(0, (sum, span) => sum + (span.text?.length ?? 0));
+    ///
+    /// Each [TextSpan] contributes its `text.length` slots; each [WidgetSpan]
+    /// contributes exactly 1 slot.
+    int totalSpanLength(List<InlineSpan> spans) {
+      var sum = 0;
+      for (final span in spans) {
+        if (span is TextSpan) {
+          sum += span.text?.length ?? 0;
+        } else if (span is WidgetSpan) {
+          sum += 1;
+        }
+      }
+      return sum;
     }
 
     group('Fast Paths', () {
@@ -240,31 +258,49 @@ void main() {
     });
 
     group('Superscript Formatting', () {
-      testWidgets('applies smaller font size without WidgetSpan', (tester) async {
+      testWidgets('always emits per-character WidgetSpan with vertical offset', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
         const baseStyle = TextStyle(fontSize: 16);
+        // No cursorPosition → always-visible mode; content still uses WidgetSpan
+        // for vertical displacement. "super" = 5 chars → 5 WidgetSpans.
         final spans = builder.build('^super^', testContext, baseStyle);
-        expect(spans.length, 3);
-        expect(spans.first.text, '^');
-        expect(spans[1], isA<TextSpan>());
-        expect(spans[1].text, 'super');
-        // Font size should be reduced (16 * 0.6 = 9.6)
-        expect(spans[1].style?.fontSize, lessThan(16));
-        expect(spans[2].text, '^');
+        // ^ (TextSpan) + 5 × WidgetSpan + ^ (TextSpan) = 7 spans
+        expect(spans.length, 7);
+        expect(spans.first, isA<TextSpan>());
+        expect(spans.first.text, '^'); // visible opening marker
+        // Content spans are WidgetSpan with Padding + Text
+        final contentSpans = spans.sublist(1, 6).cast<WidgetSpan>();
+        for (final ws in contentSpans) {
+          expect(ws.child, isA<Padding>());
+          final padding = ws.child as Padding;
+          expect(padding.child, isA<Text>());
+          // Superscript: bottom padding pushes text up
+          final edgeInsets = padding.padding as EdgeInsets;
+          expect(edgeInsets.bottom, greaterThan(0));
+        }
+        expect(spans.last, isA<TextSpan>());
+        expect(spans.last.text, '^'); // visible closing marker
       });
     });
 
     group('Subscript Formatting', () {
-      testWidgets('applies smaller font size without WidgetSpan', (tester) async {
+      testWidgets('always emits per-character WidgetSpan with vertical offset', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
         const baseStyle = TextStyle(fontSize: 16);
+        // "sub" = 3 chars → ^ + 3 WidgetSpans + ~ = 5 spans
         final spans = builder.build('~sub~', testContext, baseStyle);
-        expect(spans.length, 3);
+        expect(spans.length, 5);
+        expect(spans.first, isA<TextSpan>());
         expect(spans.first.text, '~');
-        expect(spans[1], isA<TextSpan>());
-        expect(spans[1].text, 'sub');
-        expect(spans[1].style?.fontSize, lessThan(16));
-        expect(spans[2].text, '~');
+        final contentSpans = spans.sublist(1, 4).cast<WidgetSpan>();
+        for (final ws in contentSpans) {
+          final edgeInsets = (ws.child as Padding).padding as EdgeInsets;
+          // Subscript: top padding pushes text down
+          expect(edgeInsets.top, greaterThan(0));
+          expect(edgeInsets.bottom, 0);
+        }
+        expect(spans.last, isA<TextSpan>());
+        expect(spans.last.text, '~');
       });
     });
 
@@ -320,7 +356,7 @@ void main() {
           const TextStyle(),
         );
         // The {icon} should be rendered as plain text
-        final allText = spans.map((s) => s.text).join();
+        final allText = spans.whereType<TextSpan>().map((s) => s.text ?? '').join();
         expect(allText, 'hello {icon} world');
       });
     });
@@ -575,6 +611,239 @@ void main() {
 
         expect(spans1.length, spans2.length);
         expect(spans1[1].text, spans2[1].text);
+      });
+    });
+
+    // -----------------------------------------------------------------
+    // Superscript/Subscript Preview Mode
+    //
+    // When cursorPosition is set, markerOpacity is 0, and the cursor is
+    // outside the script span, the builder emits per-character WidgetSpans
+    // with vertical displacement instead of TextSpans.
+    // -----------------------------------------------------------------
+    group('Superscript/Subscript Preview Mode', () {
+      testWidgets('superscript emits per-character WidgetSpans when cursor outside',
+          (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const baseStyle = TextStyle(fontSize: 16);
+        // Input: "E=mc^2^" — cursor at 0 (outside the ^2^ span)
+        final spans = builder.build(
+          'E=mc^2^',
+          testContext,
+          baseStyle,
+          cursorPosition: 0,
+          markerOpacity: 0,
+        );
+        // "E=mc" (TextSpan) + ^ (WidgetSpan shrink) + 2 (WidgetSpan with padding)
+        //   + ^ (WidgetSpan shrink)
+        // Find the WidgetSpans for "2"
+        final widgetSpans = spans.whereType<WidgetSpan>().toList();
+        // 2 hidden markers (^ ^) + 1 content char (2) = 3 WidgetSpans
+        expect(widgetSpans.length, 3);
+
+        // The content WidgetSpan should have Padding > Text
+        final contentWidget = widgetSpans[1]; // the "2" char
+        expect(contentWidget.child, isA<Padding>());
+        final padding = contentWidget.child as Padding;
+        final textWidget = padding.child! as Text;
+        expect(textWidget.data, '2');
+        expect(textWidget.textScaler, TextScaler.noScaling);
+
+        // Alignment should be middle for proper vertical centering
+        expect(contentWidget.alignment, PlaceholderAlignment.middle);
+      });
+
+      testWidgets('subscript emits per-character WidgetSpans when cursor outside', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const baseStyle = TextStyle(fontSize: 16);
+        // Input: "H~2~O" — cursor at 0 (outside the ~2~ span)
+        final spans = builder.build(
+          'H~2~O',
+          testContext,
+          baseStyle,
+          cursorPosition: 0,
+          markerOpacity: 0,
+        );
+        final widgetSpans = spans.whereType<WidgetSpan>().toList();
+        // 2 hidden markers (~ ~) + 1 content char (2) = 3 WidgetSpans
+        expect(widgetSpans.length, 3);
+
+        // The content WidgetSpan should use top padding (pushes down)
+        final contentWidget = widgetSpans[1];
+        final padding = contentWidget.child as Padding;
+        final edgeInsets = padding.padding as EdgeInsets;
+        expect(edgeInsets.top, greaterThan(0));
+        expect(edgeInsets.bottom, 0);
+      });
+
+      testWidgets('superscript uses bottom padding (pushes up)', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const baseStyle = TextStyle(fontSize: 16);
+        final spans = builder.build(
+          'E=mc^2^',
+          testContext,
+          baseStyle,
+          cursorPosition: 0,
+          markerOpacity: 0,
+        );
+        final widgetSpans = spans.whereType<WidgetSpan>().toList();
+        final contentWidget = widgetSpans[1]; // the "2" char
+        final padding = contentWidget.child as Padding;
+        final edgeInsets = padding.padding as EdgeInsets;
+        expect(edgeInsets.bottom, greaterThan(0));
+        expect(edgeInsets.top, 0);
+      });
+
+      testWidgets('character count invariant preserved in preview mode', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const baseStyle = TextStyle(fontSize: 16);
+        const input = 'E=mc^2^';
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          cursorPosition: 0,
+          markerOpacity: 0,
+        );
+        expect(totalSpanLength(spans), input.length);
+      });
+
+      testWidgets('cursor inside span: markers TextSpan (visible), content WidgetSpan',
+          (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const baseStyle = TextStyle(fontSize: 16);
+        // "^super^" — cursor at 3 (inside). Markers are active (visible TextSpan),
+        // content is always WidgetSpan for vertical displacement.
+        final spans = builder.build(
+          '^super^',
+          testContext,
+          baseStyle,
+          cursorPosition: 3,
+          markerOpacity: 0,
+        );
+        // ^ (TextSpan) + 5 WidgetSpan content + ^ (TextSpan) = 7
+        expect(spans.length, 7);
+        expect(spans.first, isA<TextSpan>()); // visible opening marker
+        expect(spans.first.text, '^');
+        for (final span in spans.sublist(1, 6)) {
+          expect(span, isA<WidgetSpan>()); // content always WidgetSpan
+        }
+        expect(spans.last, isA<TextSpan>()); // visible closing marker
+        expect(spans.last.text, '^');
+      });
+
+      testWidgets('markerOpacity > 0: markers TextSpan (fading), content WidgetSpan',
+          (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const baseStyle = TextStyle(fontSize: 16);
+        // Cursor outside but opacity > 0 (animating): markers still TextSpan,
+        // content still WidgetSpan.
+        final spans = builder.build(
+          '^super^',
+          testContext,
+          baseStyle,
+          cursorPosition: 100,
+          markerOpacity: 0.5,
+        );
+        // ^ (TextSpan) + 5 WidgetSpan + ^ (TextSpan) = 7
+        expect(spans.length, 7);
+        expect(spans.first, isA<TextSpan>());
+        for (final span in spans.sublist(1, 6)) {
+          expect(span, isA<WidgetSpan>());
+        }
+        expect(spans.last, isA<TextSpan>());
+      });
+
+      testWidgets('nested ^**bold**^ in preview mode uses all WidgetSpans', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const baseStyle = TextStyle(fontSize: 16);
+        // Input: "^**b**^" — cursor at 100 (outside [0,7]), opacity 0 → preview mode
+        final spans = builder.build(
+          '^**b**^',
+          testContext,
+          baseStyle,
+          cursorPosition: 100,
+          markerOpacity: 0,
+        );
+        // ^ (shrink) + ** (shrink×2) + b (WidgetSpan content) + ** (shrink×2) + ^ (shrink)
+        // = 7 WidgetSpans total (1 + 2 + 1 + 2 + 1)
+        expect(spans.length, 7);
+        for (final span in spans) {
+          expect(span, isA<WidgetSpan>());
+        }
+        // Character count must still match
+        expect(totalSpanLength(spans), '^**b**^'.length);
+      });
+
+      testWidgets('multi-char superscript content emits one WidgetSpan per char', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const baseStyle = TextStyle(fontSize: 16);
+        // Input: "x^abc^y" — 3 content chars → 3 content WidgetSpans
+        final spans = builder.build(
+          'x^abc^y',
+          testContext,
+          baseStyle,
+          cursorPosition: 0,
+          markerOpacity: 0,
+        );
+        // x (TextSpan) + ^ (shrink) + a (WS) + b (WS) + c (WS) + ^ (shrink) + y (TextSpan)
+        expect(spans.length, 7);
+        expect(spans.first, isA<TextSpan>()); // "x"
+        expect(spans[1], isA<WidgetSpan>()); // ^ (shrink)
+        expect(spans[2], isA<WidgetSpan>()); // a
+        expect(spans[3], isA<WidgetSpan>()); // b
+        expect(spans[4], isA<WidgetSpan>()); // c
+        expect(spans[5], isA<WidgetSpan>()); // ^ (shrink)
+        expect(spans[6], isA<TextSpan>()); // "y"
+
+        // Verify each content WidgetSpan has the correct character
+        for (var idx = 2; idx <= 4; idx++) {
+          final ws = spans[idx] as WidgetSpan;
+          final padding = ws.child as Padding;
+          final text = padding.child! as Text;
+          expect(text.data, 'abc'[idx - 2]);
+        }
+
+        expect(totalSpanLength(spans), 'x^abc^y'.length);
+      });
+
+      testWidgets('hidden marker WidgetSpans use SizedBox.shrink', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const baseStyle = TextStyle(fontSize: 16);
+        final spans = builder.build(
+          '^x^',
+          testContext,
+          baseStyle,
+          cursorPosition: 100,
+          markerOpacity: 0,
+        );
+        // ^ (shrink) + x (content WS) + ^ (shrink) = 3 WidgetSpans
+        expect(spans.length, 3);
+        // Opening marker: SizedBox.shrink
+        final openMarker = spans.first as WidgetSpan;
+        expect(openMarker.child, isA<SizedBox>());
+        final sizedBox = openMarker.child as SizedBox;
+        expect(sizedBox.width, 0);
+        expect(sizedBox.height, 0);
+      });
+
+      testWidgets('no cursorPosition: markers TextSpan, content WidgetSpan', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const baseStyle = TextStyle(fontSize: 16);
+        // No cursorPosition → always-visible mode; content still uses WidgetSpan
+        // for vertical displacement; markers are visible TextSpan.
+        final spans = builder.build(
+          '^super^',
+          testContext,
+          baseStyle,
+        );
+        // ^ (TextSpan) + 5 WidgetSpan + ^ (TextSpan) = 7
+        expect(spans.length, 7);
+        expect(spans.first, isA<TextSpan>());
+        for (final span in spans.sublist(1, 6)) {
+          expect(span, isA<WidgetSpan>());
+        }
+        expect(spans.last, isA<TextSpan>());
       });
     });
   });

@@ -147,7 +147,7 @@ void main() {
 
     /// Builds spans with all markers in the fully-hidden inactive style
     /// (cursor placed beyond the end of [text]).
-    List<TextSpan> buildHidden(String text, TextStyle base) {
+    List<InlineSpan> buildHidden(String text, TextStyle base) {
       return builder.build(
         text,
         testContext,

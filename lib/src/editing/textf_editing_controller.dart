@@ -22,8 +22,8 @@ import 'textf_span_builder.dart';
 /// * `++underline++`
 /// * `==highlight==`
 /// * `` `code` ``
-/// * `^superscript^` (font size only, no vertical offset)
-/// * `~subscript~` (font size only, no vertical offset)
+/// * `^superscript^` (vertical offset in preview mode; font size only when editing)
+/// * `~subscript~` (vertical offset in preview mode; font size only when editing)
 /// * `[link text](url)` (all characters visible, styled)
 ///
 /// ## Usage
@@ -60,8 +60,9 @@ import 'textf_span_builder.dart';
 /// ## Limitations
 ///
 /// - Widget placeholders (`{key}`) render as literal text (no substitution).
-/// - Super/subscript text gets a smaller font size but stays on the baseline
-///   (no vertical offset), because [TextField] does not support [WidgetSpan].
+/// - Super/subscript text gets proper vertical offset in preview mode (cursor
+///   outside, markers fully hidden). During editing or animation, it falls back
+///   to a smaller font size on the baseline.
 /// - Links show their full `[text](url)` syntax with styling applied.
 class TextfEditingController extends TextEditingController {
   /// Creates a [TextfEditingController] with optional initial text.
@@ -182,7 +183,7 @@ class TextfEditingController extends TextEditingController {
     // ignore: avoid-substring
     final String afterText = text.substring(composing.end);
 
-    final List<TextSpan> children = <TextSpan>[];
+    final List<InlineSpan> children = <InlineSpan>[];
 
     if (beforeText.isNotEmpty) {
       children.addAll(
