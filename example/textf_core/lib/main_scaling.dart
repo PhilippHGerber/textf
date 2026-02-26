@@ -37,8 +37,7 @@ class _ScalingReproScreenState extends State<ScalingReproScreen> {
               ),
               child: TextfOptions(
                 child: Container(
-                  decoration:
-                      BoxDecoration(border: Border.all(color: Colors.grey)),
+                  decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
                   padding: const EdgeInsets.all(8),
                   child: SelectionArea(
                     child: Textf(

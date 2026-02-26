@@ -21,9 +21,7 @@ class PlaceholderExampleScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(
-              currentThemeMode == ThemeMode.dark
-                  ? Icons.light_mode
-                  : Icons.dark_mode,
+              currentThemeMode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode,
             ),
             onPressed: toggleThemeMode,
           ),
@@ -202,8 +200,7 @@ Textf(
                   'admin': WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(4),

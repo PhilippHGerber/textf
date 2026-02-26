@@ -21,8 +21,7 @@ class _TextfWebDemoState extends State<TextfWebDemo> {
   @override
   void initState() {
     super.initState();
-    final platformBrightness =
-        SchedulerBinding.instance.platformDispatcher.platformBrightness;
+    final platformBrightness = SchedulerBinding.instance.platformDispatcher.platformBrightness;
     _themeModeNotifier = ValueNotifier(
       platformBrightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
     );

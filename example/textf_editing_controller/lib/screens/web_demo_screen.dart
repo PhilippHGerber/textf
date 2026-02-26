@@ -30,11 +30,12 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
           '🚀 **Welcome to Textf!**\n\n'
           '⚠️ *This is a preview — not released yet.*\n\n'
           'Edit this text to see live formatting in action:\n'
-          '• **Bold** and *Italic* text\n'
+          '• **Bold**, *Italic* text and ***both***\n'
           '• ~~Strikethrough~~ and ++Underline++\n'
-          '• ==Highlighting== and `inline code` blocks\n\n'
-          'Try nesting: **Bold with *italic* styles** or '
-          'combine ==highlighted *italic* or **bold**==.\n\n'
+          '• ==Highlighting== and `inline code` blocks\n'
+          '• ==**NEW**== Sup/subscript: E=mc^2^ H~2~O \n\n'
+          'Try nesting: **Bold with ++underline++ styles** or \n'
+          'combine ==highlighted *italic* or ++underline++==.\n\n'
           'Check out the [Documentation](https://pub.dev/packages/textf) '
           'for more details.',
     );
@@ -320,6 +321,8 @@ class _FormatChips extends StatelessWidget {
           _chip('++underline++'),
           _chip('==highlight=='),
           _chip('`code`'),
+          _chip('E=mc^2^'),
+          _chip('H~2~O'),
           _chip('[link](https://example.com)'),
         ],
       ),
@@ -328,7 +331,7 @@ class _FormatChips extends StatelessWidget {
 
   Widget _chip(String label) {
     return ActionChip(
-      label: Text(
+      label: Textf(
         label,
         style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 11),
       ),

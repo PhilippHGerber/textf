@@ -366,7 +366,8 @@ class ShowcaseScreen extends StatelessWidget {
                 final isDark = Theme.of(context).brightness == Brightness.dark;
                 return TextfOptions(
                   highlightStyle: TextStyle(
-                    backgroundColor: isDark //
+                    backgroundColor:
+                        isDark //
                         ? Colors.yellow.shade700.withAlpha(30)
                         : Colors.yellow.shade200,
                   ),

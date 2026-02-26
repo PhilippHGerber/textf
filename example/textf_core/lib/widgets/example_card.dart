@@ -59,11 +59,9 @@ class ExampleCard extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(
-                      left: 4.0, top: 4.0), // Adjust padding
+                  padding: const EdgeInsets.only(left: 4.0, top: 4.0), // Adjust padding
                   child: IconButton(
-                    icon: const Icon(Icons.copy_outlined,
-                        size: 18), // Slightly smaller icon
+                    icon: const Icon(Icons.copy_outlined, size: 18), // Slightly smaller icon
                     tooltip: 'Copy code',
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: code));
@@ -90,8 +88,7 @@ class ExampleCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   // Optional: Add a subtle border
                   border: Border.all(
-                    color:
-                        theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),

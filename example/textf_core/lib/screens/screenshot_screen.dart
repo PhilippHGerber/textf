@@ -85,8 +85,7 @@ class ScreenshotScreen extends StatefulWidget {
 
 class _ScreenshotScreenState extends State<ScreenshotScreen> {
   final TextEditingController _textController = TextEditingController(
-    text:
-        'Hello **bold** *italic* ~~strikethrought~~ ++underline++ ==highlight== \n'
+    text: 'Hello **bold** *italic* ~~strikethrought~~ ++underline++ ==highlight== \n'
         '`code` \n'
         'E = mc^2^ and H~2~O \n'
         '[link](https://example.com)',
@@ -119,8 +118,7 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
 
   // --- Available Colors (Example lists) ---
   final List<Color> _availableColors = [
-    Colors.black, Colors.white, Colors.grey.shade700,
-    Colors.grey.shade200, // Basic
+    Colors.black, Colors.white, Colors.grey.shade700, Colors.grey.shade200, // Basic
     Colors.blue.shade700, Colors.blue.shade100, // Blue tones
     Colors.red.shade700, Colors.red.shade100, // Red tones
     Colors.green.shade700, Colors.green.shade100, // Green tones
@@ -145,8 +143,8 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
       // Short delay to ensure UI with potential TextfOptions changes is rendered
       await Future.delayed(const Duration(milliseconds: 150));
 
-      RenderRepaintBoundary? boundary = _screenshotKey.currentContext
-          ?.findRenderObject() as RenderRepaintBoundary?;
+      RenderRepaintBoundary? boundary =
+          _screenshotKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) {
         if (kDebugMode) {
           print("Error: Could not find RenderRepaintBoundary.");
@@ -155,11 +153,9 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
       }
 
       if (!mounted) return;
-      ui.Image image = await boundary.toImage(
-          pixelRatio: MediaQuery.of(context).devicePixelRatio);
+      ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
 
-      ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       _imageBytes = byteData?.buffer.asUint8List();
 
       if (!mounted) return; // Check again after async gaps
@@ -220,8 +216,7 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
     // Placeholder if share_plus is not added
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text(
-            'Share functionality requires the share_plus package (see example pubspec).'),
+        content: Text('Share functionality requires the share_plus package (see example pubspec).'),
       ),
     );
   }
@@ -231,14 +226,12 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
   Widget build(BuildContext context) {
     // Theme setup for AppBar icon
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon = currentBrightness == Brightness.dark
-        ? Icons.light_mode_outlined
-        : Icons.dark_mode_outlined;
+    final IconData themeIcon =
+        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
     final theme = Theme.of(context); // Get theme for defaults
 
     // Determine the effective background color for the preview Container
-    final Color effectiveBackgroundColor =
-        _backgroundColor ?? theme.colorScheme.surface;
+    final Color effectiveBackgroundColor = _backgroundColor ?? theme.colorScheme.surface;
 
     // --- Build Method ---
     return Scaffold(
@@ -301,18 +294,14 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
                       _buildColorPickerRow(
                         label: 'Base Text Color:',
                         selectedColor: _textColor, // Use nullable state
-                        onColorSelected: (color) =>
-                            setState(() => _textColor = color),
-                        onReset: () =>
-                            setState(() => _textColor = null), // Reset to null
+                        onColorSelected: (color) => setState(() => _textColor = color),
+                        onReset: () => setState(() => _textColor = null), // Reset to null
                       ),
                       _buildColorPickerRow(
                         label: 'Background Color:',
                         selectedColor: _backgroundColor, // Use nullable state
-                        onColorSelected: (color) =>
-                            setState(() => _backgroundColor = color),
-                        onReset: () => setState(
-                            () => _backgroundColor = null), // Reset to null
+                        onColorSelected: (color) => setState(() => _backgroundColor = color),
+                        onReset: () => setState(() => _backgroundColor = null), // Reset to null
                       ),
                       const Divider(height: 20),
 
@@ -342,19 +331,16 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
                   width: double.infinity,
                   child: Card(
                     // Use theme card styling
-                    clipBehavior: Clip
-                        .antiAlias, // Ensure container color respects border radius
+                    clipBehavior: Clip.antiAlias, // Ensure container color respects border radius
                     // Apply background color here, falling back to theme surface
                     color: effectiveBackgroundColor,
                     child: Padding(
-                      padding:
-                          const EdgeInsets.all(16.0), // Padding inside the card
+                      padding: const EdgeInsets.all(16.0), // Padding inside the card
                       // Apply base font size, alignment, and optional text color here
                       child: DefaultTextStyle.merge(
                         style: TextStyle(
                           fontSize: _fontSize,
-                          color:
-                              _textColor, // If null, DefaultTextStyle inherits from theme
+                          color: _textColor, // If null, DefaultTextStyle inherits from theme
                         ),
                         child: TextfOptions(
                           // Pass the nullable option styles
@@ -389,8 +375,7 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
               child: ElevatedButton.icon(
                 onPressed: _isCapturing ? null : _captureScreenshot,
                 icon: const Icon(Icons.camera_alt_outlined),
-                label:
-                    Text(_isCapturing ? 'Capturing...' : 'Capture Screenshot'),
+                label: Text(_isCapturing ? 'Capturing...' : 'Capture Screenshot'),
               ),
             ),
 
@@ -410,22 +395,18 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // Prevent excessive height
+                      mainAxisSize: MainAxisSize.min, // Prevent excessive height
                       children: [
                         GestureDetector(
                           onLongPress: _showImageOptions,
                           child: ConstrainedBox(
                             constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width *
-                                  0.8, // Limit width
-                              maxHeight: MediaQuery.of(context).size.height *
-                                  0.4, // Limit height
+                              maxWidth: MediaQuery.of(context).size.width * 0.8, // Limit width
+                              maxHeight: MediaQuery.of(context).size.height * 0.4, // Limit height
                             ),
                             child: RawImage(
                               image: _capturedImage,
-                              fit: BoxFit
-                                  .contain, // Use contain to see the whole image
+                              fit: BoxFit.contain, // Use contain to see the whole image
                             ),
                           ),
                         ),
@@ -587,30 +568,23 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
                         color: color,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected
-                              ? Colors.blueAccent
-                              : Colors.grey.shade400,
+                          color: isSelected ? Colors.blueAccent : Colors.grey.shade400,
                           width: isSelected ? 3 : 1,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color:
-                                      Colors.blueAccent.withValues(alpha: .5),
+                                  color: Colors.blueAccent.withValues(alpha: .5),
                                   blurRadius: 3,
                                   spreadRadius: 1,
                                 ),
                               ]
                             : null,
                       ),
-                      child: (color == Colors.white ||
-                                  color.computeLuminance() > 0.8) &&
-                              isSelected
-                          ? const Icon(Icons.check,
-                              color: Colors.black54, size: 16)
+                      child: (color == Colors.white || color.computeLuminance() > 0.8) && isSelected
+                          ? const Icon(Icons.check, color: Colors.black54, size: 16)
                           : isSelected
-                              ? const Icon(Icons.check,
-                                  color: Colors.white70, size: 16)
+                              ? const Icon(Icons.check, color: Colors.white70, size: 16)
                               : null,
                     ),
                   ),
@@ -653,9 +627,7 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
               setState(() => _linkMouseCursor = newValue);
             },
             // Display 'Default' when state is null
-            hint: _linkMouseCursor == null
-                ? const Text('Default (from Textf)')
-                : null,
+            hint: _linkMouseCursor == null ? const Text('Default (from Textf)') : null,
           ),
         ],
       ),

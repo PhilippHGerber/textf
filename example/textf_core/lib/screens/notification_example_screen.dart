@@ -19,9 +19,8 @@ class NotificationExampleScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Add theme icon logic
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon = currentBrightness == Brightness.dark
-        ? Icons.light_mode_outlined
-        : Icons.dark_mode_outlined;
+    final IconData themeIcon =
+        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
 
     return Scaffold(
       appBar: AppBar(
@@ -42,8 +41,7 @@ class NotificationExampleScreen extends StatelessWidget {
             ExampleCard(
               // Use const
               title: 'Notification',
-              description:
-                  'Formatted text in a notification using default styles', // Updated desc
+              description: 'Formatted text in a notification using default styles', // Updated desc
               code: '''
 ListTile( // ... code remains the same
 )''',
@@ -55,9 +53,7 @@ ListTile( // ... code remains the same
                   subtitle: Textf(
                     // Textf default styles adapt
                     'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium, // Inherit from theme
+                    style: Theme.of(context).textTheme.bodyMedium, // Inherit from theme
                   ),
                 ),
               ),
@@ -149,23 +145,20 @@ class _NotificationSystemState extends State<NotificationSystem> {
     NotificationItem(
       icon: Icons.notifications,
       title: 'System Update',
-      message:
-          'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
+      message: 'Your device will restart in **5 minutes**. Save your work ~~or else~~!',
       time: '10:45 AM',
     ),
     NotificationItem(
       icon: Icons.warning_amber,
       title: 'Battery Low',
-      message:
-          'Your battery is at **15%**. Connect to a charger _soon_ to avoid shutdown.',
+      message: 'Your battery is at **15%**. Connect to a charger _soon_ to avoid shutdown.',
       time: '11:30 AM',
       iconColor: Colors.orange,
     ),
     NotificationItem(
       icon: Icons.update,
       title: 'App Update Available',
-      message:
-          'Version **2.0.1** is now available with _new features_ and ~~bug~~ `fixes`.',
+      message: 'Version **2.0.1** is now available with _new features_ and ~~bug~~ `fixes`.',
       time: '12:15 PM',
       iconColor: Colors.blue,
     ),
@@ -182,14 +175,12 @@ class _NotificationSystemState extends State<NotificationSystem> {
             // Use theme colors
             color: theme.colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: .5)),
+            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: .5)),
           ),
           child: Column(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   // Use theme color for header
                   color: theme.colorScheme.surfaceContainerHighest,
@@ -226,8 +217,7 @@ class _NotificationSystemState extends State<NotificationSystem> {
               const Divider(height: 1, thickness: 1),
               if (_notifications.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 40.0, horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 16.0),
                   child: Text(
                     'No notifications',
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -242,16 +232,14 @@ class _NotificationSystemState extends State<NotificationSystem> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _notifications.length,
                   // Use Material Divider
-                  separatorBuilder: (context, index) => const Divider(
-                      height: 1, thickness: 1, indent: 16, endIndent: 16),
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
                   itemBuilder: (context, index) {
                     final notification = _notifications[index];
                     return Dismissible(
-                      key: ValueKey(
-                          notification.hashCode + index), // More robust key
+                      key: ValueKey(notification.hashCode + index), // More robust key
                       background: Container(
-                        color: theme.colorScheme
-                            .errorContainer, // Use theme color for background
+                        color: theme.colorScheme.errorContainer, // Use theme color for background
                         alignment: Alignment.centerRight,
                         padding: const EdgeInsets.only(right: 16),
                         child: Icon(
@@ -266,8 +254,7 @@ class _NotificationSystemState extends State<NotificationSystem> {
                         });
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(
-                                'Notification "${notification.title}" dismissed.'),
+                            content: Text('Notification "${notification.title}" dismissed.'),
                             duration: const Duration(seconds: 2),
                           ),
                         );
@@ -275,8 +262,7 @@ class _NotificationSystemState extends State<NotificationSystem> {
                       child: ListTile(
                         leading: Icon(
                           notification.icon,
-                          color: notification.iconColor ??
-                              theme.colorScheme.primary,
+                          color: notification.iconColor ?? theme.colorScheme.primary,
                         ), // Fallback icon color
                         title: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -293,8 +279,7 @@ class _NotificationSystemState extends State<NotificationSystem> {
                         ),
                         subtitle: Textf(
                           notification.message,
-                          style: theme
-                              .textTheme.bodyMedium, // Inherit base from theme
+                          style: theme.textTheme.bodyMedium, // Inherit base from theme
                         ),
                         dense: true, // Make tiles more compact
                       ),

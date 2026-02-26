@@ -15,8 +15,7 @@ class EditingControllerScreen extends StatefulWidget {
   });
 
   @override
-  State<EditingControllerScreen> createState() =>
-      _EditingControllerScreenState();
+  State<EditingControllerScreen> createState() => _EditingControllerScreenState();
 }
 
 class _EditingControllerScreenState extends State<EditingControllerScreen>
@@ -122,9 +121,8 @@ class _EditingControllerScreenState extends State<EditingControllerScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final brightness = theme.brightness;
-    final themeIcon = brightness == Brightness.dark
-        ? Icons.light_mode_outlined
-        : Icons.dark_mode_outlined;
+    final themeIcon =
+        brightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
 
     return Scaffold(
       appBar: AppBar(
@@ -218,8 +216,7 @@ class _EditingControllerScreenState extends State<EditingControllerScreen>
             ),
             codeStyle: TextStyle(
               fontFamily: 'RobotoMono',
-              backgroundColor:
-                  theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+              backgroundColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
               color: theme.colorScheme.primary,
             ),
             highlightStyle: TextStyle(
@@ -446,8 +443,7 @@ class _ChatDemo extends StatelessWidget {
                     child: Text(
                       'Type a formatted message and tap send',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant
-                            .withValues(alpha: 0.5),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                       ),
                     ),
                   )

@@ -18,9 +18,8 @@ class ComplexFormattingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine the icon based on the current theme mode
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon = currentBrightness == Brightness.dark
-        ? Icons.light_mode_outlined
-        : Icons.dark_mode_outlined;
+    final IconData themeIcon =
+        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Complex Formatting'),
@@ -52,8 +51,7 @@ Textf(
             const SizedBox(height: 16),
             ExampleCard(
               title: 'Style Customization with TextfOptions',
-              description:
-                  'Using custom text style properties via TextfOptions for new formats',
+              description: 'Using custom text style properties via TextfOptions for new formats',
               code: '''
 TextfOptions(
   underlineStyle: TextStyle(
@@ -103,8 +101,7 @@ TextfOptions(
             const SizedBox(height: 16),
             const ExampleCard(
               title: 'Unicode and Emoji Support',
-              description:
-                  'Formatting with non-Latin scripts and emoji, including new formats',
+              description: 'Formatting with non-Latin scripts and emoji, including new formats',
               code: "Textf('**你好世界** *안녕하세요* ~~Привет~~ `🌍` ++🤯++ ==👀==')",
               child: Textf(
                 '**你好世界** *안녕하세요* ~~Привет~~ `🌍` ++🤯++ ==👀==',
@@ -113,8 +110,7 @@ TextfOptions(
             const SizedBox(height: 16),
             ExampleCard(
               title: 'Long Text with Overflow',
-              description:
-                  'Handling long text with ellipsis, including new formats',
+              description: 'Handling long text with ellipsis, including new formats',
               code: '''
 Textf(
   'This is a **very long** text with _multiple_ '
