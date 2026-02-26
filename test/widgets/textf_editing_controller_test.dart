@@ -279,11 +279,6 @@ void main() {
         expect(controller.markerVisibility, MarkerVisibility.whenActive);
       });
 
-      test('markerOpacity defaults to 1', () {
-        controller = TextfEditingController();
-        expect(controller.markerOpacity, 1);
-      });
-
       test('invalidate does not throw', () {
         controller = TextfEditingController();
         expect(controller.invalidate, returnsNormally);
@@ -293,7 +288,7 @@ void main() {
         controller = TextfEditingController(
           text: '**bold**',
           markerVisibility: MarkerVisibility.whenActive,
-        )..markerOpacity = 0;
+        );
         late TextSpan result;
 
         await tester.pumpWidget(
@@ -336,7 +331,7 @@ void main() {
         controller = TextfEditingController(
           text: 'E=mc^2^',
           markerVisibility: MarkerVisibility.whenActive,
-        )..markerOpacity = 0;
+        );
         late TextSpan result;
 
         await tester.pumpWidget(
@@ -377,7 +372,7 @@ void main() {
         controller = TextfEditingController(
           text: 'H~2~O',
           markerVisibility: MarkerVisibility.whenActive,
-        )..markerOpacity = 0;
+        );
         late TextSpan result;
 
         await tester.pumpWidget(

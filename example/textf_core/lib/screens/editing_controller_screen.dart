@@ -18,11 +18,9 @@ class EditingControllerScreen extends StatefulWidget {
   State<EditingControllerScreen> createState() => _EditingControllerScreenState();
 }
 
-class _EditingControllerScreenState extends State<EditingControllerScreen>
-    with SingleTickerProviderStateMixin {
+class _EditingControllerScreenState extends State<EditingControllerScreen> {
   late final TextfEditingController _controller;
   late final TextfEditingController _chatController;
-  late final AnimationController _markerAnim;
   final List<String> _chatMessages = [];
   MarkerVisibility _visibility = MarkerVisibility.whenActive;
 
@@ -33,20 +31,11 @@ class _EditingControllerScreenState extends State<EditingControllerScreen>
         //text: 'Try **bold**, *italic*, `code`, and ~~strike~~!',
         );
     _chatController = TextfEditingController();
-    _markerAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 550),
-      value: 1,
-    );
-    _markerAnim.addListener(_onMarkerAnimTick);
     _controller.addListener(_onSelectionChanged);
   }
 
   @override
   void dispose() {
-    _markerAnim
-      ..removeListener(_onMarkerAnimTick)
-      ..dispose();
     _controller
       ..removeListener(_onSelectionChanged)
       ..dispose();
@@ -54,19 +43,9 @@ class _EditingControllerScreenState extends State<EditingControllerScreen>
     super.dispose();
   }
 
-  void _onMarkerAnimTick() {
-    _controller
-      ..markerOpacity = _markerAnim.value
-      ..invalidate();
-  }
-
   void _onSelectionChanged() {
     if (_visibility == MarkerVisibility.whenActive) {
-      // Always keep animation at target — the span builder handles
-      // per-span cursor checks internally.
-      if (_markerAnim.status != AnimationStatus.forward) {
-        setState(() {});
-      }
+      setState(() {});
     }
   }
 
@@ -74,11 +53,6 @@ class _EditingControllerScreenState extends State<EditingControllerScreen>
     setState(() {
       _visibility = visibility;
       _controller.markerVisibility = visibility;
-      if (visibility == MarkerVisibility.always) {
-        _markerAnim.forward();
-      } else {
-        _markerAnim.reverse();
-      }
     });
   }
 

@@ -4,7 +4,6 @@ enum MarkerVisibility {
   always,
 
   /// Markers are only visible when the cursor is inside the formatted span.
-  /// Inactive markers are hidden (or fading) based on
-  /// `TextfEditingController.markerOpacity`.
+  /// Inactive markers are instantly hidden.
   whenActive,
 }

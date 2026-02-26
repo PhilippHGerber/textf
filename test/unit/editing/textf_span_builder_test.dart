@@ -476,7 +476,6 @@ void main() {
           testContext,
           baseStyle,
           cursorPosition: 0,
-          markerOpacity: 0,
         );
         // Find the opening ** marker (should be hidden)
         final openMarker = spans[1]; // "hi " is spans[0], "**" is spans[1]
@@ -522,7 +521,6 @@ void main() {
           testContext,
           const TextStyle(),
           cursorPosition: 5,
-          markerOpacity: 0,
         );
         expect(totalSpanLength(spans), input.length);
       });
@@ -536,7 +534,6 @@ void main() {
           testContext,
           baseStyle,
           cursorPosition: 0,
-          markerOpacity: 0,
         );
         // Find the "[" marker (should be hidden)
         final bracketSpan = spans[1]; // "hi " is spans[0], "[" is spans[1]
@@ -557,47 +554,6 @@ void main() {
         // "[" marker should be active (dimmed, not hidden)
         final bracketColor = spans.first.style?.color;
         expect(bracketColor!.a, greaterThan(0));
-      });
-    });
-
-    group('Marker Opacity', () {
-      testWidgets('markerOpacity 0.5 produces intermediate alpha', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        const baseStyle = TextStyle(color: Color(0xFF000000));
-        // Input: "hi **bold** bye" — cursor at 0 (outside), opacity 0.5
-        final spans = builder.build(
-          'hi **bold** bye',
-          testContext,
-          baseStyle,
-          cursorPosition: 0,
-          markerOpacity: 0.5,
-        );
-        final markerColor = spans[1].style?.color; // ** marker
-        expect(markerColor, isNotNull);
-        // Alpha should be 0.5 * 0.4 = 0.2
-        expect(markerColor!.a, closeTo(0.2, 0.01));
-        // Font size should be normal (null = inherited, not collapsed to 0.01)
-        expect(spans[1].style?.fontSize, isNot(0.01));
-      });
-
-      testWidgets('markerOpacity 1.0 without cursorPosition uses default', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        const baseStyle = TextStyle(color: Color(0xFF000000));
-        final spansDefault = builder.build(
-          '**bold**',
-          testContext,
-          baseStyle,
-        );
-        final spansWithOpacity = builder.build(
-          '**bold**',
-          testContext,
-          baseStyle,
-        );
-        // Without cursorPosition, both should produce the same marker style
-        expect(
-          spansDefault.first.style?.color,
-          spansWithOpacity.first.style?.color,
-        );
       });
     });
 
@@ -632,7 +588,6 @@ void main() {
           testContext,
           baseStyle,
           cursorPosition: 0,
-          markerOpacity: 0,
         );
         // "E=mc" (TextSpan) + ^ (WidgetSpan shrink) + 2 (WidgetSpan with padding)
         //   + ^ (WidgetSpan shrink)
@@ -662,7 +617,6 @@ void main() {
           testContext,
           baseStyle,
           cursorPosition: 0,
-          markerOpacity: 0,
         );
         final widgetSpans = spans.whereType<WidgetSpan>().toList();
         // 2 hidden markers (~ ~) + 1 content char (2) = 3 WidgetSpans
@@ -684,7 +638,6 @@ void main() {
           testContext,
           baseStyle,
           cursorPosition: 0,
-          markerOpacity: 0,
         );
         final widgetSpans = spans.whereType<WidgetSpan>().toList();
         final contentWidget = widgetSpans[1]; // the "2" char
@@ -703,7 +656,6 @@ void main() {
           testContext,
           baseStyle,
           cursorPosition: 0,
-          markerOpacity: 0,
         );
         expect(totalSpanLength(spans), input.length);
       });
@@ -719,7 +671,6 @@ void main() {
           testContext,
           baseStyle,
           cursorPosition: 3,
-          markerOpacity: 0,
         );
         // ^ (TextSpan) + 5 WidgetSpan content + ^ (TextSpan) = 7
         expect(spans.length, 7);
@@ -732,26 +683,22 @@ void main() {
         expect(spans.last.text, '^');
       });
 
-      testWidgets('markerOpacity > 0: markers TextSpan (fading), content WidgetSpan',
+      testWidgets('cursor outside: markers instantly hidden WidgetSpan, content WidgetSpan',
           (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
         const baseStyle = TextStyle(fontSize: 16);
-        // Cursor outside but opacity > 0 (animating): markers still TextSpan,
-        // content still WidgetSpan.
+        // Cursor outside: markers become hidden SizedBox.shrink WidgetSpans.
         final spans = builder.build(
           '^super^',
           testContext,
           baseStyle,
           cursorPosition: 100,
-          markerOpacity: 0.5,
         );
-        // ^ (TextSpan) + 5 WidgetSpan + ^ (TextSpan) = 7
+        // ^ (shrink WS) + 5 content WS + ^ (shrink WS) = 7 WidgetSpans
         expect(spans.length, 7);
-        expect(spans.first, isA<TextSpan>());
-        for (final span in spans.sublist(1, 6)) {
+        for (final span in spans) {
           expect(span, isA<WidgetSpan>());
         }
-        expect(spans.last, isA<TextSpan>());
       });
 
       testWidgets('nested ^**bold**^ in preview mode uses all WidgetSpans', (tester) async {
@@ -763,7 +710,6 @@ void main() {
           testContext,
           baseStyle,
           cursorPosition: 100,
-          markerOpacity: 0,
         );
         // ^ (shrink) + ** (shrink×2) + b (WidgetSpan content) + ** (shrink×2) + ^ (shrink)
         // = 7 WidgetSpans total (1 + 2 + 1 + 2 + 1)
@@ -784,7 +730,6 @@ void main() {
           testContext,
           baseStyle,
           cursorPosition: 0,
-          markerOpacity: 0,
         );
         // x (TextSpan) + ^ (shrink) + a (WS) + b (WS) + c (WS) + ^ (shrink) + y (TextSpan)
         expect(spans.length, 7);
@@ -815,7 +760,6 @@ void main() {
           testContext,
           baseStyle,
           cursorPosition: 100,
-          markerOpacity: 0,
         );
         // ^ (shrink) + x (content WS) + ^ (shrink) = 3 WidgetSpans
         expect(spans.length, 3);

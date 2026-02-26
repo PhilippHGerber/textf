@@ -39,10 +39,10 @@ class _CacheEntry {
 ///   styling; brackets, parens, and URL get a dimmed style.
 /// - **Placeholders** `{key}`: Rendered as literal text (no substitution).
 /// - **Super/subscript** `^text^` / `~text~`: In preview mode (cursor
-///   outside, markers fully hidden), each character gets its own [WidgetSpan]
-///   with vertical displacement matching the read-only `Textf` widget. When
-///   the cursor is inside the span or markers are still visible (animating),
-///   falls back to [TextSpan] with reduced font size on the baseline.
+///   outside the span), each character gets its own [WidgetSpan] with
+///   vertical displacement matching the read-only `Textf` widget. When
+///   the cursor is inside the span, falls back to [TextSpan] with reduced
+///   font size on the baseline.
 ///
 /// **Cache note:** The internal LRU cache (`_cache`) is `static` and shared
 /// across all `TextfSpanBuilder` instances. The cache key is the raw text
@@ -100,13 +100,8 @@ class TextfSpanBuilder {
   /// - [context]: BuildContext for style resolution via [TextfStyleResolver].
   /// - [baseStyle]: Base style for unformatted text segments.
   /// - [cursorPosition]: When provided, enables smart-hide mode where markers
-  ///   outside the cursor's formatted span are hidden. Pass `null` to show
-  ///   all markers (default behavior).
-  /// - [markerOpacity]: Controls the opacity of inactive markers during
-  ///   animation. `1.0` means use the default dimmed style, `0.0` means
-  ///   fully hidden (collapsed to near-zero font size). For super/subscript,
-  ///   `0.0` also activates per-character [WidgetSpan] preview mode with
-  ///   vertical displacement.
+  ///   outside the cursor's formatted span are instantly hidden. Pass `null`
+  ///   to show all markers (default behavior).
   ///
   /// Returns a list of [InlineSpan] objects ([TextSpan] and [WidgetSpan]).
   List<InlineSpan> build(
@@ -114,7 +109,6 @@ class TextfSpanBuilder {
     BuildContext context,
     TextStyle baseStyle, {
     int? cursorPosition,
-    double markerOpacity = 1.0,
   }) {
     // Fast path for empty text
     if (text.isEmpty) {
@@ -156,8 +150,8 @@ class TextfSpanBuilder {
 
     // --- Marker styles ---
     final activeMarkerStyle = _resolveMarkerStyle(baseStyle, context);
-    final inactiveMarkerStyle = cursorPosition != null
-        ? _resolveInactiveMarkerStyle(baseStyle, markerOpacity, context)
+    final inactiveMarkerStyle = cursorPosition != null //
+        ? _resolveHiddenMarkerStyle()
         : activeMarkerStyle;
 
     // --- Processing State ---
@@ -188,12 +182,11 @@ class TextfSpanBuilder {
     // Helper: check whether a script pair's MARKERS should be hidden
     // (preview mode). Content always uses WidgetSpan regardless.
     //
-    // Preview mode activates only when:
+    // Preview mode activates when:
     //  1. cursorPosition != null (MarkerVisibility.whenActive)
-    //  2. markerOpacity <= 0   (markers fully hidden, avoids visual snap)
-    //  3. Cursor is outside [openPos, closeEnd]
+    //  2. Cursor is outside [openPos, closeEnd]
     bool isScriptPreviewMode(int openIndex, int closeIndex) {
-      if (cursorPosition == null || markerOpacity > 0) return false;
+      if (cursorPosition == null) return false;
       final openPos = tokens[openIndex].position;
       final closeEnd = tokens[closeIndex].position + tokens[closeIndex].length;
       return !(cursorPosition >= openPos && cursorPosition <= closeEnd);
@@ -449,37 +442,16 @@ class TextfSpanBuilder {
     );
   }
 
-  /// Creates a style for inactive markers based on [opacity].
+  /// Creates a fully-hidden style for inactive markers.
   ///
-  /// When [opacity] is `0.0`, markers are fully hidden with near-zero font
-  /// size. When between `0.0` and `1.0`, markers fade with interpolated alpha
-  /// at normal font size (paint-only change, no relayout).
-  ///
-  /// Falls back to `Theme.of(context).colorScheme.onSurface` when
-  /// [baseStyle] carries no explicit color.
-  TextStyle _resolveInactiveMarkerStyle(
-    TextStyle baseStyle,
-    double opacity,
-    BuildContext context,
-  ) {
-    if (opacity <= 0.0) {
-      // Fully hidden: collapse to near-zero size + transparent.
-      // Negative letterSpacing collapses residual glyph advance widths,
-      // preventing visible gaps when many characters are hidden (e.g. URLs).
-      // Use <= rather than == to catch near-zero computed values from
-      // CurvedAnimation (e.g. 2.2e-16) that would otherwise skip this path.
-      return const TextStyle(
-        color: Color(0x00000000),
-        fontSize: _hiddenFontSize,
-        letterSpacing: -_hiddenFontSize * _hiddenLetterSpacingFactor,
-      );
-    }
-    // Animating: normal font size, interpolated alpha.
-    // Only carry color and fontSize — see _resolveMarkerStyle for rationale.
-    final effectiveColor = baseStyle.color ?? Theme.of(context).colorScheme.onSurface;
-    return TextStyle(
-      color: effectiveColor.withValues(alpha: opacity * _markerOpacity),
-      fontSize: baseStyle.fontSize,
+  /// Collapses markers to near-zero font size and transparent color.
+  /// Negative letterSpacing collapses residual glyph advance widths,
+  /// preventing visible gaps when many characters are hidden (e.g. URLs).
+  TextStyle _resolveHiddenMarkerStyle() {
+    return const TextStyle(
+      color: Color(0x00000000),
+      fontSize: _hiddenFontSize,
+      letterSpacing: -_hiddenFontSize * _hiddenLetterSpacingFactor,
     );
   }
 

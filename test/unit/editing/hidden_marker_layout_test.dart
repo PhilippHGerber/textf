@@ -153,7 +153,6 @@ void main() {
         testContext,
         base,
         cursorPosition: text.length + 1, // beyond all content → inactive
-        markerOpacity: 0,
       );
     }
 

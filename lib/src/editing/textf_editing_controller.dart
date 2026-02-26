@@ -47,8 +47,7 @@ import 'textf_span_builder.dart';
 ///
 /// By default, all formatting markers are visible with a dimmed style. Set
 /// [markerVisibility] to [MarkerVisibility.whenActive] to hide markers
-/// except when the cursor is inside the formatted span. Use [markerOpacity]
-/// to animate the transition (driven by an external [AnimationController]).
+/// instantly when the cursor leaves a formatted span.
 ///
 /// ## How it works
 ///
@@ -84,8 +83,8 @@ class TextfEditingController extends TextEditingController {
   ///
   /// When set to [MarkerVisibility.always], all markers are visible with
   /// dimmed styling (default). When set to [MarkerVisibility.whenActive],
-  /// only markers surrounding the cursor are visible; others are hidden
-  /// based on [markerOpacity].
+  /// only markers surrounding the cursor are visible; others are instantly
+  /// hidden.
   ///
   /// Setting this property calls [notifyListeners] automatically.
   MarkerVisibility get markerVisibility => _markerVisibility;
@@ -97,28 +96,6 @@ class TextfEditingController extends TextEditingController {
     notifyListeners();
   }
 
-  /// Opacity for inactive markers when [markerVisibility] is
-  /// [MarkerVisibility.whenActive].
-  ///
-  /// - `1.0`: markers appear with the default dimmed style.
-  /// - `0.0`: markers are fully hidden (collapsed to near-zero font size).
-  /// - Values between `0.0` and `1.0` produce a smooth fade effect.
-  ///
-  /// Values outside `[0.0, 1.0]` are clamped automatically.
-  /// Setting this property calls [notifyListeners] automatically.
-  ///
-  /// This value is typically driven by an external [AnimationController]
-  /// in the widget that owns this controller.
-  double get markerOpacity => _markerOpacity;
-  double _markerOpacity = 1;
-
-  set markerOpacity(double value) {
-    final clamped = value.clamp(0.0, 1.0);
-    if (_markerOpacity == clamped) return;
-    _markerOpacity = clamped;
-    notifyListeners();
-  }
-
   /// Clears the internal span builder cache.
   ///
   /// Call this method to free memory in low-memory situations.
@@ -127,9 +104,9 @@ class TextfEditingController extends TextEditingController {
 
   /// Forces a rebuild of the text spans without changing state.
   ///
-  /// The [markerOpacity] and [markerVisibility] setters already call
-  /// [notifyListeners] automatically. Use this only when you need a
-  /// rebuild triggered by external state not tracked by this controller.
+  /// The [markerVisibility] setter already calls [notifyListeners]
+  /// automatically. Use this only when you need a rebuild triggered by
+  /// external state not tracked by this controller.
   void invalidate() {
     notifyListeners();
   }
@@ -159,7 +136,6 @@ class TextfEditingController extends TextEditingController {
       context,
       effectiveStyle,
       cursorPosition: cursorPos,
-      markerOpacity: markerOpacity,
     );
 
     // 2. If no composing region is active, just return the parsed spans.

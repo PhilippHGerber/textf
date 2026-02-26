@@ -50,10 +50,6 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
   void _setVisibility(MarkerVisibility visibility) {
     _visibility = visibility;
     _controller.markerVisibility = visibility;
-    // markerOpacity drives inactive marker rendering:
-    // 1.0 = dimmed (same as active), 0.0 = fully hidden + collapsed.
-    _controller.markerOpacity = visibility == MarkerVisibility.always ? 1.0 : 0.0;
-    _controller.invalidate();
     setState(() {});
   }
 
