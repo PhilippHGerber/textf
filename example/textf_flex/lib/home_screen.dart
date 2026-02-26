@@ -66,8 +66,7 @@ class HomeScreen extends StatelessWidget {
                   italicStyle: TextStyle(
                     fontFamily: 'RobotoMono',
                     color: theme.colorScheme.onPrimary,
-                    backgroundColor:
-                        theme.colorScheme.primary.withValues(alpha: 0.5),
+                    backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.5),
                   ),
                   child: Textf(
                     "`$code`",
@@ -167,8 +166,7 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               value: selectedScheme,
               underline: const SizedBox.shrink(),
-              style: theme.appBarTheme.titleTextStyle ??
-                  theme.textTheme.titleMedium,
+              style: theme.appBarTheme.titleTextStyle ?? theme.textTheme.titleMedium,
               iconEnabledColor: theme.appBarTheme.iconTheme?.color,
               items: FlexScheme.values
                   .map(
@@ -199,8 +197,7 @@ class HomeScreen extends StatelessWidget {
             ),
             code:
                 'Textf(\'This is \\*\\*bold**, \\*italic*, \\~~strikethrough~~, \\`inline code\\`\')',
-            textf: Textf(
-                'This is **bold**, *italic*, ~~strikethrough~~, `inline code`'),
+            textf: Textf('This is **bold**, *italic*, ~~strikethrough~~, `inline code`'),
           ),
           _buildExampleCard(
             context: context,
