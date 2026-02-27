@@ -128,7 +128,6 @@ void main() {
 
     setUp(() {
       builder = TextfSpanBuilder();
-      TextfSpanBuilder.clearCache();
     });
 
     /// Pumps a minimal MaterialApp and captures a BuildContext.

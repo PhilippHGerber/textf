@@ -122,8 +122,11 @@ void main() {
       // Since there are no formatting markers, it should produce a single text token.
       expect(tokens.length, 1);
       expect(tokens.first, isA<TextToken>());
-      expect((tokens.first as TextToken).value, text,
-          reason: 'The entire string should be one text token');
+      expect(
+        (tokens.first as TextToken).value,
+        text,
+        reason: 'The entire string should be one text token',
+      );
     });
   });
 }

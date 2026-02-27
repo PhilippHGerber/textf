@@ -19,7 +19,6 @@ void main() {
 
     setUp(() {
       builder = TextfSpanBuilder();
-      TextfSpanBuilder.clearCache();
     });
 
     Widget buildTestWidget(
@@ -361,9 +360,8 @@ void main() {
           // Spans: [ | ** | bold | ** | ]( | url | )
           final spans = builder.build('[**bold**](url)', testContext, const TextStyle());
 
-          final totalChars = spans
-              .whereType<TextSpan>()
-              .fold(0, (n, s) => n + (s.text?.length ?? 0));
+          final totalChars =
+              spans.whereType<TextSpan>().fold(0, (n, s) => n + (s.text?.length ?? 0));
           expect(totalChars, 15);
 
           // spans[0] = '[', spans[1] = '**', spans[2] = 'bold', spans[3] = '**',
@@ -380,9 +378,8 @@ void main() {
           // [_italic_](url) = 15 chars
           final spans = builder.build('[_italic_](url)', testContext, const TextStyle());
 
-          final totalChars = spans
-              .whereType<TextSpan>()
-              .fold(0, (n, s) => n + (s.text?.length ?? 0));
+          final totalChars =
+              spans.whereType<TextSpan>().fold(0, (n, s) => n + (s.text?.length ?? 0));
           expect(totalChars, 15);
 
           expect(spans.length, 7);
@@ -397,9 +394,8 @@ void main() {
           const input = '[**bold** plain](url)';
           final spans = builder.build(input, testContext, const TextStyle());
 
-          final totalChars = spans
-              .whereType<TextSpan>()
-              .fold(0, (n, s) => n + (s.text?.length ?? 0));
+          final totalChars =
+              spans.whereType<TextSpan>().fold(0, (n, s) => n + (s.text?.length ?? 0));
           expect(totalChars, input.length);
 
           // Bold content span should have bold + underline
@@ -421,9 +417,8 @@ void main() {
           const input = '[**unpaired](url)';
           final spans = builder.build(input, testContext, const TextStyle());
 
-          final totalChars = spans
-              .whereType<TextSpan>()
-              .fold(0, (n, s) => n + (s.text?.length ?? 0));
+          final totalChars =
+              spans.whereType<TextSpan>().fold(0, (n, s) => n + (s.text?.length ?? 0));
           expect(totalChars, input.length);
 
           // Link text span should contain literal ** (not styled as bold marker)
@@ -640,19 +635,6 @@ void main() {
         // "[" marker should be active (dimmed, not hidden)
         final bracketColor = spans.first.style?.color;
         expect(bracketColor!.a, greaterThan(0));
-      });
-    });
-
-    group('Cache', () {
-      testWidgets('clearCache does not affect subsequent builds', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-
-        final spans1 = builder.build('**bold**', testContext, const TextStyle());
-        TextfSpanBuilder.clearCache();
-        final spans2 = builder.build('**bold**', testContext, const TextStyle());
-
-        expect(spans1.length, spans2.length);
-        expect(spans1[1].text, spans2[1].text);
       });
     });
 
@@ -874,51 +856,6 @@ void main() {
           expect(span, isA<WidgetSpan>());
         }
         expect(spans.last, isA<TextSpan>());
-      });
-    });
-
-    group('useCache parameter', () {
-      testWidgets('useCache: false produces correct spans', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        const style = TextStyle();
-        final cached = builder.build('**bold**', testContext, style);
-        TextfSpanBuilder.clearCache();
-        final uncached = builder.build(
-          '**bold**',
-          testContext,
-          style,
-          useCache: false,
-        );
-        expect(uncached.length, cached.length);
-        for (var i = 0; i < cached.length; i++) {
-          expect(uncached[i].text, cached[i].text);
-        }
-      });
-
-      testWidgets('useCache: false does not populate cache', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        const style = TextStyle();
-        // Build without cache — should not store anything.
-        builder.build('**test**', testContext, style, useCache: false);
-        // Clear and rebuild with cache — if previous call cached, this would
-        // hit. Instead we verify the result is still correct (functional test).
-        TextfSpanBuilder.clearCache();
-        final spans = builder.build('**test**', testContext, style);
-        expect(spans.length, greaterThan(1));
-        expect(totalSpanLength(spans), '**test**'.length);
-      });
-
-      testWidgets('useCache: false preserves character count invariant', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        const style = TextStyle();
-        const input = '**bold** *italic* `code` [link](url)';
-        final spans = builder.build(
-          input,
-          testContext,
-          style,
-          useCache: false,
-        );
-        expect(totalSpanLength(spans), input.length);
       });
     });
   });

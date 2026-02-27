@@ -9,8 +9,6 @@ void main() {
   group('TextfEditingController', () {
     late TextfEditingController controller;
 
-    setUp(TextfEditingController.clearCache);
-
     tearDown(() {
       controller.dispose();
     });
@@ -316,13 +314,6 @@ void main() {
         expect(openMarker.text, '**');
         // Cursor is on the marker, so it should be visible (not transparent)
         expect(openMarker.style?.color?.a, greaterThan(0));
-      });
-    });
-
-    group('clearCache', () {
-      test('does not throw', () {
-        controller = TextfEditingController();
-        expect(TextfEditingController.clearCache, returnsNormally);
       });
     });
 
