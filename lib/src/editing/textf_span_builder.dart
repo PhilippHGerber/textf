@@ -52,23 +52,23 @@ class TextfSpanBuilder {
     TextfTokenizer? tokenizer,
   }) : _tokenizer = tokenizer ?? TextfTokenizer();
 
-  final TextfTokenizer _tokenizer;
-
-  // Link token structure offsets (mirrors LinkHandler constants).
-  static const int _linkTextOffset = 1;
-  static const int _linkSeparatorOffset = 2;
-  static const int _linkUrlOffset = 3;
-  static const int _linkEndOffset = 4;
-  static const int _linkTokenCount = 5;
-
-  /// Opacity factor for dimmed marker characters.
-  static const double _markerOpacity = 0.4;
-
   /// Near-zero font size for fully hidden markers.
   static const double _hiddenFontSize = 0.01;
 
   /// Multiplier for negative letterSpacing to collapse hidden marker width.
   static const double _hiddenLetterSpacingFactor = 2;
+
+  static const int _linkEndOffset = 4;
+  static const int _linkSeparatorOffset = 2;
+  // Link token structure offsets (mirrors LinkHandler constants).
+  static const int _linkTextOffset = 1;
+
+  static const int _linkTokenCount = 5;
+  static const int _linkUrlOffset = 3;
+  /// Opacity factor for dimmed marker characters.
+  static const double _markerOpacity = 0.4;
+
+  final TextfTokenizer _tokenizer;
 
   /// Builds a list of [InlineSpan] from formatted text.
   ///
