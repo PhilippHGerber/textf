@@ -117,12 +117,6 @@ class TextfEditingController extends TextEditingController {
     notifyListeners();
   }
 
-  /// Clears the internal span builder cache.
-  ///
-  /// Call this method to free memory in low-memory situations.
-  /// The cache will automatically rebuild as text is parsed.
-  static void clearCache() => TextfSpanBuilder.clearCache();
-
   /// Forces a rebuild of the text spans without changing state.
   ///
   /// The [markerVisibility] setter already calls [notifyListeners]
@@ -162,7 +156,6 @@ class TextfEditingController extends TextEditingController {
       context,
       effectiveStyle,
       cursorPosition: cursorPos,
-      useCache: false,
     );
 
     // 2. If no composing region is active, just return the parsed spans.

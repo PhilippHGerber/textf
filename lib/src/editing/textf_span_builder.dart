@@ -1,19 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../core/formatting_utils.dart';
-import '../core/textf_limits.dart';
 import '../models/format_stack_entry.dart';
 import '../models/textf_token.dart';
 import '../parsing/components/pairing_resolver.dart';
 import '../parsing/textf_tokenizer.dart';
 import '../styling/textf_style_resolver.dart';
-
-/// Container for cached tokenization and pairing results.
-class _CacheEntry {
-  _CacheEntry(this.tokens, this.matchingPairs);
-  final List<TextfToken> tokens;
-  final Map<int, int> matchingPairs;
-}
 
 /// Builds a list of [InlineSpan] objects from formatted text.
 ///
@@ -62,9 +54,6 @@ class TextfSpanBuilder {
 
   final TextfTokenizer _tokenizer;
 
-  /// LRU cache for tokenization and pairing results.
-  static final Map<String, _CacheEntry> _cache = <String, _CacheEntry>{};
-
   // Link token structure offsets (mirrors LinkHandler constants).
   static const int _linkTextOffset = 1;
   static const int _linkSeparatorOffset = 2;
@@ -80,14 +69,6 @@ class TextfSpanBuilder {
 
   /// Multiplier for negative letterSpacing to collapse hidden marker width.
   static const double _hiddenLetterSpacingFactor = 2;
-
-  /// Clears the internal span builder cache.
-  ///
-  /// Call this method to free memory in low-memory situations.
-  /// The cache will automatically rebuild as text is parsed.
-  static void clearCache() {
-    _cache.clear();
-  }
 
   /// Builds a list of [InlineSpan] from formatted text.
   ///
@@ -109,7 +90,6 @@ class TextfSpanBuilder {
     BuildContext context,
     TextStyle baseStyle, {
     int? cursorPosition,
-    bool useCache = true,
   }) {
     // Fast path for empty text
     if (text.isEmpty) {
@@ -125,26 +105,8 @@ class TextfSpanBuilder {
     final List<TextfToken> tokens;
     final Map<int, int> validPairs;
 
-    if (useCache && text.length <= TextfLimits.maxCacheKeyLength) {
-      final cached = _cache.remove(text);
-
-      if (cached != null) {
-        tokens = cached.tokens;
-        validPairs = cached.matchingPairs;
-        _cache[text] = cached;
-      } else {
-        tokens = _tokenizer.tokenize(text);
-        validPairs = PairingResolver.identifyPairs(tokens);
-
-        _cache[text] = _CacheEntry(tokens, validPairs);
-        if (_cache.length > TextfLimits.maxCacheEntries) {
-          _cache.remove(_cache.keys.first);
-        }
-      }
-    } else {
-      tokens = _tokenizer.tokenize(text);
-      validPairs = PairingResolver.identifyPairs(tokens);
-    }
+    tokens = _tokenizer.tokenize(text);
+    validPairs = PairingResolver.identifyPairs(tokens);
 
     // --- Style Resolution ---
     final resolver = TextfStyleResolver(context);
