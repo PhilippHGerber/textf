@@ -506,10 +506,26 @@ class TextfSpanBuilder {
       markerStyle = activeMarkerStyle;
     }
 
-    // Emit: [ + link text + ]( + url + )
+    // Emit opening bracket.
+    spans.add(TextSpan(text: '[', style: markerStyle));
+
+    // Process link text: re-tokenize to detect nested formatting markers.
+    final innerTokens = TextfTokenizer().tokenize(linkText);
+    final bool hasNested = innerTokens.any((t) => t is! TextToken);
+    if (hasNested) {
+      _processNestedLinkText(
+        innerTokens: innerTokens,
+        spans: spans,
+        linkStyle: linkStyle,
+        markerStyle: markerStyle,
+        resolver: resolver,
+      );
+    } else {
+      spans.add(TextSpan(text: linkText, style: linkStyle));
+    }
+
+    // Emit: ]( + url + )
     spans
-      ..add(TextSpan(text: '[', style: markerStyle))
-      ..add(TextSpan(text: linkText, style: linkStyle))
       ..add(TextSpan(text: '](', style: markerStyle))
       ..add(TextSpan(text: linkUrl, style: markerStyle))
       ..add(TextSpan(text: ')', style: markerStyle));
@@ -528,6 +544,91 @@ class TextfSpanBuilder {
         tokens[index + _linkSeparatorOffset] is LinkSeparatorToken &&
         tokens[index + _linkUrlOffset] is TextToken &&
         tokens[index + _linkEndOffset] is LinkEndToken;
+  }
+
+  /// Emits styled [TextSpan]s for link text that contains nested format markers.
+  ///
+  /// Uses [linkStyle] as the base style, merging inner formatting on top.
+  /// All format marker characters are emitted with [markerStyle] (the same
+  /// dimmed/hidden style used for the outer link brackets).
+  ///
+  /// Maintains the character-slot invariant: every character in [innerTokens]
+  /// appears exactly once in [spans].
+  ///
+  /// Super/subscript inside link text is intentionally unsupported — inner
+  /// markers use [TextSpan] only (no [WidgetSpan] vertical displacement).
+  static void _processNestedLinkText({
+    required List<TextfToken> innerTokens,
+    required List<InlineSpan> spans,
+    required TextStyle linkStyle,
+    required TextStyle markerStyle,
+    required TextfStyleResolver resolver,
+  }) {
+    final validPairs = PairingResolver.identifyPairs(innerTokens);
+    final formatStack = <FormatStackEntry>[];
+    final textBuffer = StringBuffer();
+
+    TextStyle currentStyle() {
+      if (formatStack.isEmpty) return linkStyle;
+      var style = linkStyle;
+      for (final FormatStackEntry entry in formatStack) {
+        style = resolver.resolveStyle(entry.type, style);
+      }
+      return style;
+    }
+
+    void flushBuffer() {
+      if (textBuffer.isEmpty) return;
+      spans.add(TextSpan(text: textBuffer.toString(), style: currentStyle()));
+      textBuffer.clear();
+    }
+
+    for (int i = 0; i < innerTokens.length; i++) {
+      final token = innerTokens[i];
+
+      if (token is TextToken) {
+        textBuffer.write(token.value);
+        continue;
+      }
+
+      if (token is FormatMarkerToken) {
+        if (validPairs.containsKey(i)) {
+          final int matchingIndex = validPairs[i]!;
+          if (matchingIndex > i) {
+            // Opening marker.
+            flushBuffer();
+            spans.add(TextSpan(text: token.value, style: markerStyle));
+            formatStack.add(
+              FormatStackEntry(
+                index: i,
+                matchingIndex: matchingIndex,
+                type: token.markerType,
+              ),
+            );
+          } else {
+            // Closing marker.
+            flushBuffer();
+            spans.add(TextSpan(text: token.value, style: markerStyle));
+            formatStack.removeWhere((e) => e.index == matchingIndex);
+          }
+        } else {
+          // Unpaired marker → literal text preserving the character slots.
+          textBuffer.write(token.value);
+        }
+        continue;
+      }
+
+      if (token is PlaceholderToken) {
+        // Placeholders inside link text are not substituted in the editing
+        // controller — render literally to preserve character slots.
+        textBuffer
+          ..write('{')
+          ..write(token.key)
+          ..write('}');
+      }
+    }
+
+    flushBuffer();
   }
 
   /// Returns `true` for superscript or subscript marker types.

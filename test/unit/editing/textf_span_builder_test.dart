@@ -345,6 +345,92 @@ void main() {
         expect(spans.length, 1);
         expect(spans.first.text, '[not a link');
       });
+
+      testWidgets('plain text link still renders as single content span', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        final spans = builder.build('[click here](url)', testContext, const TextStyle());
+        // Simple link: [ + text + ]( + url + ) — 5 spans
+        expect(spans.length, 5);
+        expect(spans[1].text, 'click here');
+      });
+
+      group('Nested formatting in link text', () {
+        testWidgets('nested bold renders correctly with link+bold style', (tester) async {
+          await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+          // [**bold**](url) = 15 chars
+          // Spans: [ | ** | bold | ** | ]( | url | )
+          final spans = builder.build('[**bold**](url)', testContext, const TextStyle());
+
+          final totalChars = spans
+              .whereType<TextSpan>()
+              .fold(0, (n, s) => n + (s.text?.length ?? 0));
+          expect(totalChars, 15);
+
+          // spans[0] = '[', spans[1] = '**', spans[2] = 'bold', spans[3] = '**',
+          // spans[4] = '](', spans[5] = 'url', spans[6] = ')'
+          expect(spans.length, 7);
+          final boldSpan = spans[2] as TextSpan;
+          expect(boldSpan.text, 'bold');
+          expect(boldSpan.style?.fontWeight, FontWeight.bold);
+          expect(boldSpan.style?.decoration, TextDecoration.underline);
+        });
+
+        testWidgets('nested italic renders correctly with link+italic style', (tester) async {
+          await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+          // [_italic_](url) = 15 chars
+          final spans = builder.build('[_italic_](url)', testContext, const TextStyle());
+
+          final totalChars = spans
+              .whereType<TextSpan>()
+              .fold(0, (n, s) => n + (s.text?.length ?? 0));
+          expect(totalChars, 15);
+
+          expect(spans.length, 7);
+          final italicSpan = spans[2] as TextSpan;
+          expect(italicSpan.text, 'italic');
+          expect(italicSpan.style?.fontStyle, FontStyle.italic);
+          expect(italicSpan.style?.decoration, TextDecoration.underline);
+        });
+
+        testWidgets('mixed nested formatting maintains character-slot invariant', (tester) async {
+          await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+          const input = '[**bold** plain](url)';
+          final spans = builder.build(input, testContext, const TextStyle());
+
+          final totalChars = spans
+              .whereType<TextSpan>()
+              .fold(0, (n, s) => n + (s.text?.length ?? 0));
+          expect(totalChars, input.length);
+
+          // Bold content span should have bold + underline
+          final boldContentSpan = spans[2] as TextSpan;
+          expect(boldContentSpan.text, 'bold');
+          expect(boldContentSpan.style?.fontWeight, FontWeight.bold);
+          expect(boldContentSpan.style?.decoration, TextDecoration.underline);
+
+          // Plain content after closing ** should have link style only
+          final plainSpan = spans[4] as TextSpan;
+          expect(plainSpan.text, ' plain');
+          expect(plainSpan.style?.fontWeight, isNot(FontWeight.bold));
+          expect(plainSpan.style?.decoration, TextDecoration.underline);
+        });
+
+        testWidgets('unpaired markers in link text render as literal text', (tester) async {
+          await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+          // [**unpaired](url) — ** is not closed inside link text
+          const input = '[**unpaired](url)';
+          final spans = builder.build(input, testContext, const TextStyle());
+
+          final totalChars = spans
+              .whereType<TextSpan>()
+              .fold(0, (n, s) => n + (s.text?.length ?? 0));
+          expect(totalChars, input.length);
+
+          // Link text span should contain literal ** (not styled as bold marker)
+          final linkTextSpan = spans[1] as TextSpan;
+          expect(linkTextSpan.text, contains('**'));
+        });
+      });
     });
 
     group('Placeholder Handling', () {
