@@ -247,7 +247,6 @@ class TextfTokenizer {
       } else if (currentChar == kBacktick) {
         // Inline code (`) - NO FLANKING RULES
         addTextToken(textStart, pos);
-        final flags = _flankingFlags(codeUnits, pos, 1, length);
         tokens.add(
           FormatMarkerToken(
             FormatMarkerType.code,
