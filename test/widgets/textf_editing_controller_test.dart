@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:textf/src/core/textf_limits.dart';
 import 'package:textf/textf.dart';
 
 void main() {
@@ -322,6 +323,99 @@ void main() {
       test('does not throw', () {
         controller = TextfEditingController();
         expect(TextfEditingController.clearCache, returnsNormally);
+      });
+    });
+
+    group('maxLiveFormattingLength', () {
+      test('defaults to TextfLimits.maxLiveFormattingLength', () {
+        controller = TextfEditingController();
+        expect(controller.maxLiveFormattingLength, TextfLimits.maxLiveFormattingLength);
+      });
+
+      test('accepts custom value in constructor', () {
+        controller = TextfEditingController(maxLiveFormattingLength: 100);
+        expect(controller.maxLiveFormattingLength, 100);
+      });
+
+      test('fromValue constructor accepts custom value', () {
+        controller = TextfEditingController.fromValue(
+          const TextEditingValue(text: 'hello'),
+          maxLiveFormattingLength: 50,
+        );
+        expect(controller.maxLiveFormattingLength, 50);
+      });
+
+      test('setter updates value and notifies listeners', () {
+        controller = TextfEditingController();
+        var notified = false;
+        controller
+          ..addListener(() => notified = true)
+          ..maxLiveFormattingLength = 100;
+        expect(controller.maxLiveFormattingLength, 100);
+        expect(notified, isTrue);
+      });
+
+      test('setter does not notify when value unchanged', () {
+        controller = TextfEditingController(maxLiveFormattingLength: 100);
+        var notified = false;
+        controller
+          ..addListener(() => notified = true)
+          ..maxLiveFormattingLength = 100;
+        expect(notified, isFalse);
+      });
+
+      testWidgets('returns plain TextSpan when text exceeds limit', (tester) async {
+        controller = TextfEditingController(
+          text: '**bold** ' * 20,
+          maxLiveFormattingLength: 10,
+        );
+        late TextSpan result;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                result = controller.buildTextSpan(
+                  context: context,
+                  style: const TextStyle(),
+                  withComposing: false,
+                );
+                return Container();
+              },
+            ),
+          ),
+        );
+
+        // Should be a plain TextSpan with no children
+        expect(result.children, isNull);
+        expect(result.text, controller.text);
+      });
+
+      testWidgets('returns formatted TextSpan when text is within limit', (tester) async {
+        controller = TextfEditingController(
+          text: '**bold**',
+          maxLiveFormattingLength: 100,
+        );
+        late TextSpan result;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                result = controller.buildTextSpan(
+                  context: context,
+                  style: const TextStyle(),
+                  withComposing: false,
+                );
+                return Container();
+              },
+            ),
+          ),
+        );
+
+        // Should have children (formatted spans)
+        expect(result.children, isNotNull);
+        expect(result.children!.length, greaterThan(1));
       });
     });
 

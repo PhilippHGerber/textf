@@ -198,6 +198,28 @@ SelectionArea(
 
 ---
 
+## Live Formatting in TextFields
+
+Use `TextfEditingController` as a drop-in replacement for `TextEditingController` to render live-formatted text while the user types:
+
+```dart
+final controller = TextfEditingController();
+
+TextField(controller: controller);
+```
+
+Formatting markers remain visible with dimmed styling, ensuring cursor positions map 1:1 to the raw text. All standard textf formatting types are supported.
+
+### Large Text Protection
+
+For very long texts, formatting is automatically disabled when the text exceeds `maxLiveFormattingLength` (default: 5000 characters) to maintain smooth performance:
+
+```dart
+TextfEditingController(maxLiveFormattingLength: 2500)
+```
+
+---
+
 ## Performance
 
 Textf is designed for performance:

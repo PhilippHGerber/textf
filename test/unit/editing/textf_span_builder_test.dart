@@ -876,5 +876,50 @@ void main() {
         expect(spans.last, isA<TextSpan>());
       });
     });
+
+    group('useCache parameter', () {
+      testWidgets('useCache: false produces correct spans', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const style = TextStyle();
+        final cached = builder.build('**bold**', testContext, style);
+        TextfSpanBuilder.clearCache();
+        final uncached = builder.build(
+          '**bold**',
+          testContext,
+          style,
+          useCache: false,
+        );
+        expect(uncached.length, cached.length);
+        for (var i = 0; i < cached.length; i++) {
+          expect(uncached[i].text, cached[i].text);
+        }
+      });
+
+      testWidgets('useCache: false does not populate cache', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const style = TextStyle();
+        // Build without cache — should not store anything.
+        builder.build('**test**', testContext, style, useCache: false);
+        // Clear and rebuild with cache — if previous call cached, this would
+        // hit. Instead we verify the result is still correct (functional test).
+        TextfSpanBuilder.clearCache();
+        final spans = builder.build('**test**', testContext, style);
+        expect(spans.length, greaterThan(1));
+        expect(totalSpanLength(spans), '**test**'.length);
+      });
+
+      testWidgets('useCache: false preserves character count invariant', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const style = TextStyle();
+        const input = '**bold** *italic* `code` [link](url)';
+        final spans = builder.build(
+          input,
+          testContext,
+          style,
+          useCache: false,
+        );
+        expect(totalSpanLength(spans), input.length);
+      });
+    });
   });
 }

@@ -1,3 +1,6 @@
+import '../../textf.dart' show TextfEditingController;
+import '../editing/textf_editing_controller.dart' show TextfEditingController;
+
 /// Centralized numeric limits and tuning constants for the textf package.
 ///
 /// Keeping these values in one place makes them discoverable
@@ -14,6 +17,12 @@ final class TextfLimits {
 
   /// Maximum formatting nesting depth (e.g., bold inside italic = 2 levels).
   static const int maxNestingDepth = 2;
+
+  /// Maximum text length for live formatting in [TextfEditingController].
+  ///
+  /// Texts exceeding this length are rendered as plain (unformatted) text
+  /// to prevent UI freezes on extreme inputs.
+  static const int maxLiveFormattingLength = 5000;
 
   /// Padding multiplier for script (superscript/subscript) alignment.
   ///

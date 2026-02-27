@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../core/textf_limits.dart';
 import 'marker_visibility.dart';
 import 'textf_span_builder.dart';
 
@@ -68,13 +69,17 @@ class TextfEditingController extends TextEditingController {
   TextfEditingController({
     super.text,
     MarkerVisibility markerVisibility = MarkerVisibility.always,
-  }) : _markerVisibility = markerVisibility;
+    int maxLiveFormattingLength = TextfLimits.maxLiveFormattingLength,
+  })  : _markerVisibility = markerVisibility,
+        _maxLiveFormattingLength = maxLiveFormattingLength;
 
   /// Creates a [TextfEditingController] from a [TextEditingValue].
   TextfEditingController.fromValue(
     super.value, {
     MarkerVisibility markerVisibility = MarkerVisibility.always,
+    int maxLiveFormattingLength = TextfLimits.maxLiveFormattingLength,
   })  : _markerVisibility = markerVisibility,
+        _maxLiveFormattingLength = maxLiveFormattingLength,
         super.fromValue();
 
   static final TextfSpanBuilder _spanBuilder = TextfSpanBuilder();
@@ -93,6 +98,22 @@ class TextfEditingController extends TextEditingController {
   set markerVisibility(MarkerVisibility value) {
     if (_markerVisibility == value) return;
     _markerVisibility = value;
+    notifyListeners();
+  }
+
+  /// Maximum text length for live formatting.
+  ///
+  /// When [text] exceeds this length, [buildTextSpan] returns a plain
+  /// [TextSpan] with no formatting applied. This prevents UI freezes on
+  /// very large inputs. Defaults to [TextfLimits.maxLiveFormattingLength].
+  ///
+  /// Setting this property calls [notifyListeners] automatically.
+  int get maxLiveFormattingLength => _maxLiveFormattingLength;
+  int _maxLiveFormattingLength;
+
+  set maxLiveFormattingLength(int value) {
+    if (_maxLiveFormattingLength == value) return;
+    _maxLiveFormattingLength = value;
     notifyListeners();
   }
 
@@ -124,6 +145,11 @@ class TextfEditingController extends TextEditingController {
       return TextSpan(style: effectiveStyle);
     }
 
+    // Circuit breaker: skip formatting for very long text.
+    if (text.length > _maxLiveFormattingLength) {
+      return TextSpan(text: text, style: effectiveStyle);
+    }
+
     // Resolve cursor position for smart-hide mode.
     final int? cursorPos = markerVisibility == MarkerVisibility.whenActive
         ? (value.selection.isValid ? value.selection.extentOffset : null)
@@ -136,6 +162,7 @@ class TextfEditingController extends TextEditingController {
       context,
       effectiveStyle,
       cursorPosition: cursorPos,
+      useCache: false,
     );
 
     // 2. If no composing region is active, just return the parsed spans.

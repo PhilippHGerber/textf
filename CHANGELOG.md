@@ -25,6 +25,7 @@ All notable changes to the `textf` package will be documented in this file.
   * Respects `TextfOptions` from the widget tree for custom styles.
   * IME composing region support.
   * `MarkerVisibility` mode: choose between always-visible markers or smart-hide (markers only visible when cursor is inside the formatted span).
+  * `maxLiveFormattingLength` property: disables live formatting for texts exceeding a configurable character limit (default 5000). Prevents UI freezes on very large inputs.
 
 ## 1.1.2
 

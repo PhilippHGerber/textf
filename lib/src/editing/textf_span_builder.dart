@@ -109,6 +109,7 @@ class TextfSpanBuilder {
     BuildContext context,
     TextStyle baseStyle, {
     int? cursorPosition,
+    bool useCache = true,
   }) {
     // Fast path for empty text
     if (text.isEmpty) {
@@ -124,7 +125,7 @@ class TextfSpanBuilder {
     final List<TextfToken> tokens;
     final Map<int, int> validPairs;
 
-    if (text.length <= TextfLimits.maxCacheKeyLength) {
+    if (useCache && text.length <= TextfLimits.maxCacheKeyLength) {
       final cached = _cache.remove(text);
 
       if (cached != null) {
