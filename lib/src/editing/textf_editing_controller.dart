@@ -50,6 +50,10 @@ import 'textf_span_builder.dart';
 /// [markerVisibility] to [MarkerVisibility.whenActive] to hide markers
 /// instantly when the cursor leaves a formatted span.
 ///
+/// When text is selected (non-collapsed selection) in [MarkerVisibility.whenActive]
+/// mode, all markers are hidden. This prevents layout jumps on mobile where
+/// marker visibility toggling during drag selection would shift selection handles.
+///
 /// ## How it works
 ///
 /// All characters — including formatting markers — remain visible in the
@@ -89,7 +93,8 @@ class TextfEditingController extends TextEditingController {
   /// When set to [MarkerVisibility.always], all markers are visible with
   /// dimmed styling (default). When set to [MarkerVisibility.whenActive],
   /// only markers surrounding the cursor are visible; others are instantly
-  /// hidden.
+  /// hidden. During text selection, all markers are hidden to prevent
+  /// layout jumps.
   ///
   /// Setting this property calls [notifyListeners] automatically.
   MarkerVisibility get markerVisibility => _markerVisibility;
@@ -145,9 +150,25 @@ class TextfEditingController extends TextEditingController {
     }
 
     // Resolve cursor position for smart-hide mode.
-    final int? cursorPos = markerVisibility == MarkerVisibility.whenActive
-        ? (value.selection.isValid ? value.selection.extentOffset : null)
-        : null;
+    //
+    // Three states:
+    //   null  → always mode: show all markers with dimmed style.
+    //   >= 0  → whenActive + collapsed cursor: show markers only at this pos.
+    //   -1    → whenActive + active selection (or no valid selection): hide
+    //           ALL markers. The sentinel -1 never matches any span range
+    //           (openPos is always >= 0), so every marker gets the hidden
+    //           style. This prevents layout jumps during drag selection on
+    //           mobile, where toggling marker visibility would shift
+    //           selection handles.
+    final int? cursorPos;
+    if (_markerVisibility == MarkerVisibility.whenActive) {
+      final sel = value.selection;
+      cursorPos = sel.isValid && sel.isCollapsed //
+          ? sel.extentOffset
+          : TextfSpanBuilder.hideAllMarkers;
+    } else {
+      cursorPos = null;
+    }
 
     // 1. ALWAYS parse the entire text as a single unit first.
     // This ensures all formatting pairs, links, and nesting are resolved correctly.

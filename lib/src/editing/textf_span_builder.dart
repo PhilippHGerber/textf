@@ -69,6 +69,15 @@ class TextfSpanBuilder {
   /// Opacity factor for dimmed marker characters.
   static const double _markerOpacity = 0.4;
 
+  /// Sentinel value for [build]'s `cursorPosition` parameter that hides ALL
+  /// formatting markers.
+  ///
+  /// When passed as `cursorPosition`, no marker will match (since token
+  /// positions are always ≥ 0), causing every marker to receive the hidden
+  /// style. Used by 'TextfEditingController' during text selection to prevent
+  /// layout jumps on mobile.
+  static const int hideAllMarkers = -1;
+
   final TextfTokenizer _tokenizer;
 
   /// Builds a list of [InlineSpan] from formatted text.
@@ -81,9 +90,11 @@ class TextfSpanBuilder {
   /// - [text]: Input string with formatting markers.
   /// - [context]: BuildContext for style resolution via [TextfStyleResolver].
   /// - [baseStyle]: Base style for unformatted text segments.
-  /// - [cursorPosition]: When provided, enables smart-hide mode where markers
-  ///   outside the cursor's formatted span are instantly hidden. Pass `null`
-  ///   to show all markers (default behavior).
+  /// - [cursorPosition]: Controls marker visibility in smart-hide mode.
+  ///   Pass `null` to show all markers with dimmed styling (default).
+  ///   Pass a valid offset (≥ 0) to show markers only at that cursor
+  ///   position. Pass [hideAllMarkers] (-1) to hide ALL markers — used
+  ///   during text selection to prevent layout jumps on mobile.
   ///
   /// Returns a list of [InlineSpan] objects ([TextSpan] and [WidgetSpan]).
   List<InlineSpan> build(
