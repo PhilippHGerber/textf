@@ -65,6 +65,7 @@ class TextfSpanBuilder {
 
   static const int _linkTokenCount = 5;
   static const int _linkUrlOffset = 3;
+
   /// Opacity factor for dimmed marker characters.
   static const double _markerOpacity = 0.4;
 
