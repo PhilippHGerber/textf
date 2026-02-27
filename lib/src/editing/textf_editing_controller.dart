@@ -183,31 +183,46 @@ class TextfEditingController extends TextEditingController {
       } else {
         // Span overlaps with the composing range
         if (span is TextSpan) {
-          final String spanText = span.text!;
+          final String? rawText = span.text;
 
-          // Calculate local intersection indices
-          final int startInSpan = (composing.start > spanStart) ? composing.start - spanStart : 0;
-          final int endInSpan = (composing.end < spanEnd) ? composing.end - spanStart : spanLength;
+          if (rawText == null || rawText.isEmpty) {
+            // Safety fallback: if span has no text, pass it through untouched
+            children.add(span);
+          } else {
+            // Calculate local intersection indices
+            final int startInSpan = (composing.start > spanStart) //
+                ? composing.start - spanStart
+                : 0;
+            final int endInSpan = (composing.end < spanEnd) //
+                ? composing.end - spanStart
+                : spanLength;
 
-          // Segment before composing
-          if (startInSpan > 0) {
-            // ignore: avoid-substring
-            children.add(TextSpan(text: spanText.substring(0, startInSpan), style: span.style));
-          }
+            // Note on avoid-substring:
+            // It is strictly necessary to use `substring` here instead of `characters`.
+            // Flutter's `TextEditingValue.composing` provides indices based on UTF-16
+            // code units, which perfectly align with Dart's `String.substring`.
+            // Using grapheme clusters (`characters`) would cause index mismatch crashes.
 
-          // Segment currently composing (inject underline)
-          if (endInSpan > startInSpan) {
-            final TextStyle mergedStyle = span.style?.merge(composingStyle) ?? composingStyle;
-            // ignore: avoid-substring
-            children.add(
-              TextSpan(text: spanText.substring(startInSpan, endInSpan), style: mergedStyle),
-            );
-          }
+            // Segment before composing
+            if (startInSpan > 0) {
+              // ignore: avoid-substring, indices are based on UTF-16 code units
+              children.add(TextSpan(text: rawText.substring(0, startInSpan), style: span.style));
+            }
 
-          // Segment after composing
-          if (endInSpan < spanLength) {
-            // ignore: avoid-substring
-            children.add(TextSpan(text: spanText.substring(endInSpan), style: span.style));
+            // Segment currently composing (inject underline)
+            if (endInSpan > startInSpan) {
+              final TextStyle mergedStyle = span.style?.merge(composingStyle) ?? composingStyle;
+              children.add(
+                // ignore: avoid-substring, indices are based on UTF-16 code units
+                TextSpan(text: rawText.substring(startInSpan, endInSpan), style: mergedStyle),
+              );
+            }
+
+            // Segment after composing
+            if (endInSpan < spanLength) {
+              // ignore: avoid-substring
+              children.add(TextSpan(text: rawText.substring(endInSpan), style: span.style));
+            }
           }
         } else if (span is WidgetSpan) {
           // WidgetSpans (used for preview mode scripts) are atomic.
