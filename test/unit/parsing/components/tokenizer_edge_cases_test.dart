@@ -136,8 +136,7 @@ void main() {
     });
 
     group('Flanking flags', () {
-      FormatMarkerToken markerAt(List<TextfToken> tokens, int position) =>
-          tokens.firstWhere(
+      FormatMarkerToken markerAt(List<TextfToken> tokens, int position) => tokens.firstWhere(
             (t) => t is FormatMarkerToken && t.position == position,
           ) as FormatMarkerToken;
 
@@ -207,6 +206,76 @@ void main() {
         final marker = markerAt(tokens, 4);
         expect(marker.canClose, isTrue);
         expect(marker.canOpen, isFalse);
+      });
+
+      test('Unicode whitespaces are correctly recognized for flanking', () {
+        // U+00A0 is Non-Breaking Space, U+3000 is Ideographic (Japanese) Space
+        final tokens = tokenizer.tokenize('*\u00A0word\u3000*');
+
+        final first = markerAt(tokens, 0);
+        // Space follows the first asterisk, so it CANNOT open
+        expect(first.canOpen, isFalse, reason: 'Should recognize NBSP as whitespace');
+
+        final second = markerAt(tokens, 7);
+        // Space precedes the second asterisk, so it CANNOT close
+        expect(
+          second.canClose,
+          isFalse,
+          reason: 'Should recognize Ideographic Space as whitespace',
+        );
+      });
+
+      test('All supported Unicode whitespaces are correctly recognized for flanking', () {
+        // A map of code units to their readable names for debugging if a test fails
+        final testWhitespaces = <int, String>{
+          // Standard ASCII
+          0x0020: 'Space',
+          0x0009: 'Tab',
+          0x000A: 'Line Feed',
+          0x000D: 'Carriage Return',
+          // iOS/macOS Non-Breaking Space
+          0x00A0: 'Non-Breaking Space (NBSP)',
+          // Unicode Space Block (Testing boundaries and a middle value)
+          0x2000: 'En Quad (Block Start)',
+          0x2005: 'Four-Per-Em Space (Block Middle)',
+          0x200A: 'Hair Space (Block End)',
+          // Specific Formatting Whitespaces
+          0x2028: 'Line Separator',
+          0x2029: 'Paragraph Separator',
+          0x202F: 'Narrow No-Break Space',
+          0x205F: 'Medium Mathematical Space',
+          // CJK Full-width
+          0x3000: 'Ideographic (Japanese) Space',
+        };
+
+        for (final entry in testWhitespaces.entries) {
+          final wsChar = String.fromCharCode(entry.key);
+          final wsName = entry.value;
+          final hexCode = entry.key.toRadixString(16).toUpperCase().padLeft(4, '0');
+
+          // Construct string: '*' + whitespace + 'word' + whitespace + '*'
+          final text = '*${wsChar}word$wsChar*';
+          final tokens = tokenizer.tokenize(text);
+
+          // 1. Check Opening Marker (Index 0)
+          final first = markerAt(tokens, 0);
+          expect(
+            first.canOpen,
+            isFalse,
+            reason:
+                'Should recognize $wsName (U+$hexCode) as whitespace following an opening marker',
+          );
+
+          // 2. Check Closing Marker (Index 7)
+          // Breakdown: 0: *, 1: ws, 2-5: 'word', 6: ws, 7: *
+          final second = markerAt(tokens, 7);
+          expect(
+            second.canClose,
+            isFalse,
+            reason:
+                'Should recognize $wsName (U+$hexCode) as whitespace preceding a closing marker',
+          );
+        }
       });
     });
   });

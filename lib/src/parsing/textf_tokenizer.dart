@@ -339,10 +339,47 @@ class TextfTokenizer {
     return tokens;
   }
 
-  /// Returns whether [codeUnit] is an ASCII whitespace character
-  /// (space, tab, LF, or CR).
-  bool _isWhitespace(int codeUnit) =>
-      codeUnit == 0x20 || codeUnit == 0x09 || codeUnit == 0x0A || codeUnit == 0x0D;
+  /// Returns whether [codeUnit] is a whitespace character.
+  ///
+  /// Includes ASCII whitespace, Non-Breaking Spaces (common on iOS),
+  /// Ideographic Spaces (common in CJK/Japanese), and general Unicode spaces.
+  bool _isWhitespace(int codeUnit) {
+    // Fast path for standard ASCII whitespace (Space, Tab, LF, CR)
+    if (codeUnit == 0x0020 || codeUnit == 0x0009 || codeUnit == 0x000A || codeUnit == 0x000D) {
+      return true;
+    }
+
+    // Non-breaking space (very common on iOS/macOS keyboards)
+    if (codeUnit == 0x00A0) {
+      return true;
+    }
+
+    // Quick exit for most standard Latin characters to keep the parser fast
+    if (codeUnit < 0x00A0) {
+      return false;
+    }
+
+    // Ideographic space (Full-width space used in Japanese/Chinese/Korean)
+    if (codeUnit == 0x3000) {
+      return true;
+    }
+
+    // Unicode space block (U+2000 to U+200A: En space, Em space, Hair space, etc.)
+    if (codeUnit >= 0x2000 && codeUnit <= 0x200A) {
+      return true;
+    }
+
+    // Other specific formatting whitespaces
+    if (codeUnit == 0x2028 || // Line separator
+        codeUnit == 0x2029 || // Paragraph separator
+        codeUnit == 0x202F || // Narrow no-break space
+        codeUnit == 0x205F) {
+      // Medium mathematical space
+      return true;
+    }
+
+    return false;
+  }
 
   /// Computes left- and right-flanking flags for a marker run.
   ///
