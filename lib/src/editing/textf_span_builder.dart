@@ -118,7 +118,7 @@ class TextfSpanBuilder {
     final Map<int, int> validPairs;
 
     tokens = _tokenizer.tokenize(text);
-    validPairs = PairingResolver.identifyPairs(tokens);
+    validPairs = PairingResolver.identifyPairs(tokens, allowNewlineCrossing: false);
 
     // --- Style Resolution ---
     final resolver = TextfStyleResolver(context);

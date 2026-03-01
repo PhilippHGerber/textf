@@ -16,12 +16,19 @@ class PairingResolver {
   /// 3. Validates proper nesting of the identified pairs using NestingValidator.
   ///
   /// @param tokens The list of tokens to analyze
+  /// @param allowNewlineCrossing When false, pairs whose span contains a newline are
+  ///   rejected during the pairing pass. Set to false for the editing controller path
+  ///   where cross-line pairing is always accidental; leave true (default) for the
+  ///   display widget where developer-authored cross-line formatting is intentional.
   /// @return A map where keys are token indices and values are their matching pair indices
-  static Map<int, int> identifyPairs(List<TextfToken> tokens) {
+  static Map<int, int> identifyPairs(
+    List<TextfToken> tokens, {
+    bool allowNewlineCrossing = true,
+  }) {
     final Map<int, int> pairs = {};
 
     // First pass: identify simple pairs by type
-    _identifySimplePairs(tokens, pairs);
+    _identifySimplePairs(tokens, pairs, allowNewlineCrossing: allowNewlineCrossing);
 
     // Second pass: remove pairs that cross code-span boundaries or are
     // entirely inside a code span, so they cannot corrupt code pair validity.
@@ -97,9 +104,19 @@ class PairingResolver {
   /// This method uses a stack-based approach to pair opening and closing
   /// markers of the same type in a left-to-right pass.
   ///
+  /// When [allowNewlineCrossing] is false, a candidate pair is rejected if any
+  /// token between the opener and the current closer contains a newline. In that
+  /// case the opener is left on the stack and the current token is pushed as a
+  /// new opener (if [FormatMarkerToken.canOpen]), allowing it to pair with a
+  /// subsequent same-line closer.
+  ///
   /// @param tokens The list of tokens to analyze
   /// @param pairs The map to populate with identified pairs
-  static void _identifySimplePairs(List<TextfToken> tokens, Map<int, int> pairs) {
+  static void _identifySimplePairs(
+    List<TextfToken> tokens,
+    Map<int, int> pairs, {
+    bool allowNewlineCrossing = true,
+  }) {
     // Stack of opening markers for each format type
     final Map<FormatMarkerType, List<int>> openingStacks = {
       FormatMarkerType.bold: [],
@@ -128,8 +145,21 @@ class PairingResolver {
       if (stack == null) continue; // Should not happen for known formatting markers
 
       if (stack.isNotEmpty && token.canClose) {
+        final int openingIndex = stack.last; // peek before deciding
+
+        // When newline crossing is disabled, reject any pair whose span
+        // contains a newline. Leave the opener on the stack so a later
+        // same-line closer can still match it, and push the current token
+        // as a new opener if it qualifies.
+        if (!allowNewlineCrossing && _hasNewlineBetween(tokens, openingIndex, i)) {
+          if (token.canOpen) {
+            stack.add(i);
+          }
+          continue;
+        }
+
         // An opener exists and this token can close — pair them.
-        final int openingIndex = stack.removeLast();
+        stack.removeLast();
 
         // Record the pair (bidirectionally)
         pairs[openingIndex] = i;
@@ -143,5 +173,15 @@ class PairingResolver {
     }
     // At this point, any markers remaining on the stacks in `openingStacks`
     // are unpaired opening markers. They will not be included in the `pairs` map.
+  }
+
+  /// Returns true if any [TextToken] between [open] and [close] (exclusive)
+  /// contains a newline character.
+  static bool _hasNewlineBetween(List<TextfToken> tokens, int open, int close) {
+    for (int i = open + 1; i < close; i++) {
+      final token = tokens[i];
+      if (token is TextToken && token.value.contains('\n')) return true;
+    }
+    return false;
   }
 }

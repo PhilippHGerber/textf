@@ -102,6 +102,56 @@ void main() {
       });
     });
 
+    group('allowNewlineCrossing: false (editing controller path)', () {
+      /// Like [resolvedPairs] but with cross-line pairing disabled.
+      Set<String> resolvedPairsNoNewline(String text) {
+        final tokens = tokenizer.tokenize(text);
+        final pairs = PairingResolver.identifyPairs(tokens, allowNewlineCrossing: false);
+        final result = <String>{};
+        pairs.forEach((key, value) {
+          if (key < value) {
+            result.add(
+              '${(tokens[key] as FormatMarkerToken).value}'
+              ' -> '
+              '${(tokens[value] as FormatMarkerToken).value}',
+            );
+          }
+        });
+        return result;
+      }
+
+      test('cross-line superscript pairing is prevented', () {
+        // x^2\nmath x^2^ — the ^ on line 1 must not pair with the ^ on line 2.
+        // Expected: line 2's ^2^ pair survives; line 1's ^ is unpaired.
+        expect(resolvedPairsNoNewline('x^2\nmath x^2^'), {'^ -> ^'});
+      });
+
+      test('same-line superscript pairing still works', () {
+        expect(resolvedPairsNoNewline('x^2^ is a formula'), {'^ -> ^'});
+      });
+
+      test('bold markers across lines do not pair', () {
+        expect(resolvedPairsNoNewline('Hello **world\nand bold** here'), isEmpty);
+      });
+
+      test('independent same-line pairs on consecutive lines both survive', () {
+        // x^2^ and y^3^\na^2^ and b^3^ — two pairs per line, all same-line.
+        expect(
+          resolvedPairsNoNewline('x^2^ and y^3^\na^2^ and b^3^'),
+          {'^ -> ^'},
+        );
+      });
+
+      test('single-line formatting unaffected — control case', () {
+        expect(resolvedPairsNoNewline('E = mc^2^'), {'^ -> ^'});
+      });
+
+      test('default allowNewlineCrossing: true still allows cross-line pairs', () {
+        // Confirm the display widget path is unaffected.
+        expect(resolvedPairs('Hello **world\nand bold** here'), {'** -> **'});
+      });
+    });
+
     group('flanking rules', () {
       test('bullet asterisk produces no pairs', () {
         // '* Item' — * has canOpen=false (space follows) and canClose=false (SOF)
