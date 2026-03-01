@@ -71,14 +71,18 @@ class TextfTokenizer {
             nextChar == kOpenBrace ||
             nextChar == kCloseBrace) {
           addTextToken(textStart, pos);
-          // Just add the escaped character as normal text
-          tokens.add(
-            TextToken(
-              String.fromCharCode(nextChar),
-              position: pos + 1, // Position of the character itself
-              length: 1, // Length of the character itself
-            ),
-          );
+          tokens
+            // 1. Emit the backslash as a distinct marker token
+            ..add(EscapeMarkerToken(position: pos, length: 1))
+            // 2. Emit the escaped character as normal text
+            ..add(
+              TextToken(
+                String.fromCharCode(nextChar),
+                position: pos + 1, // Position of the character itself
+                length: 1, // Length of the character itself
+              ),
+            );
+
           pos += 2; // Skip escape character and the escaped character
           textStart = pos;
           continue;

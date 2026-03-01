@@ -466,6 +466,41 @@ void main() {
       });
     });
 
+    group('Escape Characters (editing mode)', () {
+      testWidgets('escaped marker preserves character-slot invariant', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        // Raw text: \*not italic* (13 chars)
+        // The \ must occupy a slot so total equals 13.
+        const input = r'\*not italic*';
+        final spans = builder.build(input, testContext, const TextStyle());
+        expect(totalSpanLength(spans), input.length);
+      });
+
+      testWidgets('escaped bold marker preserves character-slot invariant', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        // Raw: a\**b** — escape stops the ** from being a bold marker opener.
+        const input = r'a\**b**';
+        final spans = builder.build(input, testContext, const TextStyle());
+        expect(totalSpanLength(spans), input.length);
+      });
+
+      testWidgets('escaped backslash preserves character-slot invariant', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        // Raw: \\ (2 chars) → editing mode emits \\ as a 2-char token.
+        const input = r'\\';
+        final spans = builder.build(input, testContext, const TextStyle());
+        expect(totalSpanLength(spans), input.length);
+      });
+
+      testWidgets('escaped marker in link text preserves character-slot invariant', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        // [a\*b](url) — the link-text portion is 4 chars (a \ * b).
+        const input = r'[a\*b](url)';
+        final spans = builder.build(input, testContext, const TextStyle());
+        expect(totalSpanLength(spans), input.length);
+      });
+    });
+
     group('Unpaired Markers', () {
       testWidgets('single asterisk renders as plain text', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));

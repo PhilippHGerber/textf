@@ -113,7 +113,6 @@ class TextfSpanBuilder {
       return <InlineSpan>[TextSpan(text: text, style: baseStyle)];
     }
 
-    // --- Cache Lookup & Update ---
     final List<TextfToken> tokens;
     final Map<int, int> validPairs;
 
@@ -391,6 +390,16 @@ class TextfSpanBuilder {
         // exists only to satisfy Dart's exhaustive sealed-class switch.
         case PlaceholderToken(:final key):
           textBuffer.write('{$key}');
+        case EscapeMarkerToken():
+          flushText();
+          final TextStyle style;
+          // Smart-hide logic for the escape marker
+          style = cursorPosition != null
+              ? cursorPosition >= token.position && cursorPosition <= token.position + 1
+                  ? activeMarkerStyle
+                  : inactiveMarkerStyle
+              : activeMarkerStyle;
+          spans.add(TextSpan(text: r'\', style: style));
       }
       i++;
     }
@@ -600,6 +609,12 @@ class TextfSpanBuilder {
           ..write('{')
           ..write(token.key)
           ..write('}');
+      }
+
+      if (token is EscapeMarkerToken) {
+        flushBuffer();
+        spans.add(TextSpan(text: r'\', style: markerStyle));
+        continue;
       }
     }
 

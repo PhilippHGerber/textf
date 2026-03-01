@@ -128,3 +128,12 @@ final class PlaceholderToken extends TextfToken {
   @override
   String toString() => 'PlaceholderToken("$key" at $position)';
 }
+
+/// A marker token representing an escape character `\`.
+final class EscapeMarkerToken extends TextfToken {
+  /// Creates an escape marker token.
+  const EscapeMarkerToken({required super.position, required super.length});
+
+  @override
+  String toString() => 'EscapeMarkerToken(at $position)';
+}

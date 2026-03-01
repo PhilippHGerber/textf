@@ -212,74 +212,103 @@ void main() {
 
       test('Code with internal backticks is correctly tokenized', () {
         final tokens = tokenizer.tokenize(r'This `code has \` character` inside');
-        // The tokenizer just identifies the markers, it doesn't validate pairing
-        expect(tokens.length, 7);
+        // The tokenizer just identifies the markers, it doesn't validate pairing.
+        // \` produces EscapeMarkerToken + TextToken("`"), adding one extra token.
+        expect(tokens.length, 8);
         expect(tokens[1], isA<FormatMarkerToken>());
         expect((tokens[1] as FormatMarkerToken).markerType, FormatMarkerType.code);
-        expect(tokens[3], isA<TextToken>());
-        expect((tokens[4] as TextToken).value, ' character');
-        expect(tokens[5], isA<FormatMarkerToken>());
-        expect((tokens[5] as FormatMarkerToken).markerType, FormatMarkerType.code);
+        expect(tokens[3], isA<EscapeMarkerToken>());
+        expect(tokens[4], isA<TextToken>());
+        expect((tokens[4] as TextToken).value, '`');
+        expect(tokens[5], isA<TextToken>());
+        expect((tokens[5] as TextToken).value, ' character');
+        expect(tokens[6], isA<FormatMarkerToken>());
+        expect((tokens[6] as FormatMarkerToken).markerType, FormatMarkerType.code);
       });
     });
 
     group('Escape Sequences', () {
       test('Escaped asterisk', () {
+        // Each \* produces EscapeMarkerToken + TextToken("*"), so 2 extra tokens.
         final tokens = tokenizer.tokenize(r'This is \*not italic\*');
-        expect(tokens.length, 4);
+        expect(tokens.length, 6);
         expect(tokens.first, isA<TextToken>());
         expect((tokens.first as TextToken).value, 'This is ');
-        expect(tokens[1], isA<TextToken>());
-        expect((tokens[1] as TextToken).value, '*');
-        expect(tokens[2], isA<TextToken>());
-        expect((tokens[2] as TextToken).value, 'not italic');
-        expect(tokens[3], isA<TextToken>());
-        expect((tokens[3] as TextToken).value, '*');
-      });
-
-      test('Escaped underscore', () {
-        final tokens = tokenizer.tokenize(r'This is \_not italic\_');
-        expect(tokens.length, 4);
-        expect(tokens[1], isA<TextToken>());
-        expect((tokens[1] as TextToken).value, '_');
-        expect(tokens[3], isA<TextToken>());
-        expect((tokens[3] as TextToken).value, '_');
-      });
-
-      test('Escaped tilde', () {
-        final tokens = tokenizer.tokenize(r'This is \~not tilde\~');
-        expect(tokens.length, 4);
-        expect(tokens[1], isA<TextToken>());
-        expect((tokens[1] as TextToken).value, '~');
-        expect(tokens[3], isA<TextToken>());
-        expect((tokens[3] as TextToken).value, '~');
-      });
-
-      test('Escaped backtick', () {
-        final tokens = tokenizer.tokenize(r'This is \`not code\`');
-        expect(tokens.length, 4);
-        expect(tokens[1], isA<TextToken>());
-        expect((tokens[1] as TextToken).value, '`');
-        expect(tokens[3], isA<TextToken>());
-        expect((tokens[3] as TextToken).value, '`');
-      });
-
-      test('Escaped backslash', () {
-        final tokens = tokenizer.tokenize(r'This is \\backslash');
-        expect(tokens.length, 3);
-        expect(tokens[1], isA<TextToken>());
-        expect((tokens[1] as TextToken).value, r'\');
-      });
-
-      test('Multiple escaped characters', () {
-        final tokens = tokenizer.tokenize(r'This has \*\*\* many escapes');
-        expect(tokens.length, 5);
-        expect(tokens[1], isA<TextToken>());
-        expect((tokens[1] as TextToken).value, '*');
+        expect(tokens[1], isA<EscapeMarkerToken>());
         expect(tokens[2], isA<TextToken>());
         expect((tokens[2] as TextToken).value, '*');
         expect(tokens[3], isA<TextToken>());
-        expect((tokens[3] as TextToken).value, '*');
+        expect((tokens[3] as TextToken).value, 'not italic');
+        expect(tokens[4], isA<EscapeMarkerToken>());
+        expect(tokens[5], isA<TextToken>());
+        expect((tokens[5] as TextToken).value, '*');
+      });
+
+      test('Escaped underscore', () {
+        // Each \_ produces EscapeMarkerToken + TextToken("_"), so 2 extra tokens.
+        final tokens = tokenizer.tokenize(r'This is \_not italic\_');
+        expect(tokens.length, 6);
+        expect(tokens[1], isA<EscapeMarkerToken>());
+        expect(tokens[2], isA<TextToken>());
+        expect((tokens[2] as TextToken).value, '_');
+        expect(tokens[4], isA<EscapeMarkerToken>());
+        expect(tokens[5], isA<TextToken>());
+        expect((tokens[5] as TextToken).value, '_');
+      });
+
+      test('Escaped tilde', () {
+        // Each \~ produces EscapeMarkerToken + TextToken("~"), so 2 extra tokens.
+        final tokens = tokenizer.tokenize(r'This is \~not tilde\~');
+        expect(tokens.length, 6);
+        expect(tokens[1], isA<EscapeMarkerToken>());
+        expect(tokens[2], isA<TextToken>());
+        expect((tokens[2] as TextToken).value, '~');
+        expect(tokens[4], isA<EscapeMarkerToken>());
+        expect(tokens[5], isA<TextToken>());
+        expect((tokens[5] as TextToken).value, '~');
+      });
+
+      test('Escaped backtick', () {
+        // Each \` produces EscapeMarkerToken + TextToken("`"), so 2 extra tokens.
+        final tokens = tokenizer.tokenize(r'This is \`not code\`');
+        expect(tokens.length, 6);
+        expect(tokens[1], isA<EscapeMarkerToken>());
+        expect(tokens[2], isA<TextToken>());
+        expect((tokens[2] as TextToken).value, '`');
+        expect(tokens[4], isA<EscapeMarkerToken>());
+        expect(tokens[5], isA<TextToken>());
+        expect((tokens[5] as TextToken).value, '`');
+      });
+
+      test('Escaped backslash', () {
+        // \\ produces EscapeMarkerToken + TextToken("\"), adding one extra token.
+        final tokens = tokenizer.tokenize(r'This is \\backslash');
+        expect(tokens.length, 4);
+        expect(tokens[1], isA<EscapeMarkerToken>());
+        expect(tokens[2], isA<TextToken>());
+        expect((tokens[2] as TextToken).value, r'\');
+        expect(tokens[3], isA<TextToken>());
+        expect((tokens[3] as TextToken).value, 'backslash');
+      });
+
+      test('Multiple escaped characters', () {
+        // Each \* produces EscapeMarkerToken + TextToken("*"), so 3×2 = 6 extra
+        // tokens alongside the leading and trailing TextTokens.
+        final tokens = tokenizer.tokenize(r'This has \*\*\* many escapes');
+        expect(tokens.length, 8);
+        expect(tokens.first, isA<TextToken>());
+        expect((tokens.first as TextToken).value, 'This has ');
+        expect(tokens[1], isA<EscapeMarkerToken>());
+        expect(tokens[2], isA<TextToken>());
+        expect((tokens[2] as TextToken).value, '*');
+        expect(tokens[3], isA<EscapeMarkerToken>());
+        expect(tokens[4], isA<TextToken>());
+        expect((tokens[4] as TextToken).value, '*');
+        expect(tokens[5], isA<EscapeMarkerToken>());
+        expect(tokens[6], isA<TextToken>());
+        expect((tokens[6] as TextToken).value, '*');
+        expect(tokens[7], isA<TextToken>());
+        expect((tokens[7] as TextToken).value, ' many escapes');
       });
 
       test('Escape followed by non-special character is treated literally', () {

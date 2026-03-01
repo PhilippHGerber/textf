@@ -37,10 +37,13 @@ void main() {
         const text = r'\\\\';
         final tokens = tokenizer.tokenize(text);
 
-        // \\\\ should produce two literal backslashes
-        expect(tokens.length, 2);
-        expect((tokens.first as TextToken).value, r'\');
+        // \\\\ should produce two literal backslashes, each as
+        // EscapeMarkerToken + TextToken("\") to preserve the character count.
+        expect(tokens.length, 4);
+        expect(tokens.first, isA<EscapeMarkerToken>());
         expect((tokens[1] as TextToken).value, r'\');
+        expect(tokens[2], isA<EscapeMarkerToken>());
+        expect((tokens[3] as TextToken).value, r'\');
       });
 
       test('handles escape before non-formatting punctuation', () {

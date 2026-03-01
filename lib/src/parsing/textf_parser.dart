@@ -209,6 +209,9 @@ class TextfParser {
           state.textBuffer.write(')');
         case PlaceholderToken(:final key):
           state.textBuffer.write('{$key}');
+        case EscapeMarkerToken():
+          // Do nothing. This effectively strips the '\' from the visual output.
+          break;
       }
       i++;
     }

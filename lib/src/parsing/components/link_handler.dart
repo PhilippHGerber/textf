@@ -80,8 +80,12 @@ class LinkHandler {
     final tokenizerForLinkText = TextfTokenizer();
     final linkTextTokens = tokenizerForLinkText.tokenize(rawLinkText);
 
-    // Check if the link text contains any non-text tokens (markers or placeholders)
-    final bool containsFormattingMarkers = linkTextTokens.any((token) => token is! TextToken);
+    // Check if the link text contains any non-text tokens (markers or placeholders).
+    // EscapeMarkerToken is excluded: it carries no visual formatting of its own and
+    // the else-branch already strips escape characters via regex.
+    final bool containsFormattingMarkers = linkTextTokens.any(
+      (token) => token is! TextToken && token is! EscapeMarkerToken,
+    );
 
     if (containsFormattingMarkers) {
       final innerParser = TextfParser();
