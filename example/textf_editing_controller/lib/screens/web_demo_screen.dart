@@ -33,7 +33,7 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
           '• **Bold**, *Italic* text and ***both***\n'
           '• ~~Strikethrough~~ and ++Underline++\n'
           '• ==Highlighting== and `inline code` blocks\n\n'
-          '• ==**NEW**== Sup/subscript: E=mc^2^ and H~2~O \n\n'
+          '• Superscript x^2^ + y^2^ and subscript H~2~O\n\n'
           'Check out the [Documentation](https://pub.dev/packages/textf) '
           'for more details.',
     );
