@@ -204,30 +204,46 @@ class TextfSpanBuilder {
           style: style,
           isSuperscript: isSuperscript,
         );
+
         final String content = textBuffer.toString();
-        for (var c = 0; c < content.length; c++) {
+
+        // 1. Iterate over safe, visible characters (Grapheme Clusters)
+        // This prevents splitting emojis (like 🚀 or 👨‍👩‍👧‍👦) in half.
+        for (final String char in content.characters) {
+          // 2. Emit the visible WidgetSpan for this character.
+          // In a TextField, every WidgetSpan counts as exactly ONE code unit.
           spans.add(
             WidgetSpan(
               alignment: PlaceholderAlignment.middle,
               child: Padding(
                 padding: padding,
                 child: Text(
-                  content[c],
+                  char,
                   style: style,
                   textScaler: TextScaler.noScaling,
                 ),
               ),
             ),
           );
+
+          // 3. CRITICAL TEXTFIELD INVARIANT FIX:
+          // In Dart, `char.length` is the number of UTF-16 code units.
+          // Standard characters have length 1. Emojis usually have length 2 or more.
+          // If this character takes up 2 code units in the raw string, but we only
+          // emitted 1 WidgetSpan, the TextField's cursor will misalign and crash.
+          // We fix this by padding the span tree with completely hidden
+          // WidgetSpans to make up the missing code unit length.
+          for (int i = 1; i < char.length; i++) {
+            spans.add(const WidgetSpan(child: SizedBox.shrink()));
+          }
         }
       } else {
         spans.add(TextSpan(text: textBuffer.toString(), style: currentStyle()));
       }
 
       textBuffer.clear();
-    }
+    } // Helper: resolve marker style based on cursor position relative to pair.
 
-    // Helper: resolve marker style based on cursor position relative to pair.
     TextStyle markerStyleForPair(int openIndex, int closeIndex) {
       if (cursorPosition == null) return activeMarkerStyle;
       final openPos = tokens[openIndex].position;
