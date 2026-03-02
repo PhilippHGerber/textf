@@ -377,9 +377,15 @@ void main() {
           ),
         );
 
-        // Should be a plain TextSpan with no children
-        expect(result.children, isNull);
-        expect(result.text, controller.text);
+        // The text is now returned as a single unformatted child span
+        // so that it can participate in the IME composing logic.
+        expect(result.text, isNull);
+        expect(result.children, isNotNull);
+        expect(result.children!.length, 1);
+
+        final child = result.children!.first as TextSpan;
+        expect(child.text, controller.text);
+        expect(child.style, isNull); // Ensures no formatting was applied
       });
 
       testWidgets('returns formatted TextSpan when text is within limit', (tester) async {

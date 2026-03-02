@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/textf_limits.dart';
+import '../core/textf_style_utils.dart';
 import 'marker_visibility.dart';
 import 'textf_span_builder.dart';
 
@@ -144,40 +145,42 @@ class TextfEditingController extends TextEditingController {
       return TextSpan(style: effectiveStyle);
     }
 
-    // Circuit breaker: skip formatting for very long text.
+    List<InlineSpan> fullSpans;
+
+    // Circuit breaker now populates fullSpans instead of early returning,
+    // preserving the IME composing step below.
     if (text.length > _maxLiveFormattingLength) {
-      return TextSpan(text: text, style: effectiveStyle);
-    }
-
-    // Resolve cursor position for smart-hide mode.
-    //
-    // Three states:
-    //   null  → always mode: show all markers with dimmed style.
-    //   >= 0  → whenActive + collapsed cursor: show markers only at this pos.
-    //   -1    → whenActive + active selection (or no valid selection): hide
-    //           ALL markers. The sentinel -1 never matches any span range
-    //           (openPos is always >= 0), so every marker gets the hidden
-    //           style. This prevents layout jumps during drag selection on
-    //           mobile, where toggling marker visibility would shift
-    //           selection handles.
-    final int? cursorPos;
-    if (_markerVisibility == MarkerVisibility.whenActive) {
-      final sel = value.selection;
-      cursorPos = sel.isValid && sel.isCollapsed //
-          ? sel.extentOffset
-          : TextfSpanBuilder.hideAllMarkers;
+      fullSpans = <InlineSpan>[TextSpan(text: text)];
     } else {
-      cursorPos = null;
-    }
+      // Resolve cursor position for smart-hide mode.
+      //
+      // Three states:
+      //   null  → always mode: show all markers with dimmed style.
+      //   >= 0  → whenActive + collapsed cursor: show markers only at this pos.
+      //   -1    → whenActive + active selection (or no valid selection): hide
+      //           ALL markers. The sentinel -1 never matches any span range
+      //           (openPos is always >= 0), so every marker gets the hidden
+      //           style. This prevents layout jumps during drag selection on
+      //           mobile, where toggling marker visibility would shift
+      //           selection handles.
+      final int? cursorPos;
+      if (_markerVisibility == MarkerVisibility.whenActive) {
+        final sel = value.selection;
+        cursorPos = sel.isValid && sel.isCollapsed //
+            ? sel.extentOffset
+            : TextfSpanBuilder.hideAllMarkers;
+      } else {
+        cursorPos = null;
+      }
 
-    // 1. ALWAYS parse the entire text as a single unit first.
-    // This ensures all formatting pairs, links, and nesting are resolved correctly.
-    final List<InlineSpan> fullSpans = _spanBuilder.build(
-      text,
-      context,
-      effectiveStyle,
-      cursorPosition: cursorPos,
-    );
+      // 1. ALWAYS parse the entire text as a single unit first.
+      fullSpans = _spanBuilder.build(
+        text,
+        context,
+        effectiveStyle,
+        cursorPosition: cursorPos,
+      );
+    }
 
     // 2. If no composing region is active, just return the parsed spans.
     if (!withComposing || !value.composing.isValid || value.composing.isCollapsed) {
@@ -185,8 +188,6 @@ class TextfEditingController extends TextEditingController {
     }
 
     // 3. With composing region: inject the IME underline into the spans.
-    // We iterate through the flat list of spans and "slice" any TextSpan
-    // that overlaps with the composing range.
     final TextRange composing = value.composing;
     final List<InlineSpan> children = <InlineSpan>[];
     const TextStyle composingStyle = TextStyle(decoration: TextDecoration.underline);
@@ -232,7 +233,14 @@ class TextfEditingController extends TextEditingController {
 
             // Segment currently composing (inject underline)
             if (endInSpan > startInSpan) {
-              final TextStyle mergedStyle = span.style?.merge(composingStyle) ?? composingStyle;
+              // FIX 2: Use custom mergeTextStyles to prevent destroying existing TextDecorations
+              final TextStyle mergedStyle;
+              if (span.style case final TextStyle spanStyle?) {
+                mergedStyle = mergeTextStyles(spanStyle, composingStyle);
+              } else {
+                mergedStyle = composingStyle;
+              }
+
               children.add(
                 // ignore: avoid-substring, indices are based on UTF-16 code units
                 TextSpan(text: rawText.substring(startInSpan, endInSpan), style: mergedStyle),
