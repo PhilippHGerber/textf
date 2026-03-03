@@ -36,13 +36,6 @@ import '../styling/textf_style_resolver.dart';
 ///   the cursor is inside the span, falls back to [TextSpan] with reduced
 ///   font size on the baseline.
 ///
-/// **Cache note:** The internal LRU cache (`_cache`) is `static` and shared
-/// across all `TextfSpanBuilder` instances. The cache key is the raw text
-/// string only. If you construct multiple instances with different custom
-/// tokenizers, the first to cache a given string will determine the result
-/// for all instances. In practice this is not a concern because
-/// `TextfEditingController` uses a single shared instance. Revisit if a
-/// second tokenizer is ever introduced.
 class TextfSpanBuilder {
   /// Creates a new [TextfSpanBuilder] instance.
   ///
