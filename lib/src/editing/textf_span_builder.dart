@@ -618,6 +618,7 @@ class TextfSpanBuilder {
           ..write('{')
           ..write(token.key)
           ..write('}');
+        continue;
       }
 
       if (token is EscapeMarkerToken) {
