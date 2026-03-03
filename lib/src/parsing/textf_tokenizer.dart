@@ -21,7 +21,7 @@ class TextfTokenizer {
   /// - Regular text
   ///
   /// Escaped characters (preceded by \) are treated as literal text.
-  List<TextfToken> tokenize(String text) {
+  List<TextfToken> tokenize(String text, {bool allowNewlineCrossing = true}) {
     final tokens = <TextfToken>[];
     int pos = 0;
     int textStart = 0;
@@ -305,7 +305,14 @@ class TextfTokenizer {
       } else if (currentChar == kOpenBracket) {
         // Check for link start [text](url)
         addTextToken(textStart, pos);
-        final int? nextPos = _tryParseLink(text, codeUnits, length, pos, tokens);
+        final int? nextPos = _tryParseLink(
+          text,
+          codeUnits,
+          length,
+          pos,
+          tokens,
+          allowNewlineCrossing: allowNewlineCrossing,
+        );
         if (nextPos != null) {
           pos = nextPos;
           textStart = pos;
@@ -413,8 +420,9 @@ class TextfTokenizer {
     List<int> codeUnits,
     int length,
     int startPos,
-    List<TextfToken> tokens,
-  ) {
+    List<TextfToken> tokens, {
+    required bool allowNewlineCrossing,
+  }) {
     int pos = startPos + 1; // Move past '['
 
     // 1. Find the end of link text ']'
@@ -425,6 +433,12 @@ class TextfTokenizer {
     while (pos < length) {
       // Inner loop for link text
       final int c = codeUnits[pos];
+
+      // Check for newline crossing if not allowed
+      if (!allowNewlineCrossing && (c == kNewline || c == kCarriageReturn)) {
+        return null; // Not part of a complete single-line [text](link)
+      }
+
       // Handle escape sequences
       if (c == kEscape && pos + 1 < length) {
         pos += 2;
@@ -462,6 +476,12 @@ class TextfTokenizer {
 
     while (pos < length) {
       final int c = codeUnits[pos];
+
+      // Check for newline crossing if not allowed
+      if (!allowNewlineCrossing && (c == kNewline || c == kCarriageReturn)) {
+        return null;
+      }
+
       if (c == kEscape && pos + 1 < length) {
         pos += 2;
         continue;

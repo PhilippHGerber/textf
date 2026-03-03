@@ -11,9 +11,9 @@ class MockTokenizer extends TextfTokenizer {
   int callCount = 0;
 
   @override
-  List<TextfToken> tokenize(String text) {
+  List<TextfToken> tokenize(String text, {bool allowNewlineCrossing = true}) {
     callCount++;
-    return super.tokenize(text);
+    return super.tokenize(text, allowNewlineCrossing: allowNewlineCrossing);
   }
 }
 

@@ -109,7 +109,7 @@ class TextfSpanBuilder {
     final List<TextfToken> tokens;
     final Map<int, int> validPairs;
 
-    tokens = _tokenizer.tokenize(text);
+    tokens = _tokenizer.tokenize(text, allowNewlineCrossing: false);
     validPairs = PairingResolver.identifyPairs(tokens, allowNewlineCrossing: false);
 
     // --- Style Resolution ---

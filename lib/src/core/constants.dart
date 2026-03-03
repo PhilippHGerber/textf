@@ -65,3 +65,9 @@ const int kOpenBrace = 0x7B;
 ///
 /// Used for widget placeholders (e.g., {0}).
 const int kCloseBrace = 0x7D;
+
+/// Line Feed / Newline character \n (ASCII code 10)
+const int kNewline = 0x0A;
+
+/// Carriage Return character \r (ASCII code 13)
+const int kCarriageReturn = 0x0D;
