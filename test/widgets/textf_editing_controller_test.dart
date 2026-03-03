@@ -134,6 +134,43 @@ void main() {
         expect(child.style?.decoration, TextDecoration.underline);
       });
 
+      testWidgets('applies composing underline while preserving existing decoration',
+          (tester) async {
+        controller = TextfEditingController(text: '~~strike~~')
+          ..value = const TextEditingValue(
+            text: '~~strike~~',
+            composing: TextRange(start: 2, end: 8), // Over "strike"
+          );
+        late TextSpan result;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                result = controller.buildTextSpan(
+                  context: context,
+                  style: const TextStyle(),
+                  withComposing: true,
+                );
+                return Container();
+              },
+            ),
+          ),
+        );
+
+        expect(result.children, isNotNull);
+        // Spans: ~~ (dim), strike (composing + strike), ~~ (dim)
+        expect(result.children!.length, 3);
+        final composingSpan = result.children![1] as TextSpan;
+        expect(composingSpan.text, 'strike');
+
+        final expectedDecoration = TextDecoration.combine([
+          TextDecoration.lineThrough,
+          TextDecoration.underline,
+        ]);
+        expect(composingSpan.style?.decoration, expectedDecoration);
+      });
+
       testWidgets('composing region splits text correctly', (tester) async {
         controller = TextfEditingController()
           ..value = const TextEditingValue(

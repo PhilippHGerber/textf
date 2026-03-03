@@ -4,7 +4,6 @@
 import 'package:flutter/material.dart';
 
 import '../core/textf_limits.dart';
-import '../core/textf_style_utils.dart';
 import 'marker_visibility.dart';
 import 'textf_span_builder.dart';
 
@@ -233,10 +232,21 @@ class TextfEditingController extends TextEditingController {
 
             // Segment currently composing (inject underline)
             if (endInSpan > startInSpan) {
-              // FIX 2: Use custom mergeTextStyles to prevent destroying existing TextDecorations
+              // Use explicit TextDecoration combination to prevent fragile merge dependencies.
               final TextStyle mergedStyle;
               if (span.style case final TextStyle spanStyle?) {
-                mergedStyle = mergeTextStyles(spanStyle, composingStyle);
+                final TextDecoration combined;
+                final existingDeco = spanStyle.decoration;
+                if (existingDeco != null &&
+                    existingDeco != TextDecoration.none &&
+                    !existingDeco.contains(TextDecoration.underline)) {
+                  combined = TextDecoration.combine([existingDeco, TextDecoration.underline]);
+                } else if (existingDeco == null || existingDeco == TextDecoration.none) {
+                  combined = TextDecoration.underline;
+                } else {
+                  combined = existingDeco; // Already contains underline
+                }
+                mergedStyle = spanStyle.copyWith(decoration: combined);
               } else {
                 mergedStyle = composingStyle;
               }
