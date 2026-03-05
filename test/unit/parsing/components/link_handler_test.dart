@@ -8,42 +8,6 @@ import 'package:textf/src/parsing/textf_tokenizer.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
 
-// By using `extends`, we inherit the concrete implementation of TextfStyleResolver
-// and only need to override the methods relevant to this test.
-// ignore: prefer-match-file-name
-class _MockLinkStyleResolver extends TextfStyleResolver {
-  // We must call the super constructor.
-  _MockLinkStyleResolver(super.context);
-
-  @override
-  TextStyle resolveLinkStyle(TextStyle baseStyle) {
-    return baseStyle.copyWith(
-      color: Colors.blue,
-      decoration: TextDecoration.underline,
-    );
-  }
-
-  @override
-  TextStyle resolveLinkHoverStyle(TextStyle baseStyle) {
-    return baseStyle.copyWith(
-      color: Colors.red,
-      decoration: TextDecoration.underline,
-    );
-  }
-
-  @override
-  MouseCursor resolveLinkMouseCursor() {
-    return SystemMouseCursors.click;
-  }
-
-  @override
-  void Function(String url, String displayText)? resolveOnLinkTap() => null;
-
-  @override
-  void Function(String url, String displayText, {required bool isHovering})? resolveOnLinkHover() =>
-      null;
-}
-
 void main() {
   group('LinkHandler Tests', () {
     // ignore: avoid-late-keyword
@@ -54,7 +18,7 @@ void main() {
     });
 
     // Helper to create a valid test environment with context and a parser state.
-    Future<ParserState> createParserState(
+    Future<({BuildContext context, ParserState state})> createParserState(
       WidgetTester tester,
       String text,
     ) async {
@@ -71,12 +35,14 @@ void main() {
         ),
       );
 
-      return ParserState(
-        tokens: tokenizer.tokenize(text),
-        baseStyle: const TextStyle(),
-        matchingPairs: {},
-        // Use our new mock that `extends` TextfStyleResolver.
-        styleResolver: _MockLinkStyleResolver(buildContext),
+      return (
+        context: buildContext,
+        state: ParserState(
+          tokens: tokenizer.tokenize(text),
+          baseStyle: const TextStyle(),
+          matchingPairs: {},
+          styleResolver: TextfStyleResolver(buildContext),
+        ),
       );
     }
 
@@ -84,10 +50,10 @@ void main() {
       testWidgets('correctly processes a simple link', (tester) async {
         // ARRANGE
         const text = '[link text](http://example.com)';
-        final state = await createParserState(tester, text);
+        final (:context, :state) = await createParserState(tester, text);
 
         // ACT
-        final nextIndex = LinkHandler.processLink(state.styleResolver.context, state, 0);
+        final nextIndex = LinkHandler.processLink(context, state, 0);
 
         // ASSERT
         expect(nextIndex, 5, reason: 'Should return index after )');
@@ -100,11 +66,6 @@ void main() {
         final hoverableSpan = widgetSpan.child as HoverableLinkSpan;
         expect(hoverableSpan.url, 'http://example.com');
         expect(hoverableSpan.rawDisplayText, 'link text');
-        expect(
-          hoverableSpan.normalStyle.color,
-          Colors.blue,
-          reason: 'Normal style should come from mock resolver',
-        );
       });
     });
 
@@ -112,10 +73,10 @@ void main() {
       testWidgets('returns null for unclosed bracket', (tester) async {
         // ARRANGE
         const text = '[unclosed bracket';
-        final state = await createParserState(tester, text);
+        final (:context, :state) = await createParserState(tester, text);
 
         // ACT
-        final nextIndex = LinkHandler.processLink(state.styleResolver.context, state, 0);
+        final nextIndex = LinkHandler.processLink(context, state, 0);
 
         // ASSERT
         expect(nextIndex, isNull, reason: 'Should return null for invalid link');
@@ -130,10 +91,10 @@ void main() {
       testWidgets('returns null for text followed by non-link characters', (tester) async {
         // ARRANGE
         const text = '[link text] but not a url';
-        final state = await createParserState(tester, text);
+        final (:context, :state) = await createParserState(tester, text);
 
         // ACT
-        final nextIndex = LinkHandler.processLink(state.styleResolver.context, state, 0);
+        final nextIndex = LinkHandler.processLink(context, state, 0);
 
         // ASSERT
         expect(nextIndex, isNull);

@@ -11,7 +11,7 @@ void main() {
     // 1. Setup a massive string to stress the parser
     final text = List.generate(
       100,
-      (i) => '**b** *i* `c` ~~s~~ ==h== ++u++ ^s^ ~s~ [h](i)',
+      (i) => '**b** *i* `c` ~~s~~ ==h== ++u++ ^s^ ~s~ [h](i)   ',
     ).join('\n');
 
     final controller = TextfEditingController(text: text);
@@ -31,6 +31,7 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     // 3. WARMUP & CACHE MISS
     // This forces the initial parse, mimicking the first time the text is rendered.

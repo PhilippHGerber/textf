@@ -14,7 +14,7 @@ import 'package:textf/src/styling/textf_style_resolver.dart';
 class _MockTextfStyleResolver implements TextfStyleResolver {
   _MockTextfStyleResolver(this.context);
   // Ignore the unused 'context' field, as it's not needed for the mock.
-  @override
+
   final BuildContext context;
 
   final Map<FormatMarkerType, TextStyle> _styleMap = {};
