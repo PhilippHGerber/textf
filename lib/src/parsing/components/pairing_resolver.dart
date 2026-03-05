@@ -110,6 +110,9 @@ class PairingResolver {
   /// new opener (if [FormatMarkerToken.canOpen]), allowing it to pair with a
   /// subsequent same-line closer.
   ///
+  /// Newline detection uses a prefix-sum array for O(1) per-query lookups
+  /// instead of scanning tokens between each candidate pair.
+  ///
   /// @param tokens The list of tokens to analyze
   /// @param pairs The map to populate with identified pairs
   static void _identifySimplePairs(
@@ -117,6 +120,10 @@ class PairingResolver {
     Map<int, int> pairs, {
     bool allowNewlineCrossing = true,
   }) {
+    // Pre-compute newline positions for O(1) range queries when needed.
+    final List<int>? nlPrefix =
+        allowNewlineCrossing ? null : _buildNewlinePrefixSum(tokens);
+
     // Stack of opening markers for each format type
     final Map<FormatMarkerType, List<int>> openingStacks = {
       FormatMarkerType.bold: [],
@@ -151,7 +158,8 @@ class PairingResolver {
         // contains a newline. Leave the opener on the stack so a later
         // same-line closer can still match it, and push the current token
         // as a new opener if it qualifies.
-        if (!allowNewlineCrossing && _hasNewlineBetween(tokens, openingIndex, i)) {
+        // O(1) check: compare prefix sums at range boundaries.
+        if (nlPrefix != null && nlPrefix[i - 1] > nlPrefix[openingIndex]) {
           if (token.canOpen) {
             stack.add(i);
           }
@@ -175,13 +183,19 @@ class PairingResolver {
     // are unpaired opening markers. They will not be included in the `pairs` map.
   }
 
-  /// Returns true if any [TextToken] between [open] and [close] (exclusive)
-  /// contains a newline character.
-  static bool _hasNewlineBetween(List<TextfToken> tokens, int open, int close) {
-    for (int i = open + 1; i < close; i++) {
+  /// Builds a cumulative count of newline-containing [TextToken]s.
+  ///
+  /// `result[i]` equals the number of newline-containing tokens at indices
+  /// 0 through i (inclusive). A range `(open, close)` contains a newline iff
+  /// `result[close - 1] > result[open]`.
+  static List<int> _buildNewlinePrefixSum(List<TextfToken> tokens) {
+    final result = List<int>.filled(tokens.length, 0);
+    var count = 0;
+    for (var i = 0; i < tokens.length; i++) {
       final token = tokens[i];
-      if (token is TextToken && token.value.contains('\n')) return true;
+      if (token is TextToken && token.value.contains('\n')) count++;
+      result[i] = count;
     }
-    return false;
+    return result;
   }
 }

@@ -84,17 +84,15 @@ class FormatHandler {
     // Flush text inside the format
     state.flushText(context);
 
-    // Remove the corresponding opening entry from stack
-    int stackIndexToRemove = -1;
-    for (int j = state.formatStack.length - 1; j >= 0; j--) {
-      if (state.formatStack[j].index == matchingIndex) {
-        stackIndexToRemove = j;
-        break;
-      }
-    }
-
-    if (stackIndexToRemove != -1) {
-      state.formatStack.removeAt(stackIndexToRemove);
+    // Remove the corresponding opening entry from stack.
+    // NestingValidator guarantees proper nesting, so the closing marker must
+    // always match the stack top (LIFO order is preserved).
+    assert(
+      state.formatStack.isNotEmpty && state.formatStack.last.index == matchingIndex,
+      'Closing marker does not match stack top — nesting validation failed',
+    );
+    if (state.formatStack.isNotEmpty) {
+      state.formatStack.removeLast();
     }
   }
 }

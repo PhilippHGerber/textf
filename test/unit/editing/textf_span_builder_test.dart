@@ -464,6 +464,76 @@ void main() {
         expect(spans[5].style?.fontWeight, FontWeight.bold);
         expect(spans[6].text, '**'); // closing bold marker
       });
+
+      testWidgets('italic outer with nested bold — outer style persists after inner closes',
+          (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        // Stack trace: push italic → push bold → removeLast (bold) → removeLast (italic).
+        // After ** closes, only italic remains on the stack so ' italic' is italic-only.
+        final spans = builder.build(
+          '_italic **bold** italic_',
+          testContext,
+          const TextStyle(),
+        );
+        // _ + 'italic ' + ** + 'bold' + ** + ' italic' + _
+        expect(spans.length, 7);
+
+        expect(spans.first.text, '_'); // opening italic marker
+        expect(spans[1].text, 'italic ');
+        expect(spans[1].style?.fontStyle, FontStyle.italic);
+        expect(spans[1].style?.fontWeight, isNot(FontWeight.bold));
+
+        expect(spans[2].text, '**'); // opening bold marker
+        expect(spans[3].text, 'bold');
+        expect(spans[3].style?.fontStyle, FontStyle.italic);
+        expect(spans[3].style?.fontWeight, FontWeight.bold);
+
+        expect(spans[4].text, '**'); // closing bold marker
+        expect(spans[5].text, ' italic');
+        expect(spans[5].style?.fontStyle, FontStyle.italic); // italic still active
+        expect(spans[5].style?.fontWeight, isNot(FontWeight.bold)); // bold is gone
+
+        expect(spans[6].text, '_'); // closing italic marker
+      });
+
+      testWidgets('overlapping markers (cross-nesting) render as unpaired plain text',
+          (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        // **_text**_ — ** wants to pair at [0,3], _ wants to pair at [1,4].
+        // These overlap; NestingValidator rejects both pairs.
+        // All markers are unpaired → rendered as literal characters.
+        const input = '**_text**_';
+        final spans = builder.build(input, testContext, const TextStyle());
+
+        final allText = spans.whereType<TextSpan>().map((s) => s.text ?? '').join();
+        expect(allText, input);
+        expect(totalSpanLength(spans), input.length);
+        for (final span in spans.whereType<TextSpan>()) {
+          expect(span.style?.fontWeight, isNot(FontWeight.bold));
+          expect(span.style?.fontStyle, isNot(FontStyle.italic));
+        }
+      });
+
+      testWidgets('nested bold+italic inside link text — stack pop order correct', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        // [**bold** plain](url): the link re-tokenizer sees ** as a valid pair.
+        // Stack inside _processNestedLinkText: push bold → removeLast (bold).
+        // 'plain' after ** closes should have link style only (no bold).
+        const input = '[**bold** plain](url)';
+        final spans = builder.build(input, testContext, const TextStyle());
+
+        expect(totalSpanLength(spans), input.length);
+
+        // Find 'bold' span — must have bold + underline (link inherits underline).
+        final boldSpan = spans.whereType<TextSpan>().firstWhere((s) => s.text == 'bold');
+        expect(boldSpan.style?.fontWeight, FontWeight.bold);
+        expect(boldSpan.style?.decoration, TextDecoration.underline);
+
+        // Find ' plain' span — bold must be gone after the closing ** popped the stack.
+        final plainSpan = spans.whereType<TextSpan>().firstWhere((s) => s.text == ' plain');
+        expect(plainSpan.style?.fontWeight, isNot(FontWeight.bold));
+        expect(plainSpan.style?.decoration, TextDecoration.underline); // still a link
+      });
     });
 
     group('Escape Characters (editing mode)', () {

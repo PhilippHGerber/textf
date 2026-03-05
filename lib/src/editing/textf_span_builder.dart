@@ -40,7 +40,7 @@ class TextfSpanBuilder {
   /// Creates a new [TextfSpanBuilder] instance.
   ///
   /// - [tokenizer]: An optional custom tokenizer instance. If not provided,
-  ///   a default [TextfTokenizer] is created.
+  ///   a default[TextfTokenizer] is created.
   TextfSpanBuilder({
     TextfTokenizer? tokenizer,
   }) : _tokenizer = tokenizer ?? TextfTokenizer();
@@ -73,7 +73,7 @@ class TextfSpanBuilder {
 
   final TextfTokenizer _tokenizer;
 
-  /// Builds a list of [InlineSpan] from formatted text.
+  /// Builds a list of[InlineSpan] from formatted text.
   ///
   /// Every character in the input [text] appears in the output spans,
   /// ensuring 1:1 cursor-to-character mapping. Formatting markers are
@@ -81,13 +81,15 @@ class TextfSpanBuilder {
   /// according to the formatting type.
   ///
   /// - [text]: Input string with formatting markers.
-  /// - [context]: BuildContext for style resolution via [TextfStyleResolver].
+  /// - [context]: BuildContext for style resolution via[TextfStyleResolver].
   /// - [baseStyle]: Base style for unformatted text segments.
   /// - [cursorPosition]: Controls marker visibility in smart-hide mode.
   ///   Pass `null` to show all markers with dimmed styling (default).
   ///   Pass a valid offset (≥ 0) to show markers only at that cursor
   ///   position. Pass [hideAllMarkers] (-1) to hide ALL markers — used
   ///   during text selection to prevent layout jumps on mobile.
+  /// - [styleResolver]: Optional cached [TextfStyleResolver] to prevent
+  ///   expensive re-creation on every frame.
   ///
   /// Returns a list of [InlineSpan] objects ([TextSpan] and [WidgetSpan]).
   List<InlineSpan> build(
@@ -95,6 +97,7 @@ class TextfSpanBuilder {
     BuildContext context,
     TextStyle baseStyle, {
     int? cursorPosition,
+    TextfStyleResolver? styleResolver,
   }) {
     // Fast path for empty text
     if (text.isEmpty) {
@@ -113,7 +116,7 @@ class TextfSpanBuilder {
     validPairs = PairingResolver.identifyPairs(tokens, allowNewlineCrossing: false);
 
     // --- Style Resolution ---
-    final resolver = TextfStyleResolver(context);
+    final resolver = styleResolver ?? TextfStyleResolver(context);
 
     // --- Marker styles ---
     final activeMarkerStyle = _resolveMarkerStyle(baseStyle, context);
@@ -293,6 +296,7 @@ class TextfSpanBuilder {
           resolver: resolver,
           currentStyle: currentStyle,
           flushText: flushText,
+          tokenizer: _tokenizer,
         );
         if (nextIndex != null) {
           i = nextIndex;
@@ -341,15 +345,12 @@ class TextfSpanBuilder {
             flushText();
             final bool isPreview = scriptPreviewPairs.contains(matchingIndex);
 
-            int stackIndexToRemove = -1;
-            for (int j = formatStack.length - 1; j >= 0; j--) {
-              if (formatStack[j].index == matchingIndex) {
-                stackIndexToRemove = j;
-                break;
-              }
-            }
-            if (stackIndexToRemove != -1) {
-              formatStack.removeAt(stackIndexToRemove);
+            assert(
+              formatStack.isNotEmpty && formatStack.last.index == matchingIndex,
+              'Closing marker does not match stack top — nesting validation failed',
+            );
+            if (formatStack.isNotEmpty) {
+              formatStack.removeLast();
             }
 
             if (isPreview) {
@@ -470,6 +471,7 @@ class TextfSpanBuilder {
     required TextfStyleResolver resolver,
     required TextStyle Function() currentStyle,
     required void Function() flushText,
+    required TextfTokenizer tokenizer,
   }) {
     // Verify complete link structure: [text](url)
     if (!_isCompleteLink(tokens, index)) {
@@ -503,7 +505,7 @@ class TextfSpanBuilder {
     spans.add(TextSpan(text: '[', style: markerStyle));
 
     // Process link text: re-tokenize to detect nested formatting markers.
-    final innerTokens = TextfTokenizer().tokenize(linkText);
+    final innerTokens = tokenizer.tokenize(linkText);
     final bool hasNested = innerTokens.any((t) => t is! TextToken);
     if (hasNested) {
       _processNestedLinkText(
@@ -534,6 +536,7 @@ class TextfSpanBuilder {
 
     return tokens[index] is LinkStartToken &&
         tokens[index + _linkTextOffset] is TextToken &&
+        (tokens[index + _linkTextOffset] as TextToken).value.isNotEmpty &&
         tokens[index + _linkSeparatorOffset] is LinkSeparatorToken &&
         tokens[index + _linkUrlOffset] is TextToken &&
         tokens[index + _linkEndOffset] is LinkEndToken;
@@ -602,7 +605,13 @@ class TextfSpanBuilder {
             // Closing marker.
             flushBuffer();
             spans.add(TextSpan(text: token.value, style: markerStyle));
-            formatStack.removeWhere((e) => e.index == matchingIndex);
+            assert(
+              formatStack.isNotEmpty && formatStack.last.index == matchingIndex,
+              'Closing marker does not match stack top — nesting validation failed',
+            );
+            if (formatStack.isNotEmpty) {
+              formatStack.removeLast();
+            }
           }
         } else {
           // Unpaired marker → literal text preserving the character slots.

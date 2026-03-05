@@ -4,6 +4,8 @@
 import 'package:flutter/material.dart';
 
 import '../core/textf_limits.dart';
+import '../styling/textf_style_resolver.dart';
+import '../widgets/textf_options.dart';
 import 'marker_visibility.dart';
 import 'textf_span_builder.dart';
 
@@ -88,15 +90,42 @@ class TextfEditingController extends TextEditingController {
 
   static final TextfSpanBuilder _spanBuilder = TextfSpanBuilder();
 
+  // --- Caching State ---
+  // We heavily cache the expensive lists of InlineSpans to prevent Garbage Collection
+  // jank caused by massive string allocations during cursor blink.
+  // CRITICAL: We strictly DO NOT cache the final root TextSpan object. Returning the exact
+  // same root TextSpan instance breaks Flutter's EditableText inline widget diffing
+  // and causes memory leaks. We must always return a `new TextSpan(...)`.
+  List<InlineSpan>? _cachedParsedSpans;
+  List<InlineSpan>? _cachedFinalChildren;
+  String? _lastText;
+  int? _lastCursorPos;
+  MarkerVisibility? _lastVisibility;
+  TextStyle? _lastStyle;
+  ThemeData? _lastTheme;
+  TextfOptions? _lastNearestOptions;
+  TextRange? _lastComposing;
+  bool? _lastWithComposing;
+  TextfStyleResolver? _cachedResolver;
+
+  bool _isSameTheme(ThemeData? a, ThemeData? b) {
+    if (identical(a, b)) return true;
+    if (a == null || b == null) return false;
+    return a.colorScheme.primary == b.colorScheme.primary &&
+        a.colorScheme.onSurfaceVariant == b.colorScheme.onSurfaceVariant &&
+        a.colorScheme.surfaceContainer == b.colorScheme.surfaceContainer &&
+        a.colorScheme.brightness == b.colorScheme.brightness;
+  }
+
   /// Controls how formatting markers are displayed.
   ///
-  /// When set to [MarkerVisibility.always], all markers are visible with
-  /// dimmed styling (default). When set to [MarkerVisibility.whenActive],
+  /// When set to[MarkerVisibility.always], all markers are visible with
+  /// dimmed styling (default). When set to[MarkerVisibility.whenActive],
   /// only markers surrounding the cursor are visible; others are instantly
   /// hidden. During text selection, all markers are hidden to prevent
   /// layout jumps.
   ///
-  /// Setting this property calls [notifyListeners] automatically.
+  /// Setting this property calls[notifyListeners] automatically.
   MarkerVisibility get markerVisibility => _markerVisibility;
   MarkerVisibility _markerVisibility;
 
@@ -112,7 +141,7 @@ class TextfEditingController extends TextEditingController {
   /// [TextSpan] with no formatting applied. This prevents UI freezes on
   /// very large inputs. Defaults to [TextfLimits.maxLiveFormattingLength].
   ///
-  /// Setting this property calls [notifyListeners] automatically.
+  /// Setting this property calls[notifyListeners] automatically.
   int get maxLiveFormattingLength => _maxLiveFormattingLength;
   int _maxLiveFormattingLength;
 
@@ -128,6 +157,8 @@ class TextfEditingController extends TextEditingController {
   /// automatically. Use this only when you need a rebuild triggered by
   /// external state not tracked by this controller.
   void invalidate() {
+    _cachedParsedSpans = null;
+    _cachedFinalChildren = null;
     notifyListeners();
   }
 
@@ -137,142 +168,167 @@ class TextfEditingController extends TextEditingController {
     TextStyle? style,
     required bool withComposing,
   }) {
-    final TextStyle effectiveStyle = style ?? const TextStyle();
+    // START TIMER
+    // final stopwatch = Stopwatch()..start();
 
-    // Fast path: empty text
+    // 1. Fast path: Empty Text
+    // Mimics native TextEditingController, bypassing all custom logic.
+    // This drops high UI/Raster time down to baseline when the field is empty.
     if (text.isEmpty) {
-      return TextSpan(style: effectiveStyle);
+      return TextSpan(style: style, text: text);
     }
 
-    List<InlineSpan> fullSpans;
-
-    // Circuit breaker now populates fullSpans instead of early returning,
-    // preserving the IME composing step below.
-    if (text.length > _maxLiveFormattingLength) {
-      fullSpans = <InlineSpan>[TextSpan(text: text)];
+    // 2. Resolve cursor position for smart-hide mode (O(1)).
+    final int? cursorPos;
+    if (_markerVisibility == MarkerVisibility.whenActive) {
+      final sel = value.selection;
+      cursorPos =
+          sel.isValid && sel.isCollapsed ? sel.extentOffset : TextfSpanBuilder.hideAllMarkers;
     } else {
-      // Resolve cursor position for smart-hide mode.
-      //
-      // Three states:
-      //   null  → always mode: show all markers with dimmed style.
-      //   >= 0  → whenActive + collapsed cursor: show markers only at this pos.
-      //   -1    → whenActive + active selection (or no valid selection): hide
-      //           ALL markers. The sentinel -1 never matches any span range
-      //           (openPos is always >= 0), so every marker gets the hidden
-      //           style. This prevents layout jumps during drag selection on
-      //           mobile, where toggling marker visibility would shift
-      //           selection handles.
-      final int? cursorPos;
-      if (_markerVisibility == MarkerVisibility.whenActive) {
-        final sel = value.selection;
-        cursorPos = sel.isValid && sel.isCollapsed //
-            ? sel.extentOffset
-            : TextfSpanBuilder.hideAllMarkers;
-      } else {
-        cursorPos = null;
-      }
-
-      // 1. ALWAYS parse the entire text as a single unit first.
-      fullSpans = _spanBuilder.build(
-        text,
-        context,
-        effectiveStyle,
-        cursorPosition: cursorPos,
-      );
+      cursorPos = null;
     }
 
-    // 2. If no composing region is active, just return the parsed spans.
-    if (!withComposing || !value.composing.isValid || value.composing.isCollapsed) {
-      return TextSpan(style: effectiveStyle, children: fullSpans);
+    // 3. Extract inputs for cache matching (O(1)).
+    final ThemeData theme = Theme.of(context);
+    final TextfOptions? nearestOptions = TextfOptions.maybeOf(context);
+
+    final bool themeMatch = _isSameTheme(_lastTheme, theme);
+    // InheritedWidgets are immutable. O(1) identity check completely removes
+    // the expensive O(Depth) tree-walk on every frame.
+    final bool optionsMatch = _lastNearestOptions == nearestOptions;
+
+    final bool coreCacheHit = _cachedParsedSpans != null &&
+        _lastText == text &&
+        _lastCursorPos == cursorPos &&
+        _lastVisibility == _markerVisibility &&
+        _lastStyle == style &&
+        themeMatch &&
+        optionsMatch;
+
+    // 4. FULL CACHE HIT (Core Spans + Composing Region)
+    // If nothing changed, we reuse the fully composed children list.
+    // We MUST return a `new TextSpan` to safely satisfy EditableText's update
+    // contract without leaking WidgetSpans, but skipping the list allocations
+    // eliminates the Garbage Collection stutter.
+    if (coreCacheHit &&
+        _cachedFinalChildren != null &&
+        _lastComposing == value.composing &&
+        _lastWithComposing == withComposing) {
+      return TextSpan(style: style, children: _cachedFinalChildren);
     }
 
-    // 3. With composing region: inject the IME underline into the spans.
-    final TextRange composing = value.composing;
-    final List<InlineSpan> children = <InlineSpan>[];
-    const TextStyle composingStyle = TextStyle(decoration: TextDecoration.underline);
-
-    int currentOffset = 0;
-
-    for (final InlineSpan span in fullSpans) {
-      final int spanLength = span is TextSpan ? (span.text?.length ?? 0) : 1;
-      final int spanStart = currentOffset;
-      final int spanEnd = currentOffset + spanLength;
-
-      if (spanEnd <= composing.start || spanStart >= composing.end) {
-        // Span is completely outside the composing range
-        children.add(span);
+    // 5. CACHE MISS (Core Spans)
+    List<InlineSpan> fullSpans;
+    if (coreCacheHit) {
+      fullSpans = _cachedParsedSpans!;
+    } else {
+      if (text.length > _maxLiveFormattingLength) {
+        fullSpans = <InlineSpan>[TextSpan(text: text)];
       } else {
-        // Span overlaps with the composing range
-        if (span is TextSpan) {
-          final String? rawText = span.text;
-
-          if (rawText == null || rawText.isEmpty) {
-            // Safety fallback: if span has no text, pass it through untouched
-            children.add(span);
-          } else {
-            // Calculate local intersection indices
-            final int startInSpan = (composing.start > spanStart) //
-                ? composing.start - spanStart
-                : 0;
-            final int endInSpan = (composing.end < spanEnd) //
-                ? composing.end - spanStart
-                : spanLength;
-
-            // Note on avoid-substring:
-            // It is strictly necessary to use `substring` here instead of `characters`.
-            // Flutter's `TextEditingValue.composing` provides indices based on UTF-16
-            // code units, which perfectly align with Dart's `String.substring`.
-            // Using grapheme clusters (`characters`) would cause index mismatch crashes.
-
-            // Segment before composing
-            if (startInSpan > 0) {
-              // ignore: avoid-substring, indices are based on UTF-16 code units
-              children.add(TextSpan(text: rawText.substring(0, startInSpan), style: span.style));
-            }
-
-            // Segment currently composing (inject underline)
-            if (endInSpan > startInSpan) {
-              // Use explicit TextDecoration combination to prevent fragile merge dependencies.
-              final TextStyle mergedStyle;
-              if (span.style case final TextStyle spanStyle?) {
-                final TextDecoration combined;
-                final existingDeco = spanStyle.decoration;
-                if (existingDeco != null &&
-                    existingDeco != TextDecoration.none &&
-                    !existingDeco.contains(TextDecoration.underline)) {
-                  combined = TextDecoration.combine([existingDeco, TextDecoration.underline]);
-                } else if (existingDeco == null || existingDeco == TextDecoration.none) {
-                  combined = TextDecoration.underline;
-                } else {
-                  combined = existingDeco; // Already contains underline
-                }
-                mergedStyle = spanStyle.copyWith(decoration: combined);
-              } else {
-                mergedStyle = composingStyle;
-              }
-
-              children.add(
-                // ignore: avoid-substring, indices are based on UTF-16 code units
-                TextSpan(text: rawText.substring(startInSpan, endInSpan), style: mergedStyle),
-              );
-            }
-
-            // Segment after composing
-            if (endInSpan < spanLength) {
-              // ignore: avoid-substring
-              children.add(TextSpan(text: rawText.substring(endInSpan), style: span.style));
-            }
-          }
-        } else if (span is WidgetSpan) {
-          // WidgetSpans (used for preview mode scripts) are atomic.
-          // They take up 1 char space. We just pass them through.
-          children.add(span);
+        if (_cachedResolver == null || !themeMatch || !optionsMatch) {
+          _cachedResolver = TextfStyleResolver(context);
         }
+
+        fullSpans = _spanBuilder.build(
+          text,
+          context,
+          style ?? const TextStyle(),
+          cursorPosition: cursorPos,
+          styleResolver: _cachedResolver,
+        );
       }
 
-      currentOffset += spanLength;
+      _cachedParsedSpans = fullSpans;
+      _lastText = text;
+      _lastCursorPos = cursorPos;
+      _lastVisibility = _markerVisibility;
+      _lastStyle = style;
+      _lastTheme = theme;
+      _lastNearestOptions = nearestOptions;
     }
 
-    return TextSpan(style: effectiveStyle, children: children);
+    // 6. APPLY COMPOSING REGION
+    final List<InlineSpan> finalChildren;
+
+    if (!withComposing || !value.composing.isValid || value.composing.isCollapsed) {
+      // No active composing region, just use the raw parsed spans.
+      finalChildren = fullSpans;
+    } else {
+      // Inject IME underline into the spans
+      final TextRange composing = value.composing;
+      finalChildren = <InlineSpan>[];
+      const TextStyle composingStyle = TextStyle(decoration: TextDecoration.underline);
+
+      int currentOffset = 0;
+
+      for (int i = 0; i < fullSpans.length; i++) {
+        final InlineSpan span = fullSpans[i];
+        final int spanLength = span is TextSpan ? (span.text?.length ?? 0) : 1;
+        final int spanStart = currentOffset;
+        final int spanEnd = currentOffset + spanLength;
+
+        if (spanEnd <= composing.start || spanStart >= composing.end) {
+          finalChildren.add(span);
+        } else if (span is TextSpan && span.text != null && span.text!.isNotEmpty) {
+          final String rawText = span.text!;
+          final int startInSpan = (composing.start > spanStart) ? composing.start - spanStart : 0;
+          final int endInSpan = (composing.end < spanEnd) ? composing.end - spanStart : spanLength;
+
+          if (startInSpan > 0) {
+            // ignore: avoid-substring, indices are based on UTF-16 code units
+            finalChildren.add(TextSpan(text: rawText.substring(0, startInSpan), style: span.style));
+          }
+
+          if (endInSpan > startInSpan) {
+            final TextStyle mergedStyle;
+            if (span.style case final TextStyle spanStyle?) {
+              final TextDecoration combined;
+              final existingDeco = spanStyle.decoration;
+              if (existingDeco != null &&
+                  existingDeco != TextDecoration.none &&
+                  !existingDeco.contains(TextDecoration.underline)) {
+                combined = TextDecoration.combine([existingDeco, TextDecoration.underline]);
+              } else if (existingDeco == null || existingDeco == TextDecoration.none) {
+                combined = TextDecoration.underline;
+              } else {
+                combined = existingDeco;
+              }
+              mergedStyle = spanStyle.copyWith(decoration: combined);
+            } else {
+              mergedStyle = composingStyle;
+            }
+
+            finalChildren.add(
+              // ignore: avoid-substring, indices are based on UTF-16 code units
+              TextSpan(text: rawText.substring(startInSpan, endInSpan), style: mergedStyle),
+            );
+          }
+
+          if (endInSpan < spanLength) {
+            // ignore: avoid-substring
+            finalChildren.add(TextSpan(text: rawText.substring(endInSpan), style: span.style));
+          }
+        } else {
+          finalChildren.add(span);
+        }
+        currentOffset += spanLength;
+      }
+    }
+
+    _cachedFinalChildren = finalChildren;
+    _lastComposing = value.composing;
+    _lastWithComposing = withComposing;
+
+    // Always return a fresh TextSpan instance containing the cached children.
+    // return TextSpan(style: style, children: finalChildren);
+    final result = TextSpan(style: style, children: finalChildren);
+
+    // STOP TIMER
+    // stopwatch.stop();
+    // PRINT THE RESULT TO CONSOLE
+    // final isHit = coreCacheHit ? 'HIT ' : 'MISS';
+    // debugPrint('\n\nbuildTextSpan ($isHit): ${stopwatch.elapsedMicroseconds} μs\n');
+
+    return result;
   }
 }
