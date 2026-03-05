@@ -85,10 +85,18 @@ class ScreenshotScreen extends StatefulWidget {
 
 class _ScreenshotScreenState extends State<ScreenshotScreen> {
   final TextEditingController _textController = TextEditingController(
-    text: 'Hello **bold** *italic* ~~strikethrought~~ ++underline++ ==highlight== \n'
-        '`code` \n'
-        'E = mc^2^ and H~2~O \n'
-        '[link](https://example.com)',
+    text: '''
+🚀 **Welcome to Textf!**
+
+• **Bold**, *Italic* text and ***both***
+• ~~Strikethrough~~ and ++Underline++
+• ==Highlighting== and `inline code` blocks
+• Superscript x^2^ + y^2^ and Task^✅^
+• Subscript H~2~O and hot~🔥~
+
+Check out the [Documentation](https://pub.dev/packages/textf)
+for more details.
+''',
   );
   final GlobalKey _screenshotKey = GlobalKey();
 
@@ -266,7 +274,7 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
                     '++underline++, ==highlight==, [link](url) ^super^ ~sub~',
                 isDense: true,
               ),
-              maxLines: 4,
+              maxLines: 11,
               onChanged: (value) {
                 setState(() {}); // Rebuild preview on text change
               },
