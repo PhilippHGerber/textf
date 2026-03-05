@@ -56,6 +56,7 @@ class ScrollingScenario extends BenchmarkScenario {
   String get name => 'Scrolling List';
 
   final List<String> corpus = _generateCorpus();
+
   final Map<String, InlineSpan> icons = {
     'star': const WidgetSpan(child: Icon(Icons.star, size: 16, color: Colors.amber)),
     'favorite': const WidgetSpan(child: Icon(Icons.favorite, size: 16, color: Colors.red)),
@@ -65,17 +66,17 @@ class ScrollingScenario extends BenchmarkScenario {
   static List<String> _generateCorpus() {
     final random = Random(42);
     final parts = [
-      '**Bold**',
-      '*Italic*',
-      '~~Strike~~',
-      '`code`',
-      '++Under++',
-      '==High==',
-      '^Sup^',
-      '~Sub~',
-      '[Link](https://flutter.dev)',
-      'Normal text content that is a bit longer to test performance better.',
-      'Some {star} icons {favorite} in between {info}.',
+      '**Bold** ',
+      '*Italic* ',
+      '~~Strike~~ ',
+      '`code` ',
+      '++Under++ ',
+      '==High== ',
+      '^Sup^ ',
+      '~Sub~ ',
+      '[Link](https://flutter.dev) ',
+      'Normal text content that is a bit longer to test performance better. ',
+      'Some {star} icons {favorite} in between {info}. ',
     ];
     return List.generate(BenchmarkConfig.corpusSize, (index) {
       final buffer = StringBuffer();
