@@ -359,6 +359,24 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
                             _textController.text,
                             textAlign: _textAlign,
                             textScaler: TextScaler.linear(_textScaleFactor),
+                            placeholders: {
+                              'flutter': WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Image.asset('assets/img/flutter.png', height: 16),
+                              ),
+                              'dart': WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Image.asset('assets/img/dart.png', height: 16),
+                              ),
+                              'love': WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Icon(
+                                  Icons.favorite,
+                                  color: Colors.red,
+                                  size: 16,
+                                ),
+                              ),
+                            },
                           ),
                         ),
                       ),
