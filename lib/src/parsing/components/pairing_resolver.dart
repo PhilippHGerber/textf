@@ -121,8 +121,7 @@ class PairingResolver {
     bool allowNewlineCrossing = true,
   }) {
     // Pre-compute newline positions for O(1) range queries when needed.
-    final List<int>? nlPrefix =
-        allowNewlineCrossing ? null : _buildNewlinePrefixSum(tokens);
+    final List<int>? nlPrefix = allowNewlineCrossing ? null : _buildNewlinePrefixSum(tokens);
 
     // Stack of opening markers for each format type
     final Map<FormatMarkerType, List<int>> openingStacks = {

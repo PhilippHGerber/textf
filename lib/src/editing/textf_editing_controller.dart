@@ -119,13 +119,13 @@ class TextfEditingController extends TextEditingController {
 
   /// Controls how formatting markers are displayed.
   ///
-  /// When set to[MarkerVisibility.always], all markers are visible with
-  /// dimmed styling (default). When set to[MarkerVisibility.whenActive],
+  /// When set to [MarkerVisibility.always], all markers are visible with
+  /// dimmed styling (default). When set to [MarkerVisibility.whenActive],
   /// only markers surrounding the cursor are visible; others are instantly
   /// hidden. During text selection, all markers are hidden to prevent
   /// layout jumps.
   ///
-  /// Setting this property calls[notifyListeners] automatically.
+  /// Setting this property calls [notifyListeners] automatically.
   MarkerVisibility get markerVisibility => _markerVisibility;
   MarkerVisibility _markerVisibility;
 
@@ -141,7 +141,7 @@ class TextfEditingController extends TextEditingController {
   /// [TextSpan] with no formatting applied. This prevents UI freezes on
   /// very large inputs. Defaults to [TextfLimits.maxLiveFormattingLength].
   ///
-  /// Setting this property calls[notifyListeners] automatically.
+  /// Setting this property calls [notifyListeners] automatically.
   int get maxLiveFormattingLength => _maxLiveFormattingLength;
   int _maxLiveFormattingLength;
 
@@ -162,15 +162,16 @@ class TextfEditingController extends TextEditingController {
     notifyListeners();
   }
 
+  /// Builds a [TextSpan] tree with live formatting applied.
+  ///
+  /// Parses the current [text] for formatting markers and returns styled
+  /// spans. Results are cached and only recomputed when inputs change.
   @override
   TextSpan buildTextSpan({
     required BuildContext context,
     TextStyle? style,
     required bool withComposing,
   }) {
-    // START TIMER
-    // final stopwatch = Stopwatch()..start();
-
     // 1. Fast path: Empty Text
     // Mimics native TextEditingController, bypassing all custom logic.
     // This drops high UI/Raster time down to baseline when the field is empty.
@@ -320,15 +321,6 @@ class TextfEditingController extends TextEditingController {
     _lastWithComposing = withComposing;
 
     // Always return a fresh TextSpan instance containing the cached children.
-    // return TextSpan(style: style, children: finalChildren);
-    final result = TextSpan(style: style, children: finalChildren);
-
-    // STOP TIMER
-    // stopwatch.stop();
-    // PRINT THE RESULT TO CONSOLE
-    // final isHit = coreCacheHit ? 'HIT ' : 'MISS';
-    // debugPrint('\n\nbuildTextSpan ($isHit): ${stopwatch.elapsedMicroseconds} μs\n');
-
-    return result;
+    return TextSpan(style: style, children: finalChildren);
   }
 }
