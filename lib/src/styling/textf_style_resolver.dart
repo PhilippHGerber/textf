@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../core/default_styles.dart';
 import '../core/textf_limits.dart';
+import '../core/textf_style_utils.dart';
 import '../models/textf_token.dart';
-import '../widgets/textf_options.dart'; // Needed for options lookup
+import '../widgets/internal/textf_options_resolver.dart' as resolver;
+import '../widgets/textf_options.dart';
 
 /// A class responsible for resolving the final TextStyle for formatted text segments.
 ///
@@ -17,17 +19,31 @@ import '../widgets/textf_options.dart'; // Needed for options lookup
 ///
 /// The resolved style is always merged with the provided `baseStyle`.
 class TextfStyleResolver {
-  /// Creates a style resolver for the given context.
-  TextfStyleResolver(this.context)
-      : _theme = Theme.of(context),
-        _nearestOptions = TextfOptions.maybeOf(context); // Find nearest options once
+  /// Creates a style resolver from the given context.
+  ///
+  /// Extracts [ThemeData] and the [TextfOptions] hierarchy immediately.
+  /// This ensures that no [BuildContext] is retained in the instance,
+  /// preventing memory leaks when the resolver is cached by controllers
+  /// that outlive the widget tree.
+  factory TextfStyleResolver(BuildContext context) {
+    return TextfStyleResolver.withState(
+      theme: Theme.of(context),
+      optionsHierarchy: resolver.getAncestorOptions(context),
+    );
+  }
 
-  /// The context in which the resolver operates.
-  final BuildContext context;
-  // Store theme and options for potential reuse within a single resolve cycle,
-  // though looking them up on demand is also fine.
+  /// Creates a style resolver directly from dependencies.
+  ///
+  /// Use this constructor if you have already extracted the theme and
+  /// options hierarchy from the context.
+  TextfStyleResolver.withState({
+    required ThemeData theme,
+    required List<TextfOptions> optionsHierarchy,
+  })  : _theme = theme,
+        _optionsHierarchy = optionsHierarchy;
+
   final ThemeData _theme;
-  final TextfOptions? _nearestOptions;
+  final List<TextfOptions> _optionsHierarchy;
 
   /// Resolves the final TextStyle for a given format marker type and base style.
   ///
@@ -45,8 +61,8 @@ class TextfStyleResolver {
 
     if (type == FormatMarkerType.superscript || type == FormatMarkerType.subscript) {
       // Resolve the scale factor (Option -> Default)
-      final double scaleFactor = _nearestOptions?.getEffectiveScriptFontSizeFactor(context) ??
-          DefaultStyles.scriptFontSizeFactor;
+      final double scaleFactor =
+          _getFirstValue((o) => o.scriptFontSizeFactor) ?? DefaultStyles.scriptFontSizeFactor;
 
       // Apply scaling to the base style FIRST
       // This ensures that if the user only overrides color later, the size is already correct.
@@ -54,43 +70,42 @@ class TextfStyleResolver {
       effectiveBaseStyle = baseStyle.copyWith(fontSize: currentSize * scaleFactor);
     }
 
-    // Get the effective style from TextfOptions hierarchy first.
-    // The getEffective... methods handle the lookup and return null if no option is set.
+    // Get the effective style from the TextfOptions hierarchy first.
     final TextStyle? optionsStyle = _getEffectiveStyleFromOptions(type, effectiveBaseStyle);
 
     if (optionsStyle != null) {
       // Precedence 1 & 2: Use the style derived from TextfOptions
-      // The getEffective... methods already merge with the base style correctly.
+      // The _getEffectiveStyleFromOptions method already merges with the base style correctly.
       return optionsStyle;
     } else {
       // Precedence 3 & 4: No TextfOptions override found, use Theme or Default fallback
       switch (type) {
         case FormatMarkerType.bold:
-          return DefaultStyles.boldStyle(baseStyle); // Relative default
+          return DefaultStyles.boldStyle(effectiveBaseStyle); // Relative default
         case FormatMarkerType.italic:
-          return DefaultStyles.italicStyle(baseStyle); // Relative default
+          return DefaultStyles.italicStyle(effectiveBaseStyle); // Relative default
         case FormatMarkerType.boldItalic:
-          return DefaultStyles.boldItalicStyle(baseStyle); // Relative default
+          return DefaultStyles.boldItalicStyle(effectiveBaseStyle); // Relative default
         case FormatMarkerType.strikethrough:
           // No full style override from options, use default effect.
           // Check if a specific thickness is provided via options.
-          final double? thicknessOption =
-              _nearestOptions?.getEffectiveStrikethroughThickness(context);
+          final double? thicknessOption = _getFirstValue((o) => o.strikethroughThickness);
+
           // Use the option thickness if provided, otherwise use the default thickness.
           final double finalThickness =
               thicknessOption ?? DefaultStyles.defaultStrikethroughThickness;
 
           // Apply the default strikethrough effect with the resolved thickness.
           return DefaultStyles.strikethroughStyle(
-            baseStyle,
+            effectiveBaseStyle,
             thickness: finalThickness,
           );
         case FormatMarkerType.code:
-          return _getThemeBasedCodeStyle(baseStyle); // Theme-based default
+          return _getThemeBasedCodeStyle(effectiveBaseStyle); // Theme-based default
         case FormatMarkerType.underline:
-          return DefaultStyles.underlineStyle(baseStyle); // Relative default
+          return DefaultStyles.underlineStyle(effectiveBaseStyle); // Relative default
         case FormatMarkerType.highlight:
-          return _getThemeBasedHighlightStyle(baseStyle); // Theme-based default
+          return _getThemeBasedHighlightStyle(effectiveBaseStyle); // Theme-based default
         case FormatMarkerType.superscript:
           return effectiveBaseStyle;
         case FormatMarkerType.subscript:
@@ -101,7 +116,7 @@ class TextfStyleResolver {
 
   /// Resolves the final NORMAL TextStyle for a link.
   ///
-  /// Checks TextfOptions first, then falls back to a theme-based style.
+  /// Checks TextfOptions hierarchy first, then falls back to a theme-based style.
   /// Merges the result with the provided `baseStyle`.
   ///
   /// - [baseStyle]: The style of the link text *before* applying link-specific formatting
@@ -109,14 +124,16 @@ class TextfStyleResolver {
   ///
   /// Returns the final normal `TextStyle` for the link.
   TextStyle resolveLinkStyle(TextStyle baseStyle) {
-    final TextStyle? optionsStyle = _nearestOptions?.getEffectiveLinkStyle(context, baseStyle);
+    final TextStyle? optionsStyle = _getMergedStyle((o) => o.linkStyle);
+    final TextStyle? mergedOption =
+        optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
 
-    return optionsStyle ?? _getThemeBasedLinkStyle(baseStyle);
+    return mergedOption ?? _getThemeBasedLinkStyle(baseStyle);
   }
 
   /// Resolves the final HOVER TextStyle for a link.
   ///
-  /// Checks TextfOptions first, then falls back to a theme-based style
+  /// Checks TextfOptions hierarchy first, then falls back to a theme-based style
   /// (which, by default, might be the same as the normal style unless overridden).
   /// Merges the result with the provided `baseStyle`.
   ///
@@ -126,58 +143,50 @@ class TextfStyleResolver {
   TextStyle resolveLinkHoverStyle(TextStyle baseStyle) {
     // 1. Resolve the normal link style first
     final TextStyle normalLinkStyle = resolveLinkStyle(baseStyle);
-    // 2. Try to get a hover-specific style from options, merging it onto the normalLinkStyle
-    final TextStyle? optionsStyle =
-        _nearestOptions?.getEffectiveLinkHoverStyle(context, normalLinkStyle);
 
-    return optionsStyle ?? normalLinkStyle;
+    // 2. Try to get a hover-specific style from options, merging it onto the normalLinkStyle
+    final TextStyle? optionsStyle = _getMergedStyle((o) => o.linkHoverStyle);
+
+    if (optionsStyle == null) return normalLinkStyle;
+    return mergeTextStyles(normalLinkStyle, optionsStyle);
   }
 
   /// Resolves the effective MouseCursor for a link.
   ///
-  /// Checks TextfOptions first, then falls back to `DefaultStyles.linkMouseCursor`.
+  /// Checks TextfOptions hierarchy first, then falls back to `DefaultStyles.linkMouseCursor`.
   MouseCursor resolveLinkMouseCursor() {
-    return _nearestOptions?.getEffectiveLinkMouseCursor(context) ?? DefaultStyles.linkMouseCursor;
+    return _getFirstValue((o) => o.linkMouseCursor) ?? DefaultStyles.linkMouseCursor;
   }
 
   /// Resolves the effective onLinkTap callback for a link.
   ///
   /// Checks TextfOptions hierarchy for the callback. Returns null if none found.
   void Function(String url, String displayText)? resolveOnLinkTap() {
-    return _nearestOptions?.getEffectiveOnLinkTap(context);
+    return _getFirstValue((o) => o.onLinkTap);
   }
 
   /// Resolves the effective onLinkHover callback for a link.
   ///
   /// Checks TextfOptions hierarchy for the callback. Returns null if none found.
   void Function(String url, String displayText, {required bool isHovering})? resolveOnLinkHover() {
-    return _nearestOptions?.getEffectiveOnLinkHover(context);
+    return _getFirstValue((o) => o.onLinkHover);
   }
 
   /// Resolves the effective placeholder alignment for a link widget.
   ///
-  /// Checks TextfOptions hierarchy. Defaults to [PlaceholderAlignment.baseline] if not found.
+  /// Checks TextfOptions hierarchy. Defaults to[PlaceholderAlignment.baseline] if not found.
   PlaceholderAlignment resolveLinkAlignment() {
-    return _nearestOptions?.getEffectiveLinkAlignment(context) ?? PlaceholderAlignment.baseline;
+    return _getFirstValue((o) => o.linkAlignment) ?? PlaceholderAlignment.baseline;
   }
 
-  /// Creates an [InlineSpan] representing a single script fragment.
-  ///
-  /// The returned span encapsulates the visual styling, semantics, and any
-  /// interactions for the script run produced by the style resolver. This span
-  /// can be inserted into higher-level text layouts or combined with other spans
-  /// to form rich text output.
-  ///
-  /// Returns an [InlineSpan] that encodes the resolved styling and behavior for
-  /// the script fragment.
-
+  /// Calculates the vertical padding required to achieve the script's visual
   /// displacement, respecting any overrides in the [TextfOptions] hierarchy.
   ///
   /// Superscript uses bottom padding (pushes text up when aligned to middle).
   /// Subscript uses top padding (pushes text down).
   ///
   /// The padding magnitude is `fontSize × offsetFactor × 2`, where the `× 2`
-  /// comes from [TextfLimits.scriptAlignmentPaddingFactor] (because
+  /// comes from[TextfLimits.scriptAlignmentPaddingFactor] (because
   /// [PlaceholderAlignment.middle] centers the widget, so shifting the visual
   /// center by `offset` requires `2 × offset` padding).
   EdgeInsetsGeometry resolveScriptPadding({
@@ -187,8 +196,8 @@ class TextfStyleResolver {
     final double fontSize = style.fontSize ?? DefaultStyles.defaultFontSize;
 
     final double? optionFactor = isSuperscript
-        ? _nearestOptions?.getEffectiveSuperscriptBaselineFactor(context)
-        : _nearestOptions?.getEffectiveSubscriptBaselineFactor(context);
+        ? _getFirstValue((o) => o.superscriptBaselineFactor)
+        : _getFirstValue((o) => o.subscriptBaselineFactor);
 
     final double offsetFactor = optionFactor ??
         (isSuperscript
@@ -202,9 +211,9 @@ class TextfStyleResolver {
         : EdgeInsets.only(top: offsetY.abs() * TextfLimits.scriptAlignmentPaddingFactor);
   }
 
-  /// Creates an [InlineSpan] representing a single script fragment.
+  /// Creates an[InlineSpan] representing a single script fragment.
   ///
-  /// The returned span uses [WidgetSpan] with [PlaceholderAlignment.middle]
+  /// The returned span uses [WidgetSpan] with[PlaceholderAlignment.middle]
   /// and directional [Padding] (resolved via [resolveScriptPadding]) to
   /// vertically displace the text. The child [Text.rich] uses
   /// [TextScaler.noScaling] to prevent double-scaling.
@@ -237,40 +246,65 @@ class TextfStyleResolver {
 
   // --- Private Helper Methods ---
 
-  /// Internal helper to retrieve the effective style from TextfOptions hierarchy.
+  /// Internal helper to retrieve and merge a specific style from the pre-computed hierarchy.
+  /// Reverses the ancestor list (to start from the top-most parent) and iteratively merges styles downwards.
+  TextStyle? _getMergedStyle(TextStyle? Function(TextfOptions) getter) {
+    if (_optionsHierarchy.isEmpty) return null;
+
+    TextStyle? finalStyle;
+    // Iterate from root-most ancestor to nearest
+    for (final options in _optionsHierarchy.reversed) {
+      final TextStyle? localStyle = getter(options);
+      if (localStyle != null) {
+        finalStyle = finalStyle == null ? localStyle : mergeTextStyles(finalStyle, localStyle);
+      }
+    }
+    return finalStyle;
+  }
+
+  /// Internal helper to find the first non-null property from the pre-computed hierarchy.
+  /// Uses a "nearest wins" strategy, iterating from nearest ancestor to furthest.
+  T? _getFirstValue<T>(T? Function(TextfOptions) getter) {
+    for (final options in _optionsHierarchy) {
+      final T? value = getter(options);
+      if (value != null) return value;
+    }
+    return null;
+  }
+
+  /// Internal helper to retrieve the effective style from the TextfOptions hierarchy.
   /// Returns null if no option is defined for the given type.
   TextStyle? _getEffectiveStyleFromOptions(FormatMarkerType type, TextStyle baseStyle) {
-    final TextfOptions? options = _nearestOptions;
-    if (options == null) return null;
+    if (_optionsHierarchy.isEmpty) return null;
 
-    // Call the appropriate getter on the TextfOptions instance.
-    // These methods handle the ancestor lookup internally.
+    TextStyle? optionsStyle;
     switch (type) {
       case FormatMarkerType.bold:
-        return options.getEffectiveBoldStyle(context, baseStyle);
+        optionsStyle = _getMergedStyle((o) => o.boldStyle);
       case FormatMarkerType.italic:
-        return options.getEffectiveItalicStyle(context, baseStyle);
+        optionsStyle = _getMergedStyle((o) => o.italicStyle);
       case FormatMarkerType.boldItalic:
-        return options.getEffectiveBoldItalicStyle(context, baseStyle);
+        optionsStyle = _getMergedStyle((o) => o.boldItalicStyle);
       case FormatMarkerType.strikethrough:
-        return options.getEffectiveStrikethroughStyle(context, baseStyle);
+        optionsStyle = _getMergedStyle((o) => o.strikethroughStyle);
       case FormatMarkerType.code:
-        return options.getEffectiveCodeStyle(context, baseStyle);
+        optionsStyle = _getMergedStyle((o) => o.codeStyle);
       case FormatMarkerType.underline:
-        return options.getEffectiveUnderlineStyle(context, baseStyle);
+        optionsStyle = _getMergedStyle((o) => o.underlineStyle);
       case FormatMarkerType.highlight:
-        return options.getEffectiveHighlightStyle(context, baseStyle);
+        optionsStyle = _getMergedStyle((o) => o.highlightStyle);
       case FormatMarkerType.superscript:
-        return options.getEffectiveSuperscriptStyle(context, baseStyle);
+        optionsStyle = _getMergedStyle((o) => o.superscriptStyle);
       case FormatMarkerType.subscript:
-        return options.getEffectiveSubscriptStyle(context, baseStyle);
+        optionsStyle = _getMergedStyle((o) => o.subscriptStyle);
     }
+
+    return optionsStyle == null ? null : mergeTextStyles(baseStyle, optionsStyle);
   }
 
   /// Internal helper to create the default code style based on the current theme.
   TextStyle _getThemeBasedCodeStyle(TextStyle baseStyle) {
     final ColorScheme colorScheme = _theme.colorScheme;
-    // final TextTheme textTheme = _theme.textTheme; // Potentially use textTheme for font details
 
     final Color codeBackgroundColor = colorScheme.surfaceContainer; // Example theme color
     final Color codeForegroundColor = colorScheme.onSurfaceVariant; // Example theme color
@@ -309,7 +343,6 @@ class TextfStyleResolver {
     final ColorScheme colorScheme = _theme.colorScheme;
 
     // A common "highlighter yellow":
-    // force yellow for now to see it clearly
     final Color highlightBgColor = colorScheme.brightness == Brightness.light
         ? Colors.yellow.withValues(alpha: DefaultStyles.highlightAlphaLight)
         : Colors.yellow.shade700.withValues(alpha: DefaultStyles.highlightAlphaDark);
