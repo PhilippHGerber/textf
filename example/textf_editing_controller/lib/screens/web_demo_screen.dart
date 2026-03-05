@@ -4,6 +4,27 @@ import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+String initText = '''
+🚀 **Welcome to Textf!**
+
+⚠️ *This is a preview — not released yet.*
+
+Edit this text to see live formatting in action:
+• **Bold**, *Italic* text and ***both***
+• ~~Strikethrough~~ and ++Underline++
+• ==Highlighting== and `inline code` blocks
+• Superscript x^2^ + y^2^ and Task^✅^
+• Subscript H~2~O and hot~🔥~
+
+Check out the [Documentation](https://pub.dev/packages/textf)
+for more details.
+''';
+
+String init2Text = '*a* **b** ==c== ~~d~~ ++e++ ^f^ ~g~ [h](i)';
+
+// repease init2Text 20x
+String init2TextLong = List.filled(20, init2Text).join('\n');
+
 class WebDemoScreen extends StatefulWidget {
   final ThemeMode currentThemeMode;
   final VoidCallback toggleThemeMode;
@@ -20,27 +41,21 @@ class WebDemoScreen extends StatefulWidget {
 
 class _WebDemoScreenState extends State<WebDemoScreen> {
   late final TextfEditingController _controller;
+  late final FocusNode _focusNode;
   MarkerVisibility _visibility = MarkerVisibility.always;
 
   @override
   void initState() {
     super.initState();
+    _focusNode = FocusNode();
     _controller = TextfEditingController(
-      text:
-          '🚀 **Welcome to Textf!**\n\n'
-          '⚠️ *This is a preview — not released yet.*\n\n'
-          'Edit this text to see live formatting in action:\n'
-          '• **Bold**, *Italic* text and ***both***\n'
-          '• ~~Strikethrough~~ and ++Underline++\n'
-          '• ==Highlighting== and `inline code` blocks\n\n'
-          '• Superscript x^2^ + y^2^ and subscript H~2~O\n\n'
-          'Check out the [Documentation](https://pub.dev/packages/textf) '
-          'for more details.',
+      text: initText,
     );
   }
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -79,6 +94,7 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
       ..selection = TextSelection.collapsed(
         offset: start + insertText.length,
       );
+    _focusNode.requestFocus();
   }
 
   @override
@@ -145,6 +161,7 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
                   children: [
                     TextField(
                       controller: _controller,
+                      focusNode: _focusNode,
                       maxLines: 14,
                       minLines: 14,
                       decoration: InputDecoration(
@@ -317,7 +334,7 @@ class _FormatChips extends StatelessWidget {
           _chip('`code`'),
           _chip('E=mc^2^'),
           _chip('H~2~O'),
-          _chip('[link](https://example.com)'),
+          _chip('[link](https://flutter.dev/)'),
         ],
       ),
     );
@@ -325,9 +342,11 @@ class _FormatChips extends StatelessWidget {
 
   Widget _chip(String label) {
     return ActionChip(
-      label: Textf(
-        label,
-        style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 11),
+      label: IgnorePointer(
+        child: Textf(
+          label,
+          style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 11),
+        ),
       ),
       onPressed: () => onInsert('$label '),
       visualDensity: VisualDensity.compact,
