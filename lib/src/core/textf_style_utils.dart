@@ -1,5 +1,13 @@
 import 'package:flutter/painting.dart';
 
+/// Combines two optional text decorations into one, preventing duplicates
+/// and handling null or `TextDecoration.none` gracefully.
+TextDecoration? combineTextDecorations(TextDecoration? a, TextDecoration? b) {
+  if (a == null || a == TextDecoration.none) return b;
+  if (b == null || b == TextDecoration.none) return a;
+  return a.contains(b) ? a : TextDecoration.combine([a, b]);
+}
+
 /// Merges two [TextStyle] objects with intelligent [TextDecoration] handling.
 ///
 /// Unlike the standard [TextStyle.merge], this function prevents:
@@ -31,7 +39,6 @@ TextStyle mergeTextStyles(TextStyle baseStyle, TextStyle optionsStyle) {
     return merged;
   }
 
-  // Case 3: Both styles have active decorations. We need custom logic.
   if (baseDeco != null && baseDeco != TextDecoration.none) {
     // Check if the base decoration already "contains" the option's decoration.
     // TextDecoration treats combinations as a bitmask.
@@ -46,11 +53,7 @@ TextStyle mergeTextStyles(TextStyle baseStyle, TextStyle optionsStyle) {
     //    The option adds a completely new decoration (e.g., adding 'lineThrough'
     //    to text that is only 'underlined').
     //    Combine them so both appear.
-    return baseDeco.contains(optionDeco)
-        ? merged.copyWith(decoration: baseDeco)
-        : merged.copyWith(
-            decoration: TextDecoration.combine([baseDeco, optionDeco]),
-          );
+    return merged.copyWith(decoration: combineTextDecorations(baseDeco, optionDeco));
   }
 
   // Case 4: Base has no decoration, but Option does.
@@ -66,22 +69,8 @@ TextStyle mergeTextStyles(TextStyle baseStyle, TextStyle optionsStyle) {
 /// (e.g., underline).
 TextStyle applyLinkStyleToSpan(TextStyle spanStyle, TextStyle linkAppearance) {
   // 1. Determine Decoration (Merge logic)
-  TextDecoration? finalDecoration;
-  final TextDecoration? linkBaseDecoration = linkAppearance.decoration;
-  final TextDecoration? innerExistingDecoration = spanStyle.decoration;
-
-  if (linkBaseDecoration != null && linkBaseDecoration != TextDecoration.none) {
-    // ignore: prefer-conditional-expressions
-    if (innerExistingDecoration != null && innerExistingDecoration != TextDecoration.none) {
-      finalDecoration = !innerExistingDecoration.contains(linkBaseDecoration)
-          ? TextDecoration.combine([innerExistingDecoration, linkBaseDecoration])
-          : innerExistingDecoration;
-    } else {
-      finalDecoration = linkBaseDecoration;
-    }
-  } else {
-    finalDecoration = innerExistingDecoration;
-  }
+  final TextDecoration? finalDecoration =
+      combineTextDecorations(spanStyle.decoration, linkAppearance.decoration);
 
   // 2. Determine Decoration Color and Thickness
   final Color? finalDecorationColor = linkAppearance.decorationColor ?? spanStyle.decorationColor;

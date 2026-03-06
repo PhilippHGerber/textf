@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/textf_limits.dart';
+import '../core/textf_style_utils.dart';
 import '../styling/textf_style_resolver.dart';
 import '../widgets/textf_ext.dart';
 import '../widgets/textf_options.dart';
@@ -297,17 +298,8 @@ class TextfEditingController extends TextEditingController {
           if (endInSpan > startInSpan) {
             final TextStyle mergedStyle;
             if (span.style case final TextStyle spanStyle?) {
-              final TextDecoration combined;
-              final existingDeco = spanStyle.decoration;
-              if (existingDeco != null &&
-                  existingDeco != TextDecoration.none &&
-                  !existingDeco.contains(TextDecoration.underline)) {
-                combined = TextDecoration.combine([existingDeco, TextDecoration.underline]);
-              } else if (existingDeco == null || existingDeco == TextDecoration.none) {
-                combined = TextDecoration.underline;
-              } else {
-                combined = existingDeco;
-              }
+              final TextDecoration? combined =
+                  combineTextDecorations(spanStyle.decoration, TextDecoration.underline);
               mergedStyle = spanStyle.copyWith(decoration: combined);
             } else {
               mergedStyle = composingStyle;
