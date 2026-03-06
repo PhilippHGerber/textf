@@ -1,0 +1,31 @@
+name: widgetbook_textf
+description: Widgetbook for testing textf widget capabilities
+publish_to: "none"
+version: 1.0.0
+resolution: workspace
+
+environment:
+  sdk: ^3.5.0
+  flutter: ">=3.38.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  textf: ^1.1.2
+  widgetbook: ^3.20.2
+  widgetbook_annotation: ^3.9.0
+  flutter_localizations:
+    sdk: flutter
+  device_frame: ^1.4.0
+  flex_color_scheme: ^8.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^10.2.0
+  widgetbook_generator: ^3.20.1
+  build_runner: ^2.10.5
+
+flutter:
+  uses-material-design: true
