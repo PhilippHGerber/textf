@@ -12,7 +12,6 @@
 .vscode/
 *.iml
 .idea/
-/pubspec.lock
 **/doc/api/
 coverage/
 

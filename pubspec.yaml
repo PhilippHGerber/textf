@@ -8,8 +8,15 @@ repository: https://github.com/PhilippHGerber/textf
 issue_tracker: https://github.com/PhilippHGerber/textf/issues
 
 environment:
-  sdk: ">=3.5.0 <4.0.0"
+  sdk: ^3.5.0
   flutter: ">=3.27.0"
+
+workspace:
+  - example/benchmark
+  - example/textf_core
+  - example/textf_editing_controller
+  - example/textf_flex
+  - example/widgetbook_textf
 
 dependencies:
   flutter:
@@ -18,7 +25,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  very_good_analysis: ^10.0.0
+  very_good_analysis: ^10.2.0
 
 topics:
   - text
