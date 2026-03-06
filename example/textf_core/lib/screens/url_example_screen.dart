@@ -8,9 +8,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../widgets/example_card.dart';
 
 class UrlExampleScreen extends StatefulWidget {
-
   const UrlExampleScreen({
-    required this.currentThemeMode, required this.toggleThemeMode, super.key,
+    required this.currentThemeMode,
+    required this.toggleThemeMode,
+    super.key,
   });
   final ThemeMode currentThemeMode;
   final VoidCallback toggleThemeMode;

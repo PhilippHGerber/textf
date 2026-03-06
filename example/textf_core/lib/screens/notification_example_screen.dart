@@ -5,9 +5,10 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class NotificationExampleScreen extends StatelessWidget {
-
   const NotificationExampleScreen({
-    required this.currentThemeMode, required this.toggleThemeMode, super.key,
+    required this.currentThemeMode,
+    required this.toggleThemeMode,
+    super.key,
   });
   // Add theme constructor parameters
   final ThemeMode currentThemeMode;
@@ -314,7 +315,8 @@ class _NotificationSystemState extends State<NotificationSystem> {
 }
 
 // NotificationItem class remains the same
-class NotificationItem { // Make optional
+class NotificationItem {
+  // Make optional
 
   NotificationItem({
     required this.icon,

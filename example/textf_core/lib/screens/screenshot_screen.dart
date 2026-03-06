@@ -69,9 +69,10 @@ extension TextStyleCopyWithExtension on TextStyle? {
 }
 
 class ScreenshotScreen extends StatefulWidget {
-
   const ScreenshotScreen({
-    required this.currentThemeMode, required this.toggleThemeMode, super.key,
+    required this.currentThemeMode,
+    required this.toggleThemeMode,
+    super.key,
   });
   // Add theme parameters
   final ThemeMode currentThemeMode;
@@ -159,7 +160,8 @@ for more details.
       }
 
       if (!mounted) return;
-      final ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
+      final ui.Image image =
+          await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
 
       final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       _imageBytes = byteData?.buffer.asUint8List();

@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:textf/textf.dart'; // Import your textf package
 
 class HomeScreen extends StatelessWidget {
-
   const HomeScreen({
-    required this.selectedScheme, required this.themeMode, required this.onSchemeChanged, required this.onThemeModeChanged, super.key,
+    required this.selectedScheme,
+    required this.themeMode,
+    required this.onSchemeChanged,
+    required this.onThemeModeChanged,
+    super.key,
   });
   final FlexScheme selectedScheme;
   final ThemeMode themeMode;
@@ -188,8 +191,7 @@ class HomeScreen extends StatelessWidget {
               '**No boilerplate. No TextSpan pain. Just** `Textf`.\n'
               'Easily apply bold, italic, strikethrough, and inline code styles using a clean, Markdown-like syntax.',
             ),
-            code:
-                r"Textf('This is \*\*bold**, \*italic*, \~~strikethrough~~, \`inline code\`')",
+            code: r"Textf('This is \*\*bold**, \*italic*, \~~strikethrough~~, \`inline code\`')",
             textf: const Textf('This is **bold**, *italic*, ~~strikethrough~~, `inline code`'),
           ),
           _buildExampleCard(

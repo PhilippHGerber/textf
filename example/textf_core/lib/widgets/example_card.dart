@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class ExampleCard extends StatelessWidget {
-
   const ExampleCard({
-    required this.title, required this.description, required this.code, required this.child, super.key,
+    required this.title,
+    required this.description,
+    required this.code,
+    required this.child,
+    super.key,
   });
   final String title;
   final String description;

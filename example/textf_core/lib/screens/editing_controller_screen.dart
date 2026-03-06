@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 
 class EditingControllerScreen extends StatefulWidget {
-
   const EditingControllerScreen({
-    required this.currentThemeMode, required this.toggleThemeMode, super.key,
+    required this.currentThemeMode,
+    required this.toggleThemeMode,
+    super.key,
   });
   final ThemeMode currentThemeMode;
   final VoidCallback toggleThemeMode;
@@ -289,7 +290,6 @@ class _EditingControllerScreenState extends State<EditingControllerScreen> {
 // ---------------------------------------------------------------------------
 
 class _SectionHeader extends StatelessWidget {
-
   const _SectionHeader({required this.title, required this.theme});
   final String title;
   final ThemeData theme;
@@ -306,7 +306,6 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _MarkerVisibilityToggle extends StatelessWidget {
-
   const _MarkerVisibilityToggle({
     required this.visibility,
     required this.onChanged,
@@ -339,7 +338,6 @@ class _MarkerVisibilityToggle extends StatelessWidget {
 }
 
 class _FormatChips extends StatelessWidget {
-
   const _FormatChips({required this.onInsert, required this.theme});
   final ValueChanged<String> onInsert;
   final ThemeData theme;
@@ -385,7 +383,6 @@ class _FormatChips extends StatelessWidget {
 }
 
 class _ChatDemo extends StatelessWidget {
-
   const _ChatDemo({
     required this.controller,
     required this.messages,
@@ -487,7 +484,6 @@ class _ChatDemo extends StatelessWidget {
 }
 
 class _SideBySideComparison extends StatefulWidget {
-
   const _SideBySideComparison({required this.theme});
   final ThemeData theme;
 

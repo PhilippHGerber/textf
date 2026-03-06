@@ -13,9 +13,10 @@ import 'theme_example_screen.dart';
 import 'url_example_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-
   const HomeScreen({
-    required this.currentThemeMode, required this.toggleThemeMode, super.key,
+    required this.currentThemeMode,
+    required this.toggleThemeMode,
+    super.key,
   });
   final ThemeMode currentThemeMode;
   final VoidCallback toggleThemeMode;

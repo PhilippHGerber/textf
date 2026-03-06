@@ -4,9 +4,10 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class ChatExampleScreen extends StatelessWidget {
-
   const ChatExampleScreen({
-    required this.currentThemeMode, required this.toggleThemeMode, super.key,
+    required this.currentThemeMode,
+    required this.toggleThemeMode,
+    super.key,
   });
   // Add theme constructor parameters
   final ThemeMode currentThemeMode;
@@ -103,9 +104,10 @@ Container(
 }
 
 class ChatBubble extends StatelessWidget {
-
   const ChatBubble({
-    required this.isMe, required this.message, super.key,
+    required this.isMe,
+    required this.message,
+    super.key,
   });
   final bool isMe;
   final String message;
@@ -318,7 +320,6 @@ class _ChatExampleState extends State<ChatExample> {
 
 // ChatMessage class remains the same
 class ChatMessage {
-
   ChatMessage({
     required this.message,
     required this.isMe,

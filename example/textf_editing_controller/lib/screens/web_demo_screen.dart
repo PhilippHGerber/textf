@@ -26,9 +26,10 @@ String init2Text = '*a* **b** ==c== ~~d~~ ++e++ ^f^ ~g~ [h](i)';
 String init2TextLong = List.filled(20, init2Text).join('\n');
 
 class WebDemoScreen extends StatefulWidget {
-
   const WebDemoScreen({
-    required this.currentThemeMode, required this.toggleThemeMode, super.key,
+    required this.currentThemeMode,
+    required this.toggleThemeMode,
+    super.key,
   });
   final ThemeMode currentThemeMode;
   final VoidCallback toggleThemeMode;
@@ -99,9 +100,8 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final brightness = theme.brightness;
-    final themeIcon = brightness == Brightness.dark
-        ? Icons.light_mode_outlined
-        : Icons.dark_mode_outlined;
+    final themeIcon =
+        brightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
 
     return Scaffold(
       appBar: AppBar(
@@ -239,8 +239,7 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
                 const SizedBox(height: 16),
                 _CodePreview(
                   theme: theme,
-                  code:
-                      'Textf(\n'
+                  code: 'Textf(\n'
                       "  'Built with {flutter} and {dart}. "
                       "Made with {love}.\\n'\n"
                       "  'Flutter package '\n"
@@ -274,7 +273,6 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
 // ---------------------------------------------------------------------------
 
 class _CodePreview extends StatelessWidget {
-
   const _CodePreview({required this.theme, required this.code});
   final ThemeData theme;
   final String code;
@@ -305,7 +303,6 @@ class _CodePreview extends StatelessWidget {
 }
 
 class _FormatChips extends StatelessWidget {
-
   const _FormatChips({required this.onInsert, required this.theme});
   final ValueChanged<String> onInsert;
   final ThemeData theme;

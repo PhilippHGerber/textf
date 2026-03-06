@@ -34,9 +34,8 @@ class _TextfWebDemoState extends State<TextfWebDemo> {
   }
 
   void _toggleThemeMode() {
-    _themeModeNotifier.value = _themeModeNotifier.value == ThemeMode.light
-        ? ThemeMode.dark
-        : ThemeMode.light;
+    _themeModeNotifier.value =
+        _themeModeNotifier.value == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
   }
 
   @override

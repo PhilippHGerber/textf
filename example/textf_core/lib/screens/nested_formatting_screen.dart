@@ -4,9 +4,10 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class NestedFormattingScreen extends StatelessWidget {
-
   const NestedFormattingScreen({
-    required this.currentThemeMode, required this.toggleThemeMode, super.key,
+    required this.currentThemeMode,
+    required this.toggleThemeMode,
+    super.key,
   });
   final ThemeMode currentThemeMode;
   final VoidCallback toggleThemeMode;

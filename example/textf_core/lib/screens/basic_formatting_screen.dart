@@ -5,9 +5,10 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class BasicFormattingScreen extends StatelessWidget {
-
   const BasicFormattingScreen({
-    required this.currentThemeMode, required this.toggleThemeMode, super.key,
+    required this.currentThemeMode,
+    required this.toggleThemeMode,
+    super.key,
   });
   final ThemeMode currentThemeMode;
   final VoidCallback toggleThemeMode;
