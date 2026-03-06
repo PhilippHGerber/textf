@@ -5,9 +5,7 @@ import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const String initText = '''
-🚀 **Welcome to Textf!**
-
-⚠️ *This is a preview — not released yet.*
+🚀 **Welcome to Textf 1.2.0!**
 
 Edit this text to see live formatting in action:
 • **Bold**, *Italic* text and ***both***

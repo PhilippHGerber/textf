@@ -11,7 +11,7 @@ dependencies:
   flex_color_scheme: ^8.4.0
   flutter:
     sdk: flutter
-  textf: ^1.1.2
+  textf: ^1.2.0
 
 dev_dependencies:
   flutter_test:

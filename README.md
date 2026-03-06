@@ -2,287 +2,81 @@
 
 [![pub package](https://img.shields.io/pub/v/textf.svg?label=pub.dev&labelColor=333940&logo=flutter&color=00589B)](https://pub.dev/packages/textf) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![style: very good analysis](https://img.shields.io/badge/Style-very_good_analysis-B22C89.svg)](https://pub.dev/packages/very_good_analysis) [![tests](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml/badge.svg)](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml) [![coverage](https://raw.githubusercontent.com/PhilippHGerber/textf/badges/coverage.svg)](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml)
 
-Markdown-like inline formatting and clickable links — a drop-in replacement for Flutter's `Text` widget.
-**Bold**, *italic*, `code`, [URL links](.), <mark>highlights</mark>, super²/subscript₂. Zero dependencies.
+Inline Markdown-like formatting for Flutter — as drop-in replacements for `Text` and `TextEditingController`. Zero dependencies. **Bold**, *italic*, `code`, [URL Link](.), <mark>highlights</mark>, super²/subscript₂.
 
-## What Textf Is
+---
 
-* ✅ Inline text formatting only
-* ✅ Works like `Text`, but supports inline styles
-* ✅ Ideal for i18n / ARB / JSON localized strings
-* ✅ Zero dependencies, minimal footprint
+> ⚠️ **Upgrading from 1.1.x?** Version 1.2.0 introduces strict flanking rules for formatting markers. Markers with surrounding whitespace — such as `* spaced *` — no longer trigger formatting. Update these to `*not-spaced*`. See [Flanking Rules](#flanking-rules) for details.
 
-## From Text to Textf
+---
 
-Replace `Text` with `Textf` to add simple formatting:
+## Two Drop-in Replacements
+
+### `Textf` — Formatted display text
+
+Replace `Text` with `Textf` and your strings render with **bold**, *italic*, `code`, highlights, links, and more.
 
 ```dart
 Textf('Hello **Flutter**. Build for ==any screen==!');
 ```
 
-![image](https://github.com/PhilippHGerber/textf/raw/main/images/textf.png)
+![Textf widget screenshot](https://github.com/PhilippHGerber/textf/raw/main/images/textf.png)
 
-> **⚠️ Important:**
-> Textf is designed for inline styling only and is not a full Markdown renderer. It doesn't support block elements like lists, headings, or images.
+### `TextfEditingController` — Live formatting in text fields
 
-## Installation
+Replace `TextEditingController` with `TextfEditingController` to render formatting live in `TextField` as the user types — no extra widgets needed.
 
-Add Textf to your `pubspec.yaml`:
+```dart
+final controller = TextfEditingController();
+TextField(controller: controller);
+```
+
+![TextfEditingController screenshot](https://github.com/PhilippHGerber/textf/raw/main/images/textf_editing_controller.png)
+
+---
+
+## Quick Start
+
+**1. Add the dependency:**
 
 ```sh
 flutter pub add textf
-flutter pub get
 ```
 
-## Getting Started
+**2. Import the package:**
 
 ```dart
 import 'package:textf/textf.dart';
+```
+
+**3. Use it — that's it:**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:textf/textf.dart';
 
 class MyWidget extends StatelessWidget {
+  final _controller = TextfEditingController();
+
   @override
   Widget build(BuildContext context) {
-    return Textf(
-      'Hello **bold** *italic* ~~strikethrough~~ `code` '
-      '++underline++ ==highlight== ^super^ ~sub~ '
-      '[Flutter](https://flutter.dev)',
-      style: TextStyle(fontSize: 16),
+    return Column(
+      children: [
+        // Drop-in for Text
+        Textf(
+          '**Bold**, *italic*, `code`, and [links](https://flutter.dev)',
+          style: TextStyle(fontSize: 16),
+        ),
+
+        // Drop-in for TextEditingController
+        TextField(controller: _controller),
+      ],
     );
   }
 }
 ```
 
-![image](https://github.com/PhilippHGerber/textf/raw/main/images/example.png)
-
-## Supported Formatting
-
-| Format        | Syntax                       | Result                         |
-| ------------- | ---------------------------- | ------------------------------ |
-| Bold          | `**bold**` or `__bold__`     | **bold**                       |
-| Italic        | `*italic*` or `_italic_`     | *italic*                       |
-| Bold+Italic   | `***both***` or `___both___` | ***both***                     |
-| Strikethrough | `~~strikethrough~~`          | ~~strikethrough~~              |
-| Underline     | `++underline++`              | <u>underline</u>               |
-| Highlight     | `==highlight==`              | <mark>highlight</mark>         |
-| Code          | `` `code` ``                 | `code`                         |
-| Link          | `[text](url)`                | [Flutter](https://flutter.dev) |
-| Superscript   | `^superscript^`              | E = mc²                        |
-| Subscript     | `~subscript~`                | H₂O                            |
-| Placeholder   | `{key}`                      | (inserted widget)              |
-
-### Escaping Characters
-
-Use backslash to display literal formatting characters:
-
-```dart
-Textf(r'Use \*asterisks\* without formatting');
-// Output: Use *asterisks* without formatting
-
-Textf(r'Show a placeholder: \{key}');
-// Output: Show a placeholder: {key}
-```
-
-Escapable characters: `*`, `_`, `~`, `` ` ``, `[`, `]`, `(`, `)`, `{`, `}`, `\`
-
----
-
-## 🆕 Widget Placeholders
-
-Insert any `InlineSpan` (such as `WidgetSpan` or `TextSpan`) using named placeholders:
-
-```dart
-Textf(
-  'Built with {flutter} and {dart}. Made with {love}.',
-  placeholders: {
-    'flutter': WidgetSpan(child: Image.asset('flutter.png', width: 16)),
-    'dart': WidgetSpan(child: Image.asset('dart.png', width: 16)),
-    'love': WidgetSpan(child: Icon(Icons.favorite, color: Colors.red, size: 16)),
-  },
-)
-```
-
-![image](https://github.com/PhilippHGerber/textf/raw/main/images/placeholders.png)
-
-**Key points:**
-
-* Keys must be alphanumeric or underscores: `{icon}`, `{my_image}`, `{step1}`
-* Missing keys render as literal text (e.g., `{missing}`) — no crashes
-* Works inside formatting: `**{icon}**` and links: `[Click {icon}](url)`
-* Escape with backslash: `\{key}` renders as `{key}`
-
----
-
-## Customization with TextfOptions
-
-Wrap your widgets with `TextfOptions` to customize formatting styles:
-
-```dart
-TextfOptions(
-  // Style overrides
-  boldStyle: TextStyle(fontWeight: FontWeight.w900, color: Colors.orange),
-  italicStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.purple),
-  codeStyle: TextStyle(fontFamily: 'JetBrains Mono', backgroundColor: Colors.grey.shade200),
-
-  // Link behavior
-  linkStyle: TextStyle(color: Colors.teal, decoration: TextDecoration.none),
-  linkHoverStyle: TextStyle(color: Colors.teal, decoration: TextDecoration.underline),
-  onLinkTap: (url, displayText) => launchUrl(Uri.parse(url)),
-  onLinkHover: (url, displayText, {required isHovering}) => debugPrint('Hover: $isHovering'),
-
-  child: Textf('**Bold** *italic* `code` [link](https://example.com)'),
-)
-```
-
-![image](https://github.com/PhilippHGerber/textf/raw/main/images/textfoptions.png)
-
-### Available Style Options
-
-| Option               | Description                        |
-| -------------------- | ---------------------------------- |
-| `boldStyle`          | Style for `**bold**` text          |
-| `italicStyle`        | Style for `*italic*` text          |
-| `boldItalicStyle`    | Style for `***bold italic***` text |
-| `strikethroughStyle` | Style for `~~strikethrough~~` text |
-| `underlineStyle`     | Style for `++underline++` text     |
-| `highlightStyle`     | Style for `==highlight==` text     |
-| `codeStyle`          | Style for `` `code` `` text        |
-| `superscriptStyle`   | Style for `^super^` text           |
-| `subscriptStyle`     | Style for `~sub~` text             |
-| `linkStyle`          | Style for links (normal state)     |
-| `linkHoverStyle`     | Style for links (hover state)      |
-
-### Link Options
-
-| Option            | Description                                                                                    |
-| ----------------- | ---------------------------------------------------------------------------------------------- |
-| `onLinkTap`       | Callback when a link is tapped: `(String url, String displayText)`                             |
-| `onLinkHover`     | Callback on hover state change: `(String url, String displayText, {required bool isHovering})` |
-| `linkMouseCursor` | Mouse cursor for links (default: `SystemMouseCursors.click`)                                   |
-| `linkAlignment`   | Vertical alignment of link widgets (default: `PlaceholderAlignment.baseline`)                  |
-
-### Script Options
-
-| Option                      | Description                               | Default |
-| --------------------------- | ----------------------------------------- | ------- |
-| `scriptFontSizeFactor`      | Font size multiplier for super/subscripts | `0.6`   |
-| `superscriptBaselineFactor` | Vertical offset factor for superscripts   | `-0.4`  |
-| `subscriptBaselineFactor`   | Vertical offset factor for subscripts     | `0.2`   |
-
-### Inheritance
-
-`TextfOptions` inherits through the widget tree. Styles are **merged** — a parent's color combines with a child's font weight:
-
-```dart
-TextfOptions(
-  boldStyle: TextStyle(color: Colors.red),  // Parent: red color
-  child: TextfOptions(
-    boldStyle: TextStyle(fontWeight: FontWeight.w900),  // Child: heavy weight
-    child: Textf('**This is red AND heavy**'),
-  ),
-)
-```
-
----
-
-## SelectionArea Support
-
-Textf works with Flutter's `SelectionArea` for text selection:
-
-```dart
-SelectionArea(
-  child: Textf('Select **this** text!'),
-)
-```
-
-**Note:** Due to links being rendered as `WidgetSpan` elements, text selection cannot span across interactive links. This is a Flutter limitation, not a Textf bug.
-
----
-
-## Live Formatting in TextFields
-
-Use `TextfEditingController` as a drop-in replacement for `TextEditingController` to render live-formatted text while the user types:
-
-```dart
-final controller = TextfEditingController();
-
-TextField(controller: controller);
-```
-
-Formatting markers remain visible with dimmed styling, ensuring cursor positions map 1:1 to the raw text. All standard textf formatting types are supported.
-
-### Large Text Protection
-
-For very long texts, formatting is automatically disabled when the text exceeds `maxLiveFormattingLength` (default: 5000 characters) to maintain smooth performance:
-
-```dart
-TextfEditingController(maxLiveFormattingLength: 2500)
-```
-
----
-
-## Performance
-
-Textf is designed for performance:
-
-* **O(N) Linear Parsing** — Single-pass tokenization scales linearly with text length
-* **Smart Caching** — Parsed results are cached and reused across rebuilds
-* **Intelligent Invalidation** — Cache only clears when text, style, theme, or options actually change
-* **Memory Efficient** — LRU cache with configurable limits prevents memory bloat
-
-### Cache Management
-
-For advanced use cases, you can manually clear the global parse cache:
-
-```dart
-// Clear all cached parse results
-Textf.clearCache();
-```
-
-This is rarely needed — the cache automatically manages itself using LRU eviction.
-
----
-
-## Accessibility
-
-Textf respects Flutter's accessibility standards:
-
-1. **Text Scaling** — Fully respects `MediaQuery.textScalerOf(context)` and system accessibility settings
-2. **Screen Readers** — Links are wrapped in `Semantics` widgets with `link: true` for TalkBack/VoiceOver
-3. **RTL Support** — Bidirectional text and RTL languages work correctly
-
----
-
-## Why Text*f*?
-
-| Feature          | Textf               | Full Markdown Packages |
-| ---------------- | ------------------- | ---------------------- |
-| Bundle size      | Tiny                | Large                  |
-| Dependencies     | Zero                | Multiple               |
-| Parse complexity | O(N)                | Often O(N²) or worse   |
-| API familiarity  | Identical to `Text` | Custom widgets         |
-| Block elements   | ❌                  | ✅                     |
-| Use case         | Inline formatting   | Document rendering     |
-
-### About the Name
-
-The name "Textf" is inspired by C's `printf` (print formatted). Similarly, `Textf` (Text formatted) provides simple, efficient text formatting for Flutter.
-
----
-
-## Features
-
-* ✅ Bold, Italic, Bold+Italic
-* ✅ Strikethrough, Underline, Highlight
-* ✅ Inline Code with theme-aware styling
-* ✅ Superscript and Subscript
-* ✅ Links with hover effects and callbacks
-* ✅ Widget Placeholders via `{key}` syntax
-* ✅ Nested formatting (up to 2 levels)
-* ✅ Customizable styles via `TextfOptions`
-* ✅ Theme-aware defaults
-* ✅ RTL language support
-* ✅ Smart caching for performance
-* ✅ Full `Text` widget API compatibility
+Both widgets share the same formatting syntax and can be configured together with `TextfOptions`.
 
 ---
 
@@ -293,31 +87,374 @@ The name "Textf" is inspired by C's `printf` (print formatted). Similarly, `Text
 | **No block elements**      | Textf is for inline formatting only — no headings, lists, quotes, or images      |
 | **Max 2 nesting levels**   | `**bold _italic_**` works, deeper nesting renders as plain text                  |
 | **Selection across links** | Links use `WidgetSpan`, so selection can't span across them (Flutter limitation) |
+| **Widget placeholders**    | `{key}` placeholders render as literal text in `TextfEditingController`          |
 
 ---
 
-## When to Use Text*f*
+## When to Use Textf
 
-**✅ Use Textf for:**
+Textf is intentionally limited to **inline formatting only**. It is not a Markdown renderer.
 
-* Chat messages and comments
-* UI labels and captions
-* Internationalized strings with formatting
-* Performance-critical text rendering
-* Simple inline formatting needs
+**✅ Great for:**
 
-**❌ Don't use Textf for:**
+- Chat messages and comment sections
+- UI labels, captions, and tooltips
+- Internationalized strings with inline emphasis
+- User-generated content with simple formatting
+- Performance-critical lists with many text widgets
 
-* Full Markdown documents
-* HTML rendering
-* Content with headings, lists, or tables
-* Documents requiring text selection across links
+**❌ Not designed for:**
+
+- Full Markdown documents with headings, lists, or tables
+- HTML rendering
+- Block-level structure of any kind
+
+---
+
+## Formatting Markers
+
+Both `Textf` and `TextfEditingController` use the same syntax:
+
+![Formatting markers showcase](https://github.com/PhilippHGerber/textf/raw/main/images/formatting_markers.png)
+
+| Format        | Syntax              | Alternate            | Result                         |
+| ------------- | ------------------- | -------------------- | ------------------------------ |
+| Bold          | `**bold**`          | `__bold__`           | **bold**                       |
+| Italic        | `*italic*`          | `_italic_`           | *italic*                       |
+| Bold + Italic | `***bold italic***` | `___bold italic___`  | ***both***                     |
+| Strikethrough | `~~strike~~`        |                      | ~~strikethrough~~              |
+| Underline     | `++underline++`     |                      | <u>underline</u>               |
+| Highlight     | `==highlight==`     |                      | <mark>highlight</mark>         |
+| Inline code   | `` `code` ``        |                      | `code`                         |
+| Superscript   | `^super^`           |                      | E = mc²                        |
+| Subscript     | `~sub~`             |                      | H₂O                            |
+| Link          | `[label](url)`      |                      | [Flutter](https://flutter.dev) |
+| Placeholder   | `{key}`             |                      | (inserted widget)              |
+
+### Flanking Rules
+
+Formatting markers follow CommonMark-style flanking rules. Openers must not be followed by whitespace, and closers must not be preceded by whitespace:
+
+```
+*italic*    ✅    * italic *   ❌
+**bold**    ✅    ** bold **   ❌
+```
+
+This prevents accidental formatting of bullet points (`* Item`) and math expressions (`2 * 3`).
+
+### Nesting
+
+Up to **2 levels** of nesting are supported. A third level renders as plain text — it never crashes or corrupts the surrounding output.
+
+```dart
+Textf('**Bold with _italic_ inside.**')   // ✅ two levels — works
+Textf('**_`three levels`_**')             // ⚠️ third level renders as literal `three levels`
+```
+
+### Malformed or Unclosed Markers
+
+Textf is forgiving. If a marker has no matching closer, it renders as plain text — it never crashes, and the rest of the string continues to format normally.
+
+```dart
+Textf('**unclosed and *italic*')
+// renders: **unclosed and italic  (italic still applies correctly)
+```
+
+### Escaping
+
+Use a backslash to render any marker literally. You can escape formatting markers as well as placeholders:
+
+```dart
+Textf(r'\**not bold\** and \{not_a_placeholder}')
+// renders: **not bold** and {not_a_placeholder}
+```
+
+---
+
+## `Textf` Widget
+
+A drop-in replacement for Flutter's `Text` widget. All `Text` parameters are supported identically — `style`, `textAlign`, `maxLines`, `overflow`, `textScaler`, `locale`, `textDirection`, `strutStyle`, `semanticsLabel`, and more.
+
+### Basic Usage
+
+```dart
+Textf(
+  '**Bold**, *italic*, ~~strike~~, ++underline++, ==highlight==, '
+  '`code`, ^super^, ~sub~, [link](https://flutter.dev)',
+  style: TextStyle(fontSize: 16),
+  textAlign: TextAlign.center,
+  maxLines: 3,
+  overflow: TextOverflow.ellipsis,
+)
+```
+
+### String Extensions
+
+The `.textf()` extension lets you write formatting inline wherever you'd naturally write a string — useful in widget trees, i18n, and ARB-based localization:
+
+```dart
+// Directly in a widget tree
+'**Status:** All systems operational'.textf()
+
+// With style parameters
+'Hello, **$username**!'.textf(style: TextStyle(fontSize: 18))
+
+// From a localized string
+AppLocalizations.of(context).welcomeMessage.textf()
+```
+
+All `Textf` constructor parameters are available on `.textf()`.
+
+To extract clean, plain text from a formatted string (e.g., for search, analytics, or `Semantics` labels), use `.stripFormatting()`:
+
+```dart
+'**Hello** [Flutter](.)!'.stripFormatting() // Returns: "Hello Flutter!"
+```
+
+### Widget Placeholders
+
+Embed arbitrary Flutter widgets inline using `{key}` syntax:
+
+```dart
+Textf(
+  'Made with {heart} using {flutter}',
+  placeholders: {
+    'heart': WidgetSpan(child: Icon(Icons.favorite, color: Colors.red)),
+    'flutter': WidgetSpan(child: FlutterLogo(size: 16)),
+  },
+)
+```
+
+Keys must be alphanumeric or underscores. Placeholders are not substituted in `TextfEditingController` — they render as literal `{key}` text there.
+
+### Links
+
+Links are rendered as tappable `WidgetSpan` elements. Handle taps by wrapping with `TextfOptions` (see [TextfOptions](#textfoptions) for full configuration):
+
+```dart
+TextfOptions(
+  onLinkTap: (url, displayText) {
+    // Open in browser, push a route, or handle internally
+    debugPrint('Tapped: $url');
+  },
+  child: Textf('Visit [Flutter](https://flutter.dev)'),
+)
+```
+
+> **Note:** Because links are `WidgetSpan` elements, text selection cannot span across them. This is a Flutter platform limitation, not a Textf bug.
+
+### SelectionArea Support
+
+```dart
+SelectionArea(
+  child: Textf('Select **this** formatted text!'),
+)
+```
+
+### Performance
+
+`Textf` caches parsed span trees using an LRU cache. Re-renders skip re-parsing when text, style, theme, and `TextfOptions` are unchanged — important for animated lists or chat feeds with many items. The cache invalidates automatically on changes.
+
+To free memory in low-memory situations:
+
+```dart
+Textf.clearCache();
+```
+
+---
+
+## `TextfEditingController`
+
+A drop-in replacement for `TextEditingController`. Attach it to any `TextField` or `TextFormField` to render live formatting as the user types. The underlying text is always plain — the controller adds visual styling on top without affecting the stored value. Supports full IME (Input Method Editor) composing for seamless text entry in all languages.
+
+### Limitations
+
+Before building with this controller, be aware of the following constraints:
+
+- **Widget placeholders** (`{key}`) render as literal text — no widget substitution in editable fields
+- **Superscript/subscript** use proper vertical offset only when the cursor is fully outside the span and markers are hidden; during active editing, they fall back to a reduced font size on the baseline
+- **Links** display the full `[text](url)` syntax while editing — styled, but not tappable
+- **Cross-line markers** never pair across newlines — a marker on line 1 cannot accidentally format content on line 2
+
+### Basic Usage
+
+```dart
+final controller = TextfEditingController();
+
+TextField(controller: controller)
+```
+
+With initial content:
+
+```dart
+TextfEditingController(text: 'Hello **bold**')
+```
+
+### Marker Visibility
+
+`MarkerVisibility` controls how formatting markers appear while the user edits.
+
+`MarkerVisibility.always` *(default)* — markers are always visible with dimmed styling. Predictable cursor behavior, works well on all platforms.
+
+`MarkerVisibility.whenActive` — markers hide instantly when the cursor leaves the formatted span, giving a cleaner live-preview effect. During non-collapsed selection (e.g. drag-select on mobile), all markers hide automatically to prevent layout jumps that would shift selection handles.
+
+```dart
+TextfEditingController(markerVisibility: MarkerVisibility.whenActive)
+```
+
+Change the mode at runtime and the field re-renders immediately:
+
+```dart
+controller.markerVisibility = MarkerVisibility.always;
+```
+
+### Large Text Protection
+
+When text exceeds `maxLiveFormattingLength` characters, formatting is automatically disabled and the field renders as plain text. This prevents UI freezes on very long inputs.
+
+```dart
+TextfEditingController(maxLiveFormattingLength: 2500) // default: 5000
+```
+
+### Custom Styles
+
+Wrap the `TextField` with `TextfOptions` to control how formatted spans appear:
+
+```dart
+TextfOptions(
+  boldStyle: TextStyle(fontWeight: FontWeight.w900, color: Colors.deepOrange),
+  codeStyle: TextStyle(fontFamily: 'monospace', color: Colors.pink),
+  child: TextField(
+    controller: TextfEditingController(),
+    decoration: InputDecoration(labelText: 'Formatted input'),
+  ),
+)
+```
+
+---
+
+## `TextfOptions`
+
+`TextfOptions` is an `InheritedWidget` that configures all descendant `Textf` widgets and `TextfEditingController` instances. Place it once near the top of a screen — or at app level — to apply consistent formatting throughout.
+
+```dart
+TextfOptions(
+  boldStyle: TextStyle(fontWeight: FontWeight.w900, color: Colors.deepOrange),
+  codeStyle: TextStyle(fontFamily: 'monospace', color: Colors.pink),
+  onLinkTap: (url, _) => debugPrint('Link tapped: $url'),
+  child: YourWidget(),
+)
+```
+
+![TextfOptions screenshot](https://github.com/PhilippHGerber/textf/raw/main/images/textfoptions.png)
+
+### Style Options
+
+| Property             | Applies to                  |
+| -------------------- | --------------------------- |
+| `boldStyle`          | `**bold**` / `__bold__`     |
+| `italicStyle`        | `*italic*` / `_italic_`     |
+| `boldItalicStyle`    | `***bold italic***`         |
+| `strikethroughStyle` | `~~strike~~`                |
+| `underlineStyle`     | `++underline++`             |
+| `highlightStyle`     | `==highlight==`             |
+| `codeStyle`          | `` `code` ``                |
+| `superscriptStyle`   | `^super^`                   |
+| `subscriptStyle`     | `~sub~`                     |
+| `linkStyle`          | Links — normal state        |
+| `linkHoverStyle`     | Links — hover state         |
+
+### Link Options
+
+| Property          | Type / Description                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------ |
+| `onLinkTap`       | `(String url, String displayText) → void`                                            |
+| `onLinkHover`     | `(String url, String displayText, {required bool isHovering}) → void`                |
+| `linkMouseCursor` | `MouseCursor` — shown over links (default: `SystemMouseCursors.click`)               |
+| `linkAlignment`   | `PlaceholderAlignment` — vertical alignment of link spans (default: `baseline`)      |
+
+### Script Options
+
+| Property                    | Description                               | Default |
+| --------------------------- | ----------------------------------------- | ------- |
+| `scriptFontSizeFactor`      | Font size multiplier for super/subscripts | `0.6`   |
+| `superscriptBaselineFactor` | Vertical offset factor for superscripts   | `-0.4`  |
+| `subscriptBaselineFactor`   | Vertical offset factor for subscripts     | `0.2`   |
+
+### How Inheritance Works
+
+`TextfOptions` uses two different strategies depending on the property type.
+
+**Style properties merge down the tree.** A parent's color and a child's font weight both apply — neither is discarded. This mirrors how `TextStyle.merge` works across `DefaultTextStyle` in Flutter, and means you can define broad styles at a high level and refine them locally without losing the parent context.
+
+```dart
+TextfOptions(
+  boldStyle: TextStyle(color: Colors.red),              // parent: red color
+  child: TextfOptions(
+    boldStyle: TextStyle(fontWeight: FontWeight.w900),  // child: heavy weight
+    child: Textf('**Red AND heavy**'),                  // both apply ✅
+  ),
+)
+```
+
+**Callback and cursor properties use nearest-ancestor-wins.** The closest `TextfOptions` in the tree takes effect. This prevents double-firing when options are nested — only one handler should respond to a tap.
+
+```dart
+TextfOptions(
+  onLinkTap: (url, _) => debugPrint('root handler'),
+  child: TextfOptions(
+    onLinkTap: (url, _) => debugPrint('inner handler'), // this one wins
+    child: Textf('[tap me](https://example.com)'),
+  ),
+)
+```
+
+---
+
+## Theme Integration
+
+`Textf` automatically adapts to the active `ThemeData` — no configuration needed:
+
+- **Links** use `colorScheme.primary`
+- **Code background** uses `colorScheme.surfaceContainer`
+- **Code text** uses `colorScheme.onSurfaceVariant`
+
+Override any theme default with `TextfOptions`:
+
+```dart
+TextfOptions(
+  linkStyle: TextStyle(color: Colors.teal, fontWeight: FontWeight.w600),
+  child: Textf('A [custom colored](https://example.com) link.'),
+)
+```
+
+---
+
+## Accessibility
+
+- **Text Scaling** — Respects `MediaQuery.textScalerOf(context)` and system font scaling settings
+- **Screen Readers** — Links are wrapped in `Semantics(link: true)` for TalkBack and VoiceOver
+- **RTL Support** — Bidirectional text and RTL languages work correctly throughout
+
+---
+
+## Comparison
+
+| Feature           | Textf               | Full Markdown Packages |
+| ----------------- | ------------------- | ---------------------- |
+| Bundle size       | Tiny                | Large                  |
+| Dependencies      | Zero                | Multiple               |
+| Parse complexity  | O(N)                | Often O(N²) or worse   |
+| API familiarity   | Identical to `Text` | Custom widgets         |
+| Live editing      | ✅                  | Rarely                 |
+| Block elements    | ❌                  | ✅                     |
+| Best for          | Inline formatting   | Document rendering     |
 
 ---
 
 ## API Reference
 
-See the full [API documentation on pub.dev](https://pub.dev/documentation/textf/latest/).
+Full documentation on [pub.dev](https://pub.dev/documentation/textf/latest/).
 
 ---
 
@@ -327,4 +464,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+MIT License — see [LICENSE](LICENSE) for details.
+
+---
+
+> **About the name:** Textf is inspired by C's `printf` (print formatted). `Textf` (Text formatted) brings the same idea to Flutter — simple, efficient, and unsurprising.

@@ -2,31 +2,25 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
-## 1.2.0 (Unreleased)
+## 1.2.0
 
 ### Breaking Changes
 
-* **Strict formatting rules (flanking):** Formatting markers now follow CommonMark-style flanking rules.
-  * **Openers** (e.g. `*text`) must not be followed by whitespace.
-  * **Closers** (e.g. `text*`) must not be preceded by whitespace.
-  * This fixes issues with bullet points (`* Item`) and math expressions (`2 * 3`) mistakenly triggering italic/bold formatting.
-  * *Migration:* If you previously used loose formatting like `* spaced text *`, update it to `*spaced text*`.
-
-### Fixed
-
-* Fixed a bug where a leading bullet-point `*` (e.g. `* ==*NEW*==`) would pair with an inner formatting marker, corrupting the rendered output.
+* **Strict Formatting Rules (Flanking):** Formatting markers now follow CommonMark-style flanking rules (e.g. `*text*` vs `* text *`). This avoids accidental formatting in bullet points or math expressions.
 
 ### Added
 
-* **`TextfExt` String Extension** — Create `Textf` widgets directly from strings with `'Hello **bold**'.textf()`. All `Textf` constructor parameters are supported.
-* **`TextfEditingController`** — A drop-in `TextEditingController` that renders live-formatted text inside `TextField` and `TextFormField`.
-  * Supports all textf formatting types: bold, italic, strikethrough, underline, highlight, code, superscript, subscript, and links.
-  * Formatting markers stay visible with dimmed styling for correct cursor positioning.
-  * Respects `TextfOptions` from the widget tree for custom styles.
-  * IME composing region support.
-  * `MarkerVisibility` mode: choose between always-visible markers or smart-hide (markers only visible when cursor is inside the formatted span).
-  * `maxLiveFormattingLength` property: disables live formatting for texts exceeding a configurable character limit (default 5000). Prevents UI freezes on very large inputs.
-  * Formatting markers on separate lines never pair with each other — a marker on line 1 cannot accidentally consume content across a newline into a formatted span.
+* **`TextfEditingController`**: A `TextEditingController` providing live-formatted text inside `TextField`. Supports `MarkerVisibility` modes, IME composing, and performance-tuned background processing.
+* **String Extensions**:
+  * `textf()`: Create `Textf` widgets directly from strings.
+  * `stripFormatting()`: Extract clean, unformatted text from formatted strings.
+* **Performance Optimizations**:
+  * Implemented static LRU caching for tokenization/pairing results.
+  * Improved ancestor walk efficiency in `TextfRendererState`.
+
+### Fixed
+
+* Fixed a bug where leading bullet-points could corrupt the rendered output.
 
 ## 1.1.2
 
