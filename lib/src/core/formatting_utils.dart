@@ -1,4 +1,5 @@
 import '../models/textf_token.dart';
+import '../parsing/components/link_validator.dart';
 import '../parsing/components/pairing_resolver.dart';
 import '../parsing/textf_tokenizer.dart';
 import 'constants.dart';
@@ -94,7 +95,7 @@ class FormattingUtils {
           i++;
         }
       } else if (token is LinkStartToken) {
-        if (_isCompleteLink(tokens, i)) {
+        if (LinkValidator.isCompleteLink(tokens, i)) {
           // Extract the link text and recursively strip any nested formatting
           final linkText = (tokens[i + kLinkTextOffset] as TextToken).value;
           buffer.write(stripFormatting(linkText));
@@ -121,17 +122,5 @@ class FormattingUtils {
     }
 
     return buffer.toString();
-  }
-
-  /// Helper to verify a complete link structure.
-  static bool _isCompleteLink(List<TextfToken> tokens, int index) {
-    if (index + kLinkEndTokenOffset >= tokens.length) return false;
-
-    return tokens[index] is LinkStartToken &&
-        tokens[index + kLinkTextOffset] is TextToken &&
-        (tokens[index + kLinkTextOffset] as TextToken).value.isNotEmpty &&
-        tokens[index + kLinkSeparatorOffset] is LinkSeparatorToken &&
-        tokens[index + kLinkUrlOffset] is TextToken &&
-        tokens[index + kLinkEndTokenOffset] is LinkEndToken;
   }
 }

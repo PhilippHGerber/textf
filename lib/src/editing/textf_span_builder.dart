@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../core/constants.dart';
 import '../core/formatting_utils.dart';
 import '../core/textf_cache.dart';
 import '../core/textf_limits.dart';
 import '../models/format_stack_entry.dart';
 import '../models/textf_token.dart';
+import '../parsing/components/link_validator.dart';
 import '../parsing/components/pairing_resolver.dart';
 import '../parsing/textf_tokenizer.dart';
 import '../styling/textf_style_resolver.dart';
@@ -62,14 +64,6 @@ class TextfSpanBuilder {
 
   /// Multiplier for negative letterSpacing to collapse hidden marker width.
   static const double _hiddenLetterSpacingFactor = 2;
-
-  static const int _linkEndOffset = 4;
-  static const int _linkSeparatorOffset = 2;
-  // Link token structure offsets (mirrors LinkHandler constants).
-  static const int _linkTextOffset = 1;
-
-  static const int _linkTokenCount = 5;
-  static const int _linkUrlOffset = 3;
 
   /// Opacity factor for dimmed marker characters.
   static const double _markerOpacity = 0.4;
@@ -521,7 +515,7 @@ class TextfSpanBuilder {
   /// token must be a single [TextToken]. A link like `[*italic* text](url)`
   /// or `[text {placeholder}](url)` fails the completeness check and falls
   /// through to individual token rendering, producing garbled output with
-  /// stray `[](` characters. Extend [_isCompleteLink] to fix this.
+  /// stray `[](` characters. Extend [LinkValidator.isCompleteLink] to fix this.
   static int? _processLinkAsText({
     required List<TextfToken> tokens,
     required int index,
@@ -537,15 +531,15 @@ class TextfSpanBuilder {
     required TextfSpanBuilder builder,
   }) {
     // Verify complete link structure: [text](url)
-    if (!_isCompleteLink(tokens, index)) {
+    if (!LinkValidator.isCompleteLink(tokens, index)) {
       return null;
     }
 
     // Flush any preceding text with current formatting.
     flushText();
 
-    final linkTextToken = tokens[index + _linkTextOffset] as TextToken;
-    final linkUrlToken = tokens[index + _linkUrlOffset] as TextToken;
+    final linkTextToken = tokens[index + kLinkTextOffset] as TextToken;
+    final linkUrlToken = tokens[index + kLinkUrlOffset] as TextToken;
     final linkText = linkTextToken.value;
     final linkUrl = linkUrlToken.value;
 
@@ -557,7 +551,7 @@ class TextfSpanBuilder {
     if (cursorPosition != null) {
       final linkStart = tokens[index].position;
       final linkEnd =
-          tokens[index + _linkEndOffset].position + tokens[index + _linkEndOffset].length;
+          tokens[index + kLinkEndTokenOffset].position + tokens[index + kLinkEndTokenOffset].length;
       final cursorInside = cursorPosition >= linkStart && cursorPosition <= linkEnd;
       markerStyle = cursorInside ? activeMarkerStyle : inactiveMarkerStyle;
     } else {
@@ -592,21 +586,7 @@ class TextfSpanBuilder {
       ..add(TextSpan(text: linkUrl, style: markerStyle))
       ..add(TextSpan(text: ')', style: markerStyle));
 
-    return index + _linkTokenCount;
-  }
-
-  /// Checks if tokens starting at [index] form a complete `[text](url)`.
-  static bool _isCompleteLink(List<TextfToken> tokens, int index) {
-    if (index + _linkEndOffset >= tokens.length) {
-      return false;
-    }
-
-    return tokens[index] is LinkStartToken &&
-        tokens[index + _linkTextOffset] is TextToken &&
-        (tokens[index + _linkTextOffset] as TextToken).value.isNotEmpty &&
-        tokens[index + _linkSeparatorOffset] is LinkSeparatorToken &&
-        tokens[index + _linkUrlOffset] is TextToken &&
-        tokens[index + _linkEndOffset] is LinkEndToken;
+    return index + kLinkTokenCount;
   }
 
   /// Emits styled [TextSpan]s for link text that contains nested format markers.

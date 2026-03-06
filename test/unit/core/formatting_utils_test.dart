@@ -102,10 +102,10 @@ void main() {
           expect(FormattingUtils.stripFormatting('just ](url) text'), 'just ](url) text');
         });
 
-        test('link with empty text is treated as broken — full syntax preserved', () {
-          // _isCompleteLink requires non-empty link text; broken path writes
-          // each token literally: '[' + '](' + 'url' + ')'
-          expect(FormattingUtils.stripFormatting('[](url)'), '[](url)');
+        test('link with empty text extracts empty display text', () {
+          // [](url) is a valid link with an empty display text.
+          // stripFormatting extracts the display text, which is ''.
+          expect(FormattingUtils.stripFormatting('[](url)'), '');
         });
       });
 

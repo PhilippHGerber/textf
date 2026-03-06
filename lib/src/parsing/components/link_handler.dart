@@ -1,11 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/constants.dart';
 import '../../models/parser_state.dart';
 import '../../models/textf_token.dart';
 import '../../widgets/internal/hoverable_link_span.dart';
 import '../textf_parser.dart';
 import '../textf_tokenizer.dart';
+import 'link_validator.dart';
 
 /// Handles the processing of link tokens during parsing.
 ///
@@ -15,13 +17,6 @@ import '../textf_tokenizer.dart';
 /// link-specific styling (normal, hover), mouse cursor, and interaction callbacks,
 /// considering `TextfOptions`, `Theme`, and defaults.
 class LinkHandler {
-  // Link structure constants
-  static const int _linkTextOffset = 1;
-  static const int _linkSeparatorOffset = 2;
-  static const int _linkUrlOffset = 3;
-  static const int _linkEndOffset = 4;
-  static const int _linkTokenCount = 5;
-
   /// Processes a potential link structure starting at the given `index`.
   ///
   /// Returns the index immediately following the link structure if successful.
@@ -36,7 +31,7 @@ class LinkHandler {
     // 1. Fast Check: Do we have a valid link structure?
     // We check this BEFORE flushing text. If it's not a link, we want the
     // '[' character to remain part of the previous text buffer to preserve ligatures.
-    if (!_isCompleteLink(tokens, index)) {
+    if (!LinkValidator.isCompleteLink(tokens, index)) {
       return null;
     }
 
@@ -46,8 +41,8 @@ class LinkHandler {
     // --- Valid Link Processing ---
 
     // Extract raw text and URL
-    final linkTextToken = tokens[index + _linkTextOffset] as TextToken;
-    final linkUrlToken = tokens[index + _linkUrlOffset] as TextToken;
+    final linkTextToken = tokens[index + kLinkTextOffset] as TextToken;
+    final linkUrlToken = tokens[index + kLinkUrlOffset] as TextToken;
     final rawLinkText = linkTextToken.value;
     final rawLinkUrl = linkUrlToken.value;
     final normalizedUrl = normalizeUrl(rawLinkUrl);
@@ -129,7 +124,7 @@ class LinkHandler {
     );
 
     // Return the index *after* the link structure (after ')')
-    return index + _linkTokenCount;
+    return index + kLinkTokenCount;
   }
 
   /// Normalizes a URL string to ensure it is launchable.
@@ -181,22 +176,5 @@ class LinkHandler {
     if (hashIndex != -1 && colonIndex > hashIndex) return false;
 
     return true;
-  }
-
-  /// Checks if tokens starting at `index` form a complete `[text](url)` structure.
-  static bool _isCompleteLink(List<TextfToken> tokens, int index) {
-    // Needs 5 tokens: linkStart, text, linkSeparator, urlText, linkEnd
-    if (index + _linkEndOffset >= tokens.length) {
-      return false;
-    }
-
-    return tokens[index] is LinkStartToken &&
-        // The outer tokenizer emits link text as a single TextToken,
-        // even if it contains placeholders like "{icon}". LinkHandler re-tokenizes
-        // the link text internally to support nested formatting and placeholders.
-        tokens[index + _linkTextOffset] is TextToken &&
-        tokens[index + _linkSeparatorOffset] is LinkSeparatorToken &&
-        tokens[index + _linkUrlOffset] is TextToken &&
-        tokens[index + _linkEndOffset] is LinkEndToken;
   }
 }
