@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../core/textf_limits.dart';
 import '../styling/textf_style_resolver.dart';
+import '../widgets/textf_ext.dart';
 import '../widgets/textf_options.dart';
 import 'marker_visibility.dart';
 import 'textf_span_builder.dart';
@@ -116,6 +117,19 @@ class TextfEditingController extends TextEditingController {
         a.colorScheme.surfaceContainer == b.colorScheme.surfaceContainer &&
         a.colorScheme.brightness == b.colorScheme.brightness;
   }
+
+  /// Returns the plain text content with all formatting markers stripped.
+  ///
+  /// Useful for saving clean text to a database, generating preview snippets,
+  /// or character-count validation. Unpaired markers and `{key}` placeholders
+  /// are preserved. Links `[text](url)` are reduced to just `text`.
+  ///
+  /// Example:
+  /// ```dart
+  /// controller.text = '**Hello** [World](url)!';
+  /// print(controller.plainText); // Outputs: "Hello World!"
+  /// ```
+  String get plainText => text.stripFormatting();
 
   /// Controls how formatting markers are displayed.
   ///

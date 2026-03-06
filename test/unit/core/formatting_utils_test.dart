@@ -45,6 +45,116 @@ void main() {
       });
     });
 
+    group('stripFormatting', () {
+      group('no-op paths', () {
+        test('empty string returns empty string', () {
+          expect(FormattingUtils.stripFormatting(''), '');
+        });
+
+        test('plain text with no markers returns unchanged', () {
+          const text = 'This is just a regular sentence.';
+          expect(FormattingUtils.stripFormatting(text), text);
+        });
+      });
+
+      group('all format types stripped', () {
+        final Map<String, (String, String)> cases = {
+          'bold (**)': ('**bold**', 'bold'),
+          'bold (__)': ('__bold__', 'bold'),
+          'italic (*)': ('*italic*', 'italic'),
+          'italic (_)': ('_italic_', 'italic'),
+          'bold+italic (***)': ('***both***', 'both'),
+          'bold+italic (___)': ('___both___', 'both'),
+          'strikethrough': ('~~strike~~', 'strike'),
+          'code': ('`code`', 'code'),
+          'highlight': ('==highlight==', 'highlight'),
+          'underline': ('++underline++', 'underline'),
+          'superscript': ('^super^', 'super'),
+          'subscript': ('~sub~', 'sub'),
+        };
+
+        cases.forEach((description, testCase) {
+          final (input, expected) = testCase;
+          test('strips $description', () {
+            expect(
+              FormattingUtils.stripFormatting(input),
+              expected,
+              reason: '"$input" should strip markers and return "$expected"',
+            );
+          });
+        });
+      });
+
+      group('links', () {
+        test('extracts link display text', () {
+          expect(FormattingUtils.stripFormatting('[text](url)'), 'text');
+        });
+
+        test('extracts link text with nested bold', () {
+          expect(FormattingUtils.stripFormatting('[**bold**](url)'), 'bold');
+        });
+
+        test('broken link — no separator — preserves literal bracket', () {
+          expect(FormattingUtils.stripFormatting('[no close'), '[no close');
+        });
+
+        test('orphaned separator is preserved as literal text', () {
+          expect(FormattingUtils.stripFormatting('just ](url) text'), 'just ](url) text');
+        });
+
+        test('link with empty text is treated as broken — full syntax preserved', () {
+          // _isCompleteLink requires non-empty link text; broken path writes
+          // each token literally: '[' + '](' + 'url' + ')'
+          expect(FormattingUtils.stripFormatting('[](url)'), '[](url)');
+        });
+      });
+
+      group('unpaired markers preserved', () {
+        test('single asterisk between numbers', () {
+          expect(FormattingUtils.stripFormatting('2 * 3 = 6'), '2 * 3 = 6');
+        });
+
+        test('unclosed italic marker preserved', () {
+          expect(FormattingUtils.stripFormatting('*not closed'), '*not closed');
+        });
+      });
+
+      group('placeholders preserved', () {
+        test('standalone placeholder preserved', () {
+          expect(FormattingUtils.stripFormatting('{icon}'), '{icon}');
+        });
+
+        test('placeholder in sentence preserved', () {
+          expect(
+            FormattingUtils.stripFormatting('hello {name} world'),
+            'hello {name} world',
+          );
+        });
+      });
+
+      group('escape handling', () {
+        test('backslash stripped, escaped character preserved', () {
+          expect(FormattingUtils.stripFormatting(r'\*not italic\*'), '*not italic*');
+        });
+      });
+
+      group('mixed content', () {
+        test('bold and link combined', () {
+          expect(
+            FormattingUtils.stripFormatting('**bold** and [link](url)'),
+            'bold and link',
+          );
+        });
+
+        test('multiple format types in sentence', () {
+          expect(
+            FormattingUtils.stripFormatting('**Hello** [World](url)!'),
+            'Hello World!',
+          );
+        });
+      });
+    });
+
     group('hasFormattingMarkers', () {
       // Test cases for characters that imply styling (bold, italic, etc)
       // but NOT structural elements like links or placeholders.

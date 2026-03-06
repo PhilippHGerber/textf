@@ -83,4 +83,26 @@ void main() {
       expect(widget.placeholders, contains('icon'));
     });
   });
+
+  group('TextfStringExt', () {
+    test('plain text returns unchanged', () {
+      expect('Hello world'.stripFormatting(), 'Hello world');
+    });
+
+    test('bold markers stripped', () {
+      expect('**bold**'.stripFormatting(), 'bold');
+    });
+
+    test('link reduced to display text', () {
+      expect('[click](url)'.stripFormatting(), 'click');
+    });
+
+    test('unpaired marker preserved', () {
+      expect('2 * 3'.stripFormatting(), '2 * 3');
+    });
+
+    test('placeholder preserved', () {
+      expect('{icon}'.stripFormatting(), '{icon}');
+    });
+  });
 }

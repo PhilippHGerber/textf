@@ -69,5 +69,22 @@ const int kCloseBrace = 0x7D;
 /// Line Feed / Newline character \n (ASCII code 10)
 const int kNewline = 0x0A;
 
+/// Number of tokens in a complete link structure: `[`, text, `](`, url, `)`.
+const int kLinkTokenCount = 5;
+
+/// Token offsets within a complete link structure relative to the opening `[`.
+///
+/// A link is tokenized as: `[`(0), text(1), `](`(2), url(3), `)`(4).
+const int kLinkTextOffset = 1;
+
+/// Offset from the opening `[` token to the `](` separator token in a link.
+const int kLinkSeparatorOffset = 2;
+
+/// Offset from the opening `[` token to the URL text token in a link.
+const int kLinkUrlOffset = 3;
+
+/// Offset from the opening `[` token to the closing `)` token in a link.
+const int kLinkEndTokenOffset = 4;
+
 /// Carriage Return character \r (ASCII code 13)
 const int kCarriageReturn = 0x0D;

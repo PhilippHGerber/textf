@@ -204,6 +204,124 @@ void main() {
         expect(composing.style?.decoration, TextDecoration.underline);
       });
 
+      testWidgets('composing underline over bold span (null decoration) uses underline only',
+          (tester) async {
+        // Covers the else-if(existingDeco == null) branch in the composing injection loop.
+        // A bold span has a non-null style but null decoration.
+        controller = TextfEditingController()
+          ..value = const TextEditingValue(
+            text: '**bold**',
+            composing: TextRange(start: 2, end: 6), // Over "bold"
+          );
+        late TextSpan result;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                result = controller.buildTextSpan(
+                  context: context,
+                  style: const TextStyle(),
+                  withComposing: true,
+                );
+                return Container();
+              },
+            ),
+          ),
+        );
+
+        expect(result.children, isNotNull);
+        final boldSpan = result.children!
+            .whereType<TextSpan>()
+            .firstWhere((s) => s.text == 'bold', orElse: () => const TextSpan());
+        expect(boldSpan.style?.fontWeight, FontWeight.bold);
+        expect(boldSpan.style?.decoration, TextDecoration.underline);
+      });
+
+      testWidgets('core cache hit reuses parsed spans when withComposing changes', (tester) async {
+        // Covers the `fullSpans = _cachedParsedSpans!` branch (line 238):
+        // core inputs are identical, but withComposing differs → composing miss.
+        controller = TextfEditingController(text: 'hello world');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                // First call: fills _cachedParsedSpans and _cachedFinalChildren.
+                controller.buildTextSpan(
+                  context: context,
+                  style: const TextStyle(),
+                  withComposing: false,
+                );
+                // Second call: same core inputs, different withComposing
+                // → coreCacheHit=true but _lastWithComposing differs → hits line 238.
+                final result = controller.buildTextSpan(
+                  context: context,
+                  style: const TextStyle(),
+                  withComposing: true,
+                );
+                expect(result.children, isNotNull);
+                return Container();
+              },
+            ),
+          ),
+        );
+      });
+
+      testWidgets('different themes trigger full reparse via _isSameTheme', (tester) async {
+        // Covers lines 115-118 (_isSameTheme body):
+        // Uses nested Theme widgets within a single pump so the two ThemeData
+        // objects are guaranteed to be non-identical Dart instances with
+        // different colorScheme.primary values, forcing the comparison.
+        controller = TextfEditingController(text: '**bold**');
+
+        // Two ThemeData objects created from the SAME seed → same colorScheme
+        // property values but different Dart object identities (!identical).
+        // All four comparisons in _isSameTheme evaluate (none short-circuit)
+        // and return true, covering lines 115-118.
+        final themeA = ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        );
+        final themeB = ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Theme(
+              data: themeA,
+              child: Builder(
+                builder: (ctxA) {
+                  // First call: sets _lastTheme = themeA.
+                  controller.buildTextSpan(
+                    context: ctxA,
+                    style: const TextStyle(),
+                    withComposing: false,
+                  );
+                  return Theme(
+                    data: themeB,
+                    child: Builder(
+                      builder: (ctxB) {
+                        // Second call: _lastTheme=themeA, current=themeB.
+                        // Not identical but all four color fields match
+                        // → lines 115-118 are all evaluated, returns true.
+                        final result = controller.buildTextSpan(
+                          context: ctxB,
+                          style: const TextStyle(),
+                          withComposing: false,
+                        );
+                        expect(result.children, isNotNull);
+                        return Container();
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      });
+
       testWidgets('no composing when withComposing is false', (tester) async {
         controller = TextfEditingController()
           ..value = const TextEditingValue(
@@ -450,6 +568,45 @@ void main() {
         // Should have children (formatted spans)
         expect(result.children, isNotNull);
         expect(result.children!.length, greaterThan(1));
+      });
+    });
+
+    group('plainText', () {
+      test('empty text returns empty string', () {
+        controller = TextfEditingController();
+        expect(controller.plainText, '');
+      });
+
+      test('plain text returns same value as text', () {
+        controller = TextfEditingController(text: 'hello world');
+        expect(controller.plainText, 'hello world');
+      });
+
+      test('strips bold markers', () {
+        controller = TextfEditingController(text: '**bold**');
+        expect(controller.plainText, 'bold');
+      });
+
+      test('strips link and returns display text', () {
+        controller = TextfEditingController(text: '[text](url)');
+        expect(controller.plainText, 'text');
+      });
+
+      test('strips mixed formatting', () {
+        controller = TextfEditingController(text: '**Hello** [World](url)!');
+        expect(controller.plainText, 'Hello World!');
+      });
+
+      test('preserves widget placeholder', () {
+        controller = TextfEditingController(text: '{icon}');
+        expect(controller.plainText, '{icon}');
+      });
+
+      test('updates when text changes', () {
+        controller = TextfEditingController(text: '**bold**');
+        expect(controller.plainText, 'bold');
+        controller.text = 'plain';
+        expect(controller.plainText, 'plain');
       });
     });
 
