@@ -21,14 +21,25 @@ class _EditingControllerScreenState extends State<EditingControllerScreen> {
   late final TextfEditingController _controller;
   late final TextfEditingController _chatController;
   final List<String> _chatMessages = [];
-  MarkerVisibility _visibility = MarkerVisibility.whenActive;
+  MarkerVisibility _visibility = MarkerVisibility.always;
 
   @override
   void initState() {
     super.initState();
     _controller = TextfEditingController(
-        //text: 'Try **bold**, *italic*, `code`, and ~~strike~~!',
-        );
+      text: '''
+🚀 **Welcome to Textf!**
+
+Edit this text to see live formatting in action:
+• **Bold**, *Italic* text and ***both***
+• ~~Strikethrough~~ and ++Underline++
+• ==Highlighting== and `inline code` blocks
+• Superscript x^2^ + y^2^ and Task^✅^
+• Subscript H~2~O and hot~🔥~
+
+Check out the [Documentation](https://pub.dev/packages/textf) for more details.
+''',
+    );
     _chatController = TextfEditingController();
     _controller.addListener(_onSelectionChanged);
   }
@@ -115,13 +126,13 @@ class _EditingControllerScreenState extends State<EditingControllerScreen> {
           _SectionHeader(title: 'Live Formatting Preview', theme: theme),
           const SizedBox(height: 8),
           Textf(
-            'New `Text==f==EditingController`:',
+            'New Text*f*EditingController:',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           Textf(
-            'TextField with real-time marker rendering as you type.',
+            'TextField with ==real-time marker rendering== as you type.',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -129,7 +140,7 @@ class _EditingControllerScreenState extends State<EditingControllerScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: _controller,
-            maxLines: 5,
+            maxLines: 10,
             decoration: InputDecoration(
               hintText: 'Type formatted text here...',
               border: const OutlineInputBorder(),
@@ -360,8 +371,8 @@ class _FormatChips extends StatelessWidget {
           _chip('++underline++'),
           _chip('==highlight=='),
           _chip('`code`'),
-          // _chip('^super^'),
-          // _chip('~sub~'),
+          _chip('^super^'),
+          _chip('~sub~'),
           _chip('[link](https://example.com)'),
         ],
       ),
@@ -370,11 +381,13 @@ class _FormatChips extends StatelessWidget {
 
   Widget _chip(String label) {
     return ActionChip(
-      label: Text(
-        label,
-        style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 11),
+      label: IgnorePointer(
+        child: Textf(
+          label,
+          style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 11),
+        ),
       ),
-      onPressed: () => onInsert(label),
+      onPressed: () => onInsert('$label '),
       visualDensity: VisualDensity.compact,
       padding: EdgeInsets.zero,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

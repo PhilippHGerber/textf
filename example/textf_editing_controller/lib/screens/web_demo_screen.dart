@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-String initText = '''
+const String initText = '''
 🚀 **Welcome to Textf!**
 
 ⚠️ *This is a preview — not released yet.*
@@ -20,10 +20,10 @@ Check out the [Documentation](https://pub.dev/packages/textf)
 for more details.
 ''';
 
-String init2Text = '*a* **b** ==c== ~~d~~ ++e++ ^f^ ~g~ [h](i)';
+const String init2Text = '*a* **b** ==c== ~~d~~ ++e++ ^f^ ~g~ [h](i)';
 
 // repease init2Text 20x
-String init2TextLong = List.filled(20, init2Text).join('\n');
+final String init2TextLong = List.filled(20, init2Text).join('\n');
 
 class WebDemoScreen extends StatefulWidget {
   const WebDemoScreen({
