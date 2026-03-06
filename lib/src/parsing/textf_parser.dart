@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/formatting_utils.dart';
+import '../core/textf_cache.dart';
 import '../core/textf_limits.dart';
 import '../models/parser_state.dart';
 import '../models/textf_token.dart';
@@ -46,8 +47,12 @@ class TextfParser {
   final TextfTokenizer _tokenizer;
 
   /// Cache for tokens and pairing results.
-  /// Uses a LinkedHashMap to implement a simple LRU cache.
-  static final Map<String, _ParsedCacheEntry> _cache = <String, _ParsedCacheEntry>{};
+  /// Uses a memory-aware LRU cache to prevent memory bloat.
+  static final TextfCache<String, _ParsedCacheEntry> _cache = TextfCache<String, _ParsedCacheEntry>(
+    maxEntries: TextfLimits.maxCacheEntries,
+    maxTotalChars: TextfLimits.maxCacheTotalCharacters,
+    getCharCount: (key) => key.length,
+  );
 
   /// Clears the internal parser cache.
   ///
@@ -113,26 +118,20 @@ class TextfParser {
     // Only attempt caching if the text length is within reasonable limits.
     // Extremely long strings are parsed on-demand to avoid memory issues.
     if (text.length <= TextfLimits.maxCacheKeyLength) {
-      // Move to ends (most recent) if exists, or tokenize if miss.
-      final cached = _cache.remove(text);
+      // The cache handles LRU promotion internally on get()
+      final cached = _cache.get(text);
 
       if (cached != null) {
         tokens = cached.tokens;
         validPairs = cached.matchingPairs;
-        // Re-insert to mark as recently used
-        _cache[text] = cached;
       } else {
         // 1. Tokenize
         tokens = _tokenizer.tokenize(text);
         // 2. Pairing
         validPairs = PairingResolver.identifyPairs(tokens);
 
-        // Update Cache (LRU: add to end)
-        _cache[text] = _ParsedCacheEntry(tokens, validPairs);
-        if (_cache.length > TextfLimits.maxCacheEntries) {
-          // Remove the oldest entry (first key)
-          _cache.remove(_cache.keys.first);
-        }
+        // Update Cache (LRU and memory eviction handled internally)
+        _cache.set(text, _ParsedCacheEntry(tokens, validPairs));
       }
     } else {
       // Too long to cache, just process directly

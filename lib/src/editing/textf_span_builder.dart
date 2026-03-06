@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/formatting_utils.dart';
+import '../core/textf_cache.dart';
 import '../core/textf_limits.dart';
 import '../models/format_stack_entry.dart';
 import '../models/textf_token.dart';
@@ -85,8 +86,14 @@ class TextfSpanBuilder {
   final TextfTokenizer _tokenizer;
 
   /// Cache for tokens and pairing results.
-  /// Uses a LinkedHashMap to implement a simple LRU cache.
-  static final Map<_CacheKey, _ParsedCacheEntry> _cache = <_CacheKey, _ParsedCacheEntry>{};
+  /// Uses a memory-aware LRU cache to prevent re-parsing identical text segments
+  /// without causing memory bloat.
+  static final TextfCache<_CacheKey, _ParsedCacheEntry> _cache =
+      TextfCache<_CacheKey, _ParsedCacheEntry>(
+    maxEntries: TextfLimits.maxCacheEntries,
+    maxTotalChars: TextfLimits.maxCacheTotalCharacters,
+    getCharCount: (key) => key.text.length,
+  );
 
   /// Clears the internal builder cache.
   ///
@@ -99,6 +106,7 @@ class TextfSpanBuilder {
   /// Tokenizes text and resolves pairs, using an LRU cache to prevent
   /// re-parsing identical text segments (Fixes P1-1, P1-3).
   _ParsedCacheEntry _getTokensAndPairs(String text, {required bool allowNewlineCrossing}) {
+    // Too long to cache, just process directly
     if (text.length > TextfLimits.maxCacheKeyLength) {
       final tokens = _tokenizer.tokenize(text, allowNewlineCrossing: allowNewlineCrossing);
       final validPairs =
@@ -107,11 +115,11 @@ class TextfSpanBuilder {
     }
 
     final key = (text: text, allowNewlineCrossing: allowNewlineCrossing);
-    final cached = _cache.remove(key);
+
+    // The cache handles LRU promotion internally on get()
+    final cached = _cache.get(key);
 
     if (cached != null) {
-      // Re-insert to mark as recently used (LRU)
-      _cache[key] = cached;
       return cached;
     }
 
@@ -120,10 +128,8 @@ class TextfSpanBuilder {
         PairingResolver.identifyPairs(tokens, allowNewlineCrossing: allowNewlineCrossing);
     final entry = _ParsedCacheEntry(tokens, validPairs);
 
-    _cache[key] = entry;
-    if (_cache.length > TextfLimits.maxCacheEntries) {
-      _cache.remove(_cache.keys.first);
-    }
+    // Update Cache (LRU and memory eviction handled internally)
+    _cache.set(key, entry);
 
     return entry;
   }
