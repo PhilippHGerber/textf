@@ -19,8 +19,8 @@ class ScalingReproScreen extends StatefulWidget {
 }
 
 class _ScalingReproScreenState extends State<ScalingReproScreen> {
-  double _textScaleFactor = 1.0;
-  double _fontSize = 14.0;
+  double _textScaleFactor = 1;
+  double _fontSize = 14;
   MarkerVisibility _markerVisibility = MarkerVisibility.always;
   late final TextfEditingController _editorController;
 
@@ -117,10 +117,10 @@ class _ScalingReproScreenState extends State<ScalingReproScreen> {
 // ---------------------------------------------------------------------------
 
 class _PreviewTab extends StatelessWidget {
-  final double fontSize;
-  final double textScaleFactor;
 
   const _PreviewTab({required this.fontSize, required this.textScaleFactor});
+  final double fontSize;
+  final double textScaleFactor;
 
   @override
   Widget build(BuildContext context) {
@@ -164,12 +164,6 @@ class _PreviewTab extends StatelessWidget {
 }
 
 class _EditorTab extends StatelessWidget {
-  final double fontSize;
-  final double textScaleFactor;
-  final TextfEditingController controller;
-  final ValueChanged<String> onInsert;
-  final MarkerVisibility markerVisibility;
-  final ValueChanged<MarkerVisibility> onMarkerVisibilityChanged;
 
   const _EditorTab({
     required this.fontSize,
@@ -179,6 +173,12 @@ class _EditorTab extends StatelessWidget {
     required this.markerVisibility,
     required this.onMarkerVisibilityChanged,
   });
+  final double fontSize;
+  final double textScaleFactor;
+  final TextfEditingController controller;
+  final ValueChanged<String> onInsert;
+  final MarkerVisibility markerVisibility;
+  final ValueChanged<MarkerVisibility> onMarkerVisibilityChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -238,10 +238,6 @@ class _EditorTab extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _ScalingControls extends StatelessWidget {
-  final double fontSize;
-  final double textScaleFactor;
-  final ValueChanged<double> onFontSizeChanged;
-  final ValueChanged<double> onTextScaleChanged;
 
   const _ScalingControls({
     required this.fontSize,
@@ -249,6 +245,10 @@ class _ScalingControls extends StatelessWidget {
     required this.onFontSizeChanged,
     required this.onTextScaleChanged,
   });
+  final double fontSize;
+  final double textScaleFactor;
+  final ValueChanged<double> onFontSizeChanged;
+  final ValueChanged<double> onTextScaleChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -260,8 +260,8 @@ class _ScalingControls extends StatelessWidget {
         children: [
           Text('Font Size: ${fontSize.toStringAsFixed(0)}px'),
           Slider(
-            min: 14.0,
-            max: 48.0,
+            min: 14,
+            max: 48,
             divisions: 34,
             value: fontSize,
             onChanged: onFontSizeChanged,
@@ -269,7 +269,7 @@ class _ScalingControls extends StatelessWidget {
           const SizedBox(height: 4),
           Text('Text Scale Factor: ${textScaleFactor.toStringAsFixed(1)}x'),
           Slider(
-            min: 1.0,
+            min: 1,
             max: 2.5,
             value: textScaleFactor,
             onChanged: onTextScaleChanged,
@@ -281,10 +281,10 @@ class _ScalingControls extends StatelessWidget {
 }
 
 class _FormatChips extends StatelessWidget {
-  final ValueChanged<String> onInsert;
-  final ThemeData theme;
 
   const _FormatChips({required this.onInsert, required this.theme});
+  final ValueChanged<String> onInsert;
+  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
@@ -315,7 +315,7 @@ class _FormatChips extends StatelessWidget {
   static Widget _chip(String label, ValueChanged<String> onInsert) {
     return ActionChip(
       label: Textf(label, style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 11)),
-      onPressed: () => onInsert("$label "),
+      onPressed: () => onInsert('$label '),
       visualDensity: VisualDensity.compact,
       padding: EdgeInsets.zero,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

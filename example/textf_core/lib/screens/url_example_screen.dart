@@ -8,14 +8,12 @@ import 'package:url_launcher/url_launcher.dart';
 import '../widgets/example_card.dart';
 
 class UrlExampleScreen extends StatefulWidget {
-  final ThemeMode currentThemeMode;
-  final VoidCallback toggleThemeMode;
 
   const UrlExampleScreen({
-    super.key,
-    required this.currentThemeMode,
-    required this.toggleThemeMode,
+    required this.currentThemeMode, required this.toggleThemeMode, super.key,
   });
+  final ThemeMode currentThemeMode;
+  final VoidCallback toggleThemeMode;
 
   @override
   State<UrlExampleScreen> createState() => _UrlExampleScreenState();
@@ -71,7 +69,6 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
           ],
         ),
         backgroundColor: Colors.black87,
-        duration: const Duration(seconds: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -154,9 +151,8 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
     if (_overlayEntry != null) {
       try {
         _overlayEntry?.remove();
-      } catch (e) {
+      } on Object catch (_) {
         // Might throw if called after dispose or during tree modifications, ignore.
-        // print("Error removing overlay: $e");
       } finally {
         _overlayEntry = null;
         // If we are removing the overlay, reset the hover state too
@@ -196,7 +192,7 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
           _buildUrlSnackBar('Cannot open URL: $url', Icons.error_outline, Colors.red.shade700),
         );
       }
-    } catch (e) {
+    } on Object catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
         _buildUrlSnackBar('Error opening URL: $e', Icons.error_outline, Colors.red.shade700),
@@ -243,11 +239,11 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
         // Parent options provide callbacks
         onLinkTap: _handleUrlTap,
         onLinkHover: _handleLinkHover,
-        linkStyle: TextStyle(
+        linkStyle: const TextStyle(
           color: Colors.blue,
           decoration: TextDecoration.none,
         ),
-        linkHoverStyle: TextStyle(
+        linkHoverStyle: const TextStyle(
           color: Colors.blue,
           decoration: TextDecoration.underline,
           decorationColor: Colors.blue,
@@ -341,7 +337,7 @@ Textf(
 )''',
               child: Textf(
                 'Check out [**bold link**](https://example.com) '
-                '[*italic link*](https://example.org)'
+                '[*italic link*](https://example.org) '
                 'and [Link with ^*^](https://example.org)',
               ),
             ),
@@ -402,8 +398,7 @@ Textf(
   '(https://pub.dev/packages?q=textf+markdown#results)',
 )''',
               child: Textf(
-                'Search for [Package Textf]'
-                '(https://pub.dev/packages?q=textf+markdown#results)',
+                'Search for [Package Textf](https://pub.dev/packages?q=textf+markdown#results)',
               ),
             ),
             const SizedBox(height: 16),
@@ -412,7 +407,7 @@ Textf(
             const ExampleCard(
               title: 'URL Needing Normalization',
               description: 'URL without protocol (should get https:// added)',
-              code: 'Textf(\n  \'Visit [Google](google.com)\',\n)',
+              code: "Textf(\n  'Visit [Google](google.com)',\n)",
               child: Textf(
                 'Visit [Google](google.com)',
               ),

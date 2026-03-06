@@ -50,7 +50,6 @@ class _TextfWebDemoState extends State<TextfWebDemo> {
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: Colors.blue,
-              brightness: Brightness.light,
             ),
             useMaterial3: true,
           ),

@@ -2,18 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class ExampleCard extends StatelessWidget {
+
+  const ExampleCard({
+    required this.title, required this.description, required this.code, required this.child, super.key,
+  });
   final String title;
   final String description;
   final String code;
   final Widget child;
-
-  const ExampleCard({
-    super.key,
-    required this.title,
-    required this.description,
-    required this.code,
-    required this.child,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -59,13 +55,14 @@ class ExampleCard extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 4.0, top: 4.0), // Adjust padding
+                  padding: const EdgeInsets.only(left: 4, top: 4), // Adjust padding
                   child: IconButton(
                     icon: const Icon(Icons.copy_outlined, size: 18), // Slightly smaller icon
                     tooltip: 'Copy code',
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: code));
-                      ScaffoldMessenger.of(context).showSnackBar(
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      await Clipboard.setData(ClipboardData(text: code));
+                      messenger.showSnackBar(
                         const SnackBar(
                           content: Text('Code copied to clipboard'),
                           duration: Duration(seconds: 1),
@@ -89,7 +86,6 @@ class ExampleCard extends StatelessWidget {
                   // Optional: Add a subtle border
                   border: Border.all(
                     color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-                    width: 1,
                   ),
                 ),
                 // Apply default text style from theme to the child content

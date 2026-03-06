@@ -8,7 +8,7 @@ import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
   type: Textf,
 )
 Widget overflowUseCase(BuildContext context) {
-  final longText =
+  const longText =
       'This is a **very long text** with multiple formatting styles including *italic*, ~~strikethrough~~, `code blocks`, and even [links](https://example.com) that will definitely overflow the container if not properly handled with wrapping, ellipsis, or other overflow techniques. The purpose of this example is to test how Textf handles long text with various formatting applied to different parts of the text.';
 
   final containerWidth = context.knobs.double.slider(
@@ -44,10 +44,10 @@ Widget overflowUseCase(BuildContext context) {
 
   return Center(
     child: Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

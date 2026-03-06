@@ -4,15 +4,13 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class ChatExampleScreen extends StatelessWidget {
+
+  const ChatExampleScreen({
+    required this.currentThemeMode, required this.toggleThemeMode, super.key,
+  });
   // Add theme constructor parameters
   final ThemeMode currentThemeMode;
   final VoidCallback toggleThemeMode;
-
-  const ChatExampleScreen({
-    super.key,
-    required this.currentThemeMode,
-    required this.toggleThemeMode,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +40,8 @@ class ChatExampleScreen extends StatelessWidget {
               title: 'Chat Bubble',
               description:
                   'Formatted text in a chat bubble using theme colors', // Updated description
-              code: '''Container(
+              code: '''
+Container(
   padding: EdgeInsets.all(12),
   decoration: BoxDecoration(
     color: Colors.blue.shade100,
@@ -104,14 +103,12 @@ class ChatExampleScreen extends StatelessWidget {
 }
 
 class ChatBubble extends StatelessWidget {
-  final bool isMe;
-  final String message;
 
   const ChatBubble({
-    super.key,
-    required this.isMe,
-    required this.message,
+    required this.isMe, required this.message, super.key,
   });
+  final bool isMe;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
@@ -218,14 +215,14 @@ class _ChatExampleState extends State<ChatExample> {
             border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: .5)),
           ),
           child: ListView.builder(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8),
             reverse: true, // Keep reverse order
             itemCount: _messages.length,
             itemBuilder: (context, index) {
               // Access messages directly in reverse order for clarity
               final message = _messages[index];
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Align(
                   alignment: message.isMe ? Alignment.centerRight : Alignment.centerLeft,
                   child: ConstrainedBox(
@@ -321,11 +318,11 @@ class _ChatExampleState extends State<ChatExample> {
 
 // ChatMessage class remains the same
 class ChatMessage {
-  final String message;
-  final bool isMe;
 
   ChatMessage({
     required this.message,
     required this.isMe,
   });
+  final String message;
+  final bool isMe;
 }

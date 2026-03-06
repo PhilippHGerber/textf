@@ -55,7 +55,6 @@ class _TextfExampleAppState extends State<TextfExampleApp> {
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: Colors.blue,
-              brightness: Brightness.light,
             ),
             useMaterial3: true,
           ),

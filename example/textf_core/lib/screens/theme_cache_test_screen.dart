@@ -33,7 +33,6 @@ class _ThemeCacheTestScreenState extends State<ThemeCacheTestScreen> {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.yellow,
-          brightness: Brightness.light, // or Brightness.dark
         ),
       ),
       darkTheme: ThemeData(
@@ -161,10 +160,10 @@ class _ThemeCacheTestBody extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Test Section: Multiple formats
-            _TestSection(
+            const _TestSection(
               title: '3. Combined Formatting',
               description: 'All theme-dependent styles should update together',
-              child: const Textf(
+              child: Textf(
                 '==**Bold**, *italic*, `code`==, and [link](https://example.com).',
               ),
             ),
@@ -184,10 +183,10 @@ class _ThemeCacheTestBody extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Test Section: Code inside link
-            _TestSection(
+            const _TestSection(
               title: '5. Nested: Code in Link',
               description: 'Complex nesting should handle theme change',
-              child: const Textf(
+              child: Textf(
                 'Visit [`code link`](https://example.com) for more.',
               ),
             ),
@@ -195,10 +194,10 @@ class _ThemeCacheTestBody extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Test Section: With TextfOptions override
-            _TestSection(
+            const _TestSection(
               title: '6. TextfOptions Override',
               description: 'Custom linkStyle should NOT change with theme',
-              child: const TextfOptions(
+              child: TextfOptions(
                 linkStyle: TextStyle(color: Colors.orange),
                 child: Textf(
                   'This [orange link](https://example.com) stays orange.',
@@ -232,7 +231,7 @@ class _ThemeCacheTestBody extends StatelessWidget {
                       '2. Tap the theme toggle button in the app bar\n'
                       '3. Verify ALL Textf widgets update their colors\n'
                       '4. Toggle back and forth multiple times\n'
-                      '5. If colors don\'t change → cache invalidation bug',
+                      "5. If colors don't change → cache invalidation bug",
                     ),
                   ],
                 ),

@@ -4,14 +4,12 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class PlaceholderExampleScreen extends StatelessWidget {
-  final ThemeMode currentThemeMode;
-  final VoidCallback toggleThemeMode;
 
   const PlaceholderExampleScreen({
-    super.key,
-    required this.currentThemeMode,
-    required this.toggleThemeMode,
+    required this.currentThemeMode, required this.toggleThemeMode, super.key,
   });
+  final ThemeMode currentThemeMode;
+  final VoidCallback toggleThemeMode;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +26,7 @@ class PlaceholderExampleScreen extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             ExampleCard(
@@ -53,7 +51,7 @@ Textf(
                 'Hello! This is a star icon: {star}. And this is a ~~cat~~ bird: {bird}',
                 style: const TextStyle(fontSize: 18),
                 placeholders: {
-                  'star': WidgetSpan(
+                  'star': const WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: Icon(
                       Icons.star,
@@ -122,7 +120,7 @@ Textf(
                 'This is **bold {icon}** and _italic {coffee}_.',
                 style: const TextStyle(fontSize: 18),
                 placeholders: {
-                  'icon': const TextSpan(text: "[ICON]"),
+                  'icon': const TextSpan(text: '[ICON]'),
                   'coffee': WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: Image.asset(

@@ -9,10 +9,10 @@ import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 )
 Widget rtlUseCase(BuildContext context) {
   // Arabic text with formatting
-  final arabicText = 'هذا نص **عريض** و*مائل* و~~مشطوب~~ و`رمز` مع [رابط](https://example.com).';
+  const arabicText = 'هذا نص **عريض** و*مائل* و~~مشطوب~~ و`رمز` مع [رابط](https://example.com).';
 
   // English text with formatting
-  final englishText =
+  const englishText =
       'This is **bold** and *italic* and ~~strikethrough~~ and `code` with [link](https://example.com).';
 
   final textDirection = context.knobs.object.dropdown(
@@ -32,10 +32,10 @@ Widget rtlUseCase(BuildContext context) {
 
   return Center(
     child: Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

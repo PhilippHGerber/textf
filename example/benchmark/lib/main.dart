@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
@@ -19,16 +20,11 @@ class BenchmarkConfig {
   static const int maxSegments = 20;
 
   static const int largeStringLength = 1000;
-  static const Duration animationDuration = Duration(seconds: 5);
 }
 
 // --- Models ---
 class BenchmarkResult {
-  final String scenarioName;
-  final String targetName; // Textf, Raw, Rich
-  final double medianBuildTimeMs;
-  final double maxBuildTimeMs;
-  final double microsPerWidget; // For list scenarios
+  // For list scenarios
 
   BenchmarkResult({
     required this.scenarioName,
@@ -37,6 +33,11 @@ class BenchmarkResult {
     required this.maxBuildTimeMs,
     required this.microsPerWidget,
   });
+  final String scenarioName;
+  final String targetName; // Textf, Raw, Rich
+  final double medianBuildTimeMs;
+  final double maxBuildTimeMs;
+  final double microsPerWidget;
 }
 
 enum BenchmarkTarget {
@@ -64,6 +65,7 @@ class ScrollingScenario extends BenchmarkScenario {
   };
 
   static List<String> _generateCorpus() {
+    // ignore: no-magic-number
     final random = Random(42);
     final parts = [
       '**Bold** ',
@@ -80,11 +82,13 @@ class ScrollingScenario extends BenchmarkScenario {
     ];
     return List.generate(BenchmarkConfig.corpusSize, (index) {
       final buffer = StringBuffer();
-      int segments = random.nextInt(BenchmarkConfig.maxSegments - BenchmarkConfig.minSegments) +
-          BenchmarkConfig.minSegments;
+      final int segments =
+          random.nextInt(BenchmarkConfig.maxSegments - BenchmarkConfig.minSegments) +
+              BenchmarkConfig.minSegments;
       for (int i = 0; i < segments; i++) {
-        buffer.write(parts[random.nextInt(parts.length)]);
-        buffer.write(' ');
+        buffer
+          ..write(parts[random.nextInt(parts.length)])
+          ..write(' ');
       }
       return buffer.toString();
     });
@@ -203,7 +207,7 @@ class OptionsRebuildScenario extends BenchmarkScenario {
     // but the actual TextfOptions styles remain CONSTANT.
 
     // We construct styles here to simulate "new instances" every frame
-    final dynamicBoldStyle = TextStyle(fontWeight: FontWeight.bold, color: Colors.red);
+    const dynamicBoldStyle = TextStyle(fontWeight: FontWeight.bold, color: Colors.red);
 
     switch (target) {
       case BenchmarkTarget.textf:
@@ -314,7 +318,7 @@ class _BenchmarkHomeState extends State<BenchmarkHome> with SingleTickerProvider
       _offset = 0;
     });
 
-    _ticker.start();
+    unawaited(_ticker.start());
 
     // Wait for ticker to finish (it stops in _finishCurrentRun)
     while (_ticker.isActive) {
@@ -374,7 +378,6 @@ class _BenchmarkHomeState extends State<BenchmarkHome> with SingleTickerProvider
         children: [
           if (_currentScenario != null)
             Expanded(
-              flex: 1,
               child: Container(
                 decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!)),
                 child: Stack(
@@ -409,10 +412,9 @@ class _BenchmarkHomeState extends State<BenchmarkHome> with SingleTickerProvider
 }
 
 class _Dashboard extends StatelessWidget {
+  const _Dashboard({required this.results, required this.isRunning});
   final List<BenchmarkResult> results;
   final bool isRunning;
-
-  const _Dashboard({required this.results, required this.isRunning});
 
   @override
   Widget build(BuildContext context) {
@@ -437,10 +439,9 @@ class _Dashboard extends StatelessWidget {
 }
 
 class _ScenarioResultGroup extends StatelessWidget {
+  const _ScenarioResultGroup({required this.name, required this.results});
   final String name;
   final List<BenchmarkResult> results;
-
-  const _ScenarioResultGroup({required this.name, required this.results});
 
   @override
   Widget build(BuildContext context) {

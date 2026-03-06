@@ -5,15 +5,13 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class NotificationExampleScreen extends StatelessWidget {
+
+  const NotificationExampleScreen({
+    required this.currentThemeMode, required this.toggleThemeMode, super.key,
+  });
   // Add theme constructor parameters
   final ThemeMode currentThemeMode;
   final VoidCallback toggleThemeMode;
-
-  const NotificationExampleScreen({
-    super.key,
-    required this.currentThemeMode,
-    required this.toggleThemeMode,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -199,9 +197,7 @@ class _NotificationSystemState extends State<NotificationSystem> {
                     TextButton(
                       // Use TextButton for Clear All
                       onPressed: () {
-                        setState(() {
-                          _notifications.clear();
-                        });
+                        setState(_notifications.clear);
                       },
                       style: TextButton.styleFrom(
                         textStyle: theme.textTheme.labelMedium,
@@ -217,7 +213,7 @@ class _NotificationSystemState extends State<NotificationSystem> {
               const Divider(height: 1, thickness: 1),
               if (_notifications.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
                   child: Text(
                     'No notifications',
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -318,12 +314,7 @@ class _NotificationSystemState extends State<NotificationSystem> {
 }
 
 // NotificationItem class remains the same
-class NotificationItem {
-  final IconData icon;
-  final String title;
-  final String message;
-  final String time;
-  final Color? iconColor; // Make optional
+class NotificationItem { // Make optional
 
   NotificationItem({
     required this.icon,
@@ -332,4 +323,9 @@ class NotificationItem {
     required this.time,
     this.iconColor, // Allow null
   });
+  final IconData icon;
+  final String title;
+  final String message;
+  final String time;
+  final Color? iconColor;
 }

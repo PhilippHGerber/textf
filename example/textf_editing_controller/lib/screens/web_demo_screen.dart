@@ -26,14 +26,12 @@ String init2Text = '*a* **b** ==c== ~~d~~ ++e++ ^f^ ~g~ [h](i)';
 String init2TextLong = List.filled(20, init2Text).join('\n');
 
 class WebDemoScreen extends StatefulWidget {
-  final ThemeMode currentThemeMode;
-  final VoidCallback toggleThemeMode;
 
   const WebDemoScreen({
-    super.key,
-    required this.currentThemeMode,
-    required this.toggleThemeMode,
+    required this.currentThemeMode, required this.toggleThemeMode, super.key,
   });
+  final ThemeMode currentThemeMode;
+  final VoidCallback toggleThemeMode;
 
   @override
   State<WebDemoScreen> createState() => _WebDemoScreenState();
@@ -137,7 +135,7 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
             tooltip: 'Toggle Theme',
             onPressed: widget.toggleThemeMode,
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
         ],
       ),
       body: TextfOptions(
@@ -149,7 +147,7 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
               padding: const EdgeInsets.all(24),
               children: [
                 Textf(
-                  'A drop-in replacement for Flutter\'s `Text` widget with '
+                  "A drop-in replacement for Flutter's `Text` widget with "
                   '**markdown-like** inline formatting.',
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -223,7 +221,7 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
                       alignment: PlaceholderAlignment.middle,
                       child: Image.asset('assets/img/dart.png', height: 16),
                     ),
-                    'love': WidgetSpan(
+                    'love': const WidgetSpan(
                       alignment: PlaceholderAlignment.middle,
                       child: Icon(
                         Icons.favorite,
@@ -242,27 +240,25 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
                 _CodePreview(
                   theme: theme,
                   code:
-                      "Textf(\n"
+                      'Textf(\n'
                       "  'Built with {flutter} and {dart}. "
                       "Made with {love}.\\n'\n"
                       "  'Flutter package '\n"
-                      "  '[textf on pub.dev]"
-                      "(https://pub.dev/packages/textf) '\n"
+                      "  '[textf on pub.dev](https://pub.dev/packages/textf) '\n"
                       "  'and the '\n"
-                      "  '[GitHub repo]"
-                      "(https://github.com/PhilippHGerber/textf).',\n"
-                      "  placeholders: {\n"
+                      "  '[GitHub repo](https://github.com/PhilippHGerber/textf).',\n"
+                      '  placeholders: {\n'
                       "    'flutter': WidgetSpan(\n"
                       "      child: Image.asset('flutter.png', height: 16),\n"
-                      "    ),\n"
+                      '    ),\n'
                       "    'dart': WidgetSpan(\n"
                       "      child: Image.asset('dart.png', height: 16),\n"
-                      "    ),\n"
+                      '    ),\n'
                       "    'love': WidgetSpan(\n"
-                      "      child: Icon(Icons.favorite, color: Colors.red),\n"
-                      "    ),\n"
-                      "  },\n"
-                      ")",
+                      '      child: Icon(Icons.favorite, color: Colors.red),\n'
+                      '    ),\n'
+                      '  },\n'
+                      ')',
                 ),
               ],
             ),
@@ -278,10 +274,10 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
 // ---------------------------------------------------------------------------
 
 class _CodePreview extends StatelessWidget {
-  final ThemeData theme;
-  final String code;
 
   const _CodePreview({required this.theme, required this.code});
+  final ThemeData theme;
+  final String code;
 
   @override
   Widget build(BuildContext context) {
@@ -309,10 +305,10 @@ class _CodePreview extends StatelessWidget {
 }
 
 class _FormatChips extends StatelessWidget {
-  final ValueChanged<String> onInsert;
-  final ThemeData theme;
 
   const _FormatChips({required this.onInsert, required this.theme});
+  final ValueChanged<String> onInsert;
+  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {

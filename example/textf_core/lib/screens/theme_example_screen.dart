@@ -5,21 +5,19 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class ThemeExampleScreen extends StatelessWidget {
-  final ThemeMode currentThemeMode;
-  final VoidCallback toggleThemeMode;
 
   const ThemeExampleScreen({
-    super.key,
-    required this.currentThemeMode,
-    required this.toggleThemeMode,
+    required this.currentThemeMode, required this.toggleThemeMode, super.key,
   });
+  final ThemeMode currentThemeMode;
+  final VoidCallback toggleThemeMode;
 
   @override
   Widget build(BuildContext context) {
     final Brightness currentBrightness = Theme.of(context).brightness;
     final IconData themeIcon =
         currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
-    final String themeName = currentBrightness == Brightness.dark ? "Dark" : "Light";
+    final String themeName = currentBrightness == Brightness.dark ? 'Dark' : 'Light';
 
     return Scaffold(
       appBar: AppBar(
@@ -36,7 +34,7 @@ class ThemeExampleScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
+            padding: const EdgeInsets.only(bottom: 16),
             child: Text(
               'Textf automatically adapts the default styling for links and inline code to the current application theme ($themeName Theme). Use the toggle button in the AppBar to see the changes.',
               style: Theme.of(context).textTheme.bodyLarge,
@@ -46,7 +44,7 @@ class ThemeExampleScreen extends StatelessWidget {
           const Divider(height: 20),
           ExampleCard(
             title: 'Default Link Styling',
-            description: 'Links ([text](url)) use the theme\'s primary color by default.',
+            description: "Links ([text](url)) use the theme's primary color by default.",
             code: '''
 Textf(
   '==Visit== the [Flutter website](https://flutter.dev) '

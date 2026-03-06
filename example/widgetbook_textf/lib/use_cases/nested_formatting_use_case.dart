@@ -26,7 +26,6 @@ Widget nestedFormattingUseCase(BuildContext context) {
 
   final customText = context.knobs.string(
     label: 'Custom Nested Format',
-    initialValue: '',
     description:
         'Enter your own nested formatting example (leave empty to use the selected example)',
   );
@@ -35,10 +34,10 @@ Widget nestedFormattingUseCase(BuildContext context) {
 
   return Center(
     child: Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

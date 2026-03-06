@@ -9,10 +9,10 @@ import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 Widget styleInheritanceUseCase(BuildContext context) {
   return Center(
     child: Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +43,7 @@ Widget styleInheritanceUseCase(BuildContext context) {
                   children: [
                     // Example with root level styles
                     const Padding(
-                      padding: EdgeInsets.all(8.0),
+                      padding: EdgeInsets.all(8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -71,11 +71,11 @@ Widget styleInheritanceUseCase(BuildContext context) {
                         color: Colors.white,
                       ),
                       // No boldStyle override, will inherit from root
-                      child: Column(
+                      child: const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.all(8.0),
+                          Padding(
+                            padding: EdgeInsets.all(8),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -88,19 +88,19 @@ Widget styleInheritanceUseCase(BuildContext context) {
                             ),
                           ),
 
-                          const Divider(),
+                          Divider(),
 
                           // Leaf level TextfOptions that overrides some additional styles
                           TextfOptions(
                             // Override URL style but inherit other styles
-                            linkStyle: const TextStyle(
+                            linkStyle: TextStyle(
                               color: Colors.orange,
                               decoration: TextDecoration.none,
                               fontWeight: FontWeight.bold,
                             ),
                             // No boldStyle or italicStyle override
-                            child: const Padding(
-                              padding: EdgeInsets.all(8.0),
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [

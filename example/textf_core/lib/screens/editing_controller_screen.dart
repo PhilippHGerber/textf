@@ -5,14 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 
 class EditingControllerScreen extends StatefulWidget {
-  final ThemeMode currentThemeMode;
-  final VoidCallback toggleThemeMode;
 
   const EditingControllerScreen({
-    super.key,
-    required this.currentThemeMode,
-    required this.toggleThemeMode,
+    required this.currentThemeMode, required this.toggleThemeMode, super.key,
   });
+  final ThemeMode currentThemeMode;
+  final VoidCallback toggleThemeMode;
 
   @override
   State<EditingControllerScreen> createState() => _EditingControllerScreenState();
@@ -291,10 +289,10 @@ class _EditingControllerScreenState extends State<EditingControllerScreen> {
 // ---------------------------------------------------------------------------
 
 class _SectionHeader extends StatelessWidget {
-  final String title;
-  final ThemeData theme;
 
   const _SectionHeader({required this.title, required this.theme});
+  final String title;
+  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
@@ -308,15 +306,15 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _MarkerVisibilityToggle extends StatelessWidget {
-  final MarkerVisibility visibility;
-  final ValueChanged<MarkerVisibility> onChanged;
-  final ThemeData theme;
 
   const _MarkerVisibilityToggle({
     required this.visibility,
     required this.onChanged,
     required this.theme,
   });
+  final MarkerVisibility visibility;
+  final ValueChanged<MarkerVisibility> onChanged;
+  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
@@ -341,10 +339,10 @@ class _MarkerVisibilityToggle extends StatelessWidget {
 }
 
 class _FormatChips extends StatelessWidget {
-  final ValueChanged<String> onInsert;
-  final ThemeData theme;
 
   const _FormatChips({required this.onInsert, required this.theme});
+  final ValueChanged<String> onInsert;
+  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
@@ -387,10 +385,6 @@ class _FormatChips extends StatelessWidget {
 }
 
 class _ChatDemo extends StatelessWidget {
-  final TextfEditingController controller;
-  final List<String> messages;
-  final VoidCallback onSend;
-  final ThemeData theme;
 
   const _ChatDemo({
     required this.controller,
@@ -398,6 +392,10 @@ class _ChatDemo extends StatelessWidget {
     required this.onSend,
     required this.theme,
   });
+  final TextfEditingController controller;
+  final List<String> messages;
+  final VoidCallback onSend;
+  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
@@ -489,9 +487,9 @@ class _ChatDemo extends StatelessWidget {
 }
 
 class _SideBySideComparison extends StatefulWidget {
-  final ThemeData theme;
 
   const _SideBySideComparison({required this.theme});
+  final ThemeData theme;
 
   @override
   State<_SideBySideComparison> createState() => _SideBySideComparisonState();

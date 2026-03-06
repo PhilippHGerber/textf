@@ -34,13 +34,10 @@ class _FlexTextfExampleAppState extends State<FlexTextfExampleApp> {
       switch (_themeMode) {
         case ThemeMode.light:
           _themeMode = ThemeMode.dark;
-          break;
         case ThemeMode.dark:
           _themeMode = ThemeMode.system;
-          break;
         case ThemeMode.system:
           _themeMode = ThemeMode.light;
-          break;
       }
     });
   }
@@ -59,7 +56,6 @@ class _FlexTextfExampleAppState extends State<FlexTextfExampleApp> {
         blendLevel: 20,
         subThemesData: const FlexSubThemesData(),
         visualDensity: FlexColorScheme.comfortablePlatformDensity,
-        useMaterial3: useMaterial3,
         swapLegacyOnMaterial3: useMaterial3,
       ),
       darkTheme: FlexThemeData.dark(
@@ -68,7 +64,6 @@ class _FlexTextfExampleAppState extends State<FlexTextfExampleApp> {
         blendLevel: 20,
         subThemesData: const FlexSubThemesData(),
         visualDensity: FlexColorScheme.comfortablePlatformDensity,
-        useMaterial3: useMaterial3,
         swapLegacyOnMaterial3: useMaterial3,
       ),
       themeMode: _themeMode,

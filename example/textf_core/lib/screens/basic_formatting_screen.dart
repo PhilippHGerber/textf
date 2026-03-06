@@ -5,14 +5,12 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class BasicFormattingScreen extends StatelessWidget {
-  final ThemeMode currentThemeMode;
-  final VoidCallback toggleThemeMode;
 
   const BasicFormattingScreen({
-    super.key,
-    required this.currentThemeMode,
-    required this.toggleThemeMode,
+    required this.currentThemeMode, required this.toggleThemeMode, super.key,
   });
+  final ThemeMode currentThemeMode;
+  final VoidCallback toggleThemeMode;
 
   @override
   Widget build(BuildContext context) {
@@ -88,9 +86,9 @@ class BasicFormattingScreen extends StatelessWidget {
               title: 'Escaped Characters',
               description: 'Use backslash to escape formatting characters',
               code:
-                  "Textf('Escape: \\*bold\\*, \\_italic\\_, \\~\\~strike\\~\\~, \\+\\+underline\\+\\+, \\=\\=highlight\\=\\=, \\`code\\`')",
+                  r"Textf('Escape: \*bold\*, \_italic\_, \~\~strike\~\~, \+\+underline\+\+, \=\=highlight\=\=, \`code\`')",
               child: Textf(
-                'Escape: \\*bold\\*, \\_italic\\_, \\~\\~strike\\~\\~, \\+\\+underline\\+\\+, \\=\\=highlight\\=\\=, \\`code\\`',
+                r'Escape: \*bold\*, \_italic\_, \~\~strike\~\~, \+\+underline\+\+, \=\=highlight\=\=, \`code\`',
               ),
             ),
           ],

@@ -27,10 +27,10 @@ Widget linkFormattingUseCase(BuildContext context) {
 
   return Center(
     child: Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: TextfOptions(
             onLinkTap: showUrlTapSnackbar
                 ? (url, displayText) {

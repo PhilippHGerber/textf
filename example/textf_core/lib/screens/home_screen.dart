@@ -13,14 +13,12 @@ import 'theme_example_screen.dart';
 import 'url_example_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  final ThemeMode currentThemeMode;
-  final VoidCallback toggleThemeMode;
 
   const HomeScreen({
-    super.key,
-    required this.currentThemeMode,
-    required this.toggleThemeMode,
+    required this.currentThemeMode, required this.toggleThemeMode, super.key,
   });
+  final ThemeMode currentThemeMode;
+  final VoidCallback toggleThemeMode;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +59,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             _buildExampleTile(
               context,
-              Textf(
+              const Textf(
                 '{new} TextfEditingController',
                 placeholders: {
                   'new': badgeNew,
@@ -125,7 +123,7 @@ class HomeScreen extends StatelessWidget {
             ),
             _buildExampleTile(
               context,
-              Textf(
+              const Textf(
                 '{new} Placeholder Example',
                 placeholders: {
                   'new': badgeNew,
@@ -146,7 +144,7 @@ class HomeScreen extends StatelessWidget {
                 },
               ),
               const Text('Show Caching'),
-              ThemeCacheTestScreen(),
+              const ThemeCacheTestScreen(),
             ),
             _buildExampleTile(
               context,
@@ -178,10 +176,10 @@ class HomeScreen extends StatelessWidget {
         title: title,
         subtitle: subtitle,
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {
-          Navigator.push(
+        onTap: () async {
+          await Navigator.push<void>(
             context,
-            MaterialPageRoute(builder: (context) => destination),
+            MaterialPageRoute<void>(builder: (context) => destination),
           );
         },
       ),

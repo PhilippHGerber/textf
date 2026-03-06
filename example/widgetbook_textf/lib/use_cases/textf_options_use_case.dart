@@ -52,9 +52,9 @@ Widget textfOptionsUseCase(BuildContext context) {
 
   final strikethroughThickness = context.knobs.double.slider(
     label: 'Strikethrough Thickness',
-    initialValue: 2.0,
+    initialValue: 2,
     min: 0.5,
-    max: 5.0,
+    max: 5,
   );
 
   // Code style options
@@ -106,10 +106,10 @@ Widget textfOptionsUseCase(BuildContext context) {
 
   return Center(
     child: Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

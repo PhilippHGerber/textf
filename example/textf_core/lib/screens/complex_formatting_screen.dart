@@ -5,14 +5,12 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class ComplexFormattingScreen extends StatelessWidget {
-  final ThemeMode currentThemeMode;
-  final VoidCallback toggleThemeMode;
 
   const ComplexFormattingScreen({
-    super.key,
-    required this.currentThemeMode,
-    required this.toggleThemeMode,
+    required this.currentThemeMode, required this.toggleThemeMode, super.key,
   });
+  final ThemeMode currentThemeMode;
+  final VoidCallback toggleThemeMode;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +33,7 @@ class ComplexFormattingScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            ExampleCard(
+            const ExampleCard(
               title: 'Mixed Formatting',
               description: 'Combining multiple formatting styles in one text',
               code: '''
@@ -87,10 +85,10 @@ TextfOptions(
                   color: Colors.black, // Text color for highlight
                   fontStyle: FontStyle.italic,
                 ),
-                child: Textf(
+                child: const Textf(
                   '**Styled** _text_ with ~~formatting~~, '
                   '++custom underline++, and ==custom highlight==.',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     height: 1.5,
                   ),
@@ -108,7 +106,7 @@ TextfOptions(
               ),
             ),
             const SizedBox(height: 16),
-            ExampleCard(
+            const ExampleCard(
               title: 'Long Text with Overflow',
               description: 'Handling long text with ellipsis, including new formats',
               code: '''

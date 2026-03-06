@@ -69,15 +69,13 @@ extension TextStyleCopyWithExtension on TextStyle? {
 }
 
 class ScreenshotScreen extends StatefulWidget {
+
+  const ScreenshotScreen({
+    required this.currentThemeMode, required this.toggleThemeMode, super.key,
+  });
   // Add theme parameters
   final ThemeMode currentThemeMode;
   final VoidCallback toggleThemeMode;
-
-  const ScreenshotScreen({
-    super.key,
-    required this.currentThemeMode,
-    required this.toggleThemeMode,
-  });
 
   @override
   State<ScreenshotScreen> createState() => _ScreenshotScreenState();
@@ -105,7 +103,7 @@ for more details.
   Color? _textColor; // Nullable: applied via DefaultTextStyle
   Color? _backgroundColor; // Nullable: applied via Container
   TextAlign _textAlign = TextAlign.left;
-  double _textScaleFactor = 1.0;
+  double _textScaleFactor = 1;
 
   // --- TextfOptions State (Nullable to allow falling back to theme/defaults) ---
   TextStyle? _boldStyle;
@@ -149,21 +147,21 @@ for more details.
 
     try {
       // Short delay to ensure UI with potential TextfOptions changes is rendered
-      await Future.delayed(const Duration(milliseconds: 150));
+      await Future<void>.delayed(const Duration(milliseconds: 150));
 
-      RenderRepaintBoundary? boundary =
+      final RenderRepaintBoundary? boundary =
           _screenshotKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) {
         if (kDebugMode) {
-          print("Error: Could not find RenderRepaintBoundary.");
+          print('Error: Could not find RenderRepaintBoundary.');
         }
-        throw Exception("Render boundary not found");
+        throw Exception('Render boundary not found');
       }
 
       if (!mounted) return;
-      ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
+      final ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
 
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       _imageBytes = byteData?.buffer.asUint8List();
 
       if (!mounted) return; // Check again after async gaps
@@ -178,9 +176,9 @@ for more details.
           duration: Duration(seconds: 3),
         ),
       );
-    } catch (e) {
+    } on Object catch (e) {
       if (kDebugMode) {
-        print("Screenshot capture failed: $e");
+        print('Screenshot capture failed: $e');
       }
       if (!mounted) return;
       setState(() => _isCapturing = false);
@@ -196,7 +194,7 @@ for more details.
   Future<void> _showImageOptions() async {
     if (_imageBytes == null) return;
 
-    showModalBottomSheet(
+    await showModalBottomSheet<void>(
       context: context,
       builder: (context) {
         return SafeArea(
@@ -206,9 +204,9 @@ for more details.
               ListTile(
                 leading: const Icon(Icons.share),
                 title: const Text('Share Image'),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(context);
-                  _shareImage(); // Call share method
+                  await _shareImage();
                 },
               ),
             ],
@@ -284,12 +282,10 @@ for more details.
             // --- Formatting Options Expansion Tile ---
             ExpansionTile(
               title: const Text('Formatting Options'),
-              initiallyExpanded: false,
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 0,
-                    vertical: 8.0,
+                    vertical: 8,
                   ), // Reduced horizontal padding
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,7 +339,7 @@ for more details.
                     // Apply background color here, falling back to theme surface
                     color: effectiveBackgroundColor,
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0), // Padding inside the card
+                      padding: const EdgeInsets.all(16), // Padding inside the card
                       // Apply base font size, alignment, and optional text color here
                       child: DefaultTextStyle.merge(
                         style: TextStyle(
@@ -376,7 +372,7 @@ for more details.
                                 alignment: PlaceholderAlignment.middle,
                                 child: Image.asset('assets/img/dart.png', height: 16),
                               ),
-                              'love': WidgetSpan(
+                              'love': const WidgetSpan(
                                 alignment: PlaceholderAlignment.middle,
                                 child: Icon(
                                   Icons.favorite,
@@ -419,7 +415,7 @@ for more details.
                 child: Card(
                   elevation: 4,
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(8),
                     child: Column(
                       mainAxisSize: MainAxisSize.min, // Prevent excessive height
                       children: [
@@ -459,7 +455,7 @@ for more details.
   // Builds a header for a section in the options
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Text(title, style: Theme.of(context).textTheme.titleSmall),
     );
   }
@@ -467,7 +463,7 @@ for more details.
   // Builds the Font Size Slider
   Widget _buildFontSizeSlider() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -490,7 +486,7 @@ for more details.
   // Builds the Text Scale Factor Slider
   Widget _buildTextScalerSlider() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -513,7 +509,7 @@ for more details.
   // Builds the Text Alignment Selector
   Widget _buildTextAlignSelector() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -559,7 +555,7 @@ for more details.
     String resetButtonLabel = 'Use Theme/Default',
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -583,7 +579,7 @@ for more details.
               children: _availableColors.map((color) {
                 final bool isSelected = selectedColor == color;
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: InkWell(
                     onTap: () => onColorSelected(color),
                     customBorder: const CircleBorder(),
@@ -634,7 +630,7 @@ for more details.
     };
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

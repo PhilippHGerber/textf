@@ -11,7 +11,7 @@ Widget textPropertiesUseCase(BuildContext context) {
   final text = context.knobs.string(
     label: 'Formatted Text',
     initialValue:
-        'This is **bold**, *italic*, ~~strikethrough~~, and `code` text with [link](https://example.com).'
+        'This is **bold**, *italic*, ~~strikethrough~~, and `code` text with [link](https://example.com). '
         '__Lorem ipsum__ dolor sit amet, *consetetur* sadipscing elitr, sed diam nonumy '
         'eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. '
         'At vero eos et ~~saccusam~~ et justo duo dolores et ea rebum. Stet clita kasd gubergren, '
@@ -75,7 +75,6 @@ Widget textPropertiesUseCase(BuildContext context) {
 
   final semanticsLabel = context.knobs.string(
     label: 'Semantics Label',
-    initialValue: '',
     description: 'Custom accessibility label',
   );
 
@@ -96,16 +95,15 @@ Widget textPropertiesUseCase(BuildContext context) {
 
   final hasTextHeightBehavior = context.knobs.boolean(
     label: 'Use Text Height Behavior',
-    initialValue: false,
   );
 
   return Center(
     child: SelectionArea(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Container(
           width: 400,
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(8),
