@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
 
 import '../core/formatting_utils.dart';
+import '../core/textf_limits.dart';
 import '../models/format_stack_entry.dart';
 import '../models/textf_token.dart';
 import '../parsing/components/pairing_resolver.dart';
 import '../parsing/textf_tokenizer.dart';
 import '../styling/textf_style_resolver.dart';
 
+/// Container for cached parsing results in the builder.
+class _ParsedCacheEntry {
+  const _ParsedCacheEntry(this.tokens, this.validPairs);
+  final List<TextfToken> tokens;
+  final Map<int, int> validPairs;
+}
+
+/// Cache key combining the text and newline crossing rule.
+typedef _CacheKey = ({String text, bool allowNewlineCrossing});
+
 /// Builds a list of [InlineSpan] objects from formatted text.
 ///
 /// Produces [TextSpan] children for most format types, and per-character
 /// [WidgetSpan] children for superscript / subscript when in preview mode
 /// (cursor outside the formatted span with markers fully hidden). This makes
-/// it suitable for use inside [TextEditingController.buildTextSpan].
+/// it suitable for use inside[TextEditingController.buildTextSpan].
 ///
 /// **Critical invariant:** The total character-slot count of all returned
 /// spans always equals the length of the input text. Each [TextSpan]
@@ -73,9 +84,53 @@ class TextfSpanBuilder {
 
   final TextfTokenizer _tokenizer;
 
+  /// Cache for tokens and pairing results.
+  /// Uses a LinkedHashMap to implement a simple LRU cache.
+  static final Map<_CacheKey, _ParsedCacheEntry> _cache = <_CacheKey, _ParsedCacheEntry>{};
+
+  /// Clears the internal builder cache.
+  ///
+  /// Call this method to free memory in low-memory situations.
+  /// (Note: You should wire this into `Textf.clearCache()` as well).
+  static void clearCache() {
+    _cache.clear();
+  }
+
+  /// Tokenizes text and resolves pairs, using an LRU cache to prevent
+  /// re-parsing identical text segments (Fixes P1-1, P1-3).
+  _ParsedCacheEntry _getTokensAndPairs(String text, {required bool allowNewlineCrossing}) {
+    if (text.length > TextfLimits.maxCacheKeyLength) {
+      final tokens = _tokenizer.tokenize(text, allowNewlineCrossing: allowNewlineCrossing);
+      final validPairs =
+          PairingResolver.identifyPairs(tokens, allowNewlineCrossing: allowNewlineCrossing);
+      return _ParsedCacheEntry(tokens, validPairs);
+    }
+
+    final key = (text: text, allowNewlineCrossing: allowNewlineCrossing);
+    final cached = _cache.remove(key);
+
+    if (cached != null) {
+      // Re-insert to mark as recently used (LRU)
+      _cache[key] = cached;
+      return cached;
+    }
+
+    final tokens = _tokenizer.tokenize(text, allowNewlineCrossing: allowNewlineCrossing);
+    final validPairs =
+        PairingResolver.identifyPairs(tokens, allowNewlineCrossing: allowNewlineCrossing);
+    final entry = _ParsedCacheEntry(tokens, validPairs);
+
+    _cache[key] = entry;
+    if (_cache.length > TextfLimits.maxCacheEntries) {
+      _cache.remove(_cache.keys.first);
+    }
+
+    return entry;
+  }
+
   /// Builds a list of[InlineSpan] from formatted text.
   ///
-  /// Every character in the input [text] appears in the output spans,
+  /// Every character in the input[text] appears in the output spans,
   /// ensuring 1:1 cursor-to-character mapping. Formatting markers are
   /// rendered with a dimmed style; content between markers is styled
   /// according to the formatting type.
@@ -91,7 +146,7 @@ class TextfSpanBuilder {
   /// - [styleResolver]: Optional cached [TextfStyleResolver] to prevent
   ///   expensive re-creation on every frame.
   ///
-  /// Returns a list of [InlineSpan] objects ([TextSpan] and [WidgetSpan]).
+  /// Returns a list of [InlineSpan] objects ([TextSpan] and[WidgetSpan]).
   List<InlineSpan> build(
     String text,
     BuildContext context,
@@ -112,8 +167,10 @@ class TextfSpanBuilder {
     final List<TextfToken> tokens;
     final Map<int, int> validPairs;
 
-    tokens = _tokenizer.tokenize(text, allowNewlineCrossing: false);
-    validPairs = PairingResolver.identifyPairs(tokens, allowNewlineCrossing: false);
+    // Use the static LRU cache instead of executing a new tokenization pass
+    final cacheEntry = _getTokensAndPairs(text, allowNewlineCrossing: false);
+    tokens = cacheEntry.tokens;
+    validPairs = cacheEntry.validPairs;
 
     // --- Style Resolution ---
     final resolver = styleResolver ?? TextfStyleResolver(context);
@@ -154,7 +211,7 @@ class TextfSpanBuilder {
     //
     // Preview mode activates when:
     //  1. cursorPosition != null (MarkerVisibility.whenActive)
-    //  2. Cursor is outside [openPos, closeEnd]
+    //  2. Cursor is outside[openPos, closeEnd]
     bool isScriptPreviewMode(int openIndex, int closeIndex) {
       if (cursorPosition == null) return false;
       final openPos = tokens[openIndex].position;
@@ -296,7 +353,7 @@ class TextfSpanBuilder {
           resolver: resolver,
           currentStyle: currentStyle,
           flushText: flushText,
-          tokenizer: _tokenizer,
+          builder: this,
         );
         if (nextIndex != null) {
           i = nextIndex;
@@ -471,7 +528,7 @@ class TextfSpanBuilder {
     required TextfStyleResolver resolver,
     required TextStyle Function() currentStyle,
     required void Function() flushText,
-    required TextfTokenizer tokenizer,
+    required TextfSpanBuilder builder,
   }) {
     // Verify complete link structure: [text](url)
     if (!_isCompleteLink(tokens, index)) {
@@ -504,12 +561,16 @@ class TextfSpanBuilder {
     // Emit opening bracket.
     spans.add(TextSpan(text: '[', style: markerStyle));
 
-    // Process link text: re-tokenize to detect nested formatting markers.
-    final innerTokens = tokenizer.tokenize(linkText);
+    // Process link text: fetch cached tokens and pairs to detect nested formatting markers.
+    final entry = builder._getTokensAndPairs(linkText, allowNewlineCrossing: true);
+    final innerTokens = entry.tokens;
+    final validPairs = entry.validPairs;
+
     final bool hasNested = innerTokens.any((t) => t is! TextToken);
     if (hasNested) {
       _processNestedLinkText(
         innerTokens: innerTokens,
+        validPairs: validPairs,
         spans: spans,
         linkStyle: linkStyle,
         markerStyle: markerStyle,
@@ -552,15 +613,15 @@ class TextfSpanBuilder {
   /// appears exactly once in [spans].
   ///
   /// Super/subscript inside link text is intentionally unsupported — inner
-  /// markers use [TextSpan] only (no [WidgetSpan] vertical displacement).
+  /// markers use [TextSpan] only (no[WidgetSpan] vertical displacement).
   static void _processNestedLinkText({
     required List<TextfToken> innerTokens,
+    required Map<int, int> validPairs,
     required List<InlineSpan> spans,
     required TextStyle linkStyle,
     required TextStyle markerStyle,
     required TextfStyleResolver resolver,
   }) {
-    final validPairs = PairingResolver.identifyPairs(innerTokens);
     final formatStack = <FormatStackEntry>[];
     final textBuffer = StringBuffer();
 
