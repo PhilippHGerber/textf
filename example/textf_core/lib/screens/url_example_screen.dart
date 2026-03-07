@@ -1,4 +1,6 @@
 // example/lib/screens/url_example_screen.dart
+// ignore_for_file: no-magic-number
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -108,7 +110,12 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
   void _showUrlOverlay(String url) {
     _removeOverlay();
 
-    _overlayEntry = OverlayEntry(
+    final OverlayState? overlayState = Overlay.maybeOf(context);
+    if (overlayState == null) {
+      return;
+    }
+
+    final OverlayEntry entry = OverlayEntry(
       builder: (context) => Positioned(
         bottom: 0,
         left: 0,
@@ -145,7 +152,8 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
       ),
     );
 
-    Overlay.of(context).insert(_overlayEntry!);
+    _overlayEntry = entry;
+    overlayState.insert(entry);
   }
 
   void _removeOverlay() {

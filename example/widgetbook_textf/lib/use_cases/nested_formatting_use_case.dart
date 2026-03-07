@@ -1,3 +1,5 @@
+// ignore_for_file: no-magic-number
+
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 import 'package:widgetbook/widgetbook.dart';

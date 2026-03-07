@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-import '/screens/web_demo_screen.dart';
+import '/shell/playground_shell.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const TextfWebDemo());
+  runApp(const TextfPlaygroundApp());
 }
 
-class TextfWebDemo extends StatefulWidget {
-  const TextfWebDemo({super.key});
+class TextfPlaygroundApp extends StatefulWidget {
+  const TextfPlaygroundApp({super.key});
 
   @override
-  State<TextfWebDemo> createState() => _TextfWebDemoState();
+  State<TextfPlaygroundApp> createState() => _TextfPlaygroundAppState();
 }
 
-class _TextfWebDemoState extends State<TextfWebDemo> {
+class _TextfPlaygroundAppState extends State<TextfPlaygroundApp> {
+  // ignore: avoid-late-keyword
   late final ValueNotifier<ThemeMode> _themeModeNotifier;
 
   @override
@@ -45,11 +46,9 @@ class _TextfWebDemoState extends State<TextfWebDemo> {
       builder: (context, currentMode, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Textf — Live Formatting Demo',
+          title: 'Textf Playground',
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.blue,
-            ),
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
             useMaterial3: true,
           ),
           darkTheme: ThemeData(
@@ -60,7 +59,7 @@ class _TextfWebDemoState extends State<TextfWebDemo> {
             useMaterial3: true,
           ),
           themeMode: currentMode,
-          home: WebDemoScreen(
+          home: PlaygroundShell(
             currentThemeMode: currentMode,
             toggleThemeMode: _toggleThemeMode,
           ),

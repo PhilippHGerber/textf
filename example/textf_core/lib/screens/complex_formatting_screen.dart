@@ -1,4 +1,6 @@
 // example/textf_core/lib/screens/complex_formatting_screen.dart
+// ignore_for_file: no-magic-number
+
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 
@@ -82,7 +84,7 @@ TextfOptions(
                   decorationThickness: 3,
                 ),
                 highlightStyle: TextStyle(
-                  backgroundColor: Colors.tealAccent.withValues(alpha: .4),
+                  backgroundColor: Colors.tealAccent.withValues(alpha: 0.4),
                   color: Colors.black, // Text color for highlight
                   fontStyle: FontStyle.italic,
                 ),

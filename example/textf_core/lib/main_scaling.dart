@@ -8,6 +8,7 @@ void main() {
   runApp(const MaterialApp(home: ScalingReproScreen()));
 }
 
+// ignore: prefer-match-file-name
 class ScalingReproScreen extends StatefulWidget {
   @Preview(
     name: 'Scaling Repro Screen',
@@ -22,6 +23,7 @@ class _ScalingReproScreenState extends State<ScalingReproScreen> {
   double _textScaleFactor = 1;
   double _fontSize = 14;
   MarkerVisibility _markerVisibility = MarkerVisibility.always;
+  // ignore: avoid-late-keyword
   late final TextfEditingController _editorController;
 
   @override

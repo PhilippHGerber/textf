@@ -1,4 +1,4 @@
-// ignore_for_file: no-magic-number
+// ignore_for_file: no-magic-number, avoid-late-keyword, no-empty-block
 
 // example/lib/screens/editing_controller_screen.dart
 import 'package:flutter/material.dart';

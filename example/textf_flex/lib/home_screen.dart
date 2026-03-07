@@ -1,3 +1,5 @@
+// ignore_for_file: no-magic-number
+
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart'; // Import your textf package
@@ -91,7 +93,7 @@ class HomeScreen extends StatelessWidget {
   // Helper function to capitalize the first letter of a string
   String _capitalize(String text) {
     if (text.isEmpty) return text;
-    return '${text[0].toUpperCase()}${text.substring(1)}';
+    return '${text[0].toUpperCase()}${text.characters.skip(1).string}';
   }
 
   String _formatSchemeName(FlexScheme scheme) {
@@ -103,7 +105,8 @@ class HomeScreen extends StatelessWidget {
     // Handle M3 suffix
     if (rawName.endsWith('M3')) {
       // Get the part before M3, replace underscores, capitalize first letter
-      final prefix = rawName.substring(0, rawName.length - 2);
+      final rawCharacters = rawName.characters;
+      final prefix = rawCharacters.getRange(0, rawCharacters.length - 2).string;
       final spacedPrefix = prefix.replaceAll('_', ' ');
       return '${_capitalize(spacedPrefix)} M3';
     } else {

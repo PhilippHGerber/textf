@@ -1,3 +1,5 @@
+// ignore_for_file: no-magic-number
+
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
@@ -63,7 +65,7 @@ Widget styleInheritanceUseCase(BuildContext context) {
                       italicStyle: TextStyle(
                         fontStyle: FontStyle.italic,
                         color: Colors.green,
-                        backgroundColor: Colors.yellow.withValues(alpha: .3),
+                        backgroundColor: Colors.yellow.withValues(alpha: 0.3),
                       ),
                       codeStyle: const TextStyle(
                         fontFamily: 'monospace',

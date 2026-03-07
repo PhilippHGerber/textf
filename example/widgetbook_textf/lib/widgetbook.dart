@@ -1,3 +1,5 @@
+// ignore_for_file: no-magic-number
+
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -8,6 +10,7 @@ import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 import 'widgetbook.directories.g.dart';
 
 @widgetbook.App()
+// ignore: prefer-match-file-name
 class WidgetbookApp extends StatelessWidget {
   const WidgetbookApp({super.key});
 

@@ -1,4 +1,6 @@
 // example/lib/screens/notification_example_screen.dart
+// ignore_for_file: no-magic-number
+
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 
@@ -103,9 +105,11 @@ ListTile( // ... code remains the same
                   // Actions are OK
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // ignore: no-empty-block
                     TextButton(onPressed: () {}, child: const Text('Yes')),
                     const SizedBox(width: 8),
                     TextButton(
+                      // ignore: no-empty-block
                       onPressed: () {},
                       style: TextButton.styleFrom(
                         foregroundColor: Theme.of(context).colorScheme.error,
@@ -174,7 +178,7 @@ class _NotificationSystemState extends State<NotificationSystem> {
             // Use theme colors
             color: theme.colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: .5)),
+            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
           ),
           child: Column(
             children: [

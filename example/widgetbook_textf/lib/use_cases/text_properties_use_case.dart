@@ -1,3 +1,5 @@
+// ignore_for_file: no-magic-number
+
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 import 'package:widgetbook/widgetbook.dart';
@@ -90,7 +92,7 @@ Widget textPropertiesUseCase(BuildContext context) {
 
   final selectionColor = context.knobs.color(
     label: 'Selection Color',
-    initialValue: Colors.blueAccent.withValues(alpha: .4),
+    initialValue: Colors.blueAccent.withValues(alpha: 0.4),
   );
 
   final hasTextHeightBehavior = context.knobs.boolean(

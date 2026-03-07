@@ -19,6 +19,7 @@ class TextfExampleApp extends StatefulWidget {
 class _TextfExampleAppState extends State<TextfExampleApp> {
   // Use ValueNotifier for simple state management
   // Initialize with system preference or default to dark
+  // ignore: avoid-late-keyword
   late final ValueNotifier<ThemeMode> _themeModeNotifier;
 
   @override

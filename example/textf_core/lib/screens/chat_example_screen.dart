@@ -1,3 +1,5 @@
+// ignore_for_file: no-magic-number
+
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 
@@ -214,7 +216,7 @@ class _ChatExampleState extends State<ChatExample> {
             // Use theme color for list background
             color: theme.colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: .5)),
+            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
           ),
           child: ListView.builder(
             padding: const EdgeInsets.all(8),
@@ -261,7 +263,7 @@ class _ChatExampleState extends State<ChatExample> {
                     // Border when not focused
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide(
-                      color: theme.colorScheme.outline.withValues(alpha: .7),
+                      color: theme.colorScheme.outline.withValues(alpha: 0.7),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(

@@ -1,3 +1,5 @@
+// ignore_for_file: no-magic-number
+
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 import 'package:widgetbook/widgetbook.dart';
@@ -41,7 +43,7 @@ Widget textfOptionsUseCase(BuildContext context) {
 
   final italicBackgroundColor = context.knobs.color(
     label: 'Italic Background',
-    initialValue: Colors.yellow.withValues(alpha: .3),
+    initialValue: Colors.yellow.withValues(alpha: 0.3),
   );
 
   // Strikethrough style options

@@ -1,3 +1,5 @@
+// ignore_for_file: no-magic-number, avoid-non-null-assertion, avoid-late-keyword
+
 import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
@@ -65,7 +67,6 @@ class ScrollingScenario extends BenchmarkScenario {
   };
 
   static List<String> _generateCorpus() {
-    // ignore: no-magic-number
     final random = Random(42);
     final parts = [
       '**Bold** ',
@@ -165,7 +166,7 @@ class AnimationScenario extends BenchmarkScenario {
   Widget build(BuildContext context, BenchmarkTarget target, int offset) {
     // offset is used as a proxy for animation progress here
     final progress = (offset % 100) / 100.0;
-    final fontSize = 10.0 + (progress * 20.0);
+    final fontSize = (progress * 20.0) + 10.0;
     final color = Color.lerp(Colors.blue, Colors.red, progress)!;
 
     final style = TextStyle(fontSize: fontSize, color: color);

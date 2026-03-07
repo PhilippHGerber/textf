@@ -1,4 +1,6 @@
 // example/lib/screens/screenshot_screen.dart
+// ignore_for_file: no-magic-number
+
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart'; // Import kDebugMode
@@ -6,67 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:textf/textf.dart'; // Import TextfOptions
-
-// Helper extension for cleaner null checks (optional)
-extension TextStyleCopyWithExtension on TextStyle? {
-  TextStyle copyWithNullable({
-    bool? inherit,
-    Color? color,
-    Color? backgroundColor,
-    double? fontSize,
-    FontWeight? fontWeight,
-    FontStyle? fontStyle,
-    double? letterSpacing,
-    double? wordSpacing,
-    TextBaseline? textBaseline,
-    double? height,
-    Locale? locale,
-    Paint? foreground,
-    Paint? background,
-    List<Shadow>? shadows,
-    List<FontFeature>? fontFeatures,
-    List<FontVariation>? fontVariations,
-    TextDecoration? decoration,
-    Color? decorationColor,
-    TextDecorationStyle? decorationStyle,
-    double? decorationThickness,
-    String? debugLabel,
-    String? fontFamily,
-    List<String>? fontFamilyFallback,
-    String? package,
-    TextOverflow? overflow,
-  }) {
-    // If the current style is null, start with an empty TextStyle
-    final currentStyle = this ?? const TextStyle();
-    return currentStyle.copyWith(
-      inherit: inherit,
-      color: color,
-      backgroundColor: backgroundColor,
-      fontSize: fontSize,
-      fontWeight: fontWeight,
-      fontStyle: fontStyle,
-      letterSpacing: letterSpacing,
-      wordSpacing: wordSpacing,
-      textBaseline: textBaseline,
-      height: height,
-      locale: locale,
-      foreground: foreground,
-      background: background,
-      shadows: shadows,
-      fontFeatures: fontFeatures,
-      fontVariations: fontVariations,
-      decoration: decoration,
-      decorationColor: decorationColor,
-      decorationStyle: decorationStyle,
-      decorationThickness: decorationThickness,
-      debugLabel: debugLabel,
-      fontFamily: fontFamily,
-      fontFamilyFallback: fontFamilyFallback,
-      package: package,
-      overflow: overflow,
-    );
-  }
-}
 
 class ScreenshotScreen extends StatefulWidget {
   const ScreenshotScreen({
@@ -276,6 +217,7 @@ for more details.
               ),
               maxLines: 11,
               onChanged: (value) {
+                // ignore: no-empty-block
                 setState(() {}); // Rebuild preview on text change
               },
             ),
@@ -598,7 +540,7 @@ for more details.
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: Colors.blueAccent.withValues(alpha: .5),
+                                  color: Colors.blueAccent.withValues(alpha: 0.5),
                                   blurRadius: 3,
                                   spreadRadius: 1,
                                 ),
