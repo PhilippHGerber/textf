@@ -1,7 +1,6 @@
 import '../models/textf_token.dart';
 import '../parsing/components/link_validator.dart';
-import '../parsing/components/pairing_resolver.dart';
-import '../parsing/textf_tokenizer.dart';
+import '../parsing/textf_parser.dart';
 import 'constants.dart';
 
 /// Utility functions for text formatting operations.
@@ -33,7 +32,6 @@ class FormattingUtils {
         return true;
       }
     }
-
     return false;
   }
 
@@ -59,7 +57,6 @@ class FormattingUtils {
         return true;
       }
     }
-
     return false;
   }
 
@@ -69,12 +66,15 @@ class FormattingUtils {
   /// display text from links (`[text](url)` -> `text`), and removes escape
   /// backslashes. Unpaired markers (e.g., `2 * 3`) and widget placeholders
   /// (e.g., `{icon}`) are left untouched.
+  ///
+  /// Uses the shared LRU cache so repeated calls do not trigger expensive re-tokenization.
   static String stripFormatting(String text) {
     if (!hasFormatting(text)) return text;
 
-    final tokenizer = TextfTokenizer();
-    final tokens = tokenizer.tokenize(text);
-    final validPairs = PairingResolver.identifyPairs(tokens);
+    // Fetch tokens and pairing results from the shared LRU parser cache.
+    final cacheResult = TextfParser.getCachedTokensAndPairs(text);
+    final tokens = cacheResult.tokens;
+    final validPairs = cacheResult.validPairs;
 
     final buffer = StringBuffer();
     int i = 0;
@@ -99,7 +99,7 @@ class FormattingUtils {
           // Extract the link text and recursively strip any nested formatting
           final linkText = (tokens[i + kLinkTextOffset] as TextToken).value;
           buffer.write(stripFormatting(linkText));
-          i += kLinkTokenCount; // Skip the entire link token link structure
+          i += kLinkTokenCount; // Skip the entire link token structure
         } else {
           // Broken link syntax, write literal bracket
           buffer.write('[');

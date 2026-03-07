@@ -1,13 +1,14 @@
 // Override of buildTextSpan must match Flutter's parameter order.
-// ignore_for_file: always_put_required_named_parameters_first
 
 import 'package:flutter/material.dart';
 
+import '../core/formatting_utils.dart';
 import '../core/textf_limits.dart';
 import '../core/textf_style_utils.dart';
 import '../styling/textf_style_resolver.dart';
 import '../widgets/textf_ext.dart';
 import '../widgets/textf_options.dart';
+import '../widgets/textf_options_data.dart';
 import 'marker_visibility.dart';
 import 'textf_span_builder.dart';
 
@@ -95,9 +96,6 @@ class TextfEditingController extends TextEditingController {
   // --- Caching State ---
   // We heavily cache the expensive lists of InlineSpans to prevent Garbage Collection
   // jank caused by massive string allocations during cursor blink.
-  // CRITICAL: We strictly DO NOT cache the final root TextSpan object. Returning the exact
-  // same root TextSpan instance breaks Flutter's EditableText inline widget diffing
-  // and causes memory leaks. We must always return a `new TextSpan(...)`.
   List<InlineSpan>? _cachedParsedSpans;
   List<InlineSpan>? _cachedFinalChildren;
   String? _lastText;
@@ -105,7 +103,7 @@ class TextfEditingController extends TextEditingController {
   MarkerVisibility? _lastVisibility;
   TextStyle? _lastStyle;
   ThemeData? _lastTheme;
-  TextfOptions? _lastNearestOptions;
+  TextfOptionsData? _lastOptionsData;
   TextRange? _lastComposing;
   bool? _lastWithComposing;
   TextfStyleResolver? _cachedResolver;
@@ -184,13 +182,15 @@ class TextfEditingController extends TextEditingController {
   @override
   TextSpan buildTextSpan({
     required BuildContext context,
-    TextStyle? style,
     required bool withComposing,
+    TextStyle? style,
   }) {
-    // 1. Fast path: Empty Text
-    // Mimics native TextEditingController, bypassing all custom logic.
-    // This drops high UI/Raster time down to baseline when the field is empty.
-    if (text.isEmpty) {
+    // 1. Fast path: Empty Text OR Plain text without any markers AND no active composing region.
+    // This drops high UI/Raster time down to baseline when formatting isn't needed.
+    // Skip fast path when composing is active so IME underline renders correctly.
+    final bool hasActiveComposing =
+        withComposing && value.composing.isValid && !value.composing.isCollapsed;
+    if (!hasActiveComposing && (text.isEmpty || !FormattingUtils.hasFormatting(text))) {
       return TextSpan(style: style, text: text);
     }
 
@@ -206,12 +206,12 @@ class TextfEditingController extends TextEditingController {
 
     // 3. Extract inputs for cache matching (O(1)).
     final ThemeData theme = Theme.of(context);
-    final TextfOptions? nearestOptions = TextfOptions.maybeOf(context);
+
+    // We fetch the pre-merged Data class, allowing instant O(1) equality check
+    final TextfOptionsData? currentOptionsData = TextfOptions.maybeOf(context);
 
     final bool themeMatch = _isSameTheme(_lastTheme, theme);
-    // InheritedWidgets are immutable. O(1) identity check completely removes
-    // the expensive O(Depth) tree-walk on every frame.
-    final bool optionsMatch = _lastNearestOptions == nearestOptions;
+    final bool optionsMatch = _lastOptionsData == currentOptionsData;
 
     final bool coreCacheHit = _cachedParsedSpans != null &&
         _lastText == text &&
@@ -222,27 +222,25 @@ class TextfEditingController extends TextEditingController {
         optionsMatch;
 
     // 4. FULL CACHE HIT (Core Spans + Composing Region)
-    // If nothing changed, we reuse the fully composed children list.
-    // We MUST return a `new TextSpan` to safely satisfy EditableText's update
-    // contract without leaking WidgetSpans, but skipping the list allocations
-    // eliminates the Garbage Collection stutter.
+    final cachedFinalChildren = _cachedFinalChildren;
     if (coreCacheHit &&
-        _cachedFinalChildren != null &&
+        cachedFinalChildren != null &&
         _lastComposing == value.composing &&
         _lastWithComposing == withComposing) {
-      return TextSpan(style: style, children: _cachedFinalChildren);
+      return TextSpan(style: style, children: cachedFinalChildren);
     }
 
     // 5. CACHE MISS (Core Spans)
-    List<InlineSpan> fullSpans;
-    if (coreCacheHit) {
-      fullSpans = _cachedParsedSpans!;
+    List<InlineSpan>? fullSpans;
+
+    if (coreCacheHit && _cachedParsedSpans != null) {
+      fullSpans = _cachedParsedSpans;
     } else {
       if (text.length > _maxLiveFormattingLength) {
         fullSpans = <InlineSpan>[TextSpan(text: text)];
       } else {
         if (_cachedResolver == null || !themeMatch || !optionsMatch) {
-          _cachedResolver = TextfStyleResolver(context);
+          _cachedResolver = TextfStyleResolver.withState(theme: theme, options: currentOptionsData);
         }
 
         fullSpans = _spanBuilder.build(
@@ -260,15 +258,18 @@ class TextfEditingController extends TextEditingController {
       _lastVisibility = _markerVisibility;
       _lastStyle = style;
       _lastTheme = theme;
-      _lastNearestOptions = nearestOptions;
+      _lastOptionsData = currentOptionsData;
     }
+
+    // Fallback in case fullSpans couldn't be resolved
+    final resolvedFullSpans = fullSpans ?? <InlineSpan>[];
 
     // 6. APPLY COMPOSING REGION
     final List<InlineSpan> finalChildren;
 
     if (!withComposing || !value.composing.isValid || value.composing.isCollapsed) {
       // No active composing region, just use the raw parsed spans.
-      finalChildren = fullSpans;
+      finalChildren = resolvedFullSpans;
     } else {
       // Inject IME underline into the spans
       final TextRange composing = value.composing;
@@ -277,16 +278,16 @@ class TextfEditingController extends TextEditingController {
 
       int currentOffset = 0;
 
-      for (int i = 0; i < fullSpans.length; i++) {
-        final InlineSpan span = fullSpans[i];
+      for (int i = 0; i < resolvedFullSpans.length; i++) {
+        final InlineSpan span = resolvedFullSpans[i];
         final int spanLength = span is TextSpan ? (span.text?.length ?? 0) : 1;
         final int spanStart = currentOffset;
         final int spanEnd = currentOffset + spanLength;
 
         if (spanEnd <= composing.start || spanStart >= composing.end) {
           finalChildren.add(span);
-        } else if (span is TextSpan && span.text != null && span.text!.isNotEmpty) {
-          final String rawText = span.text!;
+        } else if (span is TextSpan && (span.text ?? '').isNotEmpty) {
+          final String rawText = span.text ?? '';
           final int startInSpan = (composing.start > spanStart) ? composing.start - spanStart : 0;
           final int endInSpan = (composing.end < spanEnd) ? composing.end - spanStart : spanLength;
 

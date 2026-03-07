@@ -100,10 +100,8 @@ void main() {
           ),
         );
 
-        expect(result.children, isNotNull);
-        expect(result.children!.length, 1);
-        final child = result.children!.first as TextSpan;
-        expect(child.text, 'hello world');
+        // Plain text without composing takes the fast path: text is set directly, not via children
+        expect(result.text, 'hello world');
       });
 
       testWidgets('applies composing underline decoration', (tester) async {
@@ -260,7 +258,8 @@ void main() {
                   style: const TextStyle(),
                   withComposing: true,
                 );
-                expect(result.children, isNotNull);
+                // 'hello world' has no formatting → fast-path returns TextSpan(text:...)
+                expect(result.text ?? result.children, isNotNull);
                 return Container();
               },
             ),
@@ -345,9 +344,10 @@ void main() {
           ),
         );
 
-        // Should not apply composing underline when withComposing is false
-        final child = result.children!.first as TextSpan;
-        expect(child.style?.decoration, isNot(TextDecoration.underline));
+        // 'hello' has no formatting and withComposing is false → fast-path
+        // returns a plain TextSpan(text: ...) with no composing underline.
+        expect(result.text, 'hello');
+        expect(result.style?.decoration, isNot(TextDecoration.underline));
       });
     });
 

@@ -6,12 +6,13 @@ final class TextfLimits {
   TextfLimits._();
 
   /// Maximum number of entries in the parser LRU cache.
-  static const int maxCacheEntries = 200;
+  /// Increased to 1000 to better support long list views and chat applications
+  /// without causing cache eviction thrashing.
+  static const int maxCacheEntries = 1000;
 
   /// Maximum total characters allowed across all keys in the cache.
-  /// Used alongside[maxCacheEntries] for memory-aware LRU eviction.
-  /// Prevents memory bloat if the cache is filled with maximum-length strings.
-  static const int maxCacheTotalCharacters = 50000;
+  /// Increased to accommodate the larger cache entry limit.
+  static const int maxCacheTotalCharacters = 100000;
 
   /// Maximum length of a string eligible for caching.
   /// Strings longer than this are parsed on-demand to prevent memory bloating.

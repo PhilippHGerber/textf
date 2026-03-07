@@ -382,13 +382,11 @@ class _SpanBuildState {
           flushText();
           final TextStyle style;
           final pos = cursorPosition;
-          if (pos != null) {
-            style = pos >= token.position && pos <= token.position + 1
-                ? activeMarkerStyle
-                : inactiveMarkerStyle;
-          } else {
-            style = activeMarkerStyle;
-          }
+          style = pos != null
+              ? pos >= token.position && pos <= token.position + 1
+                  ? activeMarkerStyle
+                  : inactiveMarkerStyle
+              : activeMarkerStyle;
           spans.add(TextSpan(text: r'\', style: style));
       }
       i++;

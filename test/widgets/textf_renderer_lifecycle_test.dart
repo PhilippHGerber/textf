@@ -184,8 +184,8 @@ void main() {
       // Verify called effectively again (total 2)
       expect(
         spyParser.parseCallCount,
-        2,
-        reason: 'Parser SHOULD be called again when TextAlign changes',
+        1,
+        reason: 'Parser should NOT be called again when TextAlign changes (layout-only prop)',
       );
     });
 
@@ -236,7 +236,11 @@ void main() {
           ),
         ),
       );
-      expect(spyParser.parseCallCount, 2, reason: 'Parser SHOULD be called when maxLines changes');
+      expect(
+        spyParser.parseCallCount,
+        1,
+        reason: 'Parser should NOT be called when maxLines changes (layout-only prop)',
+      );
     });
 
     testWidgets('Changing non-layout props (selectionColor) DOES NOT invalidate cache',
@@ -854,8 +858,8 @@ void main() {
 
         expect(
           spyParser.parseCallCount,
-          2,
-          reason: 'Parser SHOULD be called again when textHeightBehavior changes',
+          1,
+          reason: 'Parser should NOT be called when textHeightBehavior changes (layout-only prop)',
         );
       });
 
@@ -916,8 +920,9 @@ void main() {
 
         expect(
           spyParser.parseCallCount,
-          2,
-          reason: 'Parser SHOULD be called when textHeightBehavior changes from null to value',
+          1,
+          reason:
+              'Parser should NOT be called when textHeightBehavior changes from null to value (layout-only prop)',
         );
       });
 
@@ -978,8 +983,9 @@ void main() {
 
         expect(
           spyParser.parseCallCount,
-          2,
-          reason: 'Parser SHOULD be called when textHeightBehavior changes from value to null',
+          1,
+          reason:
+              'Parser should NOT be called when textHeightBehavior changes from value to null (layout-only prop)',
         );
       });
 
@@ -1174,8 +1180,8 @@ void main() {
 
         expect(
           spyParser.parseCallCount,
-          2,
-          reason: 'Parser SHOULD be called again when locale changes',
+          1,
+          reason: 'Parser should NOT be called when locale changes (layout-only prop)',
         );
       });
 
@@ -1232,8 +1238,9 @@ void main() {
 
         expect(
           spyParser.parseCallCount,
-          2,
-          reason: 'Parser SHOULD be called when locale changes from null to value',
+          1,
+          reason:
+              'Parser should NOT be called when locale changes from null to value (layout-only prop)',
         );
       });
 
@@ -1290,8 +1297,9 @@ void main() {
 
         expect(
           spyParser.parseCallCount,
-          2,
-          reason: 'Parser SHOULD be called when locale changes from value to null',
+          1,
+          reason:
+              'Parser should NOT be called when locale changes from value to null (layout-only prop)',
         );
       });
 
@@ -1349,8 +1357,8 @@ void main() {
 
         expect(
           spyParser.parseCallCount,
-          2,
-          reason: 'Parser SHOULD be called when language code changes',
+          1,
+          reason: 'Parser should NOT be called when language code changes (layout-only prop)',
         );
       });
 
@@ -1408,8 +1416,8 @@ void main() {
 
         expect(
           spyParser.parseCallCount,
-          2,
-          reason: 'Parser SHOULD be called when country code changes',
+          1,
+          reason: 'Parser should NOT be called when country code changes (layout-only prop)',
         );
       });
 
@@ -1591,8 +1599,9 @@ void main() {
 
         expect(
           spyParser.parseCallCount,
-          2,
-          reason: 'Parser SHOULD be called when switching between LTR and RTL locales',
+          1,
+          reason:
+              'Parser should NOT be called when switching between LTR and RTL locales (layout-only prop)',
         );
       });
     });
@@ -1661,8 +1670,9 @@ void main() {
 
         expect(
           spyParser.parseCallCount,
-          2,
-          reason: 'Parser should be called when multiple properties change',
+          1,
+          reason:
+              'Parser should NOT be called when only layout-only props change (locale and textHeightBehavior)',
         );
       });
     });

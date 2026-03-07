@@ -53,7 +53,8 @@ void main() {
         );
 
         expect(result, isA<TextSpan>());
-        expect(result.children, isNotNull);
+        // Plain text takes the fast path: returns TextSpan with text, not children
+        expect(result.text ?? result.children, isNotNull);
       });
     });
 

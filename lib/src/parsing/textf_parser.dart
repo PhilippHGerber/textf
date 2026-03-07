@@ -36,15 +36,10 @@ class _ParsedCacheEntry {
 /// - Performance: Caches tokens and formatting pairs for frequently used text.
 class TextfParser {
   /// Creates a new [TextfParser] instance.
-  ///
-  /// - [tokenizer]: An optional custom tokenizer instance. If not provided,
-  ///   a default [TextfTokenizer] is created.
-  TextfParser({
-    TextfTokenizer? tokenizer,
-  }) : _tokenizer = tokenizer ?? TextfTokenizer();
+  TextfParser();
 
-  /// TextfTokenizer instance used to break down text into tokens.
-  final TextfTokenizer _tokenizer;
+  /// Shared static tokenizer for static cache access.
+  static final TextfTokenizer _sharedTokenizer = TextfTokenizer();
 
   /// Cache for tokens and pairing results.
   /// Uses a memory-aware LRU cache to prevent memory bloat.
@@ -62,6 +57,35 @@ class TextfParser {
   /// The cache will automatically rebuild as text is parsed.
   static void clearCache() {
     _cache.clear();
+  }
+
+  /// Returns the number of entries currently in the static parser cache.
+  ///
+  /// Exposed for testing purposes to verify cache hit/miss behavior
+  /// without needing to inject a mock tokenizer.
+  static int get cacheLength => _cache.length;
+
+  /// Retrieves tokenized text and valid pairs, utilizing the shared LRU cache.
+  /// Used internally by the parser and exposed for shared utilities (like `stripFormatting`).
+  static ({List<TextfToken> tokens, Map<int, int> validPairs}) getCachedTokensAndPairs(
+    String text,
+  ) {
+    if (text.length > TextfLimits.maxCacheKeyLength) {
+      final tokens = _sharedTokenizer.tokenize(text);
+      final validPairs = PairingResolver.identifyPairs(tokens);
+      return (tokens: tokens, validPairs: validPairs);
+    }
+
+    final cached = _cache.get(text);
+    if (cached != null) {
+      return (tokens: cached.tokens, validPairs: cached.matchingPairs);
+    }
+
+    final tokens = _sharedTokenizer.tokenize(text);
+    final validPairs = PairingResolver.identifyPairs(tokens);
+    _cache.set(text, _ParsedCacheEntry(tokens, validPairs));
+
+    return (tokens: tokens, validPairs: validPairs);
   }
 
   /// Parses formatted text into a list of styled [InlineSpan] objects.
@@ -111,33 +135,10 @@ class TextfParser {
       return <InlineSpan>[TextSpan(text: text, style: baseStyle)];
     }
 
-    // --- Cache Lookup & Update ---
-    final List<TextfToken> tokens;
-    final Map<int, int> validPairs;
-
-    // Only attempt caching if the text length is within reasonable limits.
-    // Extremely long strings are parsed on-demand to avoid memory issues.
-    if (text.length <= TextfLimits.maxCacheKeyLength) {
-      // The cache handles LRU promotion internally on get()
-      final cached = _cache.get(text);
-
-      if (cached != null) {
-        tokens = cached.tokens;
-        validPairs = cached.matchingPairs;
-      } else {
-        // 1. Tokenize
-        tokens = _tokenizer.tokenize(text);
-        // 2. Pairing
-        validPairs = PairingResolver.identifyPairs(tokens);
-
-        // Update Cache (LRU and memory eviction handled internally)
-        _cache.set(text, _ParsedCacheEntry(tokens, validPairs));
-      }
-    } else {
-      // Too long to cache, just process directly
-      tokens = _tokenizer.tokenize(text);
-      validPairs = PairingResolver.identifyPairs(tokens);
-    }
+    // 1 & 2. Tokenize and Pair (leveraging the LRU Cache via static helper)
+    final cacheResult = getCachedTokensAndPairs(text);
+    final tokens = cacheResult.tokens;
+    final validPairs = cacheResult.validPairs;
 
     // 3. Style Resolver
     final resolver = TextfStyleResolver(context);

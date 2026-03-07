@@ -2,13 +2,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:textf/src/models/textf_token.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/textf_options.dart';
+import 'package:textf/src/widgets/textf_options_data.dart';
 
 void main() {
   const baseStyle = TextStyle(fontSize: 14, color: Colors.black);
 
-  group('TextfOptions effective getters', () {
-    testWidgets('getEffectiveUnderlineStyle returns merged style', (tester) async {
+  group('TextfStyleResolver resolves styles from TextfOptionsData', () {
+    testWidgets('resolves underline style', (tester) async {
       TextStyle? result;
 
       await tester.pumpWidget(
@@ -17,8 +20,8 @@ void main() {
             underlineStyle: const TextStyle(color: Colors.green),
             child: Builder(
               builder: (context) {
-                final options = TextfOptions.maybeOf(context)!;
-                result = options.getEffectiveUnderlineStyle(context, baseStyle);
+                final resolver = TextfStyleResolver(context);
+                result = resolver.resolveStyle(FormatMarkerType.underline, baseStyle);
                 return const SizedBox();
               },
             ),
@@ -30,7 +33,7 @@ void main() {
       expect(result!.color, Colors.green);
     });
 
-    testWidgets('getEffectiveHighlightStyle returns merged style', (tester) async {
+    testWidgets('resolves highlight style', (tester) async {
       TextStyle? result;
 
       await tester.pumpWidget(
@@ -39,8 +42,8 @@ void main() {
             highlightStyle: const TextStyle(backgroundColor: Colors.yellow),
             child: Builder(
               builder: (context) {
-                final options = TextfOptions.maybeOf(context)!;
-                result = options.getEffectiveHighlightStyle(context, baseStyle);
+                final resolver = TextfStyleResolver(context);
+                result = resolver.resolveStyle(FormatMarkerType.highlight, baseStyle);
                 return const SizedBox();
               },
             ),
@@ -52,7 +55,7 @@ void main() {
       expect(result!.backgroundColor, Colors.yellow);
     });
 
-    testWidgets('getEffectiveSuperscriptStyle returns merged style', (tester) async {
+    testWidgets('resolves superscript style', (tester) async {
       TextStyle? result;
 
       await tester.pumpWidget(
@@ -61,8 +64,8 @@ void main() {
             superscriptStyle: const TextStyle(fontSize: 10),
             child: Builder(
               builder: (context) {
-                final options = TextfOptions.maybeOf(context)!;
-                result = options.getEffectiveSuperscriptStyle(context, baseStyle);
+                final resolver = TextfStyleResolver(context);
+                result = resolver.resolveStyle(FormatMarkerType.superscript, baseStyle);
                 return const SizedBox();
               },
             ),
@@ -74,7 +77,7 @@ void main() {
       expect(result!.fontSize, 10);
     });
 
-    testWidgets('getEffectiveSubscriptStyle returns merged style', (tester) async {
+    testWidgets('resolves subscript style', (tester) async {
       TextStyle? result;
 
       await tester.pumpWidget(
@@ -83,8 +86,8 @@ void main() {
             subscriptStyle: const TextStyle(fontSize: 10),
             child: Builder(
               builder: (context) {
-                final options = TextfOptions.maybeOf(context)!;
-                result = options.getEffectiveSubscriptStyle(context, baseStyle);
+                final resolver = TextfStyleResolver(context);
+                result = resolver.resolveStyle(FormatMarkerType.subscript, baseStyle);
                 return const SizedBox();
               },
             ),
@@ -96,8 +99,8 @@ void main() {
       expect(result!.fontSize, 10);
     });
 
-    testWidgets('getEffectiveSuperscriptBaselineFactor returns value', (tester) async {
-      double? result;
+    testWidgets('reads superscriptBaselineFactor from data', (tester) async {
+      TextfOptionsData? data;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -105,8 +108,7 @@ void main() {
             superscriptBaselineFactor: 0.4,
             child: Builder(
               builder: (context) {
-                final options = TextfOptions.maybeOf(context)!;
-                result = options.getEffectiveSuperscriptBaselineFactor(context);
+                data = TextfOptions.maybeOf(context);
                 return const SizedBox();
               },
             ),
@@ -114,11 +116,11 @@ void main() {
         ),
       );
 
-      expect(result, 0.4);
+      expect(data!.superscriptBaselineFactor, 0.4);
     });
 
-    testWidgets('getEffectiveSubscriptBaselineFactor returns value', (tester) async {
-      double? result;
+    testWidgets('reads subscriptBaselineFactor from data', (tester) async {
+      TextfOptionsData? data;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -126,8 +128,7 @@ void main() {
             subscriptBaselineFactor: 0.3,
             child: Builder(
               builder: (context) {
-                final options = TextfOptions.maybeOf(context)!;
-                result = options.getEffectiveSubscriptBaselineFactor(context);
+                data = TextfOptions.maybeOf(context);
                 return const SizedBox();
               },
             ),
@@ -135,11 +136,11 @@ void main() {
         ),
       );
 
-      expect(result, 0.3);
+      expect(data!.subscriptBaselineFactor, 0.3);
     });
 
-    testWidgets('getEffectiveScriptFontSizeFactor returns value', (tester) async {
-      double? result;
+    testWidgets('reads scriptFontSizeFactor from data', (tester) async {
+      TextfOptionsData? data;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -147,8 +148,7 @@ void main() {
             scriptFontSizeFactor: 0.5,
             child: Builder(
               builder: (context) {
-                final options = TextfOptions.maybeOf(context)!;
-                result = options.getEffectiveScriptFontSizeFactor(context);
+                data = TextfOptions.maybeOf(context);
                 return const SizedBox();
               },
             ),
@@ -156,12 +156,11 @@ void main() {
         ),
       );
 
-      expect(result, 0.5);
+      expect(data!.scriptFontSizeFactor, 0.5);
     });
 
-    testWidgets('getEffectiveLinkHoverStyle returns merged style', (tester) async {
+    testWidgets('resolves link hover style', (tester) async {
       TextStyle? result;
-      const normalLinkStyle = TextStyle(color: Colors.blue);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -169,8 +168,8 @@ void main() {
             linkHoverStyle: const TextStyle(color: Colors.red),
             child: Builder(
               builder: (context) {
-                final options = TextfOptions.maybeOf(context)!;
-                result = options.getEffectiveLinkHoverStyle(context, normalLinkStyle);
+                final resolver = TextfStyleResolver(context);
+                result = resolver.resolveLinkHoverStyle(baseStyle);
                 return const SizedBox();
               },
             ),
@@ -182,17 +181,18 @@ void main() {
       expect(result!.color, Colors.red);
     });
 
-    testWidgets('getEffectiveLinkHoverStyle returns null when not set', (tester) async {
-      TextStyle? result;
-      const normalLinkStyle = TextStyle(color: Colors.blue);
+    testWidgets('returns normal link style when hover not set', (tester) async {
+      TextStyle? normal;
+      TextStyle? hover;
 
       await tester.pumpWidget(
         MaterialApp(
           home: TextfOptions(
             child: Builder(
               builder: (context) {
-                final options = TextfOptions.maybeOf(context)!;
-                result = options.getEffectiveLinkHoverStyle(context, normalLinkStyle);
+                final resolver = TextfStyleResolver(context);
+                normal = resolver.resolveLinkStyle(baseStyle);
+                hover = resolver.resolveLinkHoverStyle(baseStyle);
                 return const SizedBox();
               },
             ),
@@ -200,29 +200,23 @@ void main() {
         ),
       );
 
-      expect(result, isNull);
+      // Without a linkHoverStyle, hover falls back to normal link style
+      expect(hover, normal);
     });
   });
 
-  group('TextfOptions.hasSameStyle', () {
+  group('TextfOptionsData equality', () {
     test('returns true for identical options', () {
-      const options = TextfOptions(
+      const data = TextfOptionsData(
         boldStyle: TextStyle(fontWeight: FontWeight.bold),
-        child: SizedBox(),
       );
-      expect(options.hasSameStyle(options), isTrue);
+      expect(data, data);
     });
 
     test('returns false when superscriptBaselineFactor differs', () {
-      const a = TextfOptions(
-        superscriptBaselineFactor: 0.4,
-        child: SizedBox(),
-      );
-      const b = TextfOptions(
-        superscriptBaselineFactor: 0.5,
-        child: SizedBox(),
-      );
-      expect(a.hasSameStyle(b), isFalse);
+      const a = TextfOptionsData(superscriptBaselineFactor: 0.4);
+      const b = TextfOptionsData(superscriptBaselineFactor: 0.5);
+      expect(a == b, isFalse);
     });
   });
 }

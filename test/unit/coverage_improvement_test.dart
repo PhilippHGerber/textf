@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
+import 'package:textf/src/widgets/textf_options_data.dart';
 import 'package:textf/textf.dart';
 
 void main() {
@@ -126,11 +127,9 @@ void main() {
     });
   });
 
-  group('Nested TextfOptions merging in computeOptionsResolvedHash', () {
-    const baseStyle = TextStyle(fontSize: 14, color: Colors.black);
-
+  group('Nested TextfOptions merging via TextfOptionsData', () {
     testWidgets('merges same style property from two levels', (tester) async {
-      int? hash;
+      TextfOptionsData? data;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -159,7 +158,7 @@ void main() {
               linkHoverStyle: const TextStyle(decoration: TextDecoration.underline),
               child: Builder(
                 builder: (context) {
-                  hash = TextfOptions.computeResolvedHash(context, baseStyle);
+                  data = TextfOptions.maybeOf(context);
                   return const SizedBox();
                 },
               ),
@@ -168,7 +167,14 @@ void main() {
         ),
       );
 
-      expect(hash, isNot(0));
+      // Merged data should be present and contain properties from both levels
+      expect(data, isNotNull);
+      // Child italic color (from child) should be merged on top of parent red
+      expect(data!.italicStyle?.fontStyle, FontStyle.italic); // from child
+      // Child underline color wins
+      expect(data!.underlineStyle?.color, Colors.green); // from child
+      // Parent link color merged with child decoration
+      expect(data!.linkStyle?.color, Colors.blue); // from parent (child didn't specify color)
     });
   });
 

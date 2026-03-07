@@ -5,30 +5,10 @@ import 'package:flutter/material.dart';
 
 import '../../parsing/textf_parser.dart';
 import '../textf_options.dart';
-
-/// Cache key record for [TextfRendererState].
-///
-/// Groups all scalar/structural widget inputs into a single record so that
-/// cache-hit detection is a single `==` comparison instead of 12 individual
-/// field checks. [Map] and [ThemeData] are excluded because they lack
-/// structural equality or use an intentional smart comparison.
-typedef _RendererCacheKey = ({
-  String data,
-  TextStyle baseStyle,
-  TextScaler textScaler,
-  TextAlign? textAlign,
-  TextDirection? textDirection,
-  bool? softWrap,
-  TextOverflow? overflow,
-  int? maxLines,
-  TextWidthBasis? textWidthBasis,
-  ui.TextHeightBehavior? textHeightBehavior,
-  Locale? locale,
-  int optionsHash,
-});
+import '../textf_options_data.dart';
 
 /// Internal StatefulWidget that handles parsing, styling resolution via the parser,
-/// and hot reload notification. It bridges the Textf widget parameters with
+/// and cache invalidation. It bridges the Textf widget parameters with
 /// the parsing and rendering logic provided by the TextfParser.
 class TextfRenderer extends StatefulWidget {
   /// Creates a new TextfRenderer widget.
@@ -106,101 +86,92 @@ class TextfRenderer extends StatefulWidget {
   State<TextfRenderer> createState() => TextfRendererState();
 }
 
-/// The state class for [TextfRenderer] that builds the text widget
+/// The state class for [TextfRenderer] that builds the text widget and manages caching.
 class TextfRendererState extends State<TextfRenderer> {
   /// Cached list of spans from the last parse.
   List<InlineSpan>? _cachedSpans;
 
-  /// Composite cache key for all scalar/structural widget inputs.
-  _RendererCacheKey? _lastKey;
-
-  /// Kept separate: [Map] lacks structural equality.
-  Map<String, InlineSpan>? _lastPlaceholders;
-
-  /// Kept separate: uses an intentional smart 4-property comparison.
+  // Cached dependencies to detect inherited changes
   ThemeData? _lastTheme;
+  TextfOptionsData? _lastOptions;
+  DefaultTextStyle? _lastDefaultTextStyle;
+  TextScaler? _lastMediaQueryScaler;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final theme = Theme.of(context);
+    final options = TextfOptions.maybeOf(context);
+    final defaultTextStyle = DefaultTextStyle.of(context);
+    final mediaQueryScaler = MediaQuery.textScalerOf(context);
+
+    // Smart Theme comparison: only invalidate if properties affecting parsing change.
+    final lastTheme = _lastTheme;
+    final bool themeMatch = lastTheme != null &&
+        lastTheme.colorScheme.primary == theme.colorScheme.primary &&
+        lastTheme.colorScheme.onSurfaceVariant == theme.colorScheme.onSurfaceVariant &&
+        lastTheme.colorScheme.surfaceContainer == theme.colorScheme.surfaceContainer &&
+        lastTheme.colorScheme.brightness == theme.colorScheme.brightness;
+
+    // O(1) equality check via TextfOptionsData's overridden == operator.
+    final bool optionsMatch = _lastOptions == options;
+
+    // DefaultTextStyle affects our baseStyle fallback.
+    final lastDefaultStyle = _lastDefaultTextStyle;
+    final bool defaultStyleMatch = lastDefaultStyle?.style == defaultTextStyle.style;
+
+    final bool scalerMatch = _lastMediaQueryScaler == mediaQueryScaler;
+
+    // If any inherited inputs to the parser have changed, clear the cache.
+    if (!themeMatch || !optionsMatch || !defaultStyleMatch || !scalerMatch) {
+      _cachedSpans = null;
+      _lastTheme = theme;
+      _lastOptions = options;
+      _lastDefaultTextStyle = defaultTextStyle;
+      _lastMediaQueryScaler = mediaQueryScaler;
+    }
+  }
+
+  @override
+  void didUpdateWidget(TextfRenderer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Only invalidate spans if parser inputs change.
+    // Changing layout properties like maxLines or textAlign will NOT trigger a re-parse!
+    if (widget.data != oldWidget.data ||
+        widget.style != oldWidget.style ||
+        widget.textScaler != oldWidget.textScaler ||
+        !mapEquals(widget.placeholders, oldWidget.placeholders)) {
+      _cachedSpans = null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    // Read directly from context or widget to guarantee non-null without '!'
+    final currentBaseStyle = widget.style ?? DefaultTextStyle.of(context).style;
+    final effectiveScaler = widget.textScaler ?? MediaQuery.textScalerOf(context);
 
-    final DefaultTextStyle defaultTextStyle = DefaultTextStyle.of(context);
-    final TextStyle currentBaseStyle = widget.style ?? defaultTextStyle.style;
-    final TextScaler effectiveScaler = widget.textScaler ?? MediaQuery.textScalerOf(context);
+    // Local variable for type promotion
+    List<InlineSpan>? spans = _cachedSpans;
 
-    // --- Memoization Check ---
-    final List<InlineSpan>? cachedSpans = _cachedSpans;
-
-    // 1. Check placeholders
-    final bool placeholdersMatch = mapEquals(_lastPlaceholders, widget.placeholders);
-
-    // 2. Check Options (Fixing Critical Flaw)
-    final int currentOptionsHash = TextfOptions.computeResolvedHash(context, currentBaseStyle);
-
-    // 3. Check Theme
-    // Compare only the ColorScheme properties that TextfStyleResolver uses:
-    // - primary: link color/decoration
-    // - onSurfaceVariant: code text color
-    // - surfaceContainer: code background color
-    // - brightness: overall light/dark mode
-    // This avoids unnecessary re-parses when unrelated theme properties change,
-    // while still correctly invalidating when theme-derived styles would differ.
-    final ThemeData? lastTheme = _lastTheme;
-    final bool themeMatch = lastTheme == theme ||
-        (lastTheme != null &&
-            lastTheme.colorScheme.primary == theme.colorScheme.primary &&
-            lastTheme.colorScheme.onSurfaceVariant == theme.colorScheme.onSurfaceVariant &&
-            lastTheme.colorScheme.surfaceContainer == theme.colorScheme.surfaceContainer &&
-            lastTheme.colorScheme.brightness == theme.colorScheme.brightness);
-
-    final currentKey = (
-      data: widget.data,
-      baseStyle: currentBaseStyle,
-      textScaler: effectiveScaler,
-      textAlign: widget.textAlign,
-      textDirection: widget.textDirection,
-      softWrap: widget.softWrap,
-      overflow: widget.overflow,
-      maxLines: widget.maxLines,
-      textWidthBasis: widget.textWidthBasis,
-      textHeightBehavior: widget.textHeightBehavior,
-      locale: widget.locale,
-      optionsHash: currentOptionsHash,
-    );
-
-    if (cachedSpans != null //
-        &&
-        placeholdersMatch &&
-        themeMatch &&
-        currentKey == _lastKey) {
-      // Cache Hit!
-      return DefaultTextStyle.merge(
-        textAlign: widget.textAlign,
-        softWrap: widget.softWrap,
-        overflow: widget.overflow,
-        maxLines: widget.maxLines,
-        textWidthBasis: widget.textWidthBasis,
-        child: _buildRichText(cachedSpans, effectiveScaler),
+    // Re-parse only if the cache was invalidated
+    if (spans == null) {
+      spans = widget.parser.parse(
+        widget.data,
+        context,
+        currentBaseStyle,
+        textScaler: effectiveScaler,
+        placeholders: widget.placeholders,
       );
+      _cachedSpans = spans;
     }
 
-    // --- Cache Miss: Re-parse ---
-    final List<InlineSpan> spans = widget.parser.parse(
-      widget.data,
-      context,
-      currentBaseStyle,
-      textScaler: effectiveScaler,
-      placeholders: widget.placeholders,
-    );
-
+    // Build the underlying rich text widget
     final Widget result = _buildRichText(spans, effectiveScaler);
 
-    // Update Cache
-    _cachedSpans = spans;
-    _lastKey = currentKey;
-    _lastPlaceholders = widget.placeholders;
-    _lastTheme = theme;
-
+    // Apply DefaultTextStyle merging for layout properties
     return DefaultTextStyle.merge(
       textAlign: widget.textAlign,
       softWrap: widget.softWrap,

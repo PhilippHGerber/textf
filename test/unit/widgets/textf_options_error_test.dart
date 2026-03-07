@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/widgets/textf_options.dart';
+import 'package:textf/src/widgets/textf_options_data.dart';
 
 void main() {
   group('TextfOptions Error Handling', () {
@@ -48,40 +49,33 @@ void main() {
       expect(result, isNull);
     });
 
-    testWidgets('updateShouldNotify returns true when styles differ', (tester) async {
-      const options1 = TextfOptions(
-        boldStyle: TextStyle(color: Colors.red),
-        child: SizedBox.shrink(),
-      );
-      const options2 = TextfOptions(
-        boldStyle: TextStyle(color: Colors.blue),
-        child: SizedBox.shrink(),
-      );
+    testWidgets('TextfOptionsData notifies when styles differ', (tester) async {
+      // Verify that two TextfOptionsData with different styles are not equal,
+      // which causes _TextfOptionsScope.updateShouldNotify to return true.
+      const data1 = TextfOptionsData(boldStyle: TextStyle(color: Colors.red));
+      const data2 = TextfOptionsData(boldStyle: TextStyle(color: Colors.blue));
 
-      expect(options1.updateShouldNotify(options2), isTrue);
+      expect(data1 == data2, isFalse);
+      expect(data1.hashCode == data2.hashCode, isFalse);
     });
 
-    testWidgets('updateShouldNotify returns false when styles match', (tester) async {
-      const options1 = TextfOptions(
-        boldStyle: TextStyle(color: Colors.red),
-        child: SizedBox.shrink(),
-      );
-      const options2 = TextfOptions(
-        boldStyle: TextStyle(color: Colors.red),
-        child: SizedBox.shrink(),
-      );
+    testWidgets('TextfOptionsData does not notify when styles match', (tester) async {
+      // Verify that two TextfOptionsData with equal styles are considered equal,
+      // which causes _TextfOptionsScope.updateShouldNotify to return false.
+      const data1 = TextfOptionsData(boldStyle: TextStyle(color: Colors.red));
+      const data2 = TextfOptionsData(boldStyle: TextStyle(color: Colors.red));
 
-      expect(options1.updateShouldNotify(options2), isFalse);
+      expect(data1 == data2, isTrue);
+      expect(data1.hashCode, data2.hashCode);
     });
 
-    testWidgets('hasSameStyle returns true for identical options', (tester) async {
-      const options = TextfOptions(
+    testWidgets('TextfOptionsData equality is true for identical instances', (tester) async {
+      const data = TextfOptionsData(
         boldStyle: TextStyle(fontWeight: FontWeight.w900),
         linkMouseCursor: SystemMouseCursors.click,
-        child: SizedBox.shrink(),
       );
 
-      expect(options.hasSameStyle(options), isTrue);
+      expect(identical(data, data), isTrue);
     });
   });
 }

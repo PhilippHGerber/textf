@@ -153,6 +153,29 @@ void main() {
           );
         });
       });
+
+      group('complex nested formatting in links', () {
+        test('link with multiple bold segments in text', () {
+          expect(
+            FormattingUtils.stripFormatting('[**bold** and **more**](url)'),
+            'bold and more',
+          );
+        });
+
+        test('multiple links in sequence', () {
+          expect(
+            FormattingUtils.stripFormatting('[first](url1) [second](url2)'),
+            'first second',
+          );
+        });
+
+        test('link text with superscript and subscript', () {
+          expect(
+            FormattingUtils.stripFormatting('[^super^ and ~sub~](url)'),
+            'super and sub',
+          );
+        });
+      });
     });
 
     group('hasFormattingMarkers', () {

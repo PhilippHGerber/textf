@@ -23,81 +23,21 @@ class _ResolvedOptions {
     this.onLinkHover,
   });
 
-  // Factory to create from context
+  // Factory to create from context using TextfStyleResolver
   factory _ResolvedOptions.fromContext(BuildContext context, TextStyle baseStyle) {
-    final TextfOptions? nearestOptions = TextfOptions.maybeOf(context);
-    final ThemeData theme = Theme.of(context); // Get theme for fallbacks
+    final resolver = TextfStyleResolver(context);
 
-    // Helper to get theme-based link style merged with base
-    TextStyle getThemeLinkStyle(TextStyle currentBase) {
-      final Color themeLinkColor = theme.colorScheme.primary;
-      // Default link style merged onto the current base
-      return currentBase.merge(
-        TextStyle(
-          color: themeLinkColor,
-          decoration: TextDecoration.underline,
-          decorationColor: themeLinkColor,
-        ),
-      );
-    }
-
-    // Helper to get theme-based code style merged with base
-    TextStyle getThemeCodeStyle(TextStyle currentBase) {
-      final Color codeBackgroundColor = theme.colorScheme.surfaceContainer;
-      final Color codeForegroundColor = theme.colorScheme.onSurfaceVariant;
-      const String codeFontFamily = 'monospace';
-      // FIX: Use the constant directly from DefaultStyles
-      const List<String> codeFontFamilyFallback = DefaultStyles.defaultCodeFontFamilyFallback;
-
-      return currentBase.copyWith(
-        fontFamily: codeFontFamily,
-        fontFamilyFallback: codeFontFamilyFallback, // Use the constant list
-        backgroundColor: codeBackgroundColor,
-        color: codeForegroundColor, // Theme color overrides base color
-        letterSpacing: currentBase.letterSpacing ?? 0,
-        // Other properties like fontSize, height are inherited from currentBase
-      );
-    }
-
-    // Resolve each property individually, applying fallbacks if options are null
-    final resolvedBold = nearestOptions?.getEffectiveBoldStyle(context, baseStyle) ??
-        DefaultStyles.boldStyle(baseStyle); // Default fallback
-
-    final resolvedItalic = nearestOptions?.getEffectiveItalicStyle(context, baseStyle) ??
-        DefaultStyles.italicStyle(baseStyle); // Default fallback
-
-    final resolvedBoldItalic = nearestOptions?.getEffectiveBoldItalicStyle(context, baseStyle) ??
-        DefaultStyles.boldItalicStyle(baseStyle); // Default fallback
-
-    final resolvedStrike = nearestOptions?.getEffectiveStrikethroughStyle(context, baseStyle) ??
-        DefaultStyles.strikethroughStyle(baseStyle); // Default fallback
-
-    final resolvedCode = nearestOptions?.getEffectiveCodeStyle(context, baseStyle) ??
-        getThemeCodeStyle(baseStyle); // Theme fallback for code
-
-    final resolvedLink = nearestOptions?.getEffectiveLinkStyle(context, baseStyle) ??
-        getThemeLinkStyle(baseStyle); // Theme fallback for links
-
-    // Hover style depends on the resolved *normal* style
-    final resolvedLinkHover = nearestOptions?.getEffectiveLinkHoverStyle(context, baseStyle) ??
-        resolvedLink; // Default hover is same as normal if no option
-
-    final resolvedCursor = nearestOptions?.getEffectiveLinkMouseCursor(context) ??
-        DefaultStyles.linkMouseCursor; // Default fallback
-
-    final resolvedTap = nearestOptions?.getEffectiveOnLinkTap(context); // Null if not found
-    final resolvedHoverCb = nearestOptions?.getEffectiveOnLinkHover(context); // Null if not found
     return _ResolvedOptions(
-      linkStyle: resolvedLink,
-      linkHoverStyle: resolvedLinkHover,
-      linkMouseCursor: resolvedCursor,
-      boldStyle: resolvedBold,
-      italicStyle: resolvedItalic,
-      boldItalicStyle: resolvedBoldItalic,
-      strikethroughStyle: resolvedStrike,
-      codeStyle: resolvedCode,
-      onLinkTap: resolvedTap,
-      onLinkHover: resolvedHoverCb,
+      boldStyle: resolver.resolveStyle(FormatMarkerType.bold, baseStyle),
+      italicStyle: resolver.resolveStyle(FormatMarkerType.italic, baseStyle),
+      boldItalicStyle: resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle),
+      strikethroughStyle: resolver.resolveStyle(FormatMarkerType.strikethrough, baseStyle),
+      codeStyle: resolver.resolveStyle(FormatMarkerType.code, baseStyle),
+      linkStyle: resolver.resolveLinkStyle(baseStyle),
+      linkHoverStyle: resolver.resolveLinkHoverStyle(baseStyle),
+      linkMouseCursor: resolver.resolveLinkMouseCursor(),
+      onLinkTap: resolver.resolveOnLinkTap(),
+      onLinkHover: resolver.resolveOnLinkHover(),
     );
   }
   final TextStyle? linkStyle;

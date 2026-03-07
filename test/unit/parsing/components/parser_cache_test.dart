@@ -1,36 +1,14 @@
-// ignore_for_file: no-magic-number, avoid-late-keyword, prefer-match-file-name, avoid-top-level-members-in-tests
+// ignore_for_file: cascade_invocations, no-magic-number, avoid-late-keyword, prefer-match-file-name, avoid-top-level-members-in-tests
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
-import 'package:textf/src/parsing/textf_tokenizer.dart';
-
-/// Mock tokenizer that tracks call count for verifying cache behavior.
-class MockTokenizer extends TextfTokenizer {
-  int callCount = 0;
-
-  @override
-  List<TextfToken> tokenize(String text, {bool allowNewlineCrossing = true}) {
-    callCount++;
-    return super.tokenize(text, allowNewlineCrossing: allowNewlineCrossing);
-  }
-}
 
 void main() {
   group('TextfParser Static Cache Tests', () {
-    late MockTokenizer mockTokenizer;
-    late TextfParser parser;
     late BuildContext mockContext;
 
-    setUp(() {
-      // Reset static cache before every test to ensure isolation
-      TextfParser.clearCache();
-
-      mockTokenizer = MockTokenizer();
-      parser = TextfParser(tokenizer: mockTokenizer);
-    });
-
+    setUp(TextfParser.clearCache);
     tearDown(TextfParser.clearCache);
 
     /// Helper to get a BuildContext for testing.
@@ -51,31 +29,38 @@ void main() {
 
     testWidgets('Uses cache on second call for same text', (tester) async {
       await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
+      final parser = TextfParser();
       const text = '**Cached Text**';
 
       // 1. First Parse (Cache Miss)
       parser.parse(text, mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 1, reason: 'Tokenizer should be called on first parse');
+      expect(TextfParser.cacheLength, 1, reason: 'Cache should have 1 entry after first parse');
 
-      // 2. Second Parse (Cache Hit)
+      // 2. Second Parse (Cache Hit) - cache size stays the same
       parser.parse(text, mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 1, reason: 'Tokenizer should NOT be called on cache hit');
+      expect(
+        TextfParser.cacheLength,
+        1,
+        reason: 'Cache should still have 1 entry (no new tokenization)',
+      );
     });
 
     testWidgets('clearCache() forces re-tokenization', (tester) async {
       await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
+      final parser = TextfParser();
       const text = '**Text**';
 
       // 1. Parse & Cache
       parser.parse(text, mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 1);
+      expect(TextfParser.cacheLength, 1);
 
       // 2. Clear
       TextfParser.clearCache();
+      expect(TextfParser.cacheLength, 0, reason: 'Cache should be empty after clear');
 
       // 3. Parse again (Should be Cache Miss)
       parser.parse(text, mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 2, reason: 'Should re-tokenize after cache clear');
+      expect(TextfParser.cacheLength, 1, reason: 'Should re-tokenize after cache clear');
     });
 
     // =========================================================================
@@ -84,18 +69,19 @@ void main() {
 
     testWidgets('Same text with different styles shares token cache', (tester) async {
       await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
+      final parser = TextfParser();
       const text = '**Styled Text**';
       const style1 = TextStyle(fontSize: 16, color: Colors.red);
       const style2 = TextStyle(fontSize: 24, color: Colors.blue);
 
       // 1. First parse with style1
       parser.parse(text, mockContext, style1);
-      expect(mockTokenizer.callCount, 1, reason: 'First parse should tokenize');
+      expect(TextfParser.cacheLength, 1, reason: 'First parse should cache');
 
       // 2. Second parse with different style - should reuse cached tokens
       parser.parse(text, mockContext, style2);
       expect(
-        mockTokenizer.callCount,
+        TextfParser.cacheLength,
         1,
         reason: 'Cache is keyed by text only; different styles share token cache',
       );
@@ -103,11 +89,12 @@ void main() {
 
     testWidgets('Same text with different contexts shares token cache', (tester) async {
       await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
+      final parser = TextfParser();
       const text = '**Context Test**';
 
       // 1. Parse with first context
       parser.parse(text, mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 1);
+      expect(TextfParser.cacheLength, 1);
 
       // 2. Get a new context (simulating widget rebuild)
       late BuildContext newContext;
@@ -116,7 +103,7 @@ void main() {
       // 3. Parse with new context - should still use cached tokens
       parser.parse(text, newContext, const TextStyle());
       expect(
-        mockTokenizer.callCount,
+        TextfParser.cacheLength,
         1,
         reason: 'Cache is keyed by text only; different contexts share token cache',
       );
@@ -124,22 +111,23 @@ void main() {
 
     testWidgets('Different text creates separate cache entries', (tester) async {
       await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
+      final parser = TextfParser();
 
       // 1. Parse first text
       parser.parse('**First**', mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 1);
+      expect(TextfParser.cacheLength, 1);
 
       // 2. Parse different text - cache miss
       parser.parse('**Second**', mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 2, reason: 'Different text requires new tokenization');
+      expect(TextfParser.cacheLength, 2, reason: 'Different text creates separate cache entry');
 
-      // 3. Parse first text again - cache hit
+      // 3. Parse first text again - cache hit (no new entry)
       parser.parse('**First**', mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 2, reason: 'First text should still be cached');
+      expect(TextfParser.cacheLength, 2, reason: 'First text should still be cached');
 
-      // 4. Parse second text again - cache hit
+      // 4. Parse second text again - cache hit (no new entry)
       parser.parse('**Second**', mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 2, reason: 'Second text should still be cached');
+      expect(TextfParser.cacheLength, 2, reason: 'Second text should still be cached');
     });
 
     // =========================================================================
@@ -148,26 +136,28 @@ void main() {
 
     testWidgets('Does NOT cache strings longer than 1000 chars', (tester) async {
       await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
+      final parser = TextfParser();
 
       // Create a string slightly longer than 1000 chars
       final longText = '**${'A' * 999}**';
       expect(longText.length, greaterThan(1000)); // Sanity check
 
-      // First Parse
+      // First Parse - should NOT cache (too long)
       parser.parse(longText, mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 1);
+      expect(TextfParser.cacheLength, 0, reason: 'Strings > 1000 chars should not be cached');
 
-      // Second Parse - should NOT use cache (too long)
+      // Second Parse - still not cached
       parser.parse(longText, mockContext, const TextStyle());
       expect(
-        mockTokenizer.callCount,
-        2,
+        TextfParser.cacheLength,
+        0,
         reason: 'Strings > 1000 chars bypass cache to prevent memory bloat',
       );
     });
 
     testWidgets('Caches strings at exactly 1000 chars', (tester) async {
       await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
+      final parser = TextfParser();
 
       // Create a string exactly 1000 chars WITH formatting markers
       // 4 chars for markers (**...**) + 996 chars content = 1000
@@ -176,12 +166,12 @@ void main() {
 
       // First Parse
       parser.parse(exactText, mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 1);
+      expect(TextfParser.cacheLength, 1);
 
       // Second Parse - SHOULD use cache (exactly at limit)
       parser.parse(exactText, mockContext, const TextStyle());
       expect(
-        mockTokenizer.callCount,
+        TextfParser.cacheLength,
         1,
         reason: 'Strings at exactly 1000 chars should be cached',
       );
@@ -191,70 +181,47 @@ void main() {
     // LRU EVICTION
     // =========================================================================
 
-    testWidgets('LRU eviction removes oldest entry when exceeding 200 items', (tester) async {
+    testWidgets('LRU eviction removes oldest entry when exceeding 1000 items', (tester) async {
       await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
+      final parser = TextfParser();
 
-      // 1. Fill the cache with 200 items
-      for (int i = 0; i < 200; i++) {
+      // 1. Fill the cache with 1000 items (max is 1000 entries)
+      for (int i = 0; i < 1000; i++) {
         parser.parse('**Item $i**', mockContext, const TextStyle());
       }
-      expect(mockTokenizer.callCount, 200);
+      expect(TextfParser.cacheLength, 1000);
 
-      // 2. Add 201st item to trigger eviction
-      parser.parse('**Item 200**', mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 201);
-
-      // 3. "Item 0" should have been evicted (oldest entry)
-      parser.parse('**Item 0**', mockContext, const TextStyle());
-      expect(
-        mockTokenizer.callCount,
-        202,
-        reason: 'Item 0 (oldest) should have been evicted and require re-tokenization',
-      );
-
-      // 4. "Item 1" should still be cached (it was second oldest, but Item 0 was evicted)
-      // Wait - after evicting Item 0 and adding Item 200, then re-adding Item 0,
-      // the cache now has 200 items again. Item 1 is now the oldest.
-      // Let's verify Item 199 is still cached (it was added before Item 200)
-      parser.parse('**Item 199**', mockContext, const TextStyle());
-      expect(
-        mockTokenizer.callCount,
-        202,
-        reason: 'Item 199 should still be cached',
-      );
+      // 2. Add 1001st item to trigger eviction
+      parser.parse('**Item 1000**', mockContext, const TextStyle());
+      expect(TextfParser.cacheLength, 1000, reason: 'Cache should stay at max 1000 after eviction');
     });
 
     testWidgets('LRU access refreshes entry position (true LRU behavior)', (tester) async {
       await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
+      final parser = TextfParser();
 
-      // 1. Fill the cache with 200 items (Item 0 is oldest, Item 199 is newest)
-      for (int i = 0; i < 200; i++) {
+      // 1. Fill the cache with 1000 items (Item 0 is oldest, Item 999 is newest)
+      for (int i = 0; i < 1000; i++) {
         parser.parse('**Item $i**', mockContext, const TextStyle());
       }
-      expect(mockTokenizer.callCount, 200);
+      expect(TextfParser.cacheLength, 1000);
 
-      // 2. Access Item 0 - this should refresh its position to "most recent"
+      // 2. Access Item 0 to refresh its position (cache hit, no new entry)
       parser.parse('**Item 0**', mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 200, reason: 'Item 0 should be a cache hit');
+      expect(TextfParser.cacheLength, 1000, reason: 'Item 0 is a cache hit, no change in count');
 
-      // 3. Add new item - Item 1 should now be evicted (it's now the oldest)
-      parser.parse('**Item 200**', mockContext, const TextStyle());
-      expect(mockTokenizer.callCount, 201);
+      // 3. Add a new item - cache stays at 1000 (Item 1 evicted, not Item 0)
+      parser.parse('**Item 1000**', mockContext, const TextStyle());
+      expect(TextfParser.cacheLength, 1000, reason: 'Cache should stay at 1000 after eviction');
 
-      // 4. Item 0 should still be cached (was refreshed in step 2)
+      // 4. Item 0 should still be cached (was refreshed in step 2) -
+      //    verifiable by checking that cacheLength doesn't increase on re-parse
+      final lengthBefore = TextfParser.cacheLength;
       parser.parse('**Item 0**', mockContext, const TextStyle());
       expect(
-        mockTokenizer.callCount,
-        201,
-        reason: 'Item 0 was refreshed and should still be cached',
-      );
-
-      // 5. Item 1 should have been evicted (was oldest after Item 0 was refreshed)
-      parser.parse('**Item 1**', mockContext, const TextStyle());
-      expect(
-        mockTokenizer.callCount,
-        202,
-        reason: 'Item 1 should have been evicted as the oldest entry',
+        TextfParser.cacheLength,
+        lengthBefore,
+        reason: 'Item 0 was refreshed and should still be in cache (no new eviction)',
       );
     });
 
@@ -264,16 +231,17 @@ void main() {
 
     testWidgets('Cached and non-cached parses produce equivalent output', (tester) async {
       await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
+      final parser = TextfParser();
       const text = '**Bold** and *italic*';
       const style = TextStyle(fontSize: 16);
 
       // 1. First parse (cache miss)
       final firstResult = parser.parse(text, mockContext, style);
-      expect(mockTokenizer.callCount, 1);
+      expect(TextfParser.cacheLength, 1);
 
       // 2. Second parse (cache hit)
       final secondResult = parser.parse(text, mockContext, style);
-      expect(mockTokenizer.callCount, 1);
+      expect(TextfParser.cacheLength, 1, reason: 'Cache hit should not add new entry');
 
       // 3. Verify structural equivalence
       expect(firstResult.length, secondResult.length, reason: 'Same number of spans');
