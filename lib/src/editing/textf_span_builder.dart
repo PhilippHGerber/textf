@@ -2,24 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../core/constants.dart';
 import '../core/formatting_utils.dart';
-import '../core/textf_cache.dart';
-import '../core/textf_limits.dart';
+import '../core/textf_token_cache.dart';
 import '../models/format_stack_entry.dart';
 import '../models/textf_token.dart';
 import '../parsing/components/link_validator.dart';
-import '../parsing/components/pairing_resolver.dart';
-import '../parsing/textf_tokenizer.dart';
 import '../styling/textf_style_resolver.dart';
-
-/// Container for cached parsing results in the builder.
-class _ParsedCacheEntry {
-  const _ParsedCacheEntry(this.tokens, this.validPairs);
-  final List<TextfToken> tokens;
-  final Map<int, int> validPairs;
-}
-
-/// Cache key combining the text and newline crossing rule.
-typedef _CacheKey = ({String text, bool allowNewlineCrossing});
 
 /// Builds a list of [InlineSpan] objects from formatted text.
 ///
@@ -52,12 +39,7 @@ typedef _CacheKey = ({String text, bool allowNewlineCrossing});
 ///
 class TextfSpanBuilder {
   /// Creates a new [TextfSpanBuilder] instance.
-  ///
-  /// - [tokenizer]: An optional custom tokenizer instance. If not provided,
-  ///   a default[TextfTokenizer] is created.
-  TextfSpanBuilder({
-    TextfTokenizer? tokenizer,
-  }) : _tokenizer = tokenizer ?? TextfTokenizer();
+  TextfSpanBuilder();
 
   /// Near-zero font size for fully hidden markers.
   static const double _hiddenFontSize = 0.01;
@@ -77,56 +59,8 @@ class TextfSpanBuilder {
   /// layout jumps on mobile.
   static const int hideAllMarkers = -1;
 
-  final TextfTokenizer _tokenizer;
-
-  /// Cache for tokens and pairing results.
-  /// Uses a memory-aware LRU cache to prevent re-parsing identical text segments
-  /// without causing memory bloat.
-  static final TextfCache<_CacheKey, _ParsedCacheEntry> _cache =
-      TextfCache<_CacheKey, _ParsedCacheEntry>(
-    maxEntries: TextfLimits.maxCacheEntries,
-    maxTotalChars: TextfLimits.maxCacheTotalCharacters,
-    getCharCount: (key) => key.text.length,
-  );
-
-  /// Clears the internal builder cache.
-  ///
-  /// Call this method to free memory in low-memory situations.
-  /// (Note: You should wire this into `Textf.clearCache()` as well).
-  static void clearCache() {
-    _cache.clear();
-  }
-
-  /// Tokenizes text and resolves pairs, using an LRU cache to prevent
-  /// re-parsing identical text segments (Fixes P1-1, P1-3).
-  _ParsedCacheEntry _getTokensAndPairs(String text, {required bool allowNewlineCrossing}) {
-    // Too long to cache, just process directly
-    if (text.length > TextfLimits.maxCacheKeyLength) {
-      final tokens = _tokenizer.tokenize(text, allowNewlineCrossing: allowNewlineCrossing);
-      final validPairs =
-          PairingResolver.identifyPairs(tokens, allowNewlineCrossing: allowNewlineCrossing);
-      return _ParsedCacheEntry(tokens, validPairs);
-    }
-
-    final key = (text: text, allowNewlineCrossing: allowNewlineCrossing);
-
-    // The cache handles LRU promotion internally on get()
-    final cached = _cache.get(key);
-
-    if (cached != null) {
-      return cached;
-    }
-
-    final tokens = _tokenizer.tokenize(text, allowNewlineCrossing: allowNewlineCrossing);
-    final validPairs =
-        PairingResolver.identifyPairs(tokens, allowNewlineCrossing: allowNewlineCrossing);
-    final entry = _ParsedCacheEntry(tokens, validPairs);
-
-    // Update Cache (LRU and memory eviction handled internally)
-    _cache.set(key, entry);
-
-    return entry;
-  }
+  /// Clears the shared token cache used by the builder.
+  static void clearCache() => TextfTokenCache.clearCache();
 
   /// Builds a list of[InlineSpan] from formatted text.
   ///
@@ -164,7 +98,7 @@ class TextfSpanBuilder {
       return <InlineSpan>[TextSpan(text: text, style: baseStyle)];
     }
     // Use the static LRU cache instead of executing a new tokenization pass
-    final cacheEntry = _getTokensAndPairs(text, allowNewlineCrossing: false);
+    final cacheEntry = TextfTokenCache.getTokensAndPairs(text, allowNewlineCrossing: false);
     final tokens = cacheEntry.tokens;
     final validPairs = cacheEntry.validPairs;
 
@@ -176,7 +110,6 @@ class TextfSpanBuilder {
         : activeMarkerStyle;
 
     final state = _SpanBuildState(
-      builder: this,
       tokens: tokens,
       validPairs: validPairs,
       baseStyle: baseStyle,
@@ -228,7 +161,6 @@ class TextfSpanBuilder {
 /// Extracted to avoid multiple interacting closures allocating contexts and closure objects on the heap.
 class _SpanBuildState {
   _SpanBuildState({
-    required this.builder,
     required this.tokens,
     required this.validPairs,
     required this.baseStyle,
@@ -237,8 +169,6 @@ class _SpanBuildState {
     required this.cursorPosition,
     required this.resolver,
   });
-
-  final TextfSpanBuilder builder;
   final List<TextfToken> tokens;
   final Map<int, int> validPairs;
   final TextStyle baseStyle;
@@ -307,11 +237,18 @@ class _SpanBuildState {
               emitMarker(token.value, style);
             }
 
+            // Compute resolved style at this stack depth for O(1) lookup.
+            final TextStyle previousStyle = formatStack.isEmpty
+                ? baseStyle
+                : (formatStack.last.resolvedStyle ?? baseStyle);
+            final TextStyle resolved = resolver.resolveStyle(token.markerType, previousStyle);
+
             formatStack.add(
               FormatStackEntry(
                 index: i,
                 matchingIndex: matchingIndex,
                 type: token.markerType,
+                resolvedStyle: resolved,
               ),
             );
           } else {
@@ -391,8 +328,14 @@ class _SpanBuildState {
   }
 
   /// Resolve the current effective style from the format stack.
+  ///
+  /// O(1) via cached [FormatStackEntry.resolvedStyle], falls back to
+  /// walking the stack if entries lack cached styles.
   TextStyle currentStyle() {
     if (formatStack.isEmpty) return baseStyle;
+    final TextStyle? cached = formatStack.last.resolvedStyle;
+    if (cached != null) return cached;
+
     TextStyle style = baseStyle;
     for (final FormatStackEntry entry in formatStack) {
       style = resolver.resolveStyle(entry.type, style);
@@ -591,7 +534,7 @@ class _SpanBuildState {
     spans.add(TextSpan(text: '[', style: markerStyle));
 
     // Process link text: fetch cached tokens and pairs to detect nested formatting markers.
-    final entry = builder._getTokensAndPairs(linkText, allowNewlineCrossing: true);
+    final entry = TextfTokenCache.getTokensAndPairs(linkText);
     final innerTokens = entry.tokens;
     final validPairsLink = entry.validPairs;
 
@@ -642,11 +585,7 @@ class _SpanBuildState {
 
     TextStyle currentNestedStyle() {
       if (nestedFormatStack.isEmpty) return linkStyle;
-      var style = linkStyle;
-      for (final FormatStackEntry entry in nestedFormatStack) {
-        style = resolver.resolveStyle(entry.type, style);
-      }
-      return style;
+      return nestedFormatStack.last.resolvedStyle ?? linkStyle;
     }
 
     void flushNestedBuffer() {
@@ -670,11 +609,15 @@ class _SpanBuildState {
             // Opening marker.
             flushNestedBuffer();
             spans.add(TextSpan(text: token.value, style: markerStyle));
+            final TextStyle prevStyle = nestedFormatStack.isEmpty
+                ? linkStyle
+                : (nestedFormatStack.last.resolvedStyle ?? linkStyle);
             nestedFormatStack.add(
               FormatStackEntry(
                 index: i,
                 matchingIndex: matchingIndex,
                 type: token.markerType,
+                resolvedStyle: resolver.resolveStyle(token.markerType, prevStyle),
               ),
             );
           } else {

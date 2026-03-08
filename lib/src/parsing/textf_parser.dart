@@ -1,23 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../core/formatting_utils.dart';
-import '../core/textf_cache.dart';
-import '../core/textf_limits.dart';
+import '../core/textf_token_cache.dart';
 import '../models/parser_state.dart';
 import '../models/textf_token.dart';
 import '../styling/textf_style_resolver.dart';
 import 'components/format_handler.dart';
 import 'components/link_handler.dart';
-import 'components/pairing_resolver.dart';
 import 'components/placeholder_handler.dart';
-import 'textf_tokenizer.dart';
-
-/// Container for cached parsing results.
-class _ParsedCacheEntry {
-  _ParsedCacheEntry(this.tokens, this.matchingPairs);
-  final List<TextfToken> tokens;
-  final Map<int, int> matchingPairs;
-}
 
 /// Parser for formatted text that converts formatting markers into styled text spans.
 ///
@@ -38,55 +28,24 @@ class TextfParser {
   /// Creates a new [TextfParser] instance.
   TextfParser();
 
-  /// Shared static tokenizer for static cache access.
-  static final TextfTokenizer _sharedTokenizer = TextfTokenizer();
-
-  /// Cache for tokens and pairing results.
-  /// Uses a memory-aware LRU cache to prevent memory bloat.
-  static final TextfCache<String, _ParsedCacheEntry> _cache = TextfCache<String, _ParsedCacheEntry>(
-    maxEntries: TextfLimits.maxCacheEntries,
-    maxTotalChars: TextfLimits.maxCacheTotalCharacters,
-    getCharCount: (key) => key.length,
-  );
-
-  /// Clears the internal parser cache.
+  /// Clears the shared token cache.
   ///
   /// Call this method to free memory in low-memory situations,
   /// or when navigating away from text-heavy screens.
   ///
   /// The cache will automatically rebuild as text is parsed.
-  static void clearCache() {
-    _cache.clear();
-  }
+  static void clearCache() => TextfTokenCache.clearCache();
 
-  /// Returns the number of entries currently in the static parser cache.
+  /// Returns the number of entries currently in the shared token cache.
   ///
   /// Exposed for testing purposes to verify cache hit/miss behavior
   /// without needing to inject a mock tokenizer.
-  static int get cacheLength => _cache.length;
+  static int get cacheLength => TextfTokenCache.cacheLength;
 
   /// Retrieves tokenized text and valid pairs, utilizing the shared LRU cache.
   /// Used internally by the parser and exposed for shared utilities (like `stripFormatting`).
-  static ({List<TextfToken> tokens, Map<int, int> validPairs}) getCachedTokensAndPairs(
-    String text,
-  ) {
-    if (text.length > TextfLimits.maxCacheKeyLength) {
-      final tokens = _sharedTokenizer.tokenize(text);
-      final validPairs = PairingResolver.identifyPairs(tokens);
-      return (tokens: tokens, validPairs: validPairs);
-    }
-
-    final cached = _cache.get(text);
-    if (cached != null) {
-      return (tokens: cached.tokens, validPairs: cached.matchingPairs);
-    }
-
-    final tokens = _sharedTokenizer.tokenize(text);
-    final validPairs = PairingResolver.identifyPairs(tokens);
-    _cache.set(text, _ParsedCacheEntry(tokens, validPairs));
-
-    return (tokens: tokens, validPairs: validPairs);
-  }
+  static TokenCacheEntry getCachedTokensAndPairs(String text) =>
+      TextfTokenCache.getTokensAndPairs(text);
 
   /// Parses formatted text into a list of styled [InlineSpan] objects.
   ///
@@ -121,6 +80,7 @@ class TextfParser {
     TextStyle baseStyle, {
     TextScaler? textScaler,
     Map<String, InlineSpan>? placeholders,
+    TextfStyleResolver? styleResolver,
   }) {
     // Fast path for empty text
     if (text.isEmpty) {
@@ -135,13 +95,13 @@ class TextfParser {
       return <InlineSpan>[TextSpan(text: text, style: baseStyle)];
     }
 
-    // 1 & 2. Tokenize and Pair (leveraging the LRU Cache via static helper)
-    final cacheResult = getCachedTokensAndPairs(text);
-    final tokens = cacheResult.tokens;
-    final validPairs = cacheResult.validPairs;
+    // 1 & 2. Tokenize and Pair (leveraging the shared LRU Cache)
+    final cacheEntry = getCachedTokensAndPairs(text);
+    final tokens = cacheEntry.tokens;
+    final validPairs = cacheEntry.validPairs;
 
-    // 3. Style Resolver
-    final resolver = TextfStyleResolver(context);
+    // 3. Style Resolver (use cached resolver if provided to avoid redundant lookups)
+    final resolver = styleResolver ?? TextfStyleResolver(context);
 
     // 4. State
     final state = ParserState(

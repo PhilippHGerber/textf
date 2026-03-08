@@ -61,12 +61,19 @@ class FormatHandler {
     // Flush preceding text with previous style
     state.flushText(context);
 
-    // Push new format to stack
+    // Compute resolved style: apply this format on top of the current stack style.
+    final TextStyle previousStyle = state.formatStack.isEmpty
+        ? state.baseStyle
+        : (state.formatStack.last.resolvedStyle ?? state.baseStyle);
+    final TextStyle resolved = state.styleResolver.resolveStyle(token.markerType, previousStyle);
+
+    // Push new format to stack with pre-computed style
     state.formatStack.add(
       FormatStackEntry(
         index: index,
         matchingIndex: matchingIndex,
         type: token.markerType,
+        resolvedStyle: resolved,
       ),
     );
   }

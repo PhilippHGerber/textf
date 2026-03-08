@@ -54,11 +54,19 @@ class ParserState {
   final Map<String, InlineSpan>? placeholders;
 
   /// Resolves the current style based on the format stack and base style.
+  ///
+  /// O(1) when the stack top has a cached [FormatStackEntry.resolvedStyle],
+  /// falls back to walking the stack otherwise.
   TextStyle getCurrentStyle(BuildContext context) {
     if (formatStack.isEmpty) {
       return baseStyle;
     }
 
+    // O(1): use pre-computed style from stack top if available.
+    final TextStyle? cached = formatStack.last.resolvedStyle;
+    if (cached != null) return cached;
+
+    // Fallback: walk the stack (when entries lack cached styles).
     TextStyle currentStyle = baseStyle;
     for (final FormatStackEntry entry in formatStack) {
       currentStyle = styleResolver.resolveStyle(entry.type, currentStyle);

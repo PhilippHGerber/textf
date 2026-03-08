@@ -3,7 +3,9 @@ import 'dart:ui' as ui show TextHeightBehavior;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/textf_token_cache.dart';
 import '../../parsing/textf_parser.dart';
+import '../../styling/textf_style_resolver.dart';
 import '../textf_options.dart';
 import '../textf_options_data.dart';
 
@@ -87,15 +89,39 @@ class TextfRenderer extends StatefulWidget {
 }
 
 /// The state class for [TextfRenderer] that builds the text widget and manages caching.
-class TextfRendererState extends State<TextfRenderer> {
+///
+/// Implements [WidgetsBindingObserver] to automatically clear the shared token
+/// cache on memory pressure, preventing the need for manual [Textf.clearCache] calls.
+class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserver {
   /// Cached list of spans from the last parse.
   List<InlineSpan>? _cachedSpans;
+
+  /// Cached style resolver to avoid redundant Theme.of / TextfOptions.maybeOf lookups.
+  TextfStyleResolver? _cachedResolver;
 
   // Cached dependencies to detect inherited changes
   ThemeData? _lastTheme;
   TextfOptionsData? _lastOptions;
   DefaultTextStyle? _lastDefaultTextStyle;
   TextScaler? _lastMediaQueryScaler;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didHaveMemoryPressure() {
+    TextfTokenCache.clearCache();
+    _cachedSpans = null;
+  }
 
   @override
   void didChangeDependencies() {
@@ -130,6 +156,11 @@ class TextfRendererState extends State<TextfRenderer> {
       _lastOptions = options;
       _lastDefaultTextStyle = defaultTextStyle;
       _lastMediaQueryScaler = mediaQueryScaler;
+
+      // Rebuild the resolver only when theme or options change.
+      if (!themeMatch || !optionsMatch) {
+        _cachedResolver = TextfStyleResolver.withState(theme: theme, options: options);
+      }
     }
   }
 
@@ -164,6 +195,7 @@ class TextfRendererState extends State<TextfRenderer> {
         currentBaseStyle,
         textScaler: effectiveScaler,
         placeholders: widget.placeholders,
+        styleResolver: _cachedResolver,
       );
       _cachedSpans = spans;
     }

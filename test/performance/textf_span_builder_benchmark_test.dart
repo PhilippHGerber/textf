@@ -8,7 +8,7 @@ void main() {
   testWidgets('TextfSpanBuilder Cache Performance Benchmark', (WidgetTester tester) async {
     // 1. Create a large, formatting-heavy string
     const String baseText = '*a* **b** ==c== ~~d~~ ++e++ ^f^ ~g~ [link](https://flutter.dev) ';
-    final String heavyText = List.filled(15, baseText).join('\n'); // Very long text
+    final String heavyText = List.filled(15, baseText).join(); // Very long text
 
     // 2. Setup standard context requirements
     await tester.pumpWidget(const MaterialApp(home: Scaffold(body: Text(''))));

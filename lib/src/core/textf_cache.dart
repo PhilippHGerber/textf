@@ -51,10 +51,10 @@ class TextfCache<K, V> {
   void set(K key, V value) {
     final int charCount = getCharCount(key);
 
-    // If the key already exists, remove it first to accurately track the budget
-    if (_map.containsKey(key)) {
+    // If the key already exists, remove it first to accurately track the budget.
+    // Single remove() call instead of containsKey() + remove() to avoid double hash lookup.
+    if (_map.remove(key) != null) {
       _currentCharCount -= charCount;
-      _map.remove(key);
     }
 
     _map[key] = value;
@@ -71,9 +71,10 @@ class TextfCache<K, V> {
       _currentCharCount -= getCharCount(oldestKey);
       _map.remove(oldestKey);
     }
-    // If we evicted the MRU key (unlikely unless maxEntries=1), reset it.
-    if (!_map.containsKey(_mruKey)) {
-      _mruKey = _map.isNotEmpty ? _map.keys.last : null;
+    // Eviction removes from the front; _mruKey (set just before calling this)
+    // is always at the back. It can only be evicted if the map is now empty.
+    if (_map.isEmpty) {
+      _mruKey = null;
     }
   }
 
