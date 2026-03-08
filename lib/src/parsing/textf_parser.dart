@@ -158,14 +158,14 @@ class TextfParser {
     while (i < tokens.length) {
       final token = tokens[i];
 
-      // --- Placeholder Handling ---
+      // Placeholder Handling
       if (token is PlaceholderToken) {
         PlaceholderHandler.processPlaceholder(context, state, token);
         i++;
         continue;
       }
 
-      // --- Link Handling ---
+      // Link Handling
       if (token is LinkStartToken) {
         // Attempt to process a link.
         final int? nextIndex = LinkHandler.processLink(context, state, i);
@@ -178,7 +178,7 @@ class TextfParser {
         // Failure: Not a valid link. Fall through to process as plain text.
       }
 
-      // --- Formatting Handling ---
+      // Formatting Handling
       if (token is FormatMarkerToken) {
         if (state.matchingPairs.containsKey(i)) {
           // This token is part of a valid format pair.
@@ -191,7 +191,7 @@ class TextfParser {
         // Unpaired or invalidly nested marker. Fall through to process as plain text.
       }
 
-      // --- Plain Text Handling ---
+      // Plain Text Handling
       // Accumulate content into the buffer. This applies to:
       // 1. TextToken
       // 2. Unpaired/Invalid FormatMarkerTokens

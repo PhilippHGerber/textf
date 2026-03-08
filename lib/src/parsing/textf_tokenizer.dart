@@ -5,7 +5,7 @@ import '../models/textf_token.dart';
 
 /// Tokenizes text into formatting markers, placeholders, and content segments.
 ///
-/// The TextfTokenizer breaks down input text into a sequence of [TextfToken] objects that
+/// The TextfTokenizer breaks down input text into a sequence of[TextfToken] objects that
 /// represent either formatting markers (like bold, italic), placeholders (like {icon}),
 /// or regular text content.
 ///
@@ -45,16 +45,15 @@ class TextfTokenizer {
       }
     }
 
-    // Performance optimization: pre-process code units
-    final List<int> codeUnits = text.codeUnits;
-
     while (pos < length) {
       final int startPosInLoop = pos;
-      final int currentChar = codeUnits[pos];
+
+      // Using codeUnitAt directly avoids allocating a CodeUnits wrapper list.
+      final int currentChar = text.codeUnitAt(pos);
 
       // Handle escape character
       if (currentChar == kEscape && pos + 1 < length) {
-        final int nextChar = codeUnits[pos + 1];
+        final int nextChar = text.codeUnitAt(pos + 1);
         // Check if next char is a formatting character, link char, or placeholder brace
         if (nextChar == kAsterisk ||
             nextChar == kUnderscore ||
@@ -93,10 +92,10 @@ class TextfTokenizer {
       if (currentChar == kAsterisk) {
         // Check for bold+italic (***)
         if (pos + 2 < length &&
-            codeUnits[pos + 1] == kAsterisk &&
-            codeUnits[pos + 2] == kAsterisk) {
+            text.codeUnitAt(pos + 1) == kAsterisk &&
+            text.codeUnitAt(pos + 2) == kAsterisk) {
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(codeUnits, pos, 3, length);
+          final flags = _flankingFlags(text, pos, 3, length);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.boldItalic,
@@ -111,9 +110,9 @@ class TextfTokenizer {
           textStart = pos;
         }
         // Check for bold (**)
-        else if (pos + 1 < length && codeUnits[pos + 1] == kAsterisk) {
+        else if (pos + 1 < length && text.codeUnitAt(pos + 1) == kAsterisk) {
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(codeUnits, pos, 2, length);
+          final flags = _flankingFlags(text, pos, 2, length);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.bold,
@@ -130,7 +129,7 @@ class TextfTokenizer {
         // Italic (*)
         else {
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(codeUnits, pos, 1, length);
+          final flags = _flankingFlags(text, pos, 1, length);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.italic,
@@ -147,10 +146,10 @@ class TextfTokenizer {
       } else if (currentChar == kUnderscore) {
         // Check for bold+italic (___)
         if (pos + 2 < length &&
-            codeUnits[pos + 1] == kUnderscore &&
-            codeUnits[pos + 2] == kUnderscore) {
+            text.codeUnitAt(pos + 1) == kUnderscore &&
+            text.codeUnitAt(pos + 2) == kUnderscore) {
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(codeUnits, pos, 3, length);
+          final flags = _flankingFlags(text, pos, 3, length);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.boldItalic,
@@ -165,9 +164,9 @@ class TextfTokenizer {
           textStart = pos;
         }
         // Check for bold (__)
-        else if (pos + 1 < length && codeUnits[pos + 1] == kUnderscore) {
+        else if (pos + 1 < length && text.codeUnitAt(pos + 1) == kUnderscore) {
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(codeUnits, pos, 2, length);
+          final flags = _flankingFlags(text, pos, 2, length);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.bold,
@@ -184,7 +183,7 @@ class TextfTokenizer {
         // Italic (_)
         else {
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(codeUnits, pos, 1, length);
+          final flags = _flankingFlags(text, pos, 1, length);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.italic,
@@ -200,9 +199,9 @@ class TextfTokenizer {
         }
       } else if (currentChar == kTilde) {
         // Check for strikethrough (~~)
-        if (pos + 1 < length && codeUnits[pos + 1] == kTilde) {
+        if (pos + 1 < length && text.codeUnitAt(pos + 1) == kTilde) {
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(codeUnits, pos, 2, length);
+          final flags = _flankingFlags(text, pos, 2, length);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.strikethrough,
@@ -218,7 +217,7 @@ class TextfTokenizer {
         } else {
           // Single tilde for subscript
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(codeUnits, pos, 1, length);
+          final flags = _flankingFlags(text, pos, 1, length);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.subscript,
@@ -235,7 +234,7 @@ class TextfTokenizer {
       } else if (currentChar == kCaret) {
         // Caret for superscript
         addTextToken(textStart, pos);
-        final flags = _flankingFlags(codeUnits, pos, 1, length);
+        final flags = _flankingFlags(text, pos, 1, length);
         tokens.add(
           FormatMarkerToken(
             FormatMarkerType.superscript,
@@ -263,9 +262,9 @@ class TextfTokenizer {
         textStart = pos;
       } else if (currentChar == kPlus) {
         // Check for underline (++)
-        if (pos + 1 < length && codeUnits[pos + 1] == kPlus) {
+        if (pos + 1 < length && text.codeUnitAt(pos + 1) == kPlus) {
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(codeUnits, pos, 2, length);
+          final flags = _flankingFlags(text, pos, 2, length);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.underline,
@@ -284,9 +283,9 @@ class TextfTokenizer {
         }
       } else if (currentChar == kEquals) {
         // Check for highlight (==)
-        if (pos + 1 < length && codeUnits[pos + 1] == kEquals) {
+        if (pos + 1 < length && text.codeUnitAt(pos + 1) == kEquals) {
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(codeUnits, pos, 2, length);
+          final flags = _flankingFlags(text, pos, 2, length);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.highlight,
@@ -307,7 +306,6 @@ class TextfTokenizer {
         addTextToken(textStart, pos);
         final int? nextPos = _tryParseLink(
           text,
-          codeUnits,
           length,
           pos,
           tokens,
@@ -324,7 +322,7 @@ class TextfTokenizer {
       } else if (currentChar == kOpenBrace) {
         // Check for placeholder {key}
         addTextToken(textStart, pos);
-        final int? nextPos = _tryParsePlaceholder(text, codeUnits, length, pos, tokens);
+        final int? nextPos = _tryParsePlaceholder(text, length, pos, tokens);
         if (nextPos != null) {
           pos = nextPos;
           textStart = pos;
@@ -391,7 +389,7 @@ class TextfTokenizer {
 
   /// Computes left- and right-flanking flags for a marker run.
   ///
-  /// * [pos] — start of the marker in [codeUnits].
+  /// * [pos] — start of the marker in the string.
   /// * [tokenLength] — number of characters in the marker run.
   /// * [totalLength] — total length of the source string.
   ///
@@ -400,14 +398,14 @@ class TextfTokenizer {
   /// `canClose` is true when the character immediately before the run is not
   /// whitespace (and the run does not start at SOF).
   ({bool canOpen, bool canClose}) _flankingFlags(
-    List<int> codeUnits,
+    String text,
     int pos,
     int tokenLength,
     int totalLength,
   ) {
     final canOpen =
-        (pos + tokenLength < totalLength) && !_isWhitespace(codeUnits[pos + tokenLength]);
-    final canClose = (pos > 0) && !_isWhitespace(codeUnits[pos - 1]);
+        (pos + tokenLength < totalLength) && !_isWhitespace(text.codeUnitAt(pos + tokenLength));
+    final canClose = (pos > 0) && !_isWhitespace(text.codeUnitAt(pos - 1));
     return (canOpen: canOpen, canClose: canClose);
   }
 
@@ -417,7 +415,6 @@ class TextfTokenizer {
   /// otherwise returns null.
   int? _tryParseLink(
     String text,
-    List<int> codeUnits,
     int length,
     int startPos,
     List<TextfToken> tokens, {
@@ -432,7 +429,7 @@ class TextfTokenizer {
 
     while (pos < length) {
       // Inner loop for link text
-      final int c = codeUnits[pos];
+      final int c = text.codeUnitAt(pos);
 
       // Check for newline crossing if not allowed
       if (!allowNewlineCrossing && (c == kNewline || c == kCarriageReturn)) {
@@ -454,7 +451,7 @@ class TextfTokenizer {
           // This is the closing bracket for our link text
           linkTextEnd = pos;
           // Check if followed by opening parenthesis for URL
-          if (pos + 1 < length && codeUnits[pos + 1] == kOpenParen) {
+          if (pos + 1 < length && text.codeUnitAt(pos + 1) == kOpenParen) {
             break; // Found '](', proceed
           } else {
             return null; // Not part of a complete [text](link)
@@ -464,7 +461,7 @@ class TextfTokenizer {
       pos++;
     }
 
-    if (linkTextEnd == -1 || pos + 1 >= length || codeUnits[pos + 1] != kOpenParen) {
+    if (linkTextEnd == -1 || pos + 1 >= length || text.codeUnitAt(pos + 1) != kOpenParen) {
       return null;
     }
 
@@ -475,7 +472,7 @@ class TextfTokenizer {
     nestLevel = 0;
 
     while (pos < length) {
-      final int c = codeUnits[pos];
+      final int c = text.codeUnitAt(pos);
 
       // Check for newline crossing if not allowed
       if (!allowNewlineCrossing && (c == kNewline || c == kCarriageReturn)) {
@@ -540,7 +537,6 @@ class TextfTokenizer {
   /// Invalid examples: `{}`, `{ icon}`, `{a b}`, `{key.name}`.
   int? _tryParsePlaceholder(
     String text,
-    List<int> codeUnits,
     int length,
     int startPos,
     List<TextfToken> tokens,
@@ -549,7 +545,7 @@ class TextfTokenizer {
     final int keyStart = pos;
 
     while (pos < length) {
-      final int char = codeUnits[pos];
+      final int char = text.codeUnitAt(pos);
 
       // Check for allowed characters: 0-9, A-Z, _, a-z
       // 0x30-0x39: 0-9

@@ -12,7 +12,7 @@ void main() {
     final text = List.generate(
       100,
       (i) => '**b** *i* `c` ~~s~~ ==h== ++u++ ^s^ ~s~ [h](i)   ',
-    ).join('\n');
+    ).join();
 
     final controller = TextfEditingController(text: text);
 

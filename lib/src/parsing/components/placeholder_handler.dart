@@ -18,7 +18,7 @@ class PlaceholderHandler {
     ParserState state,
     PlaceholderToken token,
   ) {
-    // 1. The token key is the identifier (e.g., "icon" from "{icon}").
+    // 1. The token key is the identifier, safely extracted zero-copy.
     final String key = token.key;
 
     // Capture the map locally.
@@ -70,9 +70,8 @@ class PlaceholderHandler {
 
   /// Handles invalid placeholders by treating them as literal text.
   static void _handleFallback(ParserState state, PlaceholderToken token) {
-    // Reconstruct the brace syntax. The tokenizer stripped the braces
-    // to store the key value.
-    // e.g. token.key is "icon", we append "{icon}" to the buffer.
+    // Reconstruct the brace syntax. We extract the key dynamically now.
+    // e.g., if the token represents "{icon}", we append "{icon}" to the buffer.
     state.textBuffer.write('{${token.key}}');
   }
 }

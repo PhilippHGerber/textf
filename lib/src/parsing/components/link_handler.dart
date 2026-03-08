@@ -38,7 +38,7 @@ class LinkHandler {
     // 2. It IS a link. Now we must flush previous text to start a new span.
     state.flushText(context);
 
-    // --- Valid Link Processing ---
+    // Valid Link Processing
 
     // Extract raw text and URL
     final linkTextToken = tokens[index + kLinkTextOffset] as TextToken;

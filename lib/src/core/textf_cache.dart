@@ -3,7 +3,7 @@ import 'dart:collection';
 /// A memory-aware Least Recently Used (LRU) cache.
 ///
 /// Evicts the oldest entries when either the [maxEntries] limit
-/// OR the [maxTotalChars] budget is exceeded. This dual-bound approach
+/// OR the[maxTotalChars] budget is exceeded. This dual-bound approach
 /// prevents memory bloat when caching many long strings.
 class TextfCache<K, V> {
   /// Creates a new dual-bounded LRU cache.
@@ -25,14 +25,24 @@ class TextfCache<K, V> {
   final LinkedHashMap<K, V> _map = LinkedHashMap<K, V>();
   int _currentCharCount = 0;
 
+  /// Explicitly tracks the Most Recently Used key to achieve O(1) cache hits.
+  K? _mruKey;
+
   /// Retrieves a value from the cache and marks it as recently used.
   ///
   /// Returns `null` if the key is not present.
   V? get(K key) {
-    final V? value = _map.remove(key);
+    final V? value = _map[key];
+
     if (value != null) {
-      // Re-insert to move the entry to the end (most recently used position)
-      _map[key] = value;
+      // Optimization: Only mutate the LinkedHashMap if the item isn't ALREADY
+      // the most recently used. Tracking _mruKey explicitly provides O(1) checking,
+      // avoiding the O(N) penalty of calling `_map.keys.last`.
+      if (key != _mruKey) {
+        _map.remove(key);
+        _map[key] = value;
+        _mruKey = key;
+      }
     }
     return value;
   }
@@ -49,6 +59,7 @@ class TextfCache<K, V> {
 
     _map[key] = value;
     _currentCharCount += charCount;
+    _mruKey = key;
 
     _evictIfNeeded();
   }
@@ -60,12 +71,17 @@ class TextfCache<K, V> {
       _currentCharCount -= getCharCount(oldestKey);
       _map.remove(oldestKey);
     }
+    // If we evicted the MRU key (unlikely unless maxEntries=1), reset it.
+    if (!_map.containsKey(_mruKey)) {
+      _mruKey = _map.isNotEmpty ? _map.keys.last : null;
+    }
   }
 
   /// Clears all entries and resets the character budget.
   void clear() {
     _map.clear();
     _currentCharCount = 0;
+    _mruKey = null;
   }
 
   /// Number of items currently in the cache (useful for testing).

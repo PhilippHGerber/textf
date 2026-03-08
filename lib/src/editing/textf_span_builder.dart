@@ -26,7 +26,7 @@ typedef _CacheKey = ({String text, bool allowNewlineCrossing});
 /// Produces [TextSpan] children for most format types, and per-character
 /// [WidgetSpan] children for superscript / subscript when in preview mode
 /// (cursor outside the formatted span with markers fully hidden). This makes
-/// it suitable for use inside[TextEditingController.buildTextSpan].
+/// it suitable for use inside [TextEditingController.buildTextSpan].
 ///
 /// **Critical invariant:** The total character-slot count of all returned
 /// spans always equals the length of the input text. Each [TextSpan]
@@ -163,19 +163,13 @@ class TextfSpanBuilder {
     if (!FormattingUtils.hasFormatting(text)) {
       return <InlineSpan>[TextSpan(text: text, style: baseStyle)];
     }
-
-    final List<TextfToken> tokens;
-    final Map<int, int> validPairs;
-
     // Use the static LRU cache instead of executing a new tokenization pass
     final cacheEntry = _getTokensAndPairs(text, allowNewlineCrossing: false);
-    tokens = cacheEntry.tokens;
-    validPairs = cacheEntry.validPairs;
+    final tokens = cacheEntry.tokens;
+    final validPairs = cacheEntry.validPairs;
 
-    // --- Style Resolution ---
     final resolver = styleResolver ?? TextfStyleResolver(context);
 
-    // --- Marker styles ---
     final activeMarkerStyle = _resolveMarkerStyle(baseStyle, context);
     final inactiveMarkerStyle = cursorPosition != null //
         ? _resolveHiddenMarkerStyle()
@@ -253,7 +247,6 @@ class _SpanBuildState {
   final int? cursorPosition;
   final TextfStyleResolver resolver;
 
-  // --- Processing state variables ---
   final List<InlineSpan> spans = <InlineSpan>[];
   final StringBuffer textBuffer = StringBuffer();
   final List<FormatStackEntry> formatStack = <FormatStackEntry>[];
@@ -266,7 +259,7 @@ class _SpanBuildState {
     while (i < tokens.length) {
       final token = tokens[i];
 
-      // --- Placeholder Handling (render as literal text with braces) ---
+      // Placeholder Handling (render as literal text with braces)
       if (token is PlaceholderToken) {
         textBuffer
           ..write('{')
@@ -276,7 +269,7 @@ class _SpanBuildState {
         continue;
       }
 
-      // --- Link Handling (render as styled text spans) ---
+      // Link Handling (render as styled text spans)
       if (token is LinkStartToken) {
         final int? nextIndex = processLinkAsText(i);
         if (nextIndex != null) {
@@ -286,7 +279,7 @@ class _SpanBuildState {
         // Not a valid link — fall through to plain text.
       }
 
-      // --- Formatting Marker Handling ---
+      // Formatting Marker Handling
       if (token is FormatMarkerToken) {
         if (validPairs.containsKey(i)) {
           final int matchingIndex = validPairs[i]!;
@@ -364,7 +357,7 @@ class _SpanBuildState {
         // Unpaired marker — fall through to plain text.
       }
 
-      // --- Plain Text ---
+      // Plain Text
       switch (token) {
         case TextToken(:final value):
           textBuffer.write(value);
@@ -394,7 +387,6 @@ class _SpanBuildState {
 
     // Final flush
     flushText();
-
     return spans;
   }
 
@@ -461,34 +453,64 @@ class _SpanBuildState {
 
       final String content = textBuffer.toString();
 
-      // 1. Iterate over safe, visible characters (Grapheme Clusters)
-      // This prevents splitting emojis (like 🚀 or 👨‍👩‍👧‍👦) in half.
-      for (final String char in content.characters) {
-        // 2. Emit the visible WidgetSpan for this character.
-        // In a TextField, every WidgetSpan counts as exactly ONE code unit.
-        spans.add(
-          WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            child: Padding(
-              padding: padding,
-              child: Text(
-                char,
-                style: style,
-                textScaler: TextScaler.noScaling,
+      // FAST PATH: Check if text is entirely simple (no combining marks, emojis, or surrogates).
+      // Code units < 0x0300 cover ASCII and basic Latin-1, guaranteeing 1 code unit = 1 grapheme.
+      bool isSimpleText = true;
+      for (int i = 0; i < content.length; i++) {
+        // ignore: no-magic-number, reason: Checking for combining marks and emojis which start at U+0300.
+        if (content.codeUnitAt(i) >= 0x0300) {
+          isSimpleText = false;
+          break;
+        }
+      }
+
+      if (isSimpleText) {
+        // Bypass the expensive `characters` grapheme cluster iterator
+        for (int i = 0; i < content.length; i++) {
+          spans.add(
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Padding(
+                padding: padding,
+                child: Text(
+                  content[i],
+                  style: style,
+                  textScaler: TextScaler.noScaling,
+                ),
               ),
             ),
-          ),
-        );
+          );
+        }
+      } else {
+        // Slow path: Iterate over safe, visible characters (Grapheme Clusters)
+        // This prevents splitting emojis (like 🚀 or 👨‍👩‍👧‍👦) in half.
+        for (final String char in content.characters) {
+          // 1. Emit the visible WidgetSpan for this character.
+          // In a TextField, every WidgetSpan counts as exactly ONE code unit.
+          spans.add(
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Padding(
+                padding: padding,
+                child: Text(
+                  char,
+                  style: style,
+                  textScaler: TextScaler.noScaling,
+                ),
+              ),
+            ),
+          );
 
-        // 3. CRITICAL TEXTFIELD INVARIANT FIX:
-        // In Dart, `char.length` is the number of UTF-16 code units.
-        // Standard characters have length 1. Emojis usually have length 2 or more.
-        // If this character takes up 2 code units in the raw string, but we only
-        // emitted 1 WidgetSpan, the TextField's cursor will misalign and crash.
-        // We fix this by padding the span tree with completely hidden
-        // WidgetSpans to make up the missing code unit length.
-        for (int i = 1; i < char.length; i++) {
-          spans.add(const WidgetSpan(child: SizedBox.shrink()));
+          // 2. CRITICAL TEXTFIELD INVARIANT FIX:
+          // In Dart, `char.length` is the number of UTF-16 code units.
+          // Standard characters have length 1. Emojis usually have length 2 or more.
+          // If this character takes up 2 code units in the raw string, but we only
+          // emitted 1 WidgetSpan, the TextField's cursor will misalign and crash.
+          // We fix this by padding the span tree with completely hidden
+          // WidgetSpans to make up the missing code unit length.
+          for (int i = 1; i < char.length; i++) {
+            spans.add(const WidgetSpan(child: SizedBox.shrink()));
+          }
         }
       }
     } else {

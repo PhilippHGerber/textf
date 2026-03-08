@@ -16,10 +16,10 @@ class PairingResolver {
   /// 3. Validates proper nesting of the identified pairs using NestingValidator.
   ///
   /// @param tokens The list of tokens to analyze
-  /// @param allowNewlineCrossing When false, pairs whose span contains a newline are
-  ///   rejected during the pairing pass. Set to false for the editing controller path
-  ///   where cross-line pairing is always accidental; leave true (default) for the
-  ///   display widget where developer-authored cross-line formatting is intentional.
+  /// @param allowNewlineCrossing When false, pairs whose span contains a newline are rejected.
+  ///   Set to false for the editing controller path where cross-line pairing is always accidental;
+  ///   leave true (default) for the display widget where developer-authored cross-line formatting
+  ///   is intentional.
   /// @return A map where keys are token indices and values are their matching pair indices
   static Map<int, int> identifyPairs(
     List<TextfToken> tokens, {
@@ -30,8 +30,7 @@ class PairingResolver {
     // First pass: identify simple pairs by type
     _identifySimplePairs(tokens, pairs, allowNewlineCrossing: allowNewlineCrossing);
 
-    // Second pass: remove pairs that cross code-span boundaries or are
-    // entirely inside a code span, so they cannot corrupt code pair validity.
+    // Second pass: remove pairs that cross code-span boundaries
     _removeCodeBoundaryCrossingPairs(tokens, pairs);
 
     // Validate nesting and remove invalid pairs
@@ -151,7 +150,7 @@ class PairingResolver {
       if (stack == null) continue; // Should not happen for known formatting markers
 
       if (stack.isNotEmpty && token.canClose) {
-        final int openingIndex = stack.last; // peek before deciding
+        final int openingIndex = stack.last;
 
         // When newline crossing is disabled, reject any pair whose span
         // contains a newline. Leave the opener on the stack so a later

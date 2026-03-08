@@ -14,8 +14,8 @@ import 'textf_token.dart';
 class ParserState {
   /// Creates a new parser state.
   ///
-  /// Requires the token list, the base text style, the map of valid
-  /// matching marker pairs, and the style resolver.
+  /// Requires the original source text, the token list, the base text style,
+  /// the map of valid matching marker pairs, and the style resolver.
   ParserState({
     required this.tokens,
     required this.baseStyle,
