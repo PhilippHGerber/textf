@@ -51,7 +51,7 @@ class TextfParser {
   ///
   /// This method orchestrates the parsing process:
   /// 1. Handles fast paths for empty or plain text (text without any potential markers).
-  /// 2. Tokenizes the input text using the configured [TextfTokenizer].
+  /// 2. Tokenizes the input text using the configured 'TextfTokenizer'.
   /// 3. Creates a `TextfStyleResolver` using the provided `context` to handle style lookups.
   /// 4. Identifies matching, valid pairs of formatting markers (e.g., `*...*`) using `PairingResolver`.
   ///    This step ensures only correctly paired markers are considered for formatting.

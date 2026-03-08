@@ -238,7 +238,7 @@ class _SpanBuildState {
             }
 
             // Compute resolved style at this stack depth for O(1) lookup.
-            final TextStyle previousStyle = formatStack.isEmpty
+            final TextStyle previousStyle = formatStack.isEmpty //
                 ? baseStyle
                 : (formatStack.last.resolvedStyle ?? baseStyle);
             final TextStyle resolved = resolver.resolveStyle(token.markerType, previousStyle);

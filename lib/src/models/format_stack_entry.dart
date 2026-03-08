@@ -33,7 +33,7 @@ class FormatStackEntry {
   ///
   /// When set, this represents the fully resolved style from baseStyle
   /// through all format stack entries up to and including this one.
-  /// This avoids re-walking the stack on every [flushText] call.
+  /// This avoids re-walking the stack on every 'flushText' call.
   final TextStyle? resolvedStyle;
 
   @override

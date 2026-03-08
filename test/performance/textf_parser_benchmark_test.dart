@@ -36,7 +36,7 @@ void main() {
 
     debugPrint('--- TextfParser Cache Hit vs Miss Benchmark ---');
     debugPrint('String length: ${text.length} characters');
-    debugPrint('Cache Miss (1 parse) : ${missTime}μs'); // ignore: unnecessary_brace_in_string_interps, reason: braces needed before μ (non-ASCII)
+    debugPrint('Cache Miss (1 parse) : $missTimeμs');
     debugPrint('Cache Hit (Average)  : ${hitTimeAvg.toStringAsFixed(2)}μs');
     debugPrint('Speedup Factor       : ${(missTime / hitTimeAvg).toStringAsFixed(1)}x faster');
 

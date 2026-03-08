@@ -13,7 +13,6 @@ import 'package:textf/src/styling/textf_style_resolver.dart';
 // ignore: prefer-match-file-name
 class _MockTextfStyleResolver implements TextfStyleResolver {
   _MockTextfStyleResolver(this.context);
-  // Ignore the unused 'context' field, as it's not needed for the mock.
 
   final BuildContext context;
 

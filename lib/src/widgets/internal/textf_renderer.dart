@@ -91,7 +91,7 @@ class TextfRenderer extends StatefulWidget {
 /// The state class for [TextfRenderer] that builds the text widget and manages caching.
 ///
 /// Implements [WidgetsBindingObserver] to automatically clear the shared token
-/// cache on memory pressure, preventing the need for manual [Textf.clearCache] calls.
+/// cache on memory pressure, preventing the need for manual 'Textf.clearCache' calls.
 class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserver {
   /// Cached list of spans from the last parse.
   List<InlineSpan>? _cachedSpans;
