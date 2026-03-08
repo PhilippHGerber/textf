@@ -292,14 +292,14 @@ class _BenchmarkHomeState extends State<BenchmarkHome> with SingleTickerProvider
     }
   }
 
-  Future<void> _runAll() async {
+  Future<void> _runBatch(List<BenchmarkTarget> targets) async {
     setState(() {
       _results.clear();
       _isBatchRunning = true;
     });
 
     for (final scenario in _scenarios) {
-      for (final target in BenchmarkTarget.values) {
+      for (final target in targets) {
         await _runScenario(scenario, target);
       }
     }
@@ -367,12 +367,18 @@ class _BenchmarkHomeState extends State<BenchmarkHome> with SingleTickerProvider
       appBar: AppBar(
         title: const Text('Textf Benchmark'),
         actions: [
-          if (!_isBatchRunning)
+          if (!_isBatchRunning) ...[
             IconButton(
               icon: const Icon(Icons.play_arrow),
-              onPressed: _runAll,
-              tooltip: 'Run All Benchmarks',
+              onPressed: () => _runBatch(BenchmarkTarget.values),
+              tooltip: 'Run All (Textf + Raw + Rich)',
             ),
+            IconButton(
+              icon: const Icon(Icons.bolt),
+              onPressed: () => _runBatch(const [BenchmarkTarget.textf]),
+              tooltip: 'Run Textf Only',
+            ),
+          ],
         ],
       ),
       body: Column(
