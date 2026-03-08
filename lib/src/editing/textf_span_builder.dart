@@ -373,6 +373,19 @@ class _SpanBuildState {
         );
   }
 
+  /// Returns the active script [FormatStackEntry] if inside a script zone,
+  /// or `null` otherwise. Single-pass replacement for `inScriptZone()` +
+  /// `firstWhere()` which previously scanned the stack twice.
+  FormatStackEntry? _findActiveScriptEntry() {
+    if (scriptPairs.isEmpty) return null;
+    for (final FormatStackEntry e in formatStack) {
+      if (TextfSpanBuilder._isScriptType(e.type) && scriptPairs.contains(e.index)) {
+        return e;
+      }
+    }
+    return null;
+  }
+
   /// Flush accumulated text buffer.
   ///
   /// When inside any script zone, emits one WidgetSpan per character with
@@ -383,10 +396,12 @@ class _SpanBuildState {
   void flushText() {
     if (textBuffer.isEmpty) return;
 
-    if (inScriptZone()) {
-      final scriptEntry = formatStack.firstWhere(
-        (e) => TextfSpanBuilder._isScriptType(e.type) && scriptPairs.contains(e.index),
-      );
+    // Find the active script entry in a single pass instead of
+    // calling inScriptZone() (which scans the stack) and then
+    // firstWhere() (which scans it again with the same predicate).
+    final FormatStackEntry? scriptEntry = _findActiveScriptEntry();
+
+    if (scriptEntry != null) {
       final bool isSuperscript = scriptEntry.type == FormatMarkerType.superscript;
       final TextStyle style = currentStyle();
       final EdgeInsetsGeometry padding = resolver.resolveScriptPadding(
