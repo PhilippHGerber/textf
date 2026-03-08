@@ -14,7 +14,7 @@ environment:
 workspace:
   - example/benchmark
   - example/textf_core
-  - example/textf_editing_controller
+  - example/textf_playground
   - example/textf_flex
   - example/widgetbook_textf
 
