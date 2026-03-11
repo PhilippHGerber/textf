@@ -2,6 +2,8 @@
 
 [![pub package](https://img.shields.io/pub/v/textf.svg?label=pub.dev&labelColor=333940&logo=flutter&color=00589B)](https://pub.dev/packages/textf) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![style: very good analysis](https://img.shields.io/badge/Style-very_good_analysis-B22C89.svg)](https://pub.dev/packages/very_good_analysis) [![tests](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml/badge.svg)](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml) [![coverage](https://raw.githubusercontent.com/PhilippHGerber/textf/badges/coverage.svg)](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml)
 
+[Website](https://textf.philippgerber.li/) • [Quickstart](https://textf.philippgerber.li/docs/quickstart) • [Documentation](https://textf.philippgerber.li/docs/overview) • [Playground](https://textf.philippgerber.li/editor)
+
 Inline Markdown-like formatting for Flutter — as drop-in replacements for `Text` and `TextEditingController`. Zero dependencies. **Bold**, *italic*, `code`, [URL Link](.), <mark>highlights</mark>, super²/subscript₂.
 
 ---
@@ -272,7 +274,6 @@ A drop-in replacement for `TextEditingController`. Attach it to any `TextField` 
 Before building with this controller, be aware of the following constraints:
 
 - **Widget placeholders** (`{key}`) render as literal text — no widget substitution in editable fields
-- **Superscript/subscript** use proper vertical offset only when the cursor is fully outside the span and markers are hidden; during active editing, they fall back to a reduced font size on the baseline
 - **Links** display the full `[text](url)` syntax while editing — styled, but not tappable
 - **Cross-line markers** never pair across newlines — a marker on line 1 cannot accidentally format content on line 2
 
