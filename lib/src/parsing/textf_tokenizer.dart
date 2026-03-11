@@ -351,7 +351,12 @@ class TextfTokenizer {
   /// Ideographic Spaces (common in CJK/Japanese), and general Unicode spaces.
   bool _isWhitespace(int codeUnit) {
     // Fast path for standard ASCII whitespace (Space, Tab, LF, CR)
-    if (codeUnit == 0x0020 || codeUnit == 0x0009 || codeUnit == 0x000A || codeUnit == 0x000D) {
+    if (codeUnit == 0x0020 || // Space
+        codeUnit == 0x0009 || // Tab
+        codeUnit == 0x000A || // Line Feed
+        codeUnit == 0x000D || // Carriage Return
+        codeUnit == 0x200B) {
+      // Zero-width space (often used in formatting)
       return true;
     }
 
