@@ -24,7 +24,7 @@ jobs:
   dart:
     strategy:
       matrix:
-        example: [textf_core]
+        example: [basic]
     name: "${{ matrix.example }}"
     uses: ./.github/workflows/_base-dart.yaml
     with:
@@ -33,7 +33,7 @@ jobs:
   flutter:
     strategy:
       matrix:
-        example: [textf_core]
+        example: [basic]
     name: "${{ matrix.example }}"
     uses: ./.github/workflows/_base-flutter.yaml
     with:
