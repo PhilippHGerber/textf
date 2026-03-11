@@ -2,7 +2,7 @@
 
 Drop-in replacement for Flutter's `Text` widget with inline Markdown-like formatting.
 
-##
+## 
 
 ## Quick Start
 

@@ -76,7 +76,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                 .textfOptionsUseCase,
           ),
         ],
-      ),
+      )
     ],
-  ),
+  )
 ];
