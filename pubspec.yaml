@@ -12,11 +12,12 @@ environment:
   flutter: ">=3.27.0"
 
 workspace:
+  - docs
+  - example/basic
+  - example/advanced
   - example/benchmark
-  - example/textf_core
-  - example/textf_playground
   - example/textf_flex
-  - example/widgetbook_textf
+  - example/textf_widgetbook
 
 dependencies:
   flutter:
