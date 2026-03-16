@@ -2,8 +2,6 @@
 
 Drop-in replacement for Flutter's `Text` widget with inline Markdown-like formatting.
 
-## 
-
 ## Quick Start
 
 ```dart
@@ -92,9 +90,13 @@ TextField(
 ## Features
 
 ✓ **Zero dependencies** — pure Dart
+
 ✓ **Max 2-level nesting** — safe and predictable
+
 ✓ **Escape with backslash** — `\*not italic\*`
+
 ✓ **Fully customizable** — styles and callbacks via TextfOptions
+
 ✓ **Efficient** — LRU caching and single-pass tokenization
 
 See [pub.dev](https://pub.dev/packages/textf) for full documentation.
