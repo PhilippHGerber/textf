@@ -2,6 +2,12 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 1.2.1
+
+### Fixed
+
+* Screenshot for “TextfEditingController” in README.md has been corrected.
+
 ## 1.2.0
 
 ### Breaking Changes
