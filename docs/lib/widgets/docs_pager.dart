@@ -17,6 +17,7 @@ class DocsPager extends StatelessWidget {
     (route: DocsRoutes.placeholders, label: 'Placeholders'),
     (route: DocsRoutes.styling, label: 'Styling'),
     (route: DocsRoutes.textField, label: 'TextField'),
+    (route: DocsRoutes.agentSkill, label: 'Agent Skill'),
   ];
 
   @override

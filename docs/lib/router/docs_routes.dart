@@ -8,5 +8,6 @@ abstract final class DocsRoutes {
   static const placeholders = '/docs/placeholders';
   static const styling = '/docs/styling';
   static const textField = '/docs/text-field';
+  static const agentSkill = '/docs/agent-skill';
   static const editor = '/editor';
 }

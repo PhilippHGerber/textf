@@ -1,5 +1,5 @@
-name: textf_playground
-description: "Interactive playground demonstrating all textf formatting features, styling options, real-world examples, and the TextfEditingController."
+name: textf_docs
+description: "Documentation app for the textf Flutter package — inline markdown-like text formatting."
 publish_to: "none"
 version: 0.1.0+1
 resolution: workspace

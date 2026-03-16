@@ -11,17 +11,17 @@ const _darkBlendLevel = 18;
 
 void main() {
   usePathUrlStrategy();
-  runApp(const TextfPlaygroundApp());
+  runApp(const TextfDocsApp());
 }
 
-class TextfPlaygroundApp extends StatefulWidget {
-  const TextfPlaygroundApp({super.key});
+class TextfDocsApp extends StatefulWidget {
+  const TextfDocsApp({super.key});
 
   @override
-  State<TextfPlaygroundApp> createState() => _TextfPlaygroundAppState();
+  State<TextfDocsApp> createState() => _TextfDocsAppState();
 }
 
-class _TextfPlaygroundAppState extends State<TextfPlaygroundApp> {
+class _TextfDocsAppState extends State<TextfDocsApp> {
   // ignore: avoid-late-keyword
   late final ValueNotifier<ThemeMode> _themeModeNotifier;
 
@@ -49,7 +49,7 @@ class _TextfPlaygroundAppState extends State<TextfPlaygroundApp> {
         builder: (context, currentMode, child) {
           return MaterialApp.router(
             debugShowCheckedModeBanner: false,
-            title: 'Textf',
+            title: 'Textf Docs',
             routerConfig: appRouter,
             theme: FlexThemeData.light(
               scheme: FlexScheme.flutterDash,
