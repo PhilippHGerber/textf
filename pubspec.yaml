@@ -2,7 +2,7 @@ name: textf
 description: >
   Inline Markdown-like formatting for Flutter - as drop-in replacements for `Text` and `TextEditingController`.
   Bold, italic, code, [URL links](.), highlights, super/subscript.
-version: 1.2.0
+version: 1.2.1
 homepage: https://github.com/PhilippHGerber/textf
 repository: https://github.com/PhilippHGerber/textf
 issue_tracker: https://github.com/PhilippHGerber/textf/issues
@@ -46,3 +46,5 @@ screenshots:
     path: pub/textf_links.webp
   - description: "Placeholders"
     path: pub/textf_placeholders.webp
+  - description: "TextField with TextfEditingController"
+    path: pub/textf_editing_controller.webp
