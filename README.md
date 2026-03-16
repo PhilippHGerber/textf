@@ -34,7 +34,7 @@ final controller = TextfEditingController();
 TextField(controller: controller);
 ```
 
-![TextfEditingController screenshot](https://github.com/PhilippHGerber/textf/raw/main/images/textf_editing_controller.png)
+![TextfEditingController screenshot](https://github.com/PhilippHGerber/textf/raw/main/images/textf_editing_controller.gif)
 
 ---
 
