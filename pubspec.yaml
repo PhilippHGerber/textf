@@ -30,9 +30,10 @@ dev_dependencies:
 
 topics:
   - text
-  - widgets
   - markdown
   - formatting
+  - text-editing
+  - rich-text
 
 screenshots:
   - description: "Textf Logo"
