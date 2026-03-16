@@ -1,6 +1,7 @@
 # Text*f*
 
 [![pub package](https://img.shields.io/pub/v/textf.svg?label=pub.dev&labelColor=333940&logo=flutter&color=00589B)](https://pub.dev/packages/textf) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![style: very good analysis](https://img.shields.io/badge/Style-very_good_analysis-B22C89.svg)](https://pub.dev/packages/very_good_analysis) [![tests](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml/badge.svg)](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml) [![coverage](https://raw.githubusercontent.com/PhilippHGerber/textf/badges/coverage.svg)](https://github.com/PhilippHGerber/textf/actions/workflows/package.yaml)
+[![AI Skills](https://img.shields.io/badge/AI-SKILL.md-blueviolet?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0cHgiIGZpbGw9IiNmZmZmZmYiPjxnPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIgeD0iMCIvPjwvZz48Zz48Zz48cG9seWdvbiBwb2ludHM9IjE5LDkgMjAuMjUsNi4yNSAyMyw1IDIwLjI1LDMuNzUgMTksMSAxNy43NSwzLjc1IDE1LDUgMTcuNzUsNi4yNSIvPjxwb2x5Z29uIHBvaW50cz0iMTksMTUgMTcuNzUsMTcuNzUgMTUsMTkgMTcuNzUsMjAuMjUgMTksMjMgMjAuMjUsMjAuMjUgMjMsMTkgMjAuMjUsMTcuNzUiLz48cGF0aCBkPSJNMTEuNSw5LjVMOSw0TDYuNSw5LjVMMSwxMmw1LjUsMi41TDksMjBsMi41LTUuNUwxNywxMkwxMS41LDkuNXogTTkuOTksMTIuOTlMOSwxNS4xN2wtMC45OS0yLjE4TDUuODMsMTJsMi4xOC0wLjk5IEw5LDguODNsMC45OSwyLjE4TDEyLjE3LDEyTDkuOTksMTIuOTl6Ii8+PC9nPjwvZz48L3N2Zz4=&logoColor=white)](./skills/textf-usage/SKILL.md)
 
 [Website](https://textf.philippgerber.li/) • [Quickstart](https://textf.philippgerber.li/docs/quickstart) • [Documentation](https://textf.philippgerber.li/docs/overview) • [Playground](https://textf.philippgerber.li/editor)
 
@@ -456,6 +457,17 @@ TextfOptions(
 ## API Reference
 
 Full documentation on [pub.dev](https://pub.dev/documentation/textf/latest/).
+
+## AI Agent Skill
+
+Textf ships with an [AI agent skill](https://pub.dev/packages/skills). Once you have `textf` as a dependency, run:
+
+```sh
+dart pub global activate skills
+skills get
+```
+
+This installs Textf's skill into your project, giving AI coding agents (Claude Code, Cursor, Cline, and others) full knowledge of the API, formatting syntax, and best practices — enabling accurate, idiomatic suggestions without needing to read the docs.
 
 ---
 
