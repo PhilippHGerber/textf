@@ -20,6 +20,8 @@ build
 **/ios/*
 **/linux/*
 **/macos/*
-**/web/*
+example/**/web/*
 **/windows/*
 
+**/.firebase/**
+pubspec.lock
