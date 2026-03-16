@@ -62,7 +62,7 @@ class TextfSpanBuilder {
   /// Clears the shared token cache used by the builder.
   static void clearCache() => TextfTokenCache.clearCache();
 
-  /// Builds a list of[InlineSpan] from formatted text.
+  /// Builds a list of [InlineSpan] from formatted text.
   ///
   /// Every character in the input[text] appears in the output spans,
   /// ensuring 1:1 cursor-to-character mapping. Formatting markers are

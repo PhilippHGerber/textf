@@ -5,7 +5,7 @@ import '../models/textf_token.dart';
 
 /// Tokenizes text into formatting markers, placeholders, and content segments.
 ///
-/// The TextfTokenizer breaks down input text into a sequence of[TextfToken] objects that
+/// The TextfTokenizer breaks down input text into a sequence of [TextfToken] objects that
 /// represent either formatting markers (like bold, italic), placeholders (like {icon}),
 /// or regular text content.
 ///
