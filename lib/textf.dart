@@ -32,3 +32,4 @@ export 'src/editing/textf_editing_controller.dart';
 export 'src/widgets/textf.dart';
 export 'src/widgets/textf_ext.dart';
 export 'src/widgets/textf_options.dart';
+export 'src/widgets/textf_options_data.dart';
