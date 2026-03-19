@@ -5,6 +5,7 @@
 **build/
 /docs/
 pubspec.lock
+pubspec_overrides.yaml
 coverage/
 lcov.info
 llmifierrc.yaml

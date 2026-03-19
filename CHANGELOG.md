@@ -2,6 +2,12 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 1.2.2
+
+### Fixed
+
+* **Fix workspace issue:** Move workspace to pubspec_overrides.yaml to fix resolution errors in consumers (#8)
+
 ## 1.2.1
 
 ### Fixed

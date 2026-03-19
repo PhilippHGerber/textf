@@ -1,0 +1,7 @@
+workspace:
+  - docs
+  - example/basic
+  - example/advanced
+  - example/benchmark
+  - example/textf_flex
+  - example/textf_widgetbook
