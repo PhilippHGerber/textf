@@ -1,5 +1,5 @@
 import '../models/textf_token.dart';
-import '../parsing/components/pairing_resolver.dart';
+import '../parsing/components/pair_validator.dart';
 import '../parsing/textf_tokenizer.dart';
 import 'textf_cache.dart';
 import 'textf_limits.dart';
@@ -32,7 +32,7 @@ class TextfTokenCache {
     if (text.length > TextfLimits.maxCacheKeyLength) {
       final tokens = _tokenizer.tokenize(text, allowNewlineCrossing: allowNewlineCrossing);
       final validPairs =
-          PairingResolver.identifyPairs(tokens, allowNewlineCrossing: allowNewlineCrossing);
+          PairValidator.identifyPairs(tokens, allowNewlineCrossing: allowNewlineCrossing);
       return TokenCacheEntry(tokens, validPairs);
     }
 
@@ -44,7 +44,7 @@ class TextfTokenCache {
 
     final tokens = _tokenizer.tokenize(text, allowNewlineCrossing: allowNewlineCrossing);
     final validPairs =
-        PairingResolver.identifyPairs(tokens, allowNewlineCrossing: allowNewlineCrossing);
+        PairValidator.identifyPairs(tokens, allowNewlineCrossing: allowNewlineCrossing);
     final entry = TokenCacheEntry(tokens, validPairs);
     _cache.set(key, entry);
 

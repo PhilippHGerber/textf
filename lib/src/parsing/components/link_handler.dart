@@ -114,7 +114,9 @@ class LinkHandler {
       onHoverCallback: effectiveOnHover,
     );
 
-    // Add the widget as a WidgetSpan
+    // Add the widget as a WidgetSpan. Note: the inner Text in HoverableLinkSpan uses
+    // TextScaler.noScaling because RichText already applies the textScaler to WidgetSpan
+    // dimensions. Applying scaling again would double-scale link text.
     state.spans.add(
       WidgetSpan(
         child: hoverableWidget,

@@ -2,11 +2,17 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## Unreleased
+
+### Internal
+
+* Merged `PairingResolver` and `NestingValidator` into a single `PairValidator` class. The public API is unchanged (`identifyPairs`); the two-pass pipeline (code-boundary crossing removal + LIFO nesting validation) is now an internal implementation detail.
+
 ## 1.2.2
 
 ### Fixed
 
-* **Fix workspace issue:** Move workspace to pubspec_overrides.yaml to fix resolution errors in consumers (#8)
+* **Fix workspace issue:** Move workspace to pubspec_overrides.yaml to fix resolution errors in consumers  (#8)
 
 ## 1.2.1
 

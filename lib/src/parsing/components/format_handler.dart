@@ -7,7 +7,7 @@ import '../../models/textf_token.dart';
 /// Handles the processing of formatting tokens (bold, italic, etc.) during parsing.
 ///
 /// This class is responsible for managing the `formatStack` within the `ParserState`
-/// based on opening and closing formatting markers identified by the `PairingResolver`.
+/// based on opening and closing formatting markers identified by the `PairValidator`.
 /// It ensures that `state.flushText()` is called before format changes occur,
 /// allowing the `ParserState` (using the `TextfStyleResolver`) to apply the correct
 /// style to the text segments.
@@ -92,7 +92,7 @@ class FormatHandler {
     state.flushText(context);
 
     // Remove the corresponding opening entry from stack.
-    // NestingValidator guarantees proper nesting, so the closing marker must
+    // PairValidator guarantees proper nesting, so the closing marker must
     // always match the stack top (LIFO order is preserved).
     assert(
       state.formatStack.isNotEmpty && state.formatStack.last.index == matchingIndex,

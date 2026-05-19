@@ -500,7 +500,7 @@ void main() {
           (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
         // **_text**_ — ** wants to pair at [0,3], _ wants to pair at [1,4].
-        // These overlap; NestingValidator rejects both pairs.
+        // These overlap; pair validation rejects both pairs.
         // All markers are unpaired → rendered as literal characters.
         const input = '**_text**_';
         final spans = builder.build(input, testContext, const TextStyle());

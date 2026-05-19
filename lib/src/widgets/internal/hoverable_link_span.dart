@@ -134,6 +134,8 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
     // because WidgetSpans are treated as atomic boxes.
     Widget content = Text.rich(
       TextSpan(children: styledSpans),
+      // This Text sits inside a WidgetSpan; the parent RichText already applies the
+      // MediaQuery textScaler to WidgetSpan dimensions. Scaling here would double-scale.
       textScaler: TextScaler.noScaling,
     );
 
