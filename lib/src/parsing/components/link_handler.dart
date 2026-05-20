@@ -36,7 +36,7 @@ class LinkHandler {
     }
 
     // 2. It IS a link. Now we must flush previous text to start a new span.
-    state.flushText(context);
+    state.flushText();
 
     // Valid Link Processing
 
@@ -47,11 +47,8 @@ class LinkHandler {
     final rawLinkUrl = linkUrlToken.value;
     final normalizedUrl = normalizeUrl(rawLinkUrl);
 
-    // Calculate the style inherited from formatting markers *outside* the link
-    TextStyle inheritedStyle = state.baseStyle;
-    for (final entry in state.formatStack) {
-      inheritedStyle = state.styleResolver.resolveStyle(entry.type, inheritedStyle);
-    }
+    // Calculate the style inherited from formatting markers outside the link.
+    final TextStyle inheritedStyle = state.currentStyle();
 
     // Resolve link-specific styles and callbacks
     final TextStyle finalLinkStyle = state.styleResolver.resolveLinkStyle(inheritedStyle);

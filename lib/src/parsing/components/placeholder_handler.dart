@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../models/format_stack_entry.dart';
 import '../../models/parser_state.dart';
 import '../../models/textf_token.dart';
 
@@ -13,11 +12,7 @@ import '../../models/textf_token.dart';
 /// 4. If not found: Appending the raw placeholder text to the buffer (no flush).
 class PlaceholderHandler {
   /// Processes a placeholder token and updates the parser state.
-  static void processPlaceholder(
-    BuildContext context,
-    ParserState state,
-    PlaceholderToken token,
-  ) {
+  static void processPlaceholder(ParserState state, PlaceholderToken token) {
     // 1. The token key is the identifier, safely extracted zero-copy.
     final String key = token.key;
 
@@ -30,9 +25,9 @@ class PlaceholderHandler {
       if (span != null) {
         // Valid placeholder found.
         // We MUST flush preceding text now to preserve order before inserting the widget.
-        state.flushText(context);
+        state.flushText();
 
-        _insertStyledPlaceholder(context, state, span);
+        _insertStyledPlaceholder(state, span);
         return;
       }
     }
@@ -44,16 +39,8 @@ class PlaceholderHandler {
   }
 
   /// Inserts the [userSpan] wrapped in the current active styles.
-  static void _insertStyledPlaceholder(
-    BuildContext context,
-    ParserState state,
-    InlineSpan userSpan,
-  ) {
-    // Resolve the effective style from the current stack (e.g., base + bold + italic).
-    TextStyle currentStyle = state.baseStyle;
-    for (final FormatStackEntry entry in state.formatStack) {
-      currentStyle = state.styleResolver.resolveStyle(entry.type, currentStyle);
-    }
+  static void _insertStyledPlaceholder(ParserState state, InlineSpan userSpan) {
+    final TextStyle currentStyle = state.currentStyle();
 
     // We wrap the user's span in a TextSpan that carries the current calculated style.
     // Flutter's TextSpan inheritance logic ensures that if 'userSpan' is a TextSpan

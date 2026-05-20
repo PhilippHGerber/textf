@@ -5,7 +5,6 @@ import '../core/textf_token_cache.dart';
 import '../models/parser_state.dart';
 import '../models/textf_token.dart';
 import '../styling/textf_style_resolver.dart';
-import 'components/format_handler.dart';
 import 'components/link_handler.dart';
 import 'components/placeholder_handler.dart';
 
@@ -62,7 +61,7 @@ class TextfParser {
   ///    - Appends plain text tokens ([TextToken]) to the `ParserState`'s text buffer.
   ///    - If a [LinkStartToken] is encountered, delegates processing to `LinkHandler`.
   ///    - If a [PlaceholderToken] is encountered, delegates to `PlaceholderHandler`.
-  ///    - If a [FormatMarkerToken] is found, handles stack operations via `FormatHandler`.
+  ///    - If a [FormatMarkerToken] is found, handles stack operations via [ParserState].
   ///    - Treats any other unexpected token types encountered during the loop as plain text.
   /// 7. After iterating through all tokens, flushes any remaining text in the `ParserState`'s
   ///    buffer using the current style context via `state.flushText()`.
@@ -120,7 +119,7 @@ class TextfParser {
 
       // Placeholder Handling
       if (token is PlaceholderToken) {
-        PlaceholderHandler.processPlaceholder(context, state, token);
+        PlaceholderHandler.processPlaceholder(state, token);
         i++;
         continue;
       }
@@ -140,11 +139,14 @@ class TextfParser {
 
       // Formatting Handling
       if (token is FormatMarkerToken) {
-        if (state.matchingPairs.containsKey(i)) {
-          // This token is part of a valid format pair.
-          FormatHandler.processFormat(context, state, i, token);
-          // Handled as a marker (either pushed to or popped from stack).
-          // Do NOT add to text buffer.
+        final int? matchingIndex = state.matchingPairs[i];
+        if (matchingIndex != null) {
+          state.flushText();
+          if (matchingIndex > i) {
+            state.pushFormat(i);
+          } else {
+            state.popFormat(i);
+          }
           i++;
           continue;
         }
@@ -177,7 +179,7 @@ class TextfParser {
     }
 
     // 6. Final Flush
-    state.flushText(context);
+    state.flushText();
 
     return state.spans;
   }

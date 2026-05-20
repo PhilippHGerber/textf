@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
-import 'package:textf/src/widgets/textf_options_data.dart';
 import 'package:textf/textf.dart';
 
 void main() {

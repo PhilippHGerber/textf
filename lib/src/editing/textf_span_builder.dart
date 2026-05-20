@@ -240,7 +240,7 @@ class _SpanBuildState {
             // Compute resolved style at this stack depth for O(1) lookup.
             final TextStyle previousStyle = formatStack.isEmpty //
                 ? baseStyle
-                : (formatStack.last.resolvedStyle ?? baseStyle);
+                : formatStack.last.resolvedStyle;
             final TextStyle resolved = resolver.resolveStyle(token.markerType, previousStyle);
 
             formatStack.add(
@@ -624,9 +624,9 @@ class _SpanBuildState {
             // Opening marker.
             flushNestedBuffer();
             spans.add(TextSpan(text: token.value, style: markerStyle));
-            final TextStyle prevStyle = nestedFormatStack.isEmpty
+            final TextStyle prevStyle = nestedFormatStack.isEmpty //
                 ? linkStyle
-                : (nestedFormatStack.last.resolvedStyle ?? linkStyle);
+                : nestedFormatStack.last.resolvedStyle;
             nestedFormatStack.add(
               FormatStackEntry(
                 index: i,

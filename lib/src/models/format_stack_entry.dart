@@ -17,7 +17,7 @@ class FormatStackEntry {
     required this.index,
     required this.matchingIndex,
     required this.type,
-    this.resolvedStyle,
+    required this.resolvedStyle,
   });
 
   /// Index of the opening formatting marker in the token list.
@@ -31,10 +31,10 @@ class FormatStackEntry {
 
   /// The cumulative resolved style at this stack depth.
   ///
-  /// When set, this represents the fully resolved style from baseStyle
-  /// through all format stack entries up to and including this one.
-  /// This avoids re-walking the stack on every 'flushText' call.
-  final TextStyle? resolvedStyle;
+  /// Represents the fully resolved style from baseStyle through all format
+  /// stack entries up to and including this one, avoiding O(depth) re-walks
+  /// on every `flushText` call.
+  final TextStyle resolvedStyle;
 
   @override
   String toString() => 'FormatStackEntry($type, $index -> $matchingIndex)';

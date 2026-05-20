@@ -8,7 +8,7 @@ import 'textf_token.dart';
 ///
 /// This class maintains all the necessary variables during the parsing process,
 /// including the input tokens, the base text style, matching marker pairs,
-/// the current formatting stack, and the style resolver. It also provides
+/// the current formatting state, and the style resolver. It also provides
 /// methods for common state operations like flushing accumulated text
 /// with the currently applied formatting.
 class ParserState {
@@ -44,7 +44,7 @@ class ParserState {
   final StringBuffer textBuffer = StringBuffer();
 
   /// A stack tracking the currently active formatting markers.
-  final List<FormatStackEntry> formatStack = [];
+  final List<FormatStackEntry> _formatStack = [];
 
   /// An optional `TextScaler` for scaling the text.
   final TextScaler? textScaler;
@@ -53,55 +53,77 @@ class ParserState {
   /// Keys correspond to the text inside braces (e.g., "icon" matches "{icon}").
   final Map<String, InlineSpan>? placeholders;
 
+  /// Pushes a format onto the stack for the opening marker at [tokenIndex].
+  ///
+  /// Looks up the matching closing index from [matchingPairs] and the marker
+  /// token from [tokens]. Computes the resolved style by applying the marker
+  /// on top of [currentStyle] and caches it in the new stack entry.
+  void pushFormat(int tokenIndex) {
+    final TextfToken token = tokens[tokenIndex];
+    assert(token is FormatMarkerToken, 'pushFormat called with non-marker token');
+    if (token is! FormatMarkerToken) return;
+
+    final int? matchingIndex = matchingPairs[tokenIndex];
+    assert(matchingIndex != null, 'pushFormat called without a matching pair');
+    if (matchingIndex == null) return;
+
+    final TextStyle resolved = styleResolver.resolveStyle(token.markerType, currentStyle());
+    _formatStack.add(
+      FormatStackEntry(
+        index: tokenIndex,
+        matchingIndex: matchingIndex,
+        type: token.markerType,
+        resolvedStyle: resolved,
+      ),
+    );
+  }
+
+  /// Pops the top entry for the closing marker at [closingTokenIndex].
+  void popFormat(int closingTokenIndex) {
+    assert(
+      _formatStack.isNotEmpty && _formatStack.last.matchingIndex == closingTokenIndex,
+      'Closing marker does not match stack top - nesting validation failed',
+    );
+    if (_formatStack.isEmpty || _formatStack.last.matchingIndex != closingTokenIndex) {
+      throw StateError('Closing marker does not match stack top');
+    }
+
+    _formatStack.removeLast();
+  }
+
   /// Resolves the current style based on the format stack and base style.
   ///
-  /// O(1) when the stack top has a cached [FormatStackEntry.resolvedStyle],
-  /// falls back to walking the stack otherwise.
-  TextStyle getCurrentStyle(BuildContext context) {
-    if (formatStack.isEmpty) {
-      return baseStyle;
-    }
+  /// O(1): returns the pre-computed [FormatStackEntry.resolvedStyle] from the
+  /// stack top, or [baseStyle] when the stack is empty.
+  TextStyle currentStyle() {
+    if (_formatStack.isEmpty) return baseStyle;
 
-    // O(1): use pre-computed style from stack top if available.
-    final TextStyle? cached = formatStack.last.resolvedStyle;
-    if (cached != null) return cached;
-
-    // Fallback: walk the stack (when entries lack cached styles).
-    TextStyle currentStyle = baseStyle;
-    for (final FormatStackEntry entry in formatStack) {
-      currentStyle = styleResolver.resolveStyle(entry.type, currentStyle);
-    }
-    return currentStyle;
+    return _formatStack.last.resolvedStyle;
   }
 
   /// Flushes the accumulated `textBuffer` as a `TextSpan` with the current formatting applied.
   ///
-  /// This method calculates the effective text style by starting with `baseStyle`
-  /// and iteratively applying the styles corresponding to the markers currently
-  /// on the `formatStack`, using the `styleResolver`. It then creates a `TextSpan`
-  /// with the calculated style and the buffered text, adds it to the `spans` list,
-  /// and clears the `textBuffer`.
-  ///
-  /// - [context]: The BuildContext, needed by the styleResolver.
-  void flushText(BuildContext context) {
+  /// Creates a `TextSpan` (or script span) from [currentStyle] and the buffered
+  /// text, appends it to [spans], then clears [textBuffer].
+  void flushText() {
     if (textBuffer.isEmpty) return;
 
     final String text = textBuffer.toString();
-    final currentStyle = getCurrentStyle(context);
+    final resolvedStyle = currentStyle();
 
-    final bool isSuperscript = formatStack.any((e) => e.type == FormatMarkerType.superscript);
-    final bool isSubscript = formatStack.any((e) => e.type == FormatMarkerType.subscript);
+    final bool isSuperscript = _formatStack.any((e) => e.type == FormatMarkerType.superscript);
+    final bool isSubscript = _formatStack.any((e) => e.type == FormatMarkerType.subscript);
 
     if (isSuperscript || isSubscript) {
       spans.add(
         styleResolver.createScriptSpan(
           text: text,
-          style: currentStyle,
+          style: resolvedStyle,
           isSuperscript: isSuperscript,
         ),
       );
     } else {
-      spans.add(TextSpan(text: text, style: currentStyle));
+      spans.add(TextSpan(text: text, style: resolvedStyle));
     }
 
     textBuffer.clear();

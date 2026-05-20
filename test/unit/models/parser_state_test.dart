@@ -1,7 +1,6 @@
 // ignore_for_file: cascade_invocations // cascade_invocations for readability and chaining methods.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:textf/src/models/format_stack_entry.dart';
 import 'package:textf/src/models/parser_state.dart';
 import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
@@ -12,10 +11,6 @@ import 'package:textf/src/styling/textf_style_resolver.dart';
 // for a given FormatMarkerType.
 // ignore: prefer-match-file-name
 class _MockTextfStyleResolver implements TextfStyleResolver {
-  _MockTextfStyleResolver(this.context);
-
-  final BuildContext context;
-
   final Map<FormatMarkerType, TextStyle> _styleMap = {};
 
   // A method to configure the mock for a specific test.
@@ -72,61 +67,120 @@ class _MockTextfStyleResolver implements TextfStyleResolver {
 
 void main() {
   const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
+  const boldStyle = TextStyle(fontWeight: FontWeight.bold);
+  const italicStyle = TextStyle(fontStyle: FontStyle.italic, color: Colors.red);
+  const italicClosingIndex = 2;
 
-  // Helper function to set up a valid BuildContext and mock resolver for each test.
-  // It takes the `tester` from `testWidgets` to ensure it runs in a valid environment.
-  Future<(BuildContext, _MockTextfStyleResolver)> setupTest(WidgetTester tester) async {
-    // ignore: avoid-late-keyword
-    late BuildContext mockContext;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) {
-            mockContext = context;
-            return const SizedBox.shrink();
-          },
-        ),
-      ),
+  List<TextfToken> nestedFormatTokens() => const <TextfToken>[
+        FormatMarkerToken(FormatMarkerType.bold, '**', position: 0, length: 2),
+        FormatMarkerToken(FormatMarkerType.italic, '_', position: 2, length: 1),
+        FormatMarkerToken(FormatMarkerType.italic, '_', position: 3, length: 1),
+        FormatMarkerToken(FormatMarkerType.bold, '**', position: 4, length: 2),
+      ];
+
+  Map<int, int> nestedFormatPairs() => const <int, int>{
+        0: 3,
+        1: 2,
+        2: 1,
+        3: 0,
+      };
+
+  ParserState createState({
+    List<TextfToken>? tokens,
+    Map<int, int>? matchingPairs,
+    _MockTextfStyleResolver? resolver,
+  }) {
+    final styleResolver = resolver ?? _MockTextfStyleResolver();
+    return ParserState(
+      tokens: tokens ?? const <TextfToken>[],
+      baseStyle: baseStyle,
+      matchingPairs: matchingPairs ?? const <int, int>{},
+      styleResolver: styleResolver,
     );
-    final mockResolver = _MockTextfStyleResolver(mockContext);
-    return (mockContext, mockResolver);
   }
 
   group('ParserState Tests', () {
-    testWidgets('flushText does nothing when textBuffer is empty', (tester) async {
-      // ARRANGE
-      final (mockContext, mockResolver) = await setupTest(tester);
-      final state = ParserState(
-        tokens: [],
-        baseStyle: baseStyle,
-        matchingPairs: {},
-        styleResolver: mockResolver,
+    test('currentStyle returns baseStyle when the stack is empty', () {
+      final state = createState();
+
+      expect(state.currentStyle(), baseStyle);
+    });
+
+    test('pushFormat for bold then italic returns the combined style', () {
+      final mockResolver = _MockTextfStyleResolver()
+        ..whenResolveStyle(FormatMarkerType.bold, boldStyle)
+        ..whenResolveStyle(FormatMarkerType.italic, italicStyle);
+      final state = createState(
+        tokens: nestedFormatTokens(),
+        matchingPairs: nestedFormatPairs(),
+        resolver: mockResolver,
       );
 
-      // ACT
-      state.flushText(mockContext);
+      state.pushFormat(0);
+      state.pushFormat(1);
 
-      // ASSERT
+      final resolvedStyle = state.currentStyle();
+      expect(resolvedStyle.fontWeight, FontWeight.bold);
+      expect(resolvedStyle.fontStyle, FontStyle.italic);
+      expect(resolvedStyle.color, Colors.red);
+      expect(resolvedStyle.fontSize, baseStyle.fontSize);
+    });
+
+    test('push and pop round-trip restores the previous style', () {
+      final mockResolver = _MockTextfStyleResolver()
+        ..whenResolveStyle(FormatMarkerType.bold, boldStyle)
+        ..whenResolveStyle(FormatMarkerType.italic, italicStyle);
+      final state = createState(
+        tokens: nestedFormatTokens(),
+        matchingPairs: nestedFormatPairs(),
+        resolver: mockResolver,
+      );
+
+      state.pushFormat(0);
+      final boldResolvedStyle = state.currentStyle();
+      state.pushFormat(1);
+
+      expect(state.currentStyle().fontStyle, FontStyle.italic);
+
+      state.popFormat(italicClosingIndex);
+
+      expect(state.currentStyle(), boldResolvedStyle);
+    });
+
+    test('popFormat on an empty stack triggers an assertion', () {
+      final state = createState();
+
+      expect(() => state.popFormat(0), throwsA(isA<AssertionError>()));
+    });
+
+    test('popFormat with a mismatched closing token triggers an assertion', () {
+      final mockResolver = _MockTextfStyleResolver()
+        ..whenResolveStyle(FormatMarkerType.bold, boldStyle);
+      final state = createState(
+        tokens: nestedFormatTokens(),
+        matchingPairs: nestedFormatPairs(),
+        resolver: mockResolver,
+      );
+      state.pushFormat(0);
+
+      expect(() => state.popFormat(italicClosingIndex), throwsA(isA<AssertionError>()));
+    });
+
+    test('flushText does nothing when textBuffer is empty', () {
+      final state = createState();
+
+      state.flushText();
+
       expect(state.spans, isEmpty, reason: 'Spans list should remain empty');
       expect(state.textBuffer, isEmpty, reason: 'Text buffer should still be empty');
     });
 
-    testWidgets('flushText creates a simple TextSpan with baseStyle when formatStack is empty',
-        (tester) async {
-      // ARRANGE
-      final (mockContext, mockResolver) = await setupTest(tester);
-      final state = ParserState(
-        tokens: [],
-        baseStyle: baseStyle,
-        matchingPairs: {},
-        styleResolver: mockResolver,
-      );
+    test('flushText creates a simple TextSpan with baseStyle when the stack is empty', () {
+      final state = createState();
       state.textBuffer.write('Plain text');
 
-      // ACT
-      state.flushText(mockContext);
+      state.flushText();
 
-      // ASSERT
       expect(state.spans, hasLength(1), reason: 'One span should be created');
       final span = state.spans.first as TextSpan;
       expect(span.text, 'Plain text');
@@ -134,82 +188,46 @@ void main() {
       expect(state.textBuffer, isEmpty, reason: 'Text buffer should be cleared after flushing');
     });
 
-    testWidgets('flushText applies a single style from the formatStack', (tester) async {
-      // ARRANGE
-      final (mockContext, mockResolver) = await setupTest(tester);
-
-      // Configure the mock to return a bold style for bold.
-      const boldStyle = TextStyle(fontWeight: FontWeight.bold);
-      mockResolver.whenResolveStyle(FormatMarkerType.bold, boldStyle);
-
-      final state = ParserState(
-        tokens: [],
-        baseStyle: baseStyle,
-        matchingPairs: {},
-        styleResolver: mockResolver,
+    test('flushText applies a single style from the stack', () {
+      final mockResolver = _MockTextfStyleResolver()
+        ..whenResolveStyle(FormatMarkerType.bold, boldStyle);
+      final state = createState(
+        tokens: nestedFormatTokens(),
+        matchingPairs: nestedFormatPairs(),
+        resolver: mockResolver,
       );
       state.textBuffer.write('Bold text');
-      state.formatStack.add(
-        const FormatStackEntry(index: 0, matchingIndex: 1, type: FormatMarkerType.bold),
-      );
+      state.pushFormat(0);
 
-      // ACT
-      state.flushText(mockContext);
+      state.flushText();
 
-      // ASSERT
       expect(state.spans, hasLength(1));
       final span = state.spans.first as TextSpan;
       expect(span.text, 'Bold text');
-      // The style should have the base properties plus the merged properties.
       expect(span.style?.fontWeight, FontWeight.bold);
-      expect(
-        span.style?.fontSize,
-        baseStyle.fontSize,
-        reason: 'Font size from base style should be preserved',
-      );
-      expect(
-        span.style?.color,
-        baseStyle.color,
-        reason: 'Color from base style should be preserved',
-      );
+      expect(span.style?.fontSize, baseStyle.fontSize, reason: 'base font size preserved');
+      expect(span.style?.color, baseStyle.color, reason: 'base color preserved');
       expect(state.textBuffer, isEmpty);
     });
 
-    testWidgets('flushText correctly applies multiple nested styles from the formatStack',
-        (tester) async {
-      // ARRANGE
-      final (mockContext, mockResolver) = await setupTest(tester);
-      const boldStyle = TextStyle(fontWeight: FontWeight.bold);
-      const italicStyle =
-          TextStyle(fontStyle: FontStyle.italic, color: Colors.red); // Overrides color
-      mockResolver.whenResolveStyle(FormatMarkerType.bold, boldStyle);
-      mockResolver.whenResolveStyle(FormatMarkerType.italic, italicStyle);
-
-      final state = ParserState(
-        tokens: [],
-        baseStyle: baseStyle, // Black text
-        matchingPairs: {},
-        styleResolver: mockResolver,
+    test('flushText applies nested styles from the encapsulated stack API', () {
+      final mockResolver = _MockTextfStyleResolver()
+        ..whenResolveStyle(FormatMarkerType.bold, boldStyle)
+        ..whenResolveStyle(FormatMarkerType.italic, italicStyle);
+      final state = createState(
+        tokens: nestedFormatTokens(),
+        matchingPairs: nestedFormatPairs(),
+        resolver: mockResolver,
       );
-      state.textBuffer.write('Nested style');
-      // Simulate a nested state: **_Text_**
-      state.formatStack.add(
-        const FormatStackEntry(index: 0, matchingIndex: 3, type: FormatMarkerType.bold),
-      );
-      state.formatStack.add(
-        const FormatStackEntry(index: 1, matchingIndex: 2, type: FormatMarkerType.italic),
-      );
+      state.textBuffer.write('Bold text');
+      state.pushFormat(0);
+      state.pushFormat(1);
 
-      // ACT
-      state.flushText(mockContext);
+      state.flushText();
 
-      // ASSERT
       expect(state.spans, hasLength(1));
       final span = state.spans.first as TextSpan;
-      expect(span.text, 'Nested style');
-
-      // Check if all styles were applied correctly.
-      // The order of application in `flushText` is important.
+      expect(span.text, 'Bold text');
       expect(span.style?.fontWeight, FontWeight.bold, reason: 'Bold style should be applied');
       expect(span.style?.fontStyle, FontStyle.italic, reason: 'Italic style should be applied');
       expect(

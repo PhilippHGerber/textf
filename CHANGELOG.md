@@ -7,6 +7,7 @@ All notable changes to the `textf` package will be documented in this file.
 ### Internal
 
 * Merged `PairingResolver` and `NestingValidator` into a single `PairValidator` class. The public API is unchanged (`identifyPairs`); the two-pass pipeline (code-boundary crossing removal + LIFO nesting validation) is now an internal implementation detail.
+* Encapsulated `ParserState`'s format stack behind `pushFormat`, `popFormat`, and `currentStyle` methods. The raw `_formatStack` field is now private; no handler or parser code manipulates it directly. `FormatHandler` was deleted after the refactor reduced it to a trivial delegation; its logic is inlined into `TextfParser`. `FormatStackEntry.resolvedStyle` is now a required non-nullable field, allowing `currentStyle()` to return the stack-top value in O(1) with no fallback walk. `flushText()` and all handler signatures drop their unused `BuildContext` parameter.
 
 ## 1.2.2
 

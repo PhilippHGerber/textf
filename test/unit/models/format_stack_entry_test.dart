@@ -2,6 +2,7 @@
 
 // ignore_for_file: no-magic-number
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/format_stack_entry.dart';
 import 'package:textf/src/models/textf_token.dart';
@@ -13,6 +14,7 @@ void main() {
         type: FormatMarkerType.bold,
         index: 5,
         matchingIndex: 10,
+        resolvedStyle: TextStyle(fontWeight: FontWeight.bold),
       );
 
       final str = entry.toString();
@@ -26,6 +28,7 @@ void main() {
         type: FormatMarkerType.italic,
         index: 10,
         matchingIndex: 25,
+        resolvedStyle: TextStyle(fontStyle: FontStyle.italic),
       );
 
       expect(entry.type, FormatMarkerType.italic);
