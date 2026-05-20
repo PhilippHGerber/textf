@@ -1,90 +1,126 @@
 ---
 name: "textf-usage"
 description: "pkg:textf - Inline Markdown-like text formatting for Flutter (drop-in replacements for Text and TextEditingController)"
+user-invocable: false
 metadata:
-  version: "1.2.0"
+  version: "1.2.3"
 ---
 
-## Core Concepts
+## When to use this skill
 
-`textf` provides drop-in replacements for `Text` and `TextEditingController` with inline formatting.
+Load when:
+- Adding formatted text display to a Flutter UI (bold, italic, links, code, highlights, etc.)
+- Implementing a rich-text input field where formatting renders live as the user types
+- Configuring scoped styles or a link tap handler via `TextfOptions`
+- Extracting plain text from a formatted string with `stripFormatting()`
 
-- **Zero dependencies**
-- **O(1) style resolution** via `TextfOptions`
-- **Single-pass O(N) parsing** with LRU caching
-- **CommonMark-style flanking rules** for markers (no leading/trailing whitespace inside markers)
+## Decision: which component?
 
-## Formatting Syntax
+| Goal | Use |
+|---|---|
+| Display formatted text (read-only) | `Textf` |
+| Rich-text input (formatting as user types) | `TextfEditingController` + `TextField` |
+| Scoped styles or link callbacks | `TextfOptions` ancestor |
+| Plain text from a formatted string | `String.stripFormatting()` |
 
-| Format        | Syntax          | Alternate     | Note                          |
-| ------------- | --------------- | ------------- | ----------------------------- |
-| Bold          | `**bold**`      | `__bold__`    |                               |
-| Italic        | `*italic*`      | `_italic_`    |                               |
-| Bold + Italic | `***both***`    | `___both___`  |                               |
-| Strikethrough | `~~strike~~`    |               |                               |
-| Underline     | `++underline++` |               |                               |
-| Highlight     | `==highlight==` |               | `<mark>` style                |
-| Inline code   | `` `code` ``    |               |                               |
-| Superscript   | `^super^`       |               | `E = mc²`                     |
-| Subscript     | `~sub~`         |               | `H₂O`                         |
-| Link          | `[label](url)`  |               | Supports nested formatting    |
-| Placeholder   | `{key}`         |               | Injects `InlineSpan`          |
+## Syntax reference
 
-### Validation Rules
-- **Flanking:** `*italic*` is valid; `* italic *` is plain text.
-- **Nesting:** Max 2 levels (e.g., `**_bold italic_**`). 3rd level renders as literal text.
-- **Parsing:** Unclosed markers render as plain text. Escaping: `r'\**literal\**'`.
+| Format | Syntax | Alternate | Pitfall |
+|---|---|---|---|
+| Bold | `**bold**` | `__bold__` | |
+| Italic | `*italic*` | `_italic_` | |
+| Bold + Italic | `***both***` | `___both___` | |
+| Strikethrough | `~~strike~~` | | |
+| Underline | `++underline++` | | |
+| Highlight | `==highlight==` | | |
+| Inline code | `` `code` `` | | |
+| Superscript | `^super^` | | |
+| Subscript | `~sub~` | | |
+| Link | `[label](url)` | | nested formatting supported |
+| Placeholder | `{key}` | | literal text inside `TextfEditingController` |
 
-## Primary Components
+## Common recipes
 
-### `Textf` Widget
-Drop-in for `Text`. Supports all standard `Text` properties (`maxLines`, `overflow`, etc.).
+### Display text with formatting
 ```dart
 Textf(
-  '**Bold**, [link](https://dart.dev), {icon}',
-  style: TextStyle(fontSize: 16),
-  placeholders: {'icon': WidgetSpan(child: Icon(Icons.star))},
+  '**Bold**, *italic*, `code`, and ~~strike~~',
+  style: const TextStyle(fontSize: 16),
 )
 ```
 
-### `TextfEditingController`
-Drop-in replacement for `TextEditingController`. Renders styles live in `TextField` as user types.
-Note: `{key}` placeholders render as literal text in editor.
+### Link with tap handler
+```dart
+TextfOptions(
+  onLinkTap: (url, text) => launchUrl(Uri.parse(url)),
+  child: const Textf('[Open docs](https://dart.dev)'),
+)
+```
+
+### Widget placeholder (icon, badge, etc.)
+```dart
+Textf(
+  'Tap {icon} to continue',
+  placeholders: {'icon': const WidgetSpan(child: Icon(Icons.star))},
+)
+```
+
+### Rich-text input field
 ```dart
 final controller = TextfEditingController();
 
 TextField(
-  controller: controller, // styles render as user types
+  controller: controller,
   maxLines: null,
 )
 ```
 
-### `TextfOptions`
-InheritedWidget for scoped style configuration (e.g., `boldStyle`, `onLinkTap`).
-- **Styles:** Merged hierarchically (nearest overrides property, keeps others).
-- **Callbacks:** Nearest ancestor wins (no merging).
+### Scoped style overrides
 ```dart
 TextfOptions(
-  onLinkTap: (url, text) => print('Tapped $url'),
   boldStyle: const TextStyle(fontWeight: FontWeight.w900),
-  italicStyle: const TextStyle(fontStyle: FontStyle.italic, color: Colors.blue),
+  onLinkTap: (url, _) => launchUrl(Uri.parse(url)),
   child: Column(
     children: [
-      Textf('**Bold** and _italic_ inherit styles'),
+      const Textf('**Inherits bold style**'),
       TextfOptions(
-        boldStyle: const TextStyle(color: Colors.red), // overrides only color
-        child: Textf('**Red Bold**'),
+        boldStyle: const TextStyle(color: Colors.red), // overrides only color; weight inherited
+        child: const Textf('**Red bold**'),
       ),
     ],
   ),
 )
 ```
 
-## Extensions
-- `String.textf(...)`: Creates a `Textf` widget.
-- `String.stripFormatting()`: Returns plain text without markers.
+### Strip formatting for plain text
+```dart
+final plain = '**Hello** *world*'.stripFormatting(); // → 'Hello world'
+```
 
-## Best Practices
-- Use `TextfOptions` at the app root or feature level to avoid repeating styles.
-- Prefer `TextfEditingController` for rich-text input without complex state management.
-- For performance, `Textf` uses a dual-bounded LRU cache for parsed results.
+## Pitfalls
+
+**Flanking rule — spaces break markers:**
+`*italic*` → italic ✓
+`* italic *` → literal `* italic *` ✗
+
+**Nesting cap — max 2 levels:**
+`**_bold italic_**` ✓
+`**_~~third level~~_**` → `~~third level~~` renders as plain text, no error ✗
+
+**Placeholders don't work in the editor:**
+`{key}` renders as the literal string `{key}` inside `TextfEditingController`. Widget injection only works in `Textf`.
+
+**Callback vs style inheritance — different rules:**
+- `onLinkTap`, `onLinkHover`: nearest `TextfOptions` ancestor wins — no merging.
+- Style properties (`boldStyle`, `italicStyle`, …): merged property-by-property up the tree — only set the properties you want to override.
+
+**Escaping markers:**
+Use a raw string: `r'\**not bold\**'`
+
+## `TextfOptions` API
+
+**Style properties** (all `TextStyle?`):
+`boldStyle`, `italicStyle`, `boldItalicStyle`, `strikethroughStyle`, `underlineStyle`, `highlightStyle`, `codeStyle`, `superscriptStyle`, `subscriptStyle`, `linkStyle`, `linkHoverStyle`
+
+**Callbacks:**
+`onLinkTap(String url, String text)`, `onLinkHover(String? url, String? text)`
