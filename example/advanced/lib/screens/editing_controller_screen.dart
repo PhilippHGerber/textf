@@ -33,7 +33,7 @@ class _EditingControllerScreenState extends State<EditingControllerScreen> {
 Edit this text to see live formatting in action:
 • **Bold**, *Italic* text and ***both***
 • ~~Strikethrough~~ and ++Underline++
-• ==Highlighting== and `inline code` blocks
+• ==Highlighting== and `inline code`
 • Superscript x^2^ + y^2^ and Task^✅^
 • Subscript H~2~O and hot~🔥~
 
@@ -110,7 +110,7 @@ Check out the [Documentation](https://pub.dev/packages/textf) for more details.
 
     return Scaffold(
       appBar: AppBar(
-        title: const Textf('Textf ^_1.2.0-dev.1_^'),
+        title: const Textf('TextfEditingController'),
         actions: [
           IconButton(
             icon: Icon(themeIcon),

@@ -30,7 +30,7 @@ class _ScreenshotScreenState extends State<ScreenshotScreen> {
 
 • **Bold**, *Italic* text and ***both***
 • ~~Strikethrough~~ and ++Underline++
-• ==Highlighting== and `inline code` blocks
+• ==Highlighting== and `inline code` 
 • Superscript x^2^ + y^2^ and Task^✅^
 • Subscript H~2~O and hot~🔥~
 
