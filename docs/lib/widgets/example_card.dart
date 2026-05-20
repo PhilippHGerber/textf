@@ -1,5 +1,6 @@
 // ignore_for_file: no-magic-number
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -46,13 +47,15 @@ class ExampleCard extends StatelessWidget {
                     color: theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: SelectableText(
-                    code,
-                    style: const TextStyle(
-                      fontFamily: 'RobotoMono',
-                      fontSize: 13,
-                    ),
-                  ),
+                  child: _isMobile
+                      ? Text(
+                          code,
+                          style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 13),
+                        )
+                      : SelectableText(
+                          code,
+                          style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 13),
+                        ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.copy_outlined, size: 18),
@@ -92,3 +95,6 @@ class ExampleCard extends StatelessWidget {
     );
   }
 }
+
+bool get _isMobile =>
+    defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS;

@@ -121,7 +121,14 @@ class _TitleAnimationState extends State<TitleAnimation> {
       markerVisibility: MarkerVisibility.whenActive,
     );
     _focusNode = FocusNode();
-    unawaited(_startAnimationSequence());
+    final (firstText, _) = _parseKeyframe(_animationSteps.first);
+    _controller.value = TextEditingValue(
+      text: firstText,
+      selection: TextSelection.collapsed(offset: firstText.length),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_startAnimationSequence());
+    });
   }
 
   /// Parses a keyframe string: removes the `|` cursor marker and returns
@@ -269,37 +276,41 @@ class _TitleAnimationState extends State<TitleAnimation> {
   Widget build(BuildContext context) {
     final (finalText, _) = _parseKeyframe(_animationSteps.last);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: _horizontalPadding,
-        vertical: 16,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1E1E1E)
-            : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
-      ),
-      child: TextfOptions(
-        onLinkTap: (url, _) => launchUrl(Uri.parse(url)),
-        superscriptStyle: const TextStyle(
-          fontWeight: FontWeight.w700,
+    return RepaintBoundary(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: _horizontalPadding,
+          vertical: 16,
         ),
-        child: _showFinalFrame
-            ? SizedBox(width: double.infinity, child: Textf(finalText, style: _style))
-            : IgnorePointer(
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  readOnly: true,
-                  showCursor: _showCursor,
-                  cursorColor: Theme.of(context).colorScheme.onSurface,
-                  style: _style,
-                  maxLines: null,
-                  decoration: const InputDecoration.collapsed(hintText: ''),
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1E1E1E)
+              : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        ),
+        child: TextfOptions(
+          onLinkTap: (url, _) => launchUrl(Uri.parse(url)),
+          superscriptStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+          ),
+          child: _showFinalFrame
+              ? SizedBox(width: double.infinity, child: Textf(finalText, style: _style))
+              : ExcludeSemantics(
+                  child: IgnorePointer(
+                    child: TextField(
+                      controller: _controller,
+                      focusNode: _focusNode,
+                      readOnly: true,
+                      showCursor: _showCursor,
+                      cursorColor: Theme.of(context).colorScheme.onSurface,
+                      style: _style,
+                      maxLines: null,
+                      decoration: const InputDecoration.collapsed(hintText: ''),
+                    ),
+                  ),
                 ),
-              ),
+        ),
       ),
     );
   }

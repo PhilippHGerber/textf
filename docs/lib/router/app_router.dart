@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../sections/docs/agent_skill_page.dart';
+import '../sections/agent_skill_page.dart';
 import '../sections/docs/editing_controller_page.dart';
 import '../sections/docs/format_page.dart';
 import '../sections/docs/overview_page.dart';
@@ -83,7 +83,7 @@ final appRouter = GoRouter(
               ),
             ),
             GoRoute(
-              path: '/docs/agent-skill',
+              path: '/agent-skill',
               pageBuilder: (context, state) =>
                   _buildPageWithTransition(context, state, const AgentSkillPage()),
             ),

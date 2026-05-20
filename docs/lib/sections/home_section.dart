@@ -1,5 +1,6 @@
 // ignore_for_file: no-magic-number
 
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';

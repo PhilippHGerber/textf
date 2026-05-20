@@ -11,10 +11,12 @@ dependencies:
   flex_color_scheme: ^8.4.0
   flutter:
     sdk: flutter
+  flutter_svg: ^2.2.4
   flutter_web_plugins:
     sdk: flutter
   go_router: ^17.1.0
-  textf: ^1.2.0
+  textf: ^1.2.2
+  universal_web: ^1.1.1
   url_launcher: ^6.3.2
 
 dev_dependencies:

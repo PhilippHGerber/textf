@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 
+import '/utils/platform_utils.dart';
 import '/widgets/code_panel.dart';
 import '/widgets/docs_pager.dart';
 import '/widgets/section_header.dart';
@@ -16,13 +17,15 @@ class EditingControllerPage extends StatefulWidget {
   State<EditingControllerPage> createState() => _EditingControllerPageState();
 }
 
-class _EditingControllerPageState extends State<EditingControllerPage> {
+class _EditingControllerPageState extends State<EditingControllerPage>
+    with WidgetsBindingObserver, IOSKeyboardFocusFix {
   MarkerVisibility _visibility = MarkerVisibility.always;
   late final TextfEditingController _demoController;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _demoController = TextfEditingController(
       text:
           '**Bold**, *italic*, `code`, and ~~strike~~. \n[Flutter](https://flutter.dev) is ==awesome==!',
@@ -31,6 +34,7 @@ class _EditingControllerPageState extends State<EditingControllerPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _demoController.dispose();
     super.dispose();
   }
@@ -41,7 +45,8 @@ class _EditingControllerPageState extends State<EditingControllerPage> {
     final cs = theme.colorScheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),

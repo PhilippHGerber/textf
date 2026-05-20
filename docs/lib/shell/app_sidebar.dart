@@ -31,7 +31,6 @@ class _AppSidebarState extends State<AppSidebar> {
     DocsRoutes.placeholders,
     DocsRoutes.styling,
     DocsRoutes.textField,
-    DocsRoutes.agentSkill,
   ];
 
   static const _docsSubLabels = [
@@ -41,7 +40,6 @@ class _AppSidebarState extends State<AppSidebar> {
     'Placeholders',
     'Styling',
     'TextField',
-    'Agent Skill',
   ];
 
   static const List<IconData> _docsSubIcons = [
@@ -51,7 +49,6 @@ class _AppSidebarState extends State<AppSidebar> {
     Icons.widgets_outlined,
     Icons.palette_outlined,
     Icons.edit_note,
-    Icons.auto_awesome_outlined,
   ];
 
   Future<void> _launchUrl(String url) async {
@@ -69,6 +66,7 @@ class _AppSidebarState extends State<AppSidebar> {
     final isHome = currentPath == DocsRoutes.home;
     final isDocs = currentPath.startsWith('/docs');
     final isEditor = currentPath == DocsRoutes.editor;
+    final isAgentSkill = currentPath == DocsRoutes.agentSkill;
 
     return SizedBox(
       width: _sidebarWidth,
@@ -129,6 +127,13 @@ class _AppSidebarState extends State<AppSidebar> {
                     selected: isEditor,
                     trailing: _NewBadge(),
                     onTap: () => context.go(DocsRoutes.editor),
+                  ),
+                  _NavItem(
+                    icon: Icons.auto_awesome_outlined,
+                    label: 'Agent Skill',
+                    selected: isAgentSkill,
+                    trailing: _NewBadge(),
+                    onTap: () => context.go(DocsRoutes.agentSkill),
                   ),
                 ],
               ),

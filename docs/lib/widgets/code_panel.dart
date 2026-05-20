@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -45,10 +46,15 @@ class CodePanel extends StatelessWidget {
                 color: cs.surfaceContainerLow,
                 borderRadius: borderRadius,
               ),
-              child: SelectableText(
-                code,
-                style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 12),
-              ),
+              child: _isMobile
+                  ? Text(
+                      code,
+                      style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 12),
+                    )
+                  : SelectableText(
+                      code,
+                      style: const TextStyle(fontFamily: 'RobotoMono', fontSize: 12),
+                    ),
             ),
             Positioned(
               top: 4,
@@ -73,3 +79,6 @@ class CodePanel extends StatelessWidget {
     );
   }
 }
+
+bool get _isMobile =>
+    defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS;

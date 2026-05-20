@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -105,14 +106,24 @@ class _ExampleCarouselState extends State<ExampleCarousel> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      SelectableText(
-                        example.code,
-                        style: const TextStyle(
-                          fontFamily: 'RobotoMono',
-                          fontSize: 13,
+                      if (_isMobile)
+                        Text(
+                          example.code,
+                          style: const TextStyle(
+                            fontFamily: 'RobotoMono',
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.center,
+                        )
+                      else
+                        SelectableText(
+                          example.code,
+                          style: const TextStyle(
+                            fontFamily: 'RobotoMono',
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
                       const SizedBox(height: 12),
                       TextfOptions(
                         onLinkTap: (url, _) => _launchUrl(url),
@@ -150,3 +161,6 @@ class _ExampleCarouselState extends State<ExampleCarousel> {
     );
   }
 }
+
+bool get _isMobile =>
+    defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS;

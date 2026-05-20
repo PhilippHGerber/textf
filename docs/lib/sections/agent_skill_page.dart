@@ -5,9 +5,7 @@ import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '/widgets/code_panel.dart';
-import '/widgets/docs_pager.dart';
 import '/widgets/section_header.dart';
-import '../../router/docs_routes.dart';
 
 /// AI Agent Skill documentation page.
 class AgentSkillPage extends StatelessWidget {
@@ -36,8 +34,6 @@ class AgentSkillPage extends StatelessWidget {
               _InstallSection(cs: cs, theme: theme),
               const SizedBox(height: 32),
               _WhatItKnowsSection(cs: cs, theme: theme),
-              const SizedBox(height: 48),
-              const DocsPager(current: DocsRoutes.agentSkill),
               const SizedBox(height: 32),
             ],
           ),

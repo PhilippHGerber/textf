@@ -5,7 +5,7 @@
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Markdown-like inline text formatting for Flutter — a drop-in replacement for the Text widget.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,19 +19,30 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Textf — a drop-in replacement for Flutter's Text widget with markdown-like inline formatting. Bold, italic, code, links, highlights, and more.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+  <meta name="theme-color" content="#0175C2">
+  <meta id="meta-description" name="description"
+    content="Textf — a drop-in replacement for Flutter's Text widget with markdown-like inline formatting. Bold, italic, code, links, highlights, and more.">
+
+  <!-- Canonical URL -->
+  <link id="canonical-link" rel="canonical" href="https://textf.philippgerber.li/">
 
   <!-- Open Graph -->
-  <meta property="og:title" content="Textf – Flutter Text Formatting Widget – Docs">
-  <meta property="og:description" content="A drop-in replacement for Flutter's Text widget with markdown-like inline formatting. Try it live.">
+  <meta id="og-title" property="og:title" content="Textf – Flutter Text Formatting Widget – Docs">
+  <meta id="og-description" property="og:description"
+    content="A drop-in replacement for Flutter's Text widget with markdown-like inline formatting. Try it live.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://textf.philippgerber.li/">
+  <meta id="og-url" property="og:url" content="https://textf.philippgerber.li/">
   <meta property="og:image" content="https://textf.philippgerber.li/img/textf_screen.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="Textf Docs">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Textf – Flutter Text Formatting Widget – Docs">
-  <meta name="twitter:description" content="A drop-in replacement for Flutter's Text widget with markdown-like inline formatting. Try it live.">
+  <meta id="twitter-title" name="twitter:title" content="Textf – Flutter Text Formatting Widget – Docs">
+  <meta id="twitter-description" name="twitter:description"
+    content="A drop-in replacement for Flutter's Text widget with markdown-like inline formatting. Try it live.">
   <meta name="twitter:image" content="https://textf.philippgerber.li/img/textf_screen.png">
 
   <!-- iOS meta tags & icons -->
@@ -40,13 +52,59 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png" />
+
+  <!-- Preload Flutter's main bundle so it starts downloading immediately,
+       before flutter_bootstrap.js programmatically requests it. -->
+  <link rel="preload" href="main.dart.js" as="script">
 
   <title>Textf – Flutter Text Formatting Widget – Docs</title>
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "textf",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Android, iOS, Web, macOS, Windows, Linux",
+    "description": "A drop-in replacement for Flutter's Text widget with markdown-like inline formatting. Supports bold, italic, code, links, highlights, super/subscript, strikethrough, underline, and widget placeholders with zero dependencies.",
+    "url": "https://textf.philippgerber.li/",
+    "softwareVersion": "1.2.0",
+    "author": {
+      "@type": "Person",
+      "name": "Philipp H. Gerber",
+      "url": "https://github.com/PhilippHGerber"
+    },
+    "license": "https://github.com/PhilippHGerber/textf/blob/main/LICENSE",
+    "codeRepository": "https://github.com/PhilippHGerber/textf",
+    "downloadUrl": "https://pub.dev/packages/textf",
+    "programmingLanguage": "Dart",
+    "keywords": ["flutter", "text formatting", "markdown", "inline formatting", "flutter package", "dart package"]
+  }
+  </script>
+
   <script defer src="https://cloud.umami.is/script.js" data-website-id="0f140330-6a89-4af0-ae24-27602bbdc5ef"></script>
-  <link rel="manifest" href="manifest.json">
 </head>
+
 <body>
+  <noscript>
+    <div style="font-family: sans-serif; padding: 2rem;">
+      <h1>Textf - Flutter Text Formatting Widget</h1>
+      <p>Textf is a zero-dependency, drop-in replacement for Flutter's <code>Text</code> widget that provides
+        markdown-like inline text formatting.</p>
+      <h2>Features</h2>
+      <ul>
+        <li><strong>Bold</strong>, <em>Italic</em>, and <code>Code</code> styling</li>
+        <li>Links with URL launching support</li>
+        <li>Highlights, ~strikethrough~, and _underline_</li>
+        <li>Super^script^ and sub_script_</li>
+        <li>Custom widget {placeholders}</li>
+      </ul>
+      <p>Try the live editor and read the comprehensive documentation on this site. Please enable JavaScript to use the
+        interactive Flutter web app.</p>
+    </div>
+  </noscript>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -55,6 +113,27 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <div id="flutter-loading" style="
+    position:fixed;inset:0;
+    background:#0175C2;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    font-family:sans-serif;color:white;z-index:9999;">
+    <div style="font-size:48px;font-weight:800;letter-spacing:-1px;margin-bottom:8px">Textf</div>
+    <div style="font-size:16px;opacity:0.85">Flutter Text Formatting Widget</div>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('flutter-loading');
+      if (el) el.remove();
+      // Manifest is only needed for PWA install; defer it out of the critical path.
+      var link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = 'manifest.json';
+      document.head.appendChild(link);
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
+
 </html>

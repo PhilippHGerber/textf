@@ -1,16 +1,25 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'router/app_router.dart';
+import 'seo/meta_tags_service.dart';
 import 'theme/theme_mode_notifier.dart';
 
 const _lightBlendLevel = 4;
 const _darkBlendLevel = 18;
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  RendererBinding.instance.ensureSemantics();
   usePathUrlStrategy();
+  appRouter.routerDelegate.addListener(() {
+    MetaTagsService.updateForRoute(
+      appRouter.routerDelegate.currentConfiguration.uri.path,
+    );
+  });
   runApp(const TextfDocsApp());
 }
 

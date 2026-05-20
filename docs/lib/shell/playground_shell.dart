@@ -6,6 +6,7 @@ import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../theme/theme_mode_notifier.dart';
+import '../utils/platform_utils.dart';
 import 'app_sidebar.dart';
 
 class PlaygroundShell extends StatelessWidget {
@@ -73,6 +74,7 @@ class PlaygroundShell extends StatelessWidget {
     // Desktop: sidebar + content, no AppBar
     if (width >= _desktopBreakpoint) {
       return Scaffold(
+        resizeToAvoidBottomInset: !isMobileWeb,
         body: Row(
           children: [
             AppSidebar(navigationShell: navigationShell),
@@ -86,6 +88,7 @@ class PlaygroundShell extends StatelessWidget {
     // Tablet: AppBar + Drawer + body
     if (width >= _mobileBreakpoint) {
       return Scaffold(
+        resizeToAvoidBottomInset: !isMobileWeb,
         appBar: _buildAppBar(context, theme),
         drawer: Drawer(child: AppSidebar(navigationShell: navigationShell)),
         body: navigationShell,
@@ -94,6 +97,7 @@ class PlaygroundShell extends StatelessWidget {
 
     // Mobile: AppBar + Drawer + BottomNavigationBar
     return Scaffold(
+      resizeToAvoidBottomInset: !isMobileWeb,
       appBar: _buildAppBar(context, theme),
       drawer: Drawer(child: AppSidebar(navigationShell: navigationShell)),
       body: navigationShell,

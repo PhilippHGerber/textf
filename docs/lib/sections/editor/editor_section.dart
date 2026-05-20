@@ -4,15 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '/utils/platform_utils.dart';
 import '/widgets/section_header.dart';
 
 const String _initText = '''
-🚀 **Welcome to Textf!**
+🚀 **Welcome to Textf!** 💙
 
 Edit this text to see live formatting in action:
 • **Bold**, *Italic* text and ***both***
 • ~~Strikethrough~~ and ++Underline++
-• ==Highlighting== and `inline code` blocks
+• ==Highlighting== and `inline code`
 • Superscript x^2^ + y^2^ and Task^✅^
 • Subscript H~2~O and hot~🔥~
 
@@ -27,7 +28,8 @@ class EditorSection extends StatefulWidget {
   State<EditorSection> createState() => _EditorSectionState();
 }
 
-class _EditorSectionState extends State<EditorSection> {
+class _EditorSectionState extends State<EditorSection>
+    with WidgetsBindingObserver, IOSKeyboardFocusFix {
   late final TextfEditingController _controller;
   late final FocusNode _focusNode;
   MarkerVisibility _visibility = MarkerVisibility.always;
@@ -35,12 +37,14 @@ class _EditorSectionState extends State<EditorSection> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _focusNode = FocusNode();
     _controller = TextfEditingController(text: _initText);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _focusNode.dispose();
     _controller.dispose();
     super.dispose();
@@ -86,13 +90,14 @@ class _EditorSectionState extends State<EditorSection> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 800),
-        child: TextfOptions(
-          onLinkTap: (url, _) => _launchUrl(url),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+    return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: TextfOptions(
+            onLinkTap: (url, _) => _launchUrl(url),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -103,49 +108,47 @@ class _EditorSectionState extends State<EditorSection> {
                 const SizedBox(height: 12),
                 _FormatChips(onInsert: _insertText),
                 const SizedBox(height: 12),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      TextField(
-                        controller: _controller,
-                        focusNode: _focusNode,
-                        expands: true,
-                        maxLines: null,
-                        decoration: InputDecoration(
-                          hintText: 'Type formatted text here...',
-                          border: const OutlineInputBorder(),
-                          filled: true,
-                          fillColor: theme.brightness == Brightness.light
-                              ? theme.colorScheme.surface
-                              : theme.colorScheme.surfaceContainerLowest,
-                          hoverColor: theme.brightness == Brightness.light
-                              ? theme.colorScheme.surfaceDim.withValues(alpha: 0.4)
-                              : theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.85),
-                        ),
-                        style: theme.textTheme.bodyLarge,
-                        textAlignVertical: TextAlignVertical.top,
+                Stack(
+                  children: [
+                    TextField(
+                      controller: _controller,
+                      focusNode: _focusNode,
+                      minLines: 15,
+                      maxLines: 15,
+                      decoration: InputDecoration(
+                        hintText: 'Type formatted text here...',
+                        border: const OutlineInputBorder(),
+                        filled: true,
+                        fillColor: theme.brightness == Brightness.light
+                            ? theme.colorScheme.surface
+                            : theme.colorScheme.surfaceContainerLowest,
+                        hoverColor: theme.brightness == Brightness.light
+                            ? theme.colorScheme.surfaceDim.withValues(alpha: 0.4)
+                            : theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.85),
                       ),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: IconButton(
-                          icon: Icon(
-                            _visibility == MarkerVisibility.always
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () => _setVisibility(
-                            _visibility == MarkerVisibility.always
-                                ? MarkerVisibility.whenActive
-                                : MarkerVisibility.always,
-                          ),
-                          tooltip: _visibility == MarkerVisibility.always
-                              ? 'Markers visible'
-                              : 'Smart hide markers',
+                      style: theme.textTheme.bodyLarge,
+                      textAlignVertical: TextAlignVertical.top,
+                    ),
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: IconButton(
+                        icon: Icon(
+                          _visibility == MarkerVisibility.always
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                         ),
+                        onPressed: () => _setVisibility(
+                          _visibility == MarkerVisibility.always
+                              ? MarkerVisibility.whenActive
+                              : MarkerVisibility.always,
+                        ),
+                        tooltip: _visibility == MarkerVisibility.always
+                            ? 'Markers visible'
+                            : 'Smart hide markers',
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
               ],
