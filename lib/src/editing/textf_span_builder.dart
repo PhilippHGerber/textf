@@ -333,14 +333,7 @@ class _SpanBuildState {
   /// walking the stack if entries lack cached styles.
   TextStyle currentStyle() {
     if (formatStack.isEmpty) return baseStyle;
-    final TextStyle? cached = formatStack.last.resolvedStyle;
-    if (cached != null) return cached;
-
-    TextStyle style = baseStyle;
-    for (final FormatStackEntry entry in formatStack) {
-      style = resolver.resolveStyle(entry.type, style);
-    }
-    return style;
+    return formatStack.last.resolvedStyle;
   }
 
   /// Check whether a script pair's MARKERS should be hidden
@@ -600,7 +593,7 @@ class _SpanBuildState {
 
     TextStyle currentNestedStyle() {
       if (nestedFormatStack.isEmpty) return linkStyle;
-      return nestedFormatStack.last.resolvedStyle ?? linkStyle;
+      return nestedFormatStack.last.resolvedStyle;
     }
 
     void flushNestedBuffer() {
