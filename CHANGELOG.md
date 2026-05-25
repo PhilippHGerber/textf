@@ -2,6 +2,12 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 1.2.4
+
+### Added
+
+* Added `debugFillProperties` support to `Textf` and `TextfOptions` for better Flutter Widget Inspector integration.
+
 ## 1.2.3
 
 ### Changed
