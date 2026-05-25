@@ -3,6 +3,7 @@ import 'dart:ui' as ui show TextHeightBehavior;
 import 'package:flutter/material.dart';
 
 import '../parsing/textf_parser.dart';
+import 'internal/textf_diagnostics.dart';
 import 'internal/textf_renderer.dart';
 
 /// A lightweight text widget for simple inline formatting.
@@ -161,6 +162,29 @@ class Textf extends StatelessWidget {
 
   // Private static instance for default usage
   static final TextfParser _defaultParser = TextfParser();
+
+  @override
+  void debugFillProperties(TextfDiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    addTextfDebugProperties(
+      properties: properties,
+      data: data,
+      style: style,
+      textAlign: textAlign,
+      textDirection: textDirection,
+      maxLines: maxLines,
+      overflow: overflow,
+      softWrap: softWrap,
+      textScaler: textScaler,
+      semanticsLabel: semanticsLabel,
+      locale: locale,
+      strutStyle: strutStyle,
+      textWidthBasis: textWidthBasis,
+      textHeightBehavior: textHeightBehavior,
+      selectionColor: selectionColor,
+      placeholders: placeholders,
+    );
+  }
 
   /// Builds the widget by parsing the formatted text into spans and
   /// rendering it using a Text.rich widget.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/textf_style_utils.dart';
+import 'internal/textf_options_diagnostics.dart';
 import 'textf_options_data.dart';
 
 /// An internal InheritedWidget that securely passes the O(1) pre-merged data down the tree.
@@ -159,6 +160,33 @@ class TextfOptions extends StatelessWidget {
       );
     }
     return scope.data;
+  }
+
+  @override
+  void debugFillProperties(TextfOptionsDiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    addTextfOptionsDebugProperties(
+      properties: properties,
+      onLinkTap: onLinkTap,
+      onLinkHover: onLinkHover,
+      linkMouseCursor: linkMouseCursor,
+      linkAlignment: linkAlignment,
+      boldStyle: boldStyle,
+      italicStyle: italicStyle,
+      boldItalicStyle: boldItalicStyle,
+      strikethroughStyle: strikethroughStyle,
+      codeStyle: codeStyle,
+      underlineStyle: underlineStyle,
+      highlightStyle: highlightStyle,
+      superscriptStyle: superscriptStyle,
+      subscriptStyle: subscriptStyle,
+      linkStyle: linkStyle,
+      linkHoverStyle: linkHoverStyle,
+      scriptFontSizeFactor: scriptFontSizeFactor,
+      superscriptBaselineFactor: superscriptBaselineFactor,
+      subscriptBaselineFactor: subscriptBaselineFactor,
+      strikethroughThickness: strikethroughThickness,
+    );
   }
 
   @override
