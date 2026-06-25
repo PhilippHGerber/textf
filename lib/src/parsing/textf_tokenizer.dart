@@ -334,8 +334,7 @@ class TextfTokenizer {
           textStart = pos;
         }
       } else if (currentChar == kHash) {
-        final bool atLineStart =
-            pos == 0 || text.codeUnitAt(pos - 1) == kNewline;
+        final bool atLineStart = pos == 0 || text.codeUnitAt(pos - 1) == kNewline;
         if (atLineStart) {
           int count = 1;
           while (count < 6 && pos + count < length && text.codeUnitAt(pos + count) == kHash) {
