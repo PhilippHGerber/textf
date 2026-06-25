@@ -239,8 +239,9 @@ class _SpanBuildState {
         flushText();
         endHeading();
         final marker = '${'#' * token.level}${' ' * (token.length - token.level)}';
-        emitMarker(marker, activeMarkerStyle);
-        beginHeading(token.level);
+        final headingStyle = resolver.resolveHeadingStyle(token.level, baseStyle);
+        emitMarker(marker, headingStyle.copyWith(color: activeMarkerStyle.color));
+        _headingStyle = headingStyle;
         i++;
         continue;
       }

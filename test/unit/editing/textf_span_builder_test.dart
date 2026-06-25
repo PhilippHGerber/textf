@@ -81,6 +81,15 @@ void main() {
       expect(titleSpan.style!.fontWeight, FontWeight.bold);
     });
 
+    testWidgets('heading marker uses heading size', (tester) async {
+      await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      final spans = builder.build('# Title', testContext, const TextStyle(fontSize: 14));
+
+      final markerSpan = spans.whereType<TextSpan>().first;
+      expect(markerSpan.text, '# ');
+      expect(markerSpan.style!.fontSize, 28.0);
+    });
+
     group('Character Count Invariant', () {
       testWidgets('bold text preserves character count', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
