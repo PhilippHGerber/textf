@@ -759,6 +759,22 @@ void main() {
         final bracketColor = spans.first.style?.color;
         expect(bracketColor!.a, greaterThan(0));
       });
+
+      testWidgets('heading marker hidden when cursor outside heading line', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const baseStyle = TextStyle(color: Color(0xFF000000), fontSize: 14);
+        final spans = builder.build(
+          '#  Title\nbody',
+          testContext,
+          baseStyle,
+          cursorPosition: 10,
+        );
+
+        final markerSpan = spans.whereType<TextSpan>().first;
+        expect(markerSpan.text, '#  ');
+        expect(markerSpan.style!.color!.a, 0);
+        expect(markerSpan.style!.fontSize, lessThan(1));
+      });
     });
 
     // -----------------------------------------------------------------

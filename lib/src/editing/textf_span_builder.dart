@@ -240,7 +240,7 @@ class _SpanBuildState {
         endHeading();
         final marker = '${'#' * token.level}${' ' * (token.length - token.level)}';
         final headingStyle = resolver.resolveHeadingStyle(token.level, baseStyle);
-        emitMarker(marker, headingStyle.copyWith(color: activeMarkerStyle.color));
+        emitMarker(marker, headingMarkerStyle(i, headingStyle));
         _headingStyle = headingStyle;
         i++;
         continue;
@@ -536,6 +536,31 @@ class _SpanBuildState {
     final closeEnd = tokens[closeIndex].position + tokens[closeIndex].length;
     if (pos >= openPos && pos <= closeEnd) {
       return activeMarkerStyle;
+    }
+    return inactiveMarkerStyle;
+  }
+
+  /// Resolve heading marker style based on cursor position relative to line.
+  TextStyle headingMarkerStyle(int headingIndex, TextStyle headingStyle) {
+    final pos = cursorPosition;
+    if (pos == null) return headingStyle.copyWith(color: activeMarkerStyle.color);
+
+    final headingStart = tokens[headingIndex].position;
+    var headingEnd = headingStart + tokens[headingIndex].length;
+    for (var i = headingIndex + 1; i < tokens.length; i++) {
+      final token = tokens[i];
+      if (token is TextToken) {
+        final newlineIndex = token.value.indexOf('\n');
+        if (newlineIndex >= 0) {
+          headingEnd = token.position + newlineIndex;
+          break;
+        }
+      }
+      headingEnd = token.position + token.length;
+    }
+
+    if (pos >= headingStart && pos <= headingEnd) {
+      return headingStyle.copyWith(color: activeMarkerStyle.color);
     }
     return inactiveMarkerStyle;
   }
