@@ -27,6 +27,12 @@ class TextfOptionsData {
     this.subscriptBaselineFactor,
     this.scriptFontSizeFactor,
     this.linkAlignment,
+    this.h1Style,
+    this.h2Style,
+    this.h3Style,
+    this.h4Style,
+    this.h5Style,
+    this.h6Style,
   });
 
   /// Callback function executed when tapping or clicking on a link.
@@ -115,6 +121,24 @@ class TextfOptionsData {
   /// Merged onto the base style if provided.
   final TextStyle? subscriptStyle;
 
+  /// The [TextStyle] for level-1 headings (`# H1`). Merged onto the base style.
+  final TextStyle? h1Style;
+
+  /// The [TextStyle] for level-2 headings (`## H2`). Merged onto the base style.
+  final TextStyle? h2Style;
+
+  /// The [TextStyle] for level-3 headings (`### H3`). Merged onto the base style.
+  final TextStyle? h3Style;
+
+  /// The [TextStyle] for level-4 headings (`#### H4`). Merged onto the base style.
+  final TextStyle? h4Style;
+
+  /// The [TextStyle] for level-5 headings (`##### H5`). Merged onto the base style.
+  final TextStyle? h5Style;
+
+  /// The [TextStyle] for level-6 headings (`###### H6`). Merged onto the base style.
+  final TextStyle? h6Style;
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -137,7 +161,13 @@ class TextfOptionsData {
         other.underlineStyle == underlineStyle &&
         other.highlightStyle == highlightStyle &&
         other.superscriptStyle == superscriptStyle &&
-        other.subscriptStyle == subscriptStyle;
+        other.subscriptStyle == subscriptStyle &&
+        other.h1Style == h1Style &&
+        other.h2Style == h2Style &&
+        other.h3Style == h3Style &&
+        other.h4Style == h4Style &&
+        other.h5Style == h5Style &&
+        other.h6Style == h6Style;
   }
 
   @override
@@ -161,5 +191,11 @@ class TextfOptionsData {
         highlightStyle,
         superscriptStyle,
         subscriptStyle,
+        h1Style,
+        h2Style,
+        h3Style,
+        h4Style,
+        h5Style,
+        h6Style,
       ]);
 }

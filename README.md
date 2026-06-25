@@ -286,6 +286,19 @@ final controller = TextfEditingController();
 TextField(controller: controller)
 ```
 
+For headings in editable fields, disable forced strut height so bigger spans
+can own their line height:
+
+```dart
+final style = Theme.of(context).textTheme.bodyLarge!;
+
+TextField(
+  controller: controller,
+  style: style,
+  strutStyle: StrutStyle.fromTextStyle(style, forceStrutHeight: false),
+)
+```
+
 With initial content:
 
 ```dart

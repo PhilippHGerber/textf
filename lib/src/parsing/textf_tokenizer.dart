@@ -68,7 +68,8 @@ class TextfTokenizer {
             nextChar == kOpenParen ||
             nextChar == kCloseParen ||
             nextChar == kOpenBrace ||
-            nextChar == kCloseBrace) {
+            nextChar == kCloseBrace ||
+            nextChar == kHash) {
           addTextToken(textStart, pos);
           tokens
             // 1. Emit the backslash as a distinct marker token
@@ -331,6 +332,29 @@ class TextfTokenizer {
           tokens.add(TextToken('{', position: pos, length: 1));
           pos++;
           textStart = pos;
+        }
+      } else if (currentChar == kHash) {
+        final bool atLineStart =
+            pos == 0 || text.codeUnitAt(pos - 1) == kNewline;
+        if (atLineStart) {
+          int count = 1;
+          while (count < 6 && pos + count < length && text.codeUnitAt(pos + count) == kHash) {
+            count++;
+          }
+          var markerLength = count;
+          while (pos + markerLength < length && text.codeUnitAt(pos + markerLength) == 0x20) {
+            markerLength++;
+          }
+          if (markerLength == count) {
+            pos++;
+            continue;
+          }
+          addTextToken(textStart, pos);
+          tokens.add(HeadingToken(level: count, position: pos, length: markerLength));
+          pos += markerLength;
+          textStart = pos;
+        } else {
+          pos++;
         }
       } else {
         pos++;

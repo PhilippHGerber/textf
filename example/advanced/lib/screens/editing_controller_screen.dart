@@ -28,7 +28,7 @@ class _EditingControllerScreenState extends State<EditingControllerScreen> {
     super.initState();
     _controller = TextfEditingController(
       text: '''
-🚀 **Welcome to Textf!**
+# Welcome to Textf! 🚀
 
 Edit this text to see live formatting in action:
 • **Bold**, *Italic* text and ***both***
@@ -104,6 +104,10 @@ Check out the [Documentation](https://pub.dev/packages/textf) for more details.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final inputStrutStyle = StrutStyle.fromTextStyle(
+      theme.textTheme.bodyLarge!,
+      forceStrutHeight: false,
+    );
     final brightness = theme.brightness;
     final themeIcon =
         brightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
@@ -141,6 +145,7 @@ Check out the [Documentation](https://pub.dev/packages/textf) for more details.
           TextField(
             controller: _controller,
             maxLines: 10,
+            strutStyle: inputStrutStyle,
             decoration: InputDecoration(
               hintText: 'Type formatted text here...',
               border: const OutlineInputBorder(),
@@ -212,6 +217,7 @@ Check out the [Documentation](https://pub.dev/packages/textf) for more details.
                     '`styled code`',
               ),
               maxLines: 2,
+              strutStyle: inputStrutStyle,
               decoration: InputDecoration(
                 labelText: 'Custom styled',
                 border: const OutlineInputBorder(),
@@ -239,6 +245,7 @@ Check out the [Documentation](https://pub.dev/packages/textf) for more details.
               text: 'A **required** field with *formatted* hints',
             ),
             maxLines: 2,
+            strutStyle: inputStrutStyle,
             decoration: InputDecoration(
               labelText: 'Bio',
               helperText: 'Supports bold, italic, code, and more',
@@ -475,11 +482,16 @@ class _ChatDemo extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     controller: controller,
+                    strutStyle: StrutStyle.fromTextStyle(
+                      theme.textTheme.bodyLarge!,
+                      forceStrutHeight: false,
+                    ),
                     decoration: const InputDecoration(
                       hintText: 'Type a **formatted** message...',
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(horizontal: 12),
                     ),
+                    style: theme.textTheme.bodyLarge,
                     onSubmitted: (_) => onSend(),
                   ),
                 ),
@@ -532,6 +544,10 @@ class _SideBySideComparisonState extends State<_SideBySideComparison> {
         TextField(
           controller: _comparisonController,
           maxLines: 2,
+          strutStyle: StrutStyle.fromTextStyle(
+            theme.textTheme.bodyLarge!,
+            forceStrutHeight: false,
+          ),
           decoration: InputDecoration(
             labelText: 'Editable (TextField)',
             border: const OutlineInputBorder(),

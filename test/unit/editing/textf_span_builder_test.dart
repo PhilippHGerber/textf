@@ -72,6 +72,15 @@ void main() {
       });
     });
 
+    testWidgets('nested formatting keeps heading style', (tester) async {
+      await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      final spans = builder.build('# **Title**', testContext, const TextStyle(fontSize: 14));
+
+      final titleSpan = spans.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Title'));
+      expect(titleSpan.style!.fontSize, 28.0);
+      expect(titleSpan.style!.fontWeight, FontWeight.bold);
+    });
+
     group('Character Count Invariant', () {
       testWidgets('bold text preserves character count', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));

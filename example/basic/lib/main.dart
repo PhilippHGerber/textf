@@ -85,6 +85,55 @@ class ShowcaseScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ─────────────────────────────────────────────────────────────
+            // SECTION: Headings (H1–H6)
+            // ─────────────────────────────────────────────────────────────
+            _sectionHeader('Headings (H1 – H6)'),
+
+            // ATX-style headings: 1–6 '#' at the start of a line.
+            // The style scopes to the end of the line.
+            const Textf(
+              '# Heading Level 1\n'
+              '## Heading Level 2\n'
+              '### Heading Level 3\n'
+              '#### Heading Level 4\n'
+              '##### Heading Level 5\n'
+              '###### Heading Level 6\n'
+              'This line is normal body text again.',
+            ),
+
+            const SizedBox(height: 8),
+
+            // Inline formatting nests inside headings.
+            const Textf('# Heading with **bold** and *italic*'),
+
+            const SizedBox(height: 8),
+
+            // Mid-line '#' is NOT a heading — only a line-start run is.
+            const Textf('Use C# and #hashtags freely mid-line.'),
+
+            const SizedBox(height: 8),
+
+            // Override heading sizes per-level via TextfOptions.
+            const TextfOptions(
+              h1Style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                color: Colors.deepPurple,
+              ),
+              h2Style: TextStyle(
+                fontSize: 24,
+                color: Colors.purple,
+              ),
+              child: Textf(
+                '# Custom H1\n'
+                '## Custom H2\n'
+                'Default-styled body.',
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ─────────────────────────────────────────────────────────────
             // SECTION 2: Superscript & Subscript
             // ─────────────────────────────────────────────────────────────
             _sectionHeader('2. Superscript & Subscript'),

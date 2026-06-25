@@ -45,6 +45,32 @@ class DefaultStyles {
   /// Default baseline offset factor for subscript (relative to font size).
   static const double subscriptBaselineFactor = 0.4; // Move down
 
+  /// Relative font-size multipliers for H1–H6.
+  static const List<double> headingFontSizeFactors = [
+    2.00, // h1
+    1.50, // h2
+    1.33, // h3
+    1.14, // h4
+    1.07, // h5
+    1.00, // h6
+  ];
+
+  /// Default heading style for ATX headings (`# H1` .. `###### H6`).
+  ///
+  /// Scales the base font size by [headingFontSizeFactors] and applies bold
+  /// weight. Used as a fallback when no
+  /// `h{n}Style` is provided via TextfOptions.
+  static TextStyle headingStyle(int level, TextStyle baseStyle) {
+    final int index = (level - 1).clamp(0, headingFontSizeFactors.length - 1);
+    final double factor = headingFontSizeFactors[index];
+    final double baseSize = baseStyle.fontSize ?? defaultFontSize;
+    return baseStyle.copyWith(
+      fontSize: baseSize * factor,
+      fontWeight: baseStyle.fontWeight ?? FontWeight.bold,
+      height: 1.2,
+    );
+  }
+
   /// Applies default bold formatting (`**bold**` or `__bold__`) to a base style.
   /// Used as a fallback by TextfStyleResolver if no `boldStyle` is found via TextfOptions.
   static TextStyle boldStyle(TextStyle baseStyle) {

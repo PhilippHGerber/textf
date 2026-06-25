@@ -124,6 +124,16 @@ class TextfParser {
         continue;
       }
 
+      // Heading Handling (line-prefix ATX marker, scoped to end of line)
+      if (token is HeadingToken) {
+        state
+          ..flushText()
+          ..endHeading()
+          ..beginHeading(token.level);
+        i++;
+        continue;
+      }
+
       // Link Handling
       if (token is LinkStartToken) {
         // Attempt to process a link.
@@ -160,7 +170,7 @@ class TextfParser {
       // 3. Broken/Partial Link tokens
       switch (token) {
         case TextToken(:final value):
-          state.textBuffer.write(value);
+          state.appendText(value);
         case FormatMarkerToken(:final value):
           state.textBuffer.write(value);
         case LinkStartToken():
@@ -171,6 +181,8 @@ class TextfParser {
           state.textBuffer.write(')');
         case PlaceholderToken(:final key):
           state.textBuffer.write('{$key}');
+        case HeadingToken(:final level, :final length):
+          state.textBuffer.write('${'#' * level}${' ' * (length - level)}');
         case EscapeMarkerToken():
           // Do nothing. This effectively strips the '\' from the visual output.
           break;

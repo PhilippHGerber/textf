@@ -183,6 +183,7 @@ class _EditorTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final style = TextStyle(fontSize: fontSize);
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(
         textScaler: TextScaler.linear(textScaleFactor),
@@ -197,7 +198,11 @@ class _EditorTab extends StatelessWidget {
                 maxLines: null,
                 expands: true,
                 textAlignVertical: TextAlignVertical.top,
-                style: TextStyle(fontSize: fontSize),
+                strutStyle: StrutStyle.fromTextStyle(
+                  style,
+                  forceStrutHeight: false,
+                ),
+                style: style,
                 decoration: InputDecoration(
                   hintText: 'Type **bold**, *italic*, ^super^, ~sub~...',
                   border: const OutlineInputBorder(),

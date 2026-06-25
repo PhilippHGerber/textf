@@ -88,3 +88,8 @@ const int kLinkEndTokenOffset = 4;
 
 /// Carriage Return character \r (ASCII code 13)
 const int kCarriageReturn = 0x0D;
+
+/// Hash character # (ASCII code 35)
+///
+/// Used for ATX-style headings (`#` H1 .. `######` H6) at the start of a line.
+const int kHash = 0x23;

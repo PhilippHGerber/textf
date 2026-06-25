@@ -51,6 +51,12 @@ class TextfOptions extends StatelessWidget {
     this.superscriptBaselineFactor,
     this.subscriptBaselineFactor,
     this.scriptFontSizeFactor,
+    this.h1Style,
+    this.h2Style,
+    this.h3Style,
+    this.h4Style,
+    this.h5Style,
+    this.h6Style,
   });
 
   /// The child subtree that will have access to the merged TextfOptions configuration.
@@ -146,6 +152,24 @@ class TextfOptions extends StatelessWidget {
   /// Merged onto the base style if provided.
   final TextStyle? subscriptStyle;
 
+  /// The [TextStyle] for level-1 headings (`# H1`). Merged onto the base style.
+  final TextStyle? h1Style;
+
+  /// The [TextStyle] for level-2 headings (`## H2`). Merged onto the base style.
+  final TextStyle? h2Style;
+
+  /// The [TextStyle] for level-3 headings (`### H3`). Merged onto the base style.
+  final TextStyle? h3Style;
+
+  /// The [TextStyle] for level-4 headings (`#### H4`). Merged onto the base style.
+  final TextStyle? h4Style;
+
+  /// The [TextStyle] for level-5 headings (`##### H5`). Merged onto the base style.
+  final TextStyle? h5Style;
+
+  /// The [TextStyle] for level-6 headings (`###### H6`). Merged onto the base style.
+  final TextStyle? h6Style;
+
   /// Finds the nearest pre-merged [TextfOptionsData] ancestor in the widget tree.
   static TextfOptionsData? maybeOf(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<_TextfOptionsScope>()?.data;
@@ -218,6 +242,12 @@ class TextfOptions extends StatelessWidget {
       highlightStyle: _merge(parent?.highlightStyle, highlightStyle),
       superscriptStyle: _merge(parent?.superscriptStyle, superscriptStyle),
       subscriptStyle: _merge(parent?.subscriptStyle, subscriptStyle),
+      h1Style: _merge(parent?.h1Style, h1Style),
+      h2Style: _merge(parent?.h2Style, h2Style),
+      h3Style: _merge(parent?.h3Style, h3Style),
+      h4Style: _merge(parent?.h4Style, h4Style),
+      h5Style: _merge(parent?.h5Style, h5Style),
+      h6Style: _merge(parent?.h6Style, h6Style),
     );
 
     // 3. Provide the pre-merged O(1) object down the tree

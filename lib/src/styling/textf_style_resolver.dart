@@ -238,6 +238,29 @@ class TextfStyleResolver {
     );
   }
 
+  /// Resolves the final TextStyle for an ATX heading of [level] (1–6).
+  ///
+  /// Checks the matching `h{n}Style` in [TextfOptionsData] first, then falls
+  /// back to [DefaultStyles.headingStyle]. The result is merged onto
+  /// [baseStyle].
+  TextStyle resolveHeadingStyle(int level, TextStyle baseStyle) {
+    final opts = _options;
+    final TextStyle? optionsStyle = opts == null || level < 1 || level > 6
+        ? null
+        : <TextStyle?>[
+            opts.h1Style,
+            opts.h2Style,
+            opts.h3Style,
+            opts.h4Style,
+            opts.h5Style,
+            opts.h6Style,
+          ][level - 1];
+    if (optionsStyle != null) {
+      return mergeTextStyles(baseStyle, optionsStyle);
+    }
+    return DefaultStyles.headingStyle(level, baseStyle);
+  }
+
   // --- Private Helper Methods ---
 
   /// Internal helper to retrieve the pre-merged style from the TextfOptionsData.
