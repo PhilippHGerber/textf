@@ -6,6 +6,7 @@ import '../core/textf_token_cache.dart';
 import '../models/format_stack_entry.dart';
 import '../models/textf_token.dart';
 import '../parsing/components/link_validator.dart';
+import '../parsing/heading_region.dart';
 import '../styling/textf_style_resolver.dart';
 
 /// Builds a list of [InlineSpan] objects from formatted text.
@@ -159,7 +160,7 @@ class TextfSpanBuilder {
 /// Mutable state object for [TextfSpanBuilder.build].
 ///
 /// Extracted to avoid multiple interacting closures allocating contexts and closure objects on the heap.
-class _SpanBuildState {
+class _SpanBuildState with HeadingRegion {
   _SpanBuildState({
     required this.tokens,
     required this.validPairs,
@@ -171,6 +172,7 @@ class _SpanBuildState {
   });
   final List<TextfToken> tokens;
   final Map<int, int> validPairs;
+  @override
   final TextStyle baseStyle;
   final TextStyle activeMarkerStyle;
   final TextStyle inactiveMarkerStyle;
@@ -178,35 +180,15 @@ class _SpanBuildState {
   final TextfStyleResolver resolver;
 
   final List<InlineSpan> spans = <InlineSpan>[];
+  @override
   final StringBuffer textBuffer = StringBuffer();
+  @override
   final List<FormatStackEntry> formatStack = <FormatStackEntry>[];
   final Set<int> scriptPairs = <int>{};
   final Set<int> scriptPreviewPairs = <int>{};
 
-  /// Active heading style when inside an ATX heading line, else null.
-  TextStyle? _headingStyle;
-
-  /// Begins a heading region for [level].
-  void beginHeading(int level) {
-    _headingStyle = resolver.resolveHeadingStyle(level, baseStyle);
-  }
-
-  /// Ends the active heading region.
-  void endHeading() {
-    _headingStyle = null;
-    var previousStyle = baseStyle;
-    for (var i = 0; i < formatStack.length; i++) {
-      final entry = formatStack[i];
-      final resolved = resolver.resolveStyle(entry.type, previousStyle);
-      formatStack[i] = FormatStackEntry(
-        index: entry.index,
-        matchingIndex: entry.matchingIndex,
-        type: entry.type,
-        resolvedStyle: resolved,
-      );
-      previousStyle = resolved;
-    }
-  }
+  @override
+  TextfStyleResolver get headingResolver => resolver;
 
   /// Main processing loop
   List<InlineSpan> build() {
@@ -238,10 +220,9 @@ class _SpanBuildState {
       if (token is HeadingToken) {
         flushText();
         endHeading();
+        beginHeading(token.level);
         final marker = '${'#' * token.level}${' ' * (token.length - token.level)}';
-        final headingStyle = resolver.resolveHeadingStyle(token.level, baseStyle);
-        emitMarker(marker, headingMarkerStyle(i, headingStyle));
-        _headingStyle = headingStyle;
+        emitMarker(marker, headingMarkerStyle(token));
         i++;
         continue;
       }
@@ -369,28 +350,7 @@ class _SpanBuildState {
   /// walking the stack if entries lack cached styles.
   TextStyle currentStyle() {
     if (formatStack.isNotEmpty) return formatStack.last.resolvedStyle;
-    return _headingStyle ?? baseStyle;
-  }
-
-  /// Appends text to the buffer, terminating an active heading at the first
-  /// newline (preserves the 1:1 character-slot invariant: every char, including
-  /// the newline, is still emitted exactly once via [flushText]).
-  void appendText(String value) {
-    if (_headingStyle == null) {
-      textBuffer.write(value);
-      return;
-    }
-    final int nl = value.indexOf('\n');
-    if (nl < 0) {
-      textBuffer.write(value);
-      return;
-    }
-    textBuffer.write(value.substring(0, nl + 1));
-    flushText();
-    endHeading();
-    if (nl + 1 < value.length) {
-      appendText(value.substring(nl + 1));
-    }
+    return headingStyle ?? baseStyle;
   }
 
   /// Check whether a script pair's MARKERS should be hidden
@@ -443,6 +403,7 @@ class _SpanBuildState {
   /// makes super/subscript content appear correctly raised/lowered in all
   /// modes — always-visible markers, animating, and fully-hidden alike.
   /// Outside script zones, emits a single TextSpan as before.
+  @override
   void flushText() {
     if (textBuffer.isEmpty) return;
 
@@ -540,27 +501,21 @@ class _SpanBuildState {
     return inactiveMarkerStyle;
   }
 
-  /// Resolve heading marker style based on cursor position relative to line.
-  TextStyle headingMarkerStyle(int headingIndex, TextStyle headingStyle) {
+  /// Resolve the heading marker style based on cursor position relative to the
+  /// heading line.
+  ///
+  /// O(1): the line end is read directly from the token's back-patched
+  /// [HeadingToken.lineEndPosition] — no per-heading forward token scan. The
+  /// marker is shown active (heading-sized, active marker color) when the cursor
+  /// is on the heading line, and inactive/dimmed otherwise (including the
+  /// hide-all-markers selection path, where `cursorPosition` is < 0).
+  TextStyle headingMarkerStyle(HeadingToken token) {
+    final style = headingStyle ?? baseStyle;
     final pos = cursorPosition;
-    if (pos == null) return headingStyle.copyWith(color: activeMarkerStyle.color);
+    if (pos == null) return style.copyWith(color: activeMarkerStyle.color);
 
-    final headingStart = tokens[headingIndex].position;
-    var headingEnd = headingStart + tokens[headingIndex].length;
-    for (var i = headingIndex + 1; i < tokens.length; i++) {
-      final token = tokens[i];
-      if (token is TextToken) {
-        final newlineIndex = token.value.indexOf('\n');
-        if (newlineIndex >= 0) {
-          headingEnd = token.position + newlineIndex;
-          break;
-        }
-      }
-      headingEnd = token.position + token.length;
-    }
-
-    if (pos >= headingStart && pos <= headingEnd) {
-      return headingStyle.copyWith(color: activeMarkerStyle.color);
+    if (pos >= token.position && pos <= token.lineEndPosition) {
+      return style.copyWith(color: activeMarkerStyle.color);
     }
     return inactiveMarkerStyle;
   }

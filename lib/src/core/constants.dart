@@ -93,3 +93,11 @@ const int kCarriageReturn = 0x0D;
 ///
 /// Used for ATX-style headings (`#` H1 .. `######` H6) at the start of a line.
 const int kHash = 0x23;
+
+/// Space character ' ' (ASCII code 32)
+///
+/// The separator between an ATX heading's `#` run and its content.
+const int kSpace = 0x20;
+
+/// Maximum ATX heading level (`######`). A run of 7+ `#` is not a heading.
+const int kMaxHeadingLevel = 6;

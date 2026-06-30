@@ -142,15 +142,49 @@ final class EscapeMarkerToken extends TextfToken {
 /// line.
 ///
 /// Unlike [FormatMarkerToken], a heading is a single-sided (line-prefix)
-/// marker: its style scopes from the end of this token to the next newline
+/// marker: its style scopes from the end of this token to the line terminator
 /// (or end of string). The heading level (1–6) is derived from the run length.
+///
+/// The token is **enriched** so neither renderer re-derives line boundaries
+/// (FR Option A). [position]..[contentStart] is the consumed opening region
+/// (the `#` run plus its separator); [contentStart]..[contentEnd] is the
+/// inline content; [lineEndPosition] is the index of the line terminator (or
+/// `text.length`).
+///
+/// [contentEnd] and [lineEndPosition] are **back-patched** by the tokenizer
+/// when the line terminator is reached later in the same single pass — there is
+/// no second pass and no per-heading forward scan. They are therefore the only
+/// mutable token fields.
 final class HeadingToken extends TextfToken {
   /// Creates a heading token.
-  const HeadingToken({required this.level, required super.position, required super.length});
+  ///
+  /// [length] is derived as the width of the consumed opening region
+  /// ([contentStart] − [position]) so the per-token slot sum still equals the
+  /// input length (the 1:1 invariant). The inline content follows as separate
+  /// [TextToken]s.
+  HeadingToken({
+    required this.level,
+    required super.position,
+    required this.contentStart,
+    required this.contentEnd,
+    required this.lineEndPosition,
+  }) : super(length: contentStart - position);
 
   /// The heading level, from 1 (`#`) to 6 (`######`).
   final int level;
 
+  /// Index of the first content character (== [contentEnd] when empty).
+  final int contentStart;
+
+  /// One past the last content character. Back-patched at the line terminator.
+  int contentEnd;
+
+  /// Index of the line terminator, or `text.length` at end of input.
+  /// Back-patched at the line terminator; enables an O(1) cursor-inside-line
+  /// test in the editor.
+  int lineEndPosition;
+
   @override
-  String toString() => 'HeadingToken(h$level at $position)';
+  String toString() => 'HeadingToken(h$level at $position, '
+      'content $contentStart..$contentEnd, lineEnd $lineEndPosition)';
 }

@@ -27,6 +27,24 @@ class TextfTokenizer {
     int textStart = 0;
     final int length = text.length;
 
+    // Index in [tokens] of a HeadingToken whose line terminator has not been
+    // passed yet. Its contentEnd/lineEndPosition are back-patched the moment we
+    // reach that terminator (or EOF), so recognition stays O(N) single-pass —
+    // no second scan, no per-heading look-ahead at render time.
+    int? pendingHeadingIndex;
+
+    void finalizePendingHeading(int lineEnd) {
+      final int? idx = pendingHeadingIndex;
+      if (idx == null) return;
+      final TextfToken token = tokens[idx];
+      if (token is HeadingToken) {
+        token
+          ..contentEnd = lineEnd
+          ..lineEndPosition = lineEnd;
+      }
+      pendingHeadingIndex = null;
+    }
+
     // Helper to add accumulated text as a token
     void addTextToken(int start, int end) {
       if (end > start) {
@@ -334,27 +352,51 @@ class TextfTokenizer {
           textStart = pos;
         }
       } else if (currentChar == kHash) {
+        // ATX heading (walking-skeleton scope): column 0 only, a single U+0020
+        // space separator only. Indentation, tab separators, CRLF/lone-CR line
+        // starts, empty headings and closing runs arrive in later increments.
         final bool atLineStart = pos == 0 || text.codeUnitAt(pos - 1) == kNewline;
         if (atLineStart) {
+          // Count the WHOLE `#` run so a 7+ run is rejected rather than
+          // fragmented or partially swallowed.
           int count = 1;
-          while (count < 6 && pos + count < length && text.codeUnitAt(pos + count) == kHash) {
+          while (pos + count < length && text.codeUnitAt(pos + count) == kHash) {
             count++;
           }
-          var markerLength = count;
-          while (pos + markerLength < length && text.codeUnitAt(pos + markerLength) == 0x20) {
-            markerLength++;
-          }
-          if (markerLength == count) {
+          final int afterRun = pos + count;
+          final bool validLevel = count <= kMaxHeadingLevel;
+          final bool hasSpaceSeparator = afterRun < length && text.codeUnitAt(afterRun) == kSpace;
+
+          if (validLevel && hasSpaceSeparator) {
+            addTextToken(textStart, pos);
+            final int contentStart = afterRun + 1; // skip the single separator
+            tokens.add(
+              HeadingToken(
+                level: count,
+                position: pos,
+                contentStart: contentStart,
+                // contentEnd / lineEndPosition are back-patched at the line
+                // terminator (or EOF); seed with the EOF value.
+                contentEnd: length,
+                lineEndPosition: length,
+              ),
+            );
+            pendingHeadingIndex = tokens.length - 1;
+            pos = contentStart;
+            textStart = pos;
+          } else {
+            // Not a heading: let the `#` run accumulate into the pending text
+            // via the shared end-of-iteration path (no ad-hoc swallow).
             pos++;
-            continue;
           }
-          addTextToken(textStart, pos);
-          tokens.add(HeadingToken(level: count, position: pos, length: markerLength));
-          pos += markerLength;
-          textStart = pos;
         } else {
           pos++;
         }
+      } else if (currentChar == kNewline) {
+        // A line terminator finalizes any open heading's line-end (the O(N)
+        // back-patch). The newline itself stays part of the accumulating text.
+        finalizePendingHeading(pos);
+        pos++;
       } else {
         pos++;
       }
@@ -363,6 +405,9 @@ class TextfTokenizer {
         pos++;
       }
     }
+
+    // EOF: a heading that ran to the end of input ends at text.length.
+    finalizePendingHeading(length);
 
     addTextToken(textStart, pos);
     return tokens;
