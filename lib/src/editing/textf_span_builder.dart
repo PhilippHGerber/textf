@@ -183,6 +183,8 @@ class _SpanBuildState {
   final Set<int> scriptPairs = <int>{};
   final Set<int> scriptPreviewPairs = <int>{};
 
+<<<<<<< HEAD
+=======
   /// Active heading style when inside an ATX heading line, else null.
   TextStyle? _headingStyle;
 
@@ -208,6 +210,7 @@ class _SpanBuildState {
     }
   }
 
+>>>>>>> pr-10
   /// Main processing loop
   List<InlineSpan> build() {
     int i = 0;
@@ -234,6 +237,8 @@ class _SpanBuildState {
         // Not a valid link — fall through to plain text.
       }
 
+<<<<<<< HEAD
+=======
       // Heading Handling (line-prefix ATX marker, scoped to end of line)
       if (token is HeadingToken) {
         flushText();
@@ -246,6 +251,7 @@ class _SpanBuildState {
         continue;
       }
 
+>>>>>>> pr-10
       // Formatting Marker Handling
       if (token is FormatMarkerToken) {
         if (validPairs.containsKey(i)) {
@@ -275,7 +281,14 @@ class _SpanBuildState {
             }
 
             // Compute resolved style at this stack depth for O(1) lookup.
+<<<<<<< HEAD
+            final TextStyle previousStyle = formatStack.isEmpty //
+                ? baseStyle
+                : formatStack.last.resolvedStyle;
+            final TextStyle resolved = resolver.resolveStyle(token.markerType, previousStyle);
+=======
             final TextStyle resolved = resolver.resolveStyle(token.markerType, currentStyle());
+>>>>>>> pr-10
 
             formatStack.add(
               FormatStackEntry(
@@ -331,7 +344,11 @@ class _SpanBuildState {
       // Plain Text
       switch (token) {
         case TextToken(:final value):
+<<<<<<< HEAD
+          textBuffer.write(value);
+=======
           appendText(value);
+>>>>>>> pr-10
         case FormatMarkerToken(:final value):
           textBuffer.write(value);
         case LinkStartToken():
@@ -342,8 +359,11 @@ class _SpanBuildState {
           textBuffer.write(')');
         case PlaceholderToken(:final key):
           textBuffer.write('{$key}');
+<<<<<<< HEAD
+=======
         case HeadingToken(:final level, :final length):
           textBuffer.write('${'#' * level}${' ' * (length - level)}');
+>>>>>>> pr-10
         case EscapeMarkerToken():
           flushText();
           final TextStyle style;
@@ -368,6 +388,10 @@ class _SpanBuildState {
   /// O(1) via cached [FormatStackEntry.resolvedStyle], falls back to
   /// walking the stack if entries lack cached styles.
   TextStyle currentStyle() {
+<<<<<<< HEAD
+    if (formatStack.isEmpty) return baseStyle;
+    return formatStack.last.resolvedStyle;
+=======
     if (formatStack.isNotEmpty) return formatStack.last.resolvedStyle;
     return _headingStyle ?? baseStyle;
   }
@@ -391,6 +415,7 @@ class _SpanBuildState {
     if (nl + 1 < value.length) {
       appendText(value.substring(nl + 1));
     }
+>>>>>>> pr-10
   }
 
   /// Check whether a script pair's MARKERS should be hidden

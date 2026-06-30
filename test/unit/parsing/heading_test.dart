@@ -41,7 +41,8 @@ void main() {
     testWidgets('heading terminates at newline', (tester) async {
       final result = await parse(tester, '# Heading\nbody');
 
-      final headingSpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Heading'));
+      final headingSpan =
+          result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Heading'));
       final bodySpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('body'));
       expect(headingSpan.style!.fontSize, 28.0);
       expect(bodySpan.style!.fontSize, 14.0);
@@ -50,7 +51,8 @@ void main() {
     testWidgets('heading terminates inside cross-line formatting', (tester) async {
       final result = await parse(tester, '# **Heading\nbody**');
 
-      final headingSpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Heading'));
+      final headingSpan =
+          result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Heading'));
       final bodySpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('body'));
       expect(headingSpan.style!.fontSize, 28.0);
       expect(bodySpan.style!.fontSize, 14.0);

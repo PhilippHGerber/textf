@@ -94,6 +94,63 @@ Both widgets share the same formatting syntax and can be configured together wit
 
 ---
 
+## CommonMark Feature Support Status
+
+Because this package is designed as a Flutter `Text` widget (utilizing `TextSpan` and `WidgetSpan`), it focuses heavily on **Inline** formatting and some text-compatible **Block** elements. Complex block layouts (like nested lists or tables) are out of scope and require custom rendering.
+
+**Legend for Textf Status:**
+- [x] **Supported** - Fully implemented and tested.
+- [~] **Partial** - Implemented with known limitations.
+- [ ] **Planned** - On the roadmap.
+- [-] **Out of Scope** - Unlikely to be supported within a continuous text layout.
+
+### Inlines (Core Text Formatting)
+These features map directly to Flutter's `TextSpan` and are the primary focus of `Textf`.
+
+| Name              | Example (raw)                    | Textf |
+| :---------------- | :------------------------------- | :---: |
+| Textual Content   | `Plain text`                     |  [x]  |
+| Emphasis          | `*italic*` or `_italic_`         |  [x]  |
+| Strong Emphasis   | `**bold**` or `__bold__`         |  [x]  |
+| Code Spans        | `` `inline code` ``              |  [x]  |
+| Inline Links      | `[text](https://url.com)`        |  [x]  |
+| Reference Links   | `[text][label]`                  |  [ ]  |
+| Shortcut Links    | `[text]`                         |  [ ]  |
+| Autolinks         | `<https://url.com>` or `<a@b.c>` |  [ ]  |
+| Images            | `![alt](url.png)`                |  [ ]  |
+| Hard Line Breaks  | `Line one\ ` (backslash)         |  [ ]  |
+| Soft Line Breaks  | `Line one\nLine two`             |  [ ]  |
+| Backslash Escapes | `\*literal asterisks\*`          |  [ ]  |
+| Entity References | `&amp;` or `&#35;`               |  [ ]  |
+| Raw HTML (Inline) | `<strong>text</strong>`          |  [ ]  |
+
+### Leaf Blocks
+Blocks that do not contain other blocks. Selected items here are parsed to enhance the rich-text experience without breaking `Text` widget constraints.
+
+| Name                 | Example (raw)              | Textf |
+| :------------------- | :------------------------- | :---: |
+| Paragraphs           | `Line 1\n\nLine 2`         |  [ ]  |
+| ATX Headings         | `# Heading` to `###### H6` |  [~]  |
+| Setext Headings      | `Heading\n===`             |  [ ]  |
+| Thematic Breaks      | `---`, `***`, or `___`     |  [ ]  |
+| Link Reference Defs  | `[label]: https://url.com` |  [ ]  |
+| Fenced Code Blocks   | ` ```dart\ncode\n``` `     |  [ ]  |
+| Indented Code Blocks | `    code` (4 spaces)      |  [ ]  |
+| HTML Blocks          | `<div>\nraw html\n</div>`  |  [ ]  |
+
+### Container Blocks
+Blocks that contain other blocks. These are traditionally difficult to handle inside a single `Text.rich` widget and may require custom widget composition.
+
+| Name               | Example (raw)                  | Textf |
+| :----------------- | :----------------------------- | :---: |
+| Block Quotes       | `> quote text`                 |  [ ]  |
+| Bullet Lists       | `- item` or `* item`           |  [ ]  |
+| Ordered Lists      | `1. item` or `1) item`         |  [ ]  |
+| List Items (Loose) | Items separated by blank lines |  [ ]  |
+| List Items (Tight) | Items with no blank lines      |  [ ]  |
+
+---
+
 ## When to Use Textf
 
 Textf is intentionally limited to **inline formatting only**. It is not a Markdown renderer.
@@ -120,19 +177,19 @@ Both `Textf` and `TextfEditingController` use the same syntax:
 
 ![Formatting markers showcase](https://github.com/PhilippHGerber/textf/raw/main/images/formatting_markers.png)
 
-| Format        | Syntax              | Alternate            | Result                         |
-| ------------- | ------------------- | -------------------- | ------------------------------ |
-| Bold          | `**bold**`          | `__bold__`           | **bold**                       |
-| Italic        | `*italic*`          | `_italic_`           | *italic*                       |
-| Bold + Italic | `***bold italic***` | `___bold italic___`  | ***both***                     |
-| Strikethrough | `~~strike~~`        |                      | ~~strikethrough~~              |
-| Underline     | `++underline++`     |                      | <u>underline</u>               |
-| Highlight     | `==highlight==`     |                      | <mark>highlight</mark>         |
-| Inline code   | `` `code` ``        |                      | `code`                         |
-| Superscript   | `^super^`           |                      | E = mc²                        |
-| Subscript     | `~sub~`             |                      | H₂O                            |
-| Link          | `[label](url)`      |                      | [Flutter](https://flutter.dev) |
-| Placeholder   | `{key}`             |                      | (inserted widget)              |
+| Format        | Syntax              | Alternate           | Result                         |
+| ------------- | ------------------- | ------------------- | ------------------------------ |
+| Bold          | `**bold**`          | `__bold__`          | **bold**                       |
+| Italic        | `*italic*`          | `_italic_`          | *italic*                       |
+| Bold + Italic | `***bold italic***` | `___bold italic___` | ***both***                     |
+| Strikethrough | `~~strike~~`        |                     | ~~strikethrough~~              |
+| Underline     | `++underline++`     |                     | <u>underline</u>               |
+| Highlight     | `==highlight==`     |                     | <mark>highlight</mark>         |
+| Inline code   | `` `code` ``        |                     | `code`                         |
+| Superscript   | `^super^`           |                     | E = mc²                        |
+| Subscript     | `~sub~`             |                     | H₂O                            |
+| Link          | `[label](url)`      |                     | [Flutter](https://flutter.dev) |
+| Placeholder   | `{key}`             |                     | (inserted widget)              |
 
 ### Flanking Rules
 
@@ -365,28 +422,28 @@ TextfOptions(
 
 ### Style Options
 
-| Property             | Applies to                  |
-| -------------------- | --------------------------- |
-| `boldStyle`          | `**bold**` / `__bold__`     |
-| `italicStyle`        | `*italic*` / `_italic_`     |
-| `boldItalicStyle`    | `***bold italic***`         |
-| `strikethroughStyle` | `~~strike~~`                |
-| `underlineStyle`     | `++underline++`             |
-| `highlightStyle`     | `==highlight==`             |
-| `codeStyle`          | `` `code` ``                |
-| `superscriptStyle`   | `^super^`                   |
-| `subscriptStyle`     | `~sub~`                     |
-| `linkStyle`          | Links — normal state        |
-| `linkHoverStyle`     | Links — hover state         |
+| Property             | Applies to              |
+| -------------------- | ----------------------- |
+| `boldStyle`          | `**bold**` / `__bold__` |
+| `italicStyle`        | `*italic*` / `_italic_` |
+| `boldItalicStyle`    | `***bold italic***`     |
+| `strikethroughStyle` | `~~strike~~`            |
+| `underlineStyle`     | `++underline++`         |
+| `highlightStyle`     | `==highlight==`         |
+| `codeStyle`          | `` `code` ``            |
+| `superscriptStyle`   | `^super^`               |
+| `subscriptStyle`     | `~sub~`                 |
+| `linkStyle`          | Links — normal state    |
+| `linkHoverStyle`     | Links — hover state     |
 
 ### Link Options
 
-| Property          | Type / Description                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------ |
-| `onLinkTap`       | `(String url, String displayText) → void`                                            |
-| `onLinkHover`     | `(String url, String displayText, {required bool isHovering}) → void`                |
-| `linkMouseCursor` | `MouseCursor` — shown over links (default: `SystemMouseCursors.click`)               |
-| `linkAlignment`   | `PlaceholderAlignment` — vertical alignment of link spans (default: `baseline`)      |
+| Property          | Type / Description                                                              |
+| ----------------- | ------------------------------------------------------------------------------- |
+| `onLinkTap`       | `(String url, String displayText) → void`                                       |
+| `onLinkHover`     | `(String url, String displayText, {required bool isHovering}) → void`           |
+| `linkMouseCursor` | `MouseCursor` — shown over links (default: `SystemMouseCursors.click`)          |
+| `linkAlignment`   | `PlaceholderAlignment` — vertical alignment of link spans (default: `baseline`) |
 
 ### Script Options
 
@@ -455,15 +512,15 @@ TextfOptions(
 
 ## Comparison
 
-| Feature           | Textf               | Full Markdown Packages |
-| ----------------- | ------------------- | ---------------------- |
-| Bundle size       | Tiny                | Large                  |
-| Dependencies      | Zero                | Multiple               |
-| Parse complexity  | O(N)                | Often O(N²) or worse   |
-| API familiarity   | Identical to `Text` | Custom widgets         |
-| Live editing      | ✅                  | Rarely                 |
-| Block elements    | ❌                  | ✅                     |
-| Best for          | Inline formatting   | Document rendering     |
+| Feature          | Textf               | Full Markdown Packages |
+| ---------------- | ------------------- | ---------------------- |
+| Bundle size      | Tiny                | Large                  |
+| Dependencies     | Zero                | Multiple               |
+| Parse complexity | O(N)                | Often O(N²) or worse   |
+| API familiarity  | Identical to `Text` | Custom widgets         |
+| Live editing     | ✅                  | Rarely                 |
+| Block elements   | ❌                  | ✅                     |
+| Best for         | Inline formatting   | Document rendering     |
 
 ---
 

@@ -6,8 +6,10 @@ formatter:
 
 analyzer:
   exclude:
+    - "**/build/**"
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    - "docs-jaspr/**"
 
   errors:
     unused_import: warning
