@@ -2,6 +2,12 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 2.0.0-dev.1
+
+### Added
+
+* **Heading formatting (ATX):** `#` through `######` render as headings with per-level default and custom styles, consistently in both read-only and editor rendering. Documented the line-height strut setup for editable headings. (#10, thanks @davidlondono)
+
 ## 1.2.4
 
 ### Added
