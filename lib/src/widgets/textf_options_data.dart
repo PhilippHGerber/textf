@@ -121,8 +121,6 @@ class TextfOptionsData {
   /// Merged onto the base style if provided.
   final TextStyle? subscriptStyle;
 
-<<<<<<< HEAD
-=======
   /// The [TextStyle] for level-1 headings (`# H1`). Merged onto the base style.
   final TextStyle? h1Style;
 
@@ -141,7 +139,6 @@ class TextfOptionsData {
   /// The [TextStyle] for level-6 headings (`###### H6`). Merged onto the base style.
   final TextStyle? h6Style;
 
->>>>>>> pr-10
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -164,9 +161,6 @@ class TextfOptionsData {
         other.underlineStyle == underlineStyle &&
         other.highlightStyle == highlightStyle &&
         other.superscriptStyle == superscriptStyle &&
-<<<<<<< HEAD
-        other.subscriptStyle == subscriptStyle;
-=======
         other.subscriptStyle == subscriptStyle &&
         other.h1Style == h1Style &&
         other.h2Style == h2Style &&
@@ -174,7 +168,6 @@ class TextfOptionsData {
         other.h4Style == h4Style &&
         other.h5Style == h5Style &&
         other.h6Style == h6Style;
->>>>>>> pr-10
   }
 
   @override
@@ -198,14 +191,11 @@ class TextfOptionsData {
         highlightStyle,
         superscriptStyle,
         subscriptStyle,
-<<<<<<< HEAD
-=======
         h1Style,
         h2Style,
         h3Style,
         h4Style,
         h5Style,
         h6Style,
->>>>>>> pr-10
       ]);
 }
