@@ -5,6 +5,7 @@ import 'package:textf/textf.dart';
 import 'basic_formatting_screen.dart';
 import 'complex_formatting_screen.dart';
 import 'editing_controller_screen.dart';
+import 'headings_screen.dart';
 import 'nested_formatting_screen.dart';
 import 'placeholder_example_screen.dart';
 import 'screenshot_screen.dart';
@@ -79,6 +80,19 @@ class HomeScreen extends StatelessWidget {
               ThemeExampleScreen(
                 // Pass down theme info
                 currentThemeMode: currentThemeMode,
+                toggleThemeMode: toggleThemeMode,
+              ),
+            ),
+            _buildExampleTile(
+              context,
+              const Textf(
+                '{new} Headings',
+                placeholders: {
+                  'new': badgeNew,
+                },
+              ),
+              const Text('ATX-style H1–H6 headings with # at line start'),
+              HeadingsScreen(
                 toggleThemeMode: toggleThemeMode,
               ),
             ),

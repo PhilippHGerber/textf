@@ -28,7 +28,8 @@ class FormattingUtils {
           char == kPlus ||
           char == kEscape ||
           char == kOpenBracket ||
-          char == kOpenBrace) {
+          char == kOpenBrace ||
+          char == kHash) {
         return true;
       }
     }
@@ -113,6 +114,10 @@ class FormattingUtils {
         i++;
       } else if (token is PlaceholderToken) {
         buffer.write('{${token.key}}');
+        i++;
+      } else if (token is HeadingToken) {
+        // Heading markers ('#' run) are stripped; the line's text content is
+        // emitted by the following TextTokens.
         i++;
       } else if (token is EscapeMarkerToken) {
         // Skip the backslash itself. The escaped character is always the

@@ -72,6 +72,24 @@ void main() {
       });
     });
 
+    testWidgets('nested formatting keeps heading style', (tester) async {
+      await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      final spans = builder.build('# **Title**', testContext, const TextStyle(fontSize: 14));
+
+      final titleSpan = spans.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Title'));
+      expect(titleSpan.style!.fontSize, 28.0);
+      expect(titleSpan.style!.fontWeight, FontWeight.bold);
+    });
+
+    testWidgets('heading marker uses heading size', (tester) async {
+      await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      final spans = builder.build('# Title', testContext, const TextStyle(fontSize: 14));
+
+      final markerSpan = spans.whereType<TextSpan>().first;
+      expect(markerSpan.text, '# ');
+      expect(markerSpan.style!.fontSize, 28.0);
+    });
+
     group('Character Count Invariant', () {
       testWidgets('bold text preserves character count', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
@@ -740,6 +758,22 @@ void main() {
         // "[" marker should be active (dimmed, not hidden)
         final bracketColor = spans.first.style?.color;
         expect(bracketColor!.a, greaterThan(0));
+      });
+
+      testWidgets('heading marker hidden when cursor outside heading line', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        const baseStyle = TextStyle(color: Color(0xFF000000), fontSize: 14);
+        final spans = builder.build(
+          '#  Title\nbody',
+          testContext,
+          baseStyle,
+          cursorPosition: 10,
+        );
+
+        final markerSpan = spans.whereType<TextSpan>().first;
+        expect(markerSpan.text, '#  ');
+        expect(markerSpan.style!.color!.a, 0);
+        expect(markerSpan.style!.fontSize, lessThan(1));
       });
     });
 

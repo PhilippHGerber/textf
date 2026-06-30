@@ -33,6 +33,9 @@ class _MockTextfStyleResolver implements TextfStyleResolver {
   // The remaining methods are not needed for this test and can be
   // implemented with an exception to ensure they are not accidentally called.
   @override
+  TextStyle resolveHeadingStyle(int level, TextStyle baseStyle) => throw UnimplementedError();
+
+  @override
   TextStyle resolveLinkStyle(TextStyle baseStyle) => throw UnimplementedError();
   @override
   TextStyle resolveLinkHoverStyle(TextStyle baseStyle) => throw UnimplementedError();

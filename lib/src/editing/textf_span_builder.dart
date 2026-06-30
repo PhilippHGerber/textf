@@ -183,6 +183,31 @@ class _SpanBuildState {
   final Set<int> scriptPairs = <int>{};
   final Set<int> scriptPreviewPairs = <int>{};
 
+  /// Active heading style when inside an ATX heading line, else null.
+  TextStyle? _headingStyle;
+
+  /// Begins a heading region for [level].
+  void beginHeading(int level) {
+    _headingStyle = resolver.resolveHeadingStyle(level, baseStyle);
+  }
+
+  /// Ends the active heading region.
+  void endHeading() {
+    _headingStyle = null;
+    var previousStyle = baseStyle;
+    for (var i = 0; i < formatStack.length; i++) {
+      final entry = formatStack[i];
+      final resolved = resolver.resolveStyle(entry.type, previousStyle);
+      formatStack[i] = FormatStackEntry(
+        index: entry.index,
+        matchingIndex: entry.matchingIndex,
+        type: entry.type,
+        resolvedStyle: resolved,
+      );
+      previousStyle = resolved;
+    }
+  }
+
   /// Main processing loop
   List<InlineSpan> build() {
     int i = 0;
@@ -207,6 +232,18 @@ class _SpanBuildState {
           continue;
         }
         // Not a valid link — fall through to plain text.
+      }
+
+      // Heading Handling (line-prefix ATX marker, scoped to end of line)
+      if (token is HeadingToken) {
+        flushText();
+        endHeading();
+        final marker = '${'#' * token.level}${' ' * (token.length - token.level)}';
+        final headingStyle = resolver.resolveHeadingStyle(token.level, baseStyle);
+        emitMarker(marker, headingMarkerStyle(i, headingStyle));
+        _headingStyle = headingStyle;
+        i++;
+        continue;
       }
 
       // Formatting Marker Handling
@@ -238,10 +275,7 @@ class _SpanBuildState {
             }
 
             // Compute resolved style at this stack depth for O(1) lookup.
-            final TextStyle previousStyle = formatStack.isEmpty //
-                ? baseStyle
-                : formatStack.last.resolvedStyle;
-            final TextStyle resolved = resolver.resolveStyle(token.markerType, previousStyle);
+            final TextStyle resolved = resolver.resolveStyle(token.markerType, currentStyle());
 
             formatStack.add(
               FormatStackEntry(
@@ -297,7 +331,7 @@ class _SpanBuildState {
       // Plain Text
       switch (token) {
         case TextToken(:final value):
-          textBuffer.write(value);
+          appendText(value);
         case FormatMarkerToken(:final value):
           textBuffer.write(value);
         case LinkStartToken():
@@ -308,6 +342,8 @@ class _SpanBuildState {
           textBuffer.write(')');
         case PlaceholderToken(:final key):
           textBuffer.write('{$key}');
+        case HeadingToken(:final level, :final length):
+          textBuffer.write('${'#' * level}${' ' * (length - level)}');
         case EscapeMarkerToken():
           flushText();
           final TextStyle style;
@@ -332,8 +368,29 @@ class _SpanBuildState {
   /// O(1) via cached [FormatStackEntry.resolvedStyle], falls back to
   /// walking the stack if entries lack cached styles.
   TextStyle currentStyle() {
-    if (formatStack.isEmpty) return baseStyle;
-    return formatStack.last.resolvedStyle;
+    if (formatStack.isNotEmpty) return formatStack.last.resolvedStyle;
+    return _headingStyle ?? baseStyle;
+  }
+
+  /// Appends text to the buffer, terminating an active heading at the first
+  /// newline (preserves the 1:1 character-slot invariant: every char, including
+  /// the newline, is still emitted exactly once via [flushText]).
+  void appendText(String value) {
+    if (_headingStyle == null) {
+      textBuffer.write(value);
+      return;
+    }
+    final int nl = value.indexOf('\n');
+    if (nl < 0) {
+      textBuffer.write(value);
+      return;
+    }
+    textBuffer.write(value.substring(0, nl + 1));
+    flushText();
+    endHeading();
+    if (nl + 1 < value.length) {
+      appendText(value.substring(nl + 1));
+    }
   }
 
   /// Check whether a script pair's MARKERS should be hidden
@@ -479,6 +536,31 @@ class _SpanBuildState {
     final closeEnd = tokens[closeIndex].position + tokens[closeIndex].length;
     if (pos >= openPos && pos <= closeEnd) {
       return activeMarkerStyle;
+    }
+    return inactiveMarkerStyle;
+  }
+
+  /// Resolve heading marker style based on cursor position relative to line.
+  TextStyle headingMarkerStyle(int headingIndex, TextStyle headingStyle) {
+    final pos = cursorPosition;
+    if (pos == null) return headingStyle.copyWith(color: activeMarkerStyle.color);
+
+    final headingStart = tokens[headingIndex].position;
+    var headingEnd = headingStart + tokens[headingIndex].length;
+    for (var i = headingIndex + 1; i < tokens.length; i++) {
+      final token = tokens[i];
+      if (token is TextToken) {
+        final newlineIndex = token.value.indexOf('\n');
+        if (newlineIndex >= 0) {
+          headingEnd = token.position + newlineIndex;
+          break;
+        }
+      }
+      headingEnd = token.position + token.length;
+    }
+
+    if (pos >= headingStart && pos <= headingEnd) {
+      return headingStyle.copyWith(color: activeMarkerStyle.color);
     }
     return inactiveMarkerStyle;
   }

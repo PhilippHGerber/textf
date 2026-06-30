@@ -137,3 +137,20 @@ final class EscapeMarkerToken extends TextfToken {
   @override
   String toString() => 'EscapeMarkerToken(at $position)';
 }
+
+/// An ATX-style heading prefix: a run of 1–6 `#` characters at the start of a
+/// line.
+///
+/// Unlike [FormatMarkerToken], a heading is a single-sided (line-prefix)
+/// marker: its style scopes from the end of this token to the next newline
+/// (or end of string). The heading level (1–6) is derived from the run length.
+final class HeadingToken extends TextfToken {
+  /// Creates a heading token.
+  const HeadingToken({required this.level, required super.position, required super.length});
+
+  /// The heading level, from 1 (`#`) to 6 (`######`).
+  final int level;
+
+  @override
+  String toString() => 'HeadingToken(h$level at $position)';
+}

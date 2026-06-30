@@ -103,6 +103,10 @@ class _TextfEditingControllerUseCaseState extends State<TextfEditingControllerUs
       controller: _controller,
       maxLines: null,
       minLines: 4,
+      strutStyle: StrutStyle.fromTextStyle(
+        const TextStyle(fontSize: 16),
+        forceStrutHeight: false,
+      ),
       style: const TextStyle(fontSize: 16),
       decoration: const InputDecoration(
         border: OutlineInputBorder(),

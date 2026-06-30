@@ -46,6 +46,11 @@ class ParserState {
   /// A stack tracking the currently active formatting markers.
   final List<FormatStackEntry> _formatStack = [];
 
+  /// The active heading style when inside an ATX heading line, else null.
+  ///
+  /// Cleared by [endHeading] (called when a newline or EOF terminates the line).
+  TextStyle? _headingStyle;
+
   /// An optional `TextScaler` for scaling the text.
   final TextScaler? textScaler;
 
@@ -91,14 +96,58 @@ class ParserState {
     _formatStack.removeLast();
   }
 
+  /// Begins a heading region for [level]. Subsequent text uses the heading
+  /// style until [endHeading] is called (at newline or EOF).
+  void beginHeading(int level) {
+    _headingStyle = styleResolver.resolveHeadingStyle(level, baseStyle);
+  }
+
+  /// Ends the active heading region.
+  void endHeading() {
+    _headingStyle = null;
+    var previousStyle = baseStyle;
+    for (var i = 0; i < _formatStack.length; i++) {
+      final entry = _formatStack[i];
+      final resolved = styleResolver.resolveStyle(entry.type, previousStyle);
+      _formatStack[i] = FormatStackEntry(
+        index: entry.index,
+        matchingIndex: entry.matchingIndex,
+        type: entry.type,
+        resolvedStyle: resolved,
+      );
+      previousStyle = resolved;
+    }
+  }
+
+  /// Appends text to the buffer, terminating an active heading at the first
+  /// newline (the newline and preceding text keep the heading style; anything
+  /// after resumes the base style).
+  void appendText(String value) {
+    if (_headingStyle == null) {
+      textBuffer.write(value);
+      return;
+    }
+    final int nl = value.indexOf('\n');
+    if (nl < 0) {
+      textBuffer.write(value);
+      return;
+    }
+    textBuffer.write(value.substring(0, nl + 1));
+    flushText();
+    endHeading();
+    if (nl + 1 < value.length) {
+      appendText(value.substring(nl + 1));
+    }
+  }
+
   /// Resolves the current style based on the format stack and base style.
   ///
   /// O(1): returns the pre-computed [FormatStackEntry.resolvedStyle] from the
-  /// stack top, or [baseStyle] when the stack is empty.
+  /// stack top, the active heading style (when the stack is empty inside a
+  /// heading line), or [baseStyle].
   TextStyle currentStyle() {
-    if (_formatStack.isEmpty) return baseStyle;
-
-    return _formatStack.last.resolvedStyle;
+    if (_formatStack.isNotEmpty) return _formatStack.last.resolvedStyle;
+    return _headingStyle ?? baseStyle;
   }
 
   /// Flushes the accumulated `textBuffer` as a `TextSpan` with the current formatting applied.
