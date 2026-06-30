@@ -764,14 +764,16 @@ void main() {
         await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
         const baseStyle = TextStyle(color: Color(0xFF000000), fontSize: 14);
         final spans = builder.build(
-          '#  Title\nbody',
+          '# Title\nbody',
           testContext,
           baseStyle,
           cursorPosition: 10,
         );
 
+        // Cursor at index 10 is in "body" (line 2), outside the heading line,
+        // so the marker is fully hidden via the O(1) lineEndPosition check.
         final markerSpan = spans.whereType<TextSpan>().first;
-        expect(markerSpan.text, '#  ');
+        expect(markerSpan.text, '# ');
         expect(markerSpan.style!.color!.a, 0);
         expect(markerSpan.style!.fontSize, lessThan(1));
       });

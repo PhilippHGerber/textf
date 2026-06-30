@@ -57,9 +57,7 @@ void main() {
       void walk(InlineSpan span) {
         if (span is TextSpan) {
           sum += span.text?.length ?? 0;
-          for (final c in span.children ?? const <InlineSpan>[]) {
-            walk(c);
-          }
+          (span.children ?? const <InlineSpan>[]).forEach(walk);
         } else if (span is WidgetSpan) {
           sum += 1;
         }
@@ -109,7 +107,7 @@ void main() {
       testWidgets('B7 — heading with emoji content keeps slot count == text.length',
           (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
-        const input = '# Titel 🚀 mit Emoji';
+        const input = '# Title 🚀 with emoji';
         final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
 
         // 🚀 is two UTF-16 code units; the invariant counts code units.
@@ -118,21 +116,21 @@ void main() {
 
       testWidgets('B2 — heading with bold and italic keeps slot count', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
-        const input = '# Titel mit **fett** und *kursiv*';
+        const input = '# Title with **bold** and *italic*';
         final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
         expect(totalSlots(spans), input.length);
       });
 
       testWidgets('B8 — heading with a link keeps slot count', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
-        const input = '# Siehe [Doku](https://example.com)';
+        const input = '# See [Docs](https://example.com)';
         final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
         expect(totalSlots(spans), input.length);
       });
 
       testWidgets('A5 — open inline marker on a heading line keeps slot count', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
-        const input = '# Titel **fett';
+        const input = '# Title **bold';
         // Cursor at end (simulating mid-typing).
         final spans = builder.build(input, testContext, baseStyle, cursorPosition: input.length);
         expect(totalSlots(spans), input.length);
@@ -140,14 +138,14 @@ void main() {
 
       testWidgets('A6 — two headings with an open marker keep slot count', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
-        const input = '# Eins **noch offen\n## Zwei';
+        const input = '# One **still open\n## Two';
         final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
         expect(totalSlots(spans), input.length);
       });
 
       testWidgets('all-markers-hidden mode also preserves slot count', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
-        const input = '# Titel 🚀';
+        const input = '# Title 🚀';
         final spans = builder.build(
           input,
           testContext,
@@ -165,10 +163,10 @@ void main() {
     group('no style bleed past the heading line', () {
       testWidgets('B3 — paragraph after a heading uses the base style', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
-        const input = '# Überschrift\nNormaler Text danach.';
+        const input = '# Heading\nNormal text afterwards.';
         final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
 
-        final paragraph = styleOf(spans, 'Normaler Text danach');
+        final paragraph = styleOf(spans, 'Normal text afterwards');
         expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no enlarged heading size leak');
         expect(paragraph.fontWeight, baseStyle.fontWeight, reason: 'no bold heading weight leak');
         expect(totalSlots(spans), input.length);
@@ -176,10 +174,10 @@ void main() {
 
       testWidgets('B4 — every paragraph between headings stays at base style', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
-        const input = '# Erste\nAbsatz eins.\n## Zweite\nAbsatz zwei.';
+        const input = '# First\nParagraph one.\n## Second\nParagraph two.';
         final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
 
-        for (final needle in <String>['Absatz eins', 'Absatz zwei']) {
+        for (final needle in <String>['Paragraph one', 'Paragraph two']) {
           final style = styleOf(spans, needle);
           expect(style.fontSize, baseStyle.fontSize, reason: '$needle keeps base size');
           expect(style.fontWeight, baseStyle.fontWeight, reason: '$needle keeps base weight');
@@ -192,10 +190,10 @@ void main() {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         // The `**` is left open on the heading line; the following plain
         // paragraph must NOT inherit bold nor the heading size.
-        const input = '# Titel **noch offen\nNormaler Absatz hier.';
+        const input = '# Title **still open\nNormal paragraph here.';
         final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
 
-        final paragraph = styleOf(spans, 'Normaler Absatz hier');
+        final paragraph = styleOf(spans, 'Normal paragraph here');
         expect(paragraph.fontWeight, baseStyle.fontWeight, reason: 'no bold bleed from open **');
         expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no heading size bleed');
         expect(totalSlots(spans), input.length);
@@ -209,15 +207,104 @@ void main() {
     group('heading content styling', () {
       testWidgets('heading content is larger than the base text', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
-        const input = '# Großer Titel';
+        const input = '# Big Title';
         final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
 
-        final title = styleOf(spans, 'Großer Titel');
+        final title = styleOf(spans, 'Big Title');
         expect(
           title.fontSize,
           greaterThanOrEqualTo(baseStyle.fontSize!),
           reason: 'H1 content should be at least as large as base',
         );
+      });
+    });
+
+    // ========================================================================
+    // Cursor-aware heading marker (O(1) via lineEndPosition)
+    // ========================================================================
+
+    group('cursor-aware heading marker', () {
+      /// The leading '# ' marker span.
+      TextSpan markerSpan(List<InlineSpan> spans) =>
+          spans.whereType<TextSpan>().firstWhere((s) => s.text == '# ');
+
+      testWidgets('active (heading-sized) when the cursor is on the heading line', (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '# Title\nbody';
+        // Cursor at index 3 — inside the heading line.
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 3);
+
+        final marker = markerSpan(spans);
+        // Active marker keeps the heading font size (28 for base 14)…
+        expect(marker.style!.fontSize, 28);
+        // …and is visible (not collapsed to the hidden style).
+        expect(marker.style!.color!.a, greaterThan(0));
+      });
+
+      testWidgets('inactive/hidden when the cursor is on another line', (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '# Title\nbody';
+        // Cursor at index 10 — in "body", past the heading line's terminator.
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 10);
+
+        final marker = markerSpan(spans);
+        expect(marker.style!.color!.a, 0, reason: 'marker hidden off-line');
+        expect(marker.style!.fontSize, lessThan(1));
+      });
+
+      testWidgets('hide-all-markers path hides the heading marker', (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '# Title\nbody';
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          cursorPosition: TextfSpanBuilder.hideAllMarkers,
+        );
+
+        final marker = markerSpan(spans);
+        expect(marker.style!.color!.a, 0);
+        expect(totalSlots(spans), input.length);
+      });
+
+      testWidgets('null cursor shows the marker (dimmed but present)', (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '# Title';
+        final spans = builder.build(input, testContext, baseStyle);
+
+        final marker = markerSpan(spans);
+        expect(marker.style!.color!.a, greaterThan(0));
+        expect(totalSlots(spans), input.length);
+      });
+    });
+
+    // ========================================================================
+    // Performance / scale — locks in the O(1) marker (no per-heading scan)
+    // ========================================================================
+
+    group('large heading-dense input', () {
+      testWidgets('1:1 invariant holds across many long heading lines', (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+
+        final buffer = StringBuffer();
+        for (var i = 0; i < 400; i++) {
+          buffer
+            ..write('## ')
+            ..write('Heading $i ${'word ' * 40}')
+            ..write('\n');
+        }
+        final input = buffer.toString();
+
+        // A per-heading forward scan would make per-line marker resolution grow
+        // with line length; with the O(1) lineEndPosition check this stays
+        // comfortably fast. The generous bound only guards against a
+        // super-linear (O(N²)) regression, not micro-timing.
+        final stopwatch = Stopwatch()..start();
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        stopwatch.stop();
+
+        expect(totalSlots(spans), input.length);
+        expect(stopwatch.elapsedMilliseconds, lessThan(2000));
       });
     });
   });

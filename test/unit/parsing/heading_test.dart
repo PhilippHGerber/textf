@@ -85,12 +85,14 @@ void main() {
       }
     });
 
-    test('line-start hash consumes all following spaces as marker', () {
+    test('a single space is the separator; extra spaces remain (untrimmed) content', () {
+      // Increment 01 consumes exactly one separator space; trimming of leading
+      // content whitespace arrives in increment 05.
       final tokens = TextfParser.getCachedTokensAndPairs('#   Title').tokens;
       final heading = tokens.whereType<HeadingToken>().single;
       expect(heading.level, 1);
-      expect(heading.length, 4);
-      expect(tokens.whereType<TextToken>().map((t) => t.value).join(), 'Title');
+      expect(heading.length, 2);
+      expect(tokens.whereType<TextToken>().map((t) => t.value).join(), '  Title');
     });
 
     test('seven hashes is not a heading', () {
@@ -100,7 +102,8 @@ void main() {
 
     test('stripFormatting removes heading markers but keeps content', () {
       expect(FormattingUtils.stripFormatting('# Title'), 'Title');
-      expect(FormattingUtils.stripFormatting('#   Title'), 'Title');
+      // Only the single separator space is part of the marker (increment 01).
+      expect(FormattingUtils.stripFormatting('#   Title'), '  Title');
       expect(FormattingUtils.stripFormatting('## Sub\nbody'), 'Sub\nbody');
     });
   });

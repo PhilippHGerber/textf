@@ -4,31 +4,36 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/parsing/textf_tokenizer.dart';
 
-/// Test specification for ATX heading tokenization.
+/// Test specification for ATX heading tokenization — **increment 01**
+/// (walking skeleton). Scope is intentionally narrow:
 ///
-/// Detection rules (CommonMark-aligned, per the agreed decisions):
-///  * Emitted only at a line start: at SOF, immediately after `\n`, or
-///    immediately after `\r\n` (CRLF must be treated as a line break).
-///  * Up to 3 leading spaces before the first `#` are allowed.
-///  * 1..6 `#` characters. 7+ `#` is NOT a heading.
-///  * The `#` run must be followed by at least one whitespace OR end-of-line.
-///    `#` directly followed by a non-space is NOT a heading.
-///  * A line consisting only of `#`s and trailing whitespace is a valid EMPTY
-///    heading.
-///  * An escaped `\#` at line start is NOT a heading; `kHash` joins the
-///    escape whitelist.
+///  * Column 0 only (line start = string start or immediately after `\n`).
+///  * A single `U+0020` space separator only.
 ///
-/// Token-stream invariants:
-///  * `HeadingToken.length` covers the consumed marker region: any leading
-///    spaces + the `#` run + the trailing whitespace run up to the content.
-///    e.g. `# `    -> length 2 ; `###   ` -> length 6 ; `   # ` -> length 5.
-///  * The heading content (if any) follows as a separate [TextToken].
-///  * The sum of every token's `length` always equals `text.length`
-///    (UTF-16 code units). This is the 1:1 character invariant.
-///  * Detection is independent of `allowNewlineCrossing`; only the downstream
-///    rendering differs.
+/// Deferred to later increments (each has its own conformance cases):
+///  * tab separator + lone-`\r`/`\r\n` line starts  → increment 02
+///  * 0–3 leading spaces of indentation             → increment 03
+///  * empty heading from a separator-less `#`        → increment 04
+///  * closing `#` run + leading/trailing trimming    → increment 05
+///
+/// Recognition rules exercised here:
+///  * Emitted at a line start: at SOF or immediately after `\n`.
+///  * 1..6 `#` characters. 7+ `#` is NOT a heading and stays verbatim.
+///  * The `#` run must be followed by a single space. `#` directly followed by
+///    a non-space (or end of line) is NOT a heading in this increment.
+///  * An escaped `\#` at line start is NOT a heading.
+///
+/// Enriched-token invariants (FR Option A):
+///  * [HeadingToken.length] covers the consumed opening region
+///    `[position, contentStart)` = the `#` run + the single separator space.
+///  * [HeadingToken.contentStart] is the first content character.
+///  * [HeadingToken.contentEnd] / [HeadingToken.lineEndPosition] are
+///    back-patched to the line terminator (or `text.length`) in the same pass.
+///  * The sum of every token's `length` always equals `text.length` (UTF-16
+///    code units) — the 1:1 character invariant.
+///  * Detection is independent of `allowNewlineCrossing`.
 void main() {
-  group('TextfTokenizer — headings', () {
+  group('TextfTokenizer — headings (increment 01)', () {
     late TextfTokenizer tokenizer;
 
     setUp(() {
@@ -37,21 +42,17 @@ void main() {
 
     // -- Helpers ------------------------------------------------------------
 
-    /// Total UTF-16 code-unit slots represented by [tokens]. Must always equal
-    /// the original input length (the 1:1 invariant).
     int slotSum(List<TextfToken> tokens) => tokens.fold(0, (sum, t) => sum + t.length);
 
     List<HeadingToken> headings(List<TextfToken> tokens) =>
         tokens.whereType<HeadingToken>().toList();
 
-    /// Concatenates the textual payload of [TextToken]s only. Useful for
-    /// asserting plain-text preservation in the no-heading cases.
     String plainTextOf(List<TextfToken> tokens) =>
         tokens.whereType<TextToken>().map((t) => t.value).join();
 
     /// Tokenizes [input] under BOTH newline-crossing modes and asserts the set
-    /// of detected headings (level + position) is identical. Returns the
-    /// tokens from the read-only (`allowNewlineCrossing: true`) pass.
+    /// of detected headings (level + position) is identical. Returns the tokens
+    /// from the read-only (`allowNewlineCrossing: true`) pass.
     List<TextfToken> tokenizeBothModes(String input) {
       final readOnly = tokenizer.tokenize(input);
       final editor = tokenizer.tokenize(input, allowNewlineCrossing: false);
@@ -64,7 +65,6 @@ void main() {
         reason: 'Heading detection must be allowNewlineCrossing-independent',
       );
 
-      // The 1:1 invariant must hold in both modes.
       expect(slotSum(readOnly), input.length);
       expect(slotSum(editor), input.length);
 
@@ -72,122 +72,11 @@ void main() {
     }
 
     // ========================================================================
-    // Probable-bug cases
+    // Recognition — levels and boundaries
     // ========================================================================
 
-    group('Probable-bug cases', () {
-      test('Seven hashes are not a heading and must stay verbatim', () {
-        const input = '####### Titel';
-        final tokens = tokenizeBothModes(input);
-
-        expect(headings(tokens), isEmpty, reason: '7+ hashes is not an ATX heading');
-        // The whole sequence survives unchanged as plain text.
-        expect(plainTextOf(tokens), input);
-        expect(slotSum(tokens), input.length);
-      });
-
-      test('Hash without a following space is not a heading', () {
-        const input = '#kein-space';
-        final tokens = tokenizeBothModes(input);
-
-        expect(headings(tokens), isEmpty);
-        expect(plainTextOf(tokens), input);
-        expect(slotSum(tokens), input.length);
-      });
-
-      test('Hash without space, followed by an inline marker', () {
-        const input = '#tag *kursiv*';
-        final tokens = tokenizeBothModes(input);
-
-        // No heading; the `#tag ` stays plain text and `*kursiv*` is still
-        // recognised as italic markers around content.
-        expect(headings(tokens), isEmpty);
-        expect(
-          tokens.any((t) => t is FormatMarkerToken && t.markerType == FormatMarkerType.italic),
-          isTrue,
-          reason: '`*kursiv*` must still tokenize as italic',
-        );
-        // No character is dropped or duplicated.
-        expect(slotSum(tokens), input.length);
-        // The literal `#tag ` text is preserved exactly once, before the marker.
-        expect(plainTextOf(tokens), contains('#tag '));
-        expect('#'.allMatches(plainTextOf(tokens)).length, 1);
-      });
-
-      test('CRLF before hash still starts a heading (Windows / pasted text)', () {
-        const input = 'Zeile1\r\n# Titel';
-        final tokens = tokenizeBothModes(input);
-
-        final heads = headings(tokens);
-        expect(heads, hasLength(1), reason: r'`# Titel` after \r\n is a valid H1');
-        expect(heads.single.level, 1);
-        expect(slotSum(tokens), input.length);
-      });
-
-      test('Six hashes without a space is not a heading (upper boundary)', () {
-        const input = '###### no-space';
-        final tokens = tokenizeBothModes(input);
-
-        expect(headings(tokens), isEmpty);
-        expect(plainTextOf(tokens), input);
-        expect(slotSum(tokens), input.length);
-      });
-
-      test('Up to three leading spaces before the hash → valid H1 (CommonMark)', () {
-        const input = '   # Eingerückt';
-        final tokens = tokenizeBothModes(input);
-
-        final heads = headings(tokens);
-        expect(heads, hasLength(1));
-        expect(heads.single.level, 1);
-        // The marker region (3 spaces + `# `) is absorbed into the token length.
-        expect(heads.single.length, 5);
-        // Content follows as a separate text token.
-        expect(plainTextOf(tokens), 'Eingerückt');
-        expect(slotSum(tokens), input.length);
-      });
-
-      test('Four leading spaces is NOT a heading (exceeds the 3-space allowance)', () {
-        const input = '    # zu weit eingerückt';
-        final tokens = tokenizeBothModes(input);
-
-        expect(headings(tokens), isEmpty);
-        expect(plainTextOf(tokens), input);
-        expect(slotSum(tokens), input.length);
-      });
-
-      test('Lone hash at end of string is plain text', () {
-        const input = '#';
-        final tokens = tokenizeBothModes(input);
-
-        expect(headings(tokens), isEmpty);
-        expect(plainTextOf(tokens), '#');
-        // Exactly one `#`, never duplicated or lost.
-        expect('#'.allMatches(plainTextOf(tokens)).length, 1);
-        expect(slotSum(tokens), input.length);
-      });
-
-      test('Marker then only whitespace to EOL → empty heading (CommonMark)', () {
-        const input = '###   ';
-        final tokens = tokenizeBothModes(input);
-
-        final heads = headings(tokens);
-        expect(heads, hasLength(1));
-        expect(heads.single.level, 3);
-        // Three hashes + three spaces are all consumed by the marker token.
-        expect(heads.single.length, 6);
-        // No content text token follows.
-        expect(plainTextOf(tokens), isEmpty);
-        expect(slotSum(tokens), input.length);
-      });
-    });
-
-    // ========================================================================
-    // Mandatory cases
-    // ========================================================================
-
-    group('Mandatory cases', () {
-      test('Simple H1 through H6', () {
+    group('Recognition', () {
+      test('Simple H1 through H6 with a single-space separator', () {
         for (var level = 1; level <= 6; level++) {
           final marker = '#' * level;
           final input = '$marker H$level';
@@ -195,83 +84,162 @@ void main() {
 
           final heads = headings(tokens);
           expect(heads, hasLength(1), reason: 'level $level should yield one heading');
-          expect(heads.single.level, level);
-          expect(heads.single.position, 0);
-          // marker + single space.
-          expect(heads.single.length, level + 1);
+
+          final heading = heads.single;
+          expect(heading.level, level);
+          expect(heading.position, 0);
+          // Opening region = '#'*level + one space.
+          expect(heading.length, level + 1);
+          expect(heading.contentStart, level + 1);
+          // No newline: content runs to EOF, back-patched to text.length.
+          expect(heading.contentEnd, input.length);
+          expect(heading.lineEndPosition, input.length);
           expect(plainTextOf(tokens), 'H$level');
-          expect(slotSum(tokens), input.length);
         }
       });
 
-      test('H1 with no content but a trailing space (valid empty heading)', () {
-        const input = '# ';
+      test('Seven hashes are not a heading and stay verbatim', () {
+        const input = '####### Title';
         final tokens = tokenizeBothModes(input);
 
-        final heads = headings(tokens);
-        expect(heads, hasLength(1));
-        expect(heads.single.level, 1);
-        expect(heads.single.length, 2);
-        expect(slotSum(tokens), input.length);
+        expect(headings(tokens), isEmpty, reason: '7+ hashes is not an ATX heading');
+        expect(plainTextOf(tokens), input);
       });
 
-      test('Bare `#` at EOL (no trailing space) is a valid empty heading', () {
-        const input = '#';
-        // NOTE: distinct from A9 only by interpretation. A9 fixes that a LONE
-        // `#` is plain text; CommonMark would also accept `#` as empty H1 when
-        // it is the whole line. We keep A9 as the decided behaviour: lone `#`
-        // with no following whitespace stays plain text.
-        final tokens = tokenizer.tokenize(input);
-        expect(headings(tokens), isEmpty);
+      test('Six hashes is the upper boundary (still a heading)', () {
+        const input = '###### H6';
+        final tokens = tokenizeBothModes(input);
+
+        expect(headings(tokens).single.level, 6);
+        expect(plainTextOf(tokens), 'H6');
       });
 
-      test('Hash not at line start is plain text', () {
-        const input = 'Text # mitten in der Zeile';
+      test('Hash with no following space is not a heading', () {
+        const input = '#no-space';
         final tokens = tokenizeBothModes(input);
 
         expect(headings(tokens), isEmpty);
         expect(plainTextOf(tokens), input);
-        expect(slotSum(tokens), input.length);
+      });
+
+      test('Six hashes with no following space is not a heading', () {
+        const input = '######no-space';
+        final tokens = tokenizeBothModes(input);
+
+        expect(headings(tokens), isEmpty);
+        expect(plainTextOf(tokens), input);
+      });
+
+      test('Lone hash at end of string is plain text (empty heading is increment 04)', () {
+        const input = '#';
+        final tokens = tokenizeBothModes(input);
+
+        expect(headings(tokens), isEmpty);
+        expect(plainTextOf(tokens), '#');
+        expect('#'.allMatches(plainTextOf(tokens)).length, 1);
+      });
+
+      test('Hash + trailing space with empty content is a heading (region only)', () {
+        const input = '# ';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.level, 1);
+        expect(heading.length, 2);
+        expect(heading.contentStart, 2);
+        expect(heading.contentEnd, 2);
+        expect(plainTextOf(tokens), isEmpty);
+      });
+
+      test('A single space is the separator; extra spaces are (untrimmed) content', () {
+        // Trimming of leading content whitespace arrives in increment 05; here
+        // only ONE space is the separator, the rest is content.
+        const input = '#   Title';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.level, 1);
+        expect(heading.length, 2, reason: 'one hash + one separator space');
+        expect(heading.contentStart, 2);
+        expect(plainTextOf(tokens), '  Title');
+      });
+
+      test('Hash not at line start is plain text', () {
+        const input = 'Text # in the middle of the line';
+        final tokens = tokenizeBothModes(input);
+
+        expect(headings(tokens), isEmpty);
+        expect(plainTextOf(tokens), input);
       });
 
       test('Escaped hash at line start is not a heading', () {
-        const input = r'\# kein Heading';
+        const input = r'\# not a heading';
         final tokens = tokenizeBothModes(input);
 
         expect(headings(tokens), isEmpty, reason: r'\# must not start a heading');
-        // The backslash is emitted as an escape marker, then a literal `#`.
         expect(tokens.first, isA<EscapeMarkerToken>());
         expect((tokens[1] as TextToken).value, '#');
-        expect(slotSum(tokens), input.length);
       });
 
       test('Pure plain text without any hash stays a single text token', () {
-        const input = 'Ganz normaler Text ohne Sonderzeichen.';
+        const input = 'Just plain text without any special characters.';
         final tokens = tokenizeBothModes(input);
 
         expect(headings(tokens), isEmpty);
         expect(tokens, hasLength(1));
-        expect(tokens.single, isA<TextToken>());
         expect((tokens.single as TextToken).value, input);
       });
 
-      test('Read-only and editor detect the same headings per line', () {
-        const input = '# Eins\n####### Sieben\n#kein-space';
+      test('Tab separator is NOT yet a heading (deferred to increment 02)', () {
+        const input = '#\tTitle';
+        final tokens = tokenizeBothModes(input);
 
-        final readOnly = tokenizer.tokenize(input);
-        final editor = tokenizer.tokenize(input, allowNewlineCrossing: false);
+        expect(headings(tokens), isEmpty);
+        expect(plainTextOf(tokens), input);
+      });
 
-        // Only the first line is a heading; lines 2 and 3 (A1/A7-style and
-        // A2-style) are NOT headings — in BOTH modes.
-        final readOnlyHeads = headings(readOnly);
-        final editorHeads = headings(editor);
+      test('Leading spaces are NOT yet a heading (deferred to increment 03)', () {
+        const input = '   # Indented';
+        final tokens = tokenizeBothModes(input);
 
-        expect(readOnlyHeads.map((h) => h.level), [1]);
-        expect(editorHeads.map((h) => h.level), [1]);
-        expect(readOnlyHeads.single.position, editorHeads.single.position);
+        expect(headings(tokens), isEmpty);
+        expect(plainTextOf(tokens), input);
+      });
+    });
 
-        expect(slotSum(readOnly), input.length);
-        expect(slotSum(editor), input.length);
+    // ========================================================================
+    // Enriched token — line-end back-patch
+    // ========================================================================
+
+    group('lineEndPosition back-patch', () {
+      test('Heading followed by a newline: line end is the terminator index', () {
+        const input = '# Heading\nbody';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.contentStart, 2);
+        // '\n' is at index 9.
+        expect(heading.contentEnd, 9);
+        expect(heading.lineEndPosition, 9);
+      });
+
+      test('Heading at EOF: line end is text.length', () {
+        const input = '# Heading';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.lineEndPosition, input.length);
+        expect(heading.contentEnd, input.length);
+      });
+
+      test('CRLF before a hash still starts a heading (line break ends with LF)', () {
+        const input = 'Line1\r\n# Title';
+        final tokens = tokenizeBothModes(input);
+
+        final heads = headings(tokens);
+        expect(heads.single.level, 1);
+        // The heading begins right after the \r\n (index 7).
+        expect(heads.single.position, 7);
       });
     });
 
@@ -281,59 +249,39 @@ void main() {
 
     group('Multi-line', () {
       test('Heading followed by a normal paragraph: only line 1 is a heading', () {
-        const input = '# Überschrift\nNormaler Text danach.';
+        const input = '# Heading\nNormal text afterwards.';
         final tokens = tokenizeBothModes(input);
 
         expect(headings(tokens).map((h) => h.level), [1]);
-        expect(slotSum(tokens), input.length);
       });
 
       test('Two consecutive headings each detected with the right level', () {
-        const input = '# Eins\n## Zwei';
-        final tokens = tokenizeBothModes(input);
-
-        expect(headings(tokens).map((h) => h.level), [1, 2]);
-        expect(slotSum(tokens), input.length);
-      });
-
-      test('Alternating headings and paragraphs', () {
-        const input = '# Erste\nAbsatz eins.\n## Zweite\nAbsatz zwei.';
+        const input = '# One\n## Two';
         final tokens = tokenizeBothModes(input);
 
         final heads = headings(tokens);
         expect(heads.map((h) => h.level), [1, 2]);
-        // Second heading starts exactly at its own line, not before.
-        expect(heads[1].level, 2);
-        expect(slotSum(tokens), input.length);
+        // First heading's line ends at the '\n' (index 5); second runs to EOF.
+        expect(heads[0].lineEndPosition, 5);
+        expect(heads[1].lineEndPosition, input.length);
       });
 
-      test('Open inline marker in a heading line does not leak across the newline', () {
-        const input = '# Eins **noch offen\n## Zwei';
+      test('Alternating headings and paragraphs', () {
+        const input = '# First\nParagraph one.\n## Second\nParagraph two.';
         final tokens = tokenizeBothModes(input);
 
-        // Tokenizer view: both heading lines are detected; the dangling `**`
-        // is just a FormatMarkerToken on line 1 — pairing/styling happens later.
         expect(headings(tokens).map((h) => h.level), [1, 2]);
-        expect(slotSum(tokens), input.length);
       });
-    });
 
-    // ========================================================================
-    // Extra edge cases worth pinning down
-    // ========================================================================
-
-    group('Additional edge cases', () {
-      test('Tab after the hash counts as the required whitespace', () {
-        const input = '#\tTitel';
+      test('Open inline marker in a heading line does not affect detection', () {
+        const input = '# One **still open\n## Two';
         final tokens = tokenizeBothModes(input);
 
-        expect(headings(tokens), hasLength(1));
-        expect(headings(tokens).single.level, 1);
-        expect(slotSum(tokens), input.length);
+        expect(headings(tokens).map((h) => h.level), [1, 2]);
       });
 
       test('Heading with inline formatting keeps both heading and markers', () {
-        const input = '# Titel mit **fett** und *kursiv*';
+        const input = '# Title with **bold** and *italic*';
         final tokens = tokenizeBothModes(input);
 
         expect(headings(tokens), hasLength(1));
@@ -341,33 +289,36 @@ void main() {
           tokens.whereType<FormatMarkerToken>().map((m) => m.markerType),
           containsAll(<FormatMarkerType>[FormatMarkerType.bold, FormatMarkerType.italic]),
         );
-        expect(slotSum(tokens), input.length);
       });
 
+      test('Heading on the second line (after a leading newline)', () {
+        const input = '\n# Title';
+        final tokens = tokenizeBothModes(input);
+
+        expect(headings(tokens).single.level, 1);
+        expect(headings(tokens).single.position, 1);
+      });
+    });
+
+    // ========================================================================
+    // Degenerate inputs
+    // ========================================================================
+
+    group('Degenerate inputs', () {
       test('Empty input yields no tokens and no heading', () {
         final tokens = tokenizer.tokenize('');
         expect(tokens, isEmpty);
-        expect(headings(tokens), isEmpty);
       });
 
       test('Only a newline yields no heading', () {
         const input = '\n';
         final tokens = tokenizeBothModes(input);
         expect(headings(tokens), isEmpty);
-        expect(slotSum(tokens), input.length);
       });
 
-      test('Heading on the second line (after a leading newline)', () {
-        const input = '\n# Titel';
-        final tokens = tokenizeBothModes(input);
-        expect(headings(tokens), hasLength(1));
-        expect(headings(tokens).single.level, 1);
-        expect(slotSum(tokens), input.length);
-      });
-
-      test('Bare CR (no LF) before hash does not falsely fragment the line', () {
-        // A standalone \r is rare; whatever the decision, the 1:1 invariant
-        // must hold and no character may be lost.
+      test('Bare CR (no LF) before hash preserves the 1:1 invariant', () {
+        // A lone \r is not yet a line start (increment 02); the invariant must
+        // hold regardless and no character may be lost.
         const input = 'a\r# b';
         final tokens = tokenizeBothModes(input);
         expect(slotSum(tokens), input.length);
