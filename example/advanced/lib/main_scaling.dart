@@ -137,6 +137,7 @@ class _PreviewTab extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             child: SelectionArea(
               child: Textf(
+                '# Textf Scaling \n'
                 ' **hello** ==world== \n'
                 ' E = mc^2^ \n'
                 ' H~2~O \n'

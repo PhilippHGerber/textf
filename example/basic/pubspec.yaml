@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  textf: ^1.2.0
+  textf: any
 
 dev_dependencies:
   flutter_test:

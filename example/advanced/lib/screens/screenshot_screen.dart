@@ -26,11 +26,11 @@ class ScreenshotScreen extends StatefulWidget {
 class _ScreenshotScreenState extends State<ScreenshotScreen> {
   final TextEditingController _textController = TextEditingController(
     text: '''
-🚀 **Welcome to Textf!**
+# 🚀 Welcome to Textf!
 
 • **Bold**, *Italic* text and ***both***
 • ~~Strikethrough~~ and ++Underline++
-• ==Highlighting== and `inline code` 
+• ==Highlighting== and `inline code`
 • Superscript x^2^ + y^2^ and Task^✅^
 • Subscript H~2~O and hot~🔥~
 

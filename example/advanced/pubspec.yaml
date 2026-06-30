@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   share_plus: ^13.1.0
-  textf: ^1.2.0
+  textf: any
   url_launcher: ^6.3.2
 
 dev_dependencies:

@@ -15,7 +15,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   go_router: ^17.1.0
-  textf: ^1.2.2
+  textf: any
   universal_web: ^1.1.1
   url_launcher: ^6.3.2
 
