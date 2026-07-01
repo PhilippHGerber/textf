@@ -370,10 +370,15 @@ class TextfTokenizer {
                 text.codeUnitAt(checkPos) == kNewline ||
                 text.codeUnitAt(checkPos) == kCarriageReturn);
         if (atLineStart) {
-          // Count the WHOLE `#` run so a 7+ run is rejected rather than
-          // fragmented or partially swallowed.
+          // Count the `#` run, capped at kMaxHeadingLevel + 1: once count
+          // exceeds the max level the heading is already invalid, so there's
+          // no need to keep scanning an arbitrarily long run (e.g. a user
+          // holding the `#` key). `afterRun`/`hasSeparator` below are only
+          // read when `validLevel` is true, so the cap never affects them.
           int count = 1;
-          while (pos + count < length && text.codeUnitAt(pos + count) == kHash) {
+          while (count <= kMaxHeadingLevel &&
+              pos + count < length &&
+              text.codeUnitAt(pos + count) == kHash) {
             count++;
           }
           final int afterRun = pos + count;
