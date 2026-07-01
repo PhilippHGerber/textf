@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/constants.dart';
 import '../models/format_stack_entry.dart';
 import '../styling/textf_style_resolver.dart';
 
@@ -12,6 +13,9 @@ import '../styling/textf_style_resolver.dart';
 /// everything heading-specific (including the back-to-base re-resolution) is
 /// implemented here.
 mixin HeadingRegion {
+  /// Width in code units of a `\r\n` terminator.
+  static const int _crLfLength = 2;
+
   TextStyle? _headingStyle;
 
   /// The active heading style while inside a heading line, else `null`.
@@ -64,31 +68,44 @@ mixin HeadingRegion {
     }
   }
 
-  /// Appends [value] to [textBuffer], terminating an active heading at the first
-  /// newline (the newline and preceding text keep the heading style; anything
-  /// after resumes the base style). Every character — including the newline — is
-  /// still emitted exactly once via [flushText], preserving the 1:1 invariant.
+  /// Appends [value] to [textBuffer], terminating an active heading at the
+  /// first line terminator — `\n`, a lone `\r`, or `\r\n` (the terminator and
+  /// preceding text keep the heading style; anything after resumes the base
+  /// style). Every character — including the terminator — is still emitted
+  /// exactly once via [flushText], preserving the 1:1 invariant.
   void appendText(String value) {
     if (_headingStyle == null) {
       textBuffer.write(value);
       return;
     }
-    final int nl = value.indexOf('\n');
-    if (nl < 0) {
+    final int terminatorStart = _lineTerminatorStart(value);
+    if (terminatorStart < 0) {
       textBuffer.write(value);
       return;
     }
-    // The split boundary is the index right after the newline. `\n` (U+000A) is
-    // a single BMP code unit and can never be half of a surrogate pair, so
-    // `nl + 1` is always a valid code-unit boundary — these substrings never
-    // bisect an emoji. (Same invariant the tokenizer relies on.)
+    // `\r\n` is a single terminator; a lone `\r` or `\n` is one code unit. All
+    // three cases are single BMP code units (or a pair of them), never half of
+    // a surrogate pair, so these substrings never bisect an emoji.
+    final bool isCrLf = value.codeUnitAt(terminatorStart) == kCarriageReturn &&
+        terminatorStart + 1 < value.length &&
+        value.codeUnitAt(terminatorStart + 1) == kNewline;
+    final int terminatorEnd = terminatorStart + (isCrLf ? _crLfLength : 1);
     // ignore: avoid-substring
-    textBuffer.write(value.substring(0, nl + 1));
+    textBuffer.write(value.substring(0, terminatorEnd));
     flushText();
     endHeading();
-    if (nl + 1 < value.length) {
+    if (terminatorEnd < value.length) {
       // ignore: avoid-substring
-      appendText(value.substring(nl + 1));
+      appendText(value.substring(terminatorEnd));
     }
+  }
+
+  /// Index of the first `\n` or `\r` in [value], or -1 if neither is present.
+  int _lineTerminatorStart(String value) {
+    final int nl = value.indexOf('\n');
+    final int cr = value.indexOf('\r');
+    if (nl < 0) return cr;
+    if (cr < 0) return nl;
+    return nl < cr ? nl : cr;
   }
 }

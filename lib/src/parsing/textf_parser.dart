@@ -181,8 +181,9 @@ class TextfParser {
           state.textBuffer.write(')');
         case PlaceholderToken(:final key):
           state.textBuffer.write('{$key}');
-        case HeadingToken(:final level, :final length):
-          state.textBuffer.write('${'#' * level}${' ' * (length - level)}');
+        case HeadingToken(:final position, :final contentStart):
+          // ignore: avoid-substring
+          state.textBuffer.write(text.substring(position, contentStart));
         case EscapeMarkerToken():
           // Do nothing. This effectively strips the '\' from the visual output.
           break;

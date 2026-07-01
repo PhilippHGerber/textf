@@ -48,6 +48,34 @@ void main() {
       expect(bodySpan.style!.fontSize, 14.0);
     });
 
+    testWidgets('heading terminates at CRLF (increment 02)', (tester) async {
+      final result = await parse(tester, '# Heading\r\nbody');
+
+      final headingSpan =
+          result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Heading'));
+      final bodySpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('body'));
+      expect(headingSpan.style!.fontSize, 28.0);
+      expect(bodySpan.style!.fontSize, 14.0);
+    });
+
+    testWidgets('heading terminates at a lone CR (increment 02)', (tester) async {
+      final result = await parse(tester, '# Heading\rbody');
+
+      final headingSpan =
+          result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Heading'));
+      final bodySpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('body'));
+      expect(headingSpan.style!.fontSize, 28.0);
+      expect(bodySpan.style!.fontSize, 14.0);
+    });
+
+    testWidgets('tab separator produces a heading with H1 styling (increment 02)', (tester) async {
+      final result = await parse(tester, '#\tTitle');
+
+      final textSpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Title'));
+      expect(textSpan.style!.fontSize, 28.0);
+      expect(textSpan.style!.fontWeight, FontWeight.bold);
+    });
+
     testWidgets('heading terminates inside cross-line formatting', (tester) async {
       final result = await parse(tester, '# **Heading\nbody**');
 

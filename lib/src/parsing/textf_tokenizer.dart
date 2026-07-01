@@ -352,10 +352,13 @@ class TextfTokenizer {
           textStart = pos;
         }
       } else if (currentChar == kHash) {
-        // ATX heading (walking-skeleton scope): column 0 only, a single U+0020
-        // space separator only. Indentation, tab separators, CRLF/lone-CR line
-        // starts, empty headings and closing runs arrive in later increments.
-        final bool atLineStart = pos == 0 || text.codeUnitAt(pos - 1) == kNewline;
+        // ATX heading (increment 02 scope): column 0 only — indentation arrives
+        // in increment 03. Separator is a space or a tab. Line start is SOF or
+        // immediately after `\n` or `\r` (covers `\n`, lone `\r`, and `\r\n`,
+        // since the `\r` branch below back-patches and advances past itself).
+        final bool atLineStart = pos == 0 ||
+            text.codeUnitAt(pos - 1) == kNewline ||
+            text.codeUnitAt(pos - 1) == kCarriageReturn;
         if (atLineStart) {
           // Count the WHOLE `#` run so a 7+ run is rejected rather than
           // fragmented or partially swallowed.
@@ -365,9 +368,10 @@ class TextfTokenizer {
           }
           final int afterRun = pos + count;
           final bool validLevel = count <= kMaxHeadingLevel;
-          final bool hasSpaceSeparator = afterRun < length && text.codeUnitAt(afterRun) == kSpace;
+          final bool hasSeparator = afterRun < length &&
+              (text.codeUnitAt(afterRun) == kSpace || text.codeUnitAt(afterRun) == kTab);
 
-          if (validLevel && hasSpaceSeparator) {
+          if (validLevel && hasSeparator) {
             addTextToken(textStart, pos);
             final int contentStart = afterRun + 1; // skip the single separator
             tokens.add(
@@ -395,6 +399,15 @@ class TextfTokenizer {
       } else if (currentChar == kNewline) {
         // A line terminator finalizes any open heading's line-end (the O(N)
         // back-patch). The newline itself stays part of the accumulating text.
+        finalizePendingHeading(pos);
+        pos++;
+      } else if (currentChar == kCarriageReturn) {
+        // A lone `\r` or the `\r` of a `\r\n` pair both terminate the line at
+        // this index — the terminator always *starts* here, so back-patching
+        // immediately (without looking ahead for a following `\n`) is correct
+        // in both cases and keeps this single-pass. If a `\n` follows, its own
+        // branch above will run next and finalize again, but that is a no-op
+        // since `pendingHeadingIndex` is already cleared.
         finalizePendingHeading(pos);
         pos++;
       } else {

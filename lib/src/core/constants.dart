@@ -99,5 +99,10 @@ const int kHash = 0x23;
 /// The separator between an ATX heading's `#` run and its content.
 const int kSpace = 0x20;
 
+/// Tab character '\t' (ASCII code 9)
+///
+/// An alternative separator between an ATX heading's `#` run and its content.
+const int kTab = 0x09;
+
 /// Maximum ATX heading level (`######`). A run of 7+ `#` is not a heading.
 const int kMaxHeadingLevel = 6;

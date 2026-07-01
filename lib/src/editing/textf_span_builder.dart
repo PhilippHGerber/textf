@@ -111,6 +111,7 @@ class TextfSpanBuilder {
         : activeMarkerStyle;
 
     final state = _SpanBuildState(
+      text: text,
       tokens: tokens,
       validPairs: validPairs,
       baseStyle: baseStyle,
@@ -162,6 +163,7 @@ class TextfSpanBuilder {
 /// Extracted to avoid multiple interacting closures allocating contexts and closure objects on the heap.
 class _SpanBuildState with HeadingRegion {
   _SpanBuildState({
+    required this.text,
     required this.tokens,
     required this.validPairs,
     required this.baseStyle,
@@ -170,6 +172,7 @@ class _SpanBuildState with HeadingRegion {
     required this.cursorPosition,
     required this.resolver,
   });
+  final String text;
   final List<TextfToken> tokens;
   final Map<int, int> validPairs;
   @override
@@ -221,7 +224,11 @@ class _SpanBuildState with HeadingRegion {
         flushText();
         endHeading();
         beginHeading(token.level);
-        final marker = '${'#' * token.level}${' ' * (token.length - token.level)}';
+        // Slice the real opening-region characters (rather than assuming a
+        // space-filled marker) so alternate separators like a tab are
+        // preserved verbatim in the dimmed marker span.
+        // ignore: avoid-substring
+        final marker = text.substring(token.position, token.contentStart);
         emitMarker(marker, headingMarkerStyle(token));
         i++;
         continue;
@@ -323,8 +330,9 @@ class _SpanBuildState with HeadingRegion {
           textBuffer.write(')');
         case PlaceholderToken(:final key):
           textBuffer.write('{$key}');
-        case HeadingToken(:final level, :final length):
-          textBuffer.write('${'#' * level}${' ' * (length - level)}');
+        case HeadingToken(:final position, :final contentStart):
+          // ignore: avoid-substring
+          textBuffer.write(text.substring(position, contentStart));
         case EscapeMarkerToken():
           flushText();
           final TextStyle style;

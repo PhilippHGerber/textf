@@ -220,6 +220,44 @@ void main() {
     });
 
     // ========================================================================
+    // Increment 02 — tab separator + CRLF / lone-CR line starts
+    // ========================================================================
+
+    group('Increment 02', () {
+      testWidgets('tab separator is preserved verbatim in the dimmed marker span', (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '#\tTitle';
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+
+        final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '#\t');
+        expect(totalSlots(spans), input.length);
+        expect(marker.text, '#\t');
+      });
+
+      testWidgets('CRLF heading keeps slot count and terminates style at the paragraph',
+          (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '# Heading\r\nNormal text afterwards.';
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+
+        final paragraph = styleOf(spans, 'Normal text afterwards');
+        expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no enlarged heading size leak');
+        expect(totalSlots(spans), input.length);
+      });
+
+      testWidgets('lone-CR heading keeps slot count and terminates style at the paragraph',
+          (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '# Heading\rNormal text afterwards.';
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+
+        final paragraph = styleOf(spans, 'Normal text afterwards');
+        expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no enlarged heading size leak');
+        expect(totalSlots(spans), input.length);
+      });
+    });
+
+    // ========================================================================
     // Cursor-aware heading marker (O(1) via lineEndPosition)
     // ========================================================================
 

@@ -190,14 +190,6 @@ void main() {
         expect((tokens.single as TextToken).value, input);
       });
 
-      test('Tab separator is NOT yet a heading (deferred to increment 02)', () {
-        const input = '#\tTitle';
-        final tokens = tokenizeBothModes(input);
-
-        expect(headings(tokens), isEmpty);
-        expect(plainTextOf(tokens), input);
-      });
-
       test('Leading spaces are NOT yet a heading (deferred to increment 03)', () {
         const input = '   # Indented';
         final tokens = tokenizeBothModes(input);
@@ -262,7 +254,7 @@ void main() {
         final heads = headings(tokens);
         expect(heads.map((h) => h.level), [1, 2]);
         // First heading's line ends at the '\n' (index 5); second runs to EOF.
-        expect(heads[0].lineEndPosition, 5);
+        expect(heads.first.lineEndPosition, 5);
         expect(heads[1].lineEndPosition, input.length);
       });
 
@@ -317,11 +309,91 @@ void main() {
       });
 
       test('Bare CR (no LF) before hash preserves the 1:1 invariant', () {
-        // A lone \r is not yet a line start (increment 02); the invariant must
-        // hold regardless and no character may be lost.
         const input = 'a\r# b';
         final tokens = tokenizeBothModes(input);
         expect(slotSum(tokens), input.length);
+      });
+    });
+
+    // ========================================================================
+    // Increment 02 — tab separator + CRLF / lone-CR line starts
+    // ========================================================================
+
+    group('Increment 02 — tab separator', () {
+      test('A tab after the # run is a valid separator', () {
+        const input = '#\tTitle';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.level, 1);
+        expect(heading.length, 2, reason: 'one hash + one separator tab');
+        expect(heading.contentStart, 2);
+        expect(plainTextOf(tokens), 'Title');
+      });
+
+      test('Tab separator works at every level', () {
+        for (var level = 1; level <= 6; level++) {
+          final input = '${'#' * level}\tH$level';
+          final tokens = tokenizeBothModes(input);
+          expect(headings(tokens).single.level, level, reason: 'level $level');
+        }
+      });
+    });
+
+    group('Increment 02 — lone CR line start', () {
+      test('A lone CR (not followed by LF) starts a new line', () {
+        const input = 'Line1\r# Title';
+        final tokens = tokenizeBothModes(input);
+
+        final heads = headings(tokens);
+        expect(heads, hasLength(1));
+        expect(heads.single.position, 6);
+      });
+
+      test('A heading can begin the string itself (SOF), unaffected by CR support', () {
+        const input = '# Title';
+        final tokens = tokenizeBothModes(input);
+        expect(headings(tokens).single.position, 0);
+      });
+    });
+
+    group('Increment 02 — line-terminator back-patch excludes the terminator', () {
+      test('LF-terminated heading: lineEndPosition is the LF index (unchanged behavior)', () {
+        const input = '# Title\nBody';
+        final tokens = tokenizeBothModes(input);
+        final heading = headings(tokens).single;
+        // '\n' is at index 7.
+        expect(heading.contentEnd, 7);
+        expect(heading.lineEndPosition, 7);
+      });
+
+      test('CRLF-terminated heading: lineEndPosition is the CR index, not the LF index', () {
+        const input = '# Title\r\nBody';
+        final tokens = tokenizeBothModes(input);
+        final heading = headings(tokens).single;
+        // '\r' is at index 7, '\n' at index 8. The CR starts the terminator.
+        expect(heading.contentEnd, 7);
+        expect(heading.lineEndPosition, 7);
+      });
+
+      test('Lone-CR-terminated heading: lineEndPosition is the CR index', () {
+        const input = '# Title\rBody';
+        final tokens = tokenizeBothModes(input);
+        final heading = headings(tokens).single;
+        expect(heading.contentEnd, 7);
+        expect(heading.lineEndPosition, 7);
+      });
+
+      test('Two headings separated by CRLF: both back-patched correctly', () {
+        const input = '# One\r\n## Two';
+        final tokens = tokenizeBothModes(input);
+        final heads = headings(tokens);
+        expect(heads.map((h) => h.level), [1, 2]);
+        // '# One' ends at the '\r' (index 5); '## Two' starts right after the
+        // '\r\n' (index 7) and runs to EOF.
+        expect(heads.first.lineEndPosition, 5);
+        expect(heads[1].position, 7);
+        expect(heads[1].lineEndPosition, input.length);
       });
     });
   });

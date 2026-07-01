@@ -2,6 +2,10 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## Unreleased
+
+* Headings now also recognize a **tab** as the separator after the `#` run (`#\tTitle`), and are recognized after **CRLF (`\r\n`)** and **lone-CR (`\r`)** line endings, in addition to `\n`. Conforms to the CommonMark [ATX headings](https://spec.commonmark.org/current/#atx-headings) and [Characters and lines](https://spec.commonmark.org/current/#characters-and-lines) sections.
+
 ## 2.0.0-dev.1
 
 ### Added
