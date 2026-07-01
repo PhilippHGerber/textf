@@ -11,8 +11,8 @@ import 'package:textf/src/parsing/textf_tokenizer.dart';
 ///  * A single `U+0020` space separator only.
 ///
 /// Deferred to later increments (each has its own conformance cases):
-///  * tab separator + lone-`\r`/`\r\n` line starts  → increment 02
-///  * 0–3 leading spaces of indentation             → increment 03
+///  * tab separator + lone-`\r`/`\r\n` line starts  → increment 02 (done)
+///  * 0–3 leading spaces of indentation             → increment 03 (done)
 ///  * empty heading from a separator-less `#`        → increment 04
 ///  * closing `#` run + leading/trailing trimming    → increment 05
 ///
@@ -188,14 +188,6 @@ void main() {
         expect(headings(tokens), isEmpty);
         expect(tokens, hasLength(1));
         expect((tokens.single as TextToken).value, input);
-      });
-
-      test('Leading spaces are NOT yet a heading (deferred to increment 03)', () {
-        const input = '   # Indented';
-        final tokens = tokenizeBothModes(input);
-
-        expect(headings(tokens), isEmpty);
-        expect(plainTextOf(tokens), input);
       });
     });
 
@@ -394,6 +386,92 @@ void main() {
         expect(heads.first.lineEndPosition, 5);
         expect(heads[1].position, 7);
         expect(heads[1].lineEndPosition, input.length);
+      });
+    });
+
+    // ========================================================================
+    // Increment 03 — up to three-space indentation
+    // ========================================================================
+
+    group('Increment 03 — up to three-space indentation', () {
+      test('0/1/2/3 leading spaces are recognized at the correct level', () {
+        for (var indent = 0; indent <= 3; indent++) {
+          final input = '${' ' * indent}### foo';
+          final tokens = tokenizeBothModes(input);
+
+          final heads = headings(tokens);
+          expect(heads, hasLength(1), reason: 'indent $indent should yield one heading');
+          expect(heads.single.level, 3);
+          // The heading's consumed region starts at the FIRST leading space (or
+          // the `#` itself when indent is 0), so the indentation folds into it.
+          expect(heads.single.position, 0);
+          expect(heads.single.length, indent + 4, reason: '$indent spaces + "### "');
+          expect(heads.single.contentStart, indent + 4);
+          expect(plainTextOf(tokens), 'foo');
+        }
+      });
+
+      test('4 leading spaces disqualify the line as a heading', () {
+        const input = '    # foo';
+        final tokens = tokenizeBothModes(input);
+
+        expect(headings(tokens), isEmpty, reason: '4+ leading spaces is not a heading');
+        expect(plainTextOf(tokens), input);
+      });
+
+      test('5 leading spaces also disqualify the line as a heading', () {
+        const input = '     # foo';
+        final tokens = tokenizeBothModes(input);
+
+        expect(headings(tokens), isEmpty);
+        expect(plainTextOf(tokens), input);
+      });
+
+      test('Indentation folds into the consumed opening region (1:1 invariant)', () {
+        const input = '   # Indented';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.level, 1);
+        expect(heading.position, 0);
+        expect(heading.length, 5, reason: '3 spaces + "# "');
+        expect(heading.contentStart, 5);
+        expect(plainTextOf(tokens), 'Indented');
+        expect(slotSum(tokens), input.length);
+      });
+
+      test('Indentation after a newline is recognized on the second line', () {
+        const input = 'Para\n   ## Sub';
+        final tokens = tokenizeBothModes(input);
+
+        final heads = headings(tokens);
+        expect(heads, hasLength(1));
+        expect(heads.single.level, 2);
+        // Heading region starts right after the '\n' (index 5), not at the '#'.
+        expect(heads.single.position, 5);
+      });
+
+      test('Indentation with a tab separator', () {
+        const input = '  #\tTabbed';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.level, 1);
+        expect(heading.length, 4, reason: '2 spaces + "#" + tab');
+        expect(plainTextOf(tokens), 'Tabbed');
+      });
+
+      test('4-space indent still allows a heading later on the SAME line to matter only per-line',
+          () {
+        // The disqualified line is plain text; a following well-formed heading
+        // line is unaffected.
+        const input = '    # not a heading\n# real heading';
+        final tokens = tokenizeBothModes(input);
+
+        final heads = headings(tokens);
+        expect(heads, hasLength(1));
+        expect(heads.single.level, 1);
+        expect(heads.single.position, 20);
       });
     });
   });

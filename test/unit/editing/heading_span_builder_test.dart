@@ -258,6 +258,33 @@ void main() {
     });
 
     // ========================================================================
+    // Increment 03 — up to three-space indentation
+    // ========================================================================
+
+    group('Increment 03 — up to three-space indentation', () {
+      testWidgets('leading spaces are preserved verbatim in the dimmed marker span',
+          (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '   # Title';
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+
+        final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '   # ');
+        expect(marker.text, '   # ');
+        expect(totalSlots(spans), input.length);
+      });
+
+      testWidgets('4-space indent is plain text, not a dimmed heading marker', (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '    # Title';
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+
+        final title = styleOf(spans, 'Title');
+        expect(title.fontSize, baseStyle.fontSize, reason: '4 spaces disqualifies the heading');
+        expect(totalSlots(spans), input.length);
+      });
+    });
+
+    // ========================================================================
     // Cursor-aware heading marker (O(1) via lineEndPosition)
     // ========================================================================
 

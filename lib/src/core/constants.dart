@@ -106,3 +106,8 @@ const int kTab = 0x09;
 
 /// Maximum ATX heading level (`######`). A run of 7+ `#` is not a heading.
 const int kMaxHeadingLevel = 6;
+
+/// Maximum number of leading spaces before a `#` run that still counts as an
+/// ATX heading (CommonMark's up-to-three-space indentation rule). 4+ leading
+/// spaces disqualify the line as a heading.
+const int kMaxHeadingIndent = 3;

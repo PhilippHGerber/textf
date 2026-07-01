@@ -352,13 +352,23 @@ class TextfTokenizer {
           textStart = pos;
         }
       } else if (currentChar == kHash) {
-        // ATX heading (increment 02 scope): column 0 only — indentation arrives
-        // in increment 03. Separator is a space or a tab. Line start is SOF or
-        // immediately after `\n` or `\r` (covers `\n`, lone `\r`, and `\r\n`,
-        // since the `\r` branch below back-patches and advances past itself).
-        final bool atLineStart = pos == 0 ||
-            text.codeUnitAt(pos - 1) == kNewline ||
-            text.codeUnitAt(pos - 1) == kCarriageReturn;
+        // ATX heading: up to 3 leading spaces (CommonMark's up-to-three-space
+        // indentation rule) are allowed before the `#` run; 4+ disqualifies.
+        // Separator is a space or a tab. Line start (before the indentation) is
+        // SOF or immediately after `\n` or `\r` (covers `\n`, lone `\r`, and
+        // `\r\n`, since the `\r` branch below back-patches and advances past
+        // itself).
+        int indent = 0;
+        int checkPos = pos - 1;
+        while (
+            checkPos >= 0 && indent <= kMaxHeadingIndent && text.codeUnitAt(checkPos) == kSpace) {
+          indent++;
+          checkPos--;
+        }
+        final bool atLineStart = indent <= kMaxHeadingIndent &&
+            (checkPos < 0 ||
+                text.codeUnitAt(checkPos) == kNewline ||
+                text.codeUnitAt(checkPos) == kCarriageReturn);
         if (atLineStart) {
           // Count the WHOLE `#` run so a 7+ run is rejected rather than
           // fragmented or partially swallowed.
@@ -372,12 +382,13 @@ class TextfTokenizer {
               (text.codeUnitAt(afterRun) == kSpace || text.codeUnitAt(afterRun) == kTab);
 
           if (validLevel && hasSeparator) {
-            addTextToken(textStart, pos);
+            final int headingStart = pos - indent;
+            addTextToken(textStart, headingStart);
             final int contentStart = afterRun + 1; // skip the single separator
             tokens.add(
               HeadingToken(
                 level: count,
-                position: pos,
+                position: headingStart,
                 contentStart: contentStart,
                 // contentEnd / lineEndPosition are back-patched at the line
                 // terminator (or EOF); seed with the EOF value.

@@ -134,5 +134,25 @@ void main() {
       expect(FormattingUtils.stripFormatting('#   Title'), '  Title');
       expect(FormattingUtils.stripFormatting('## Sub\nbody'), 'Sub\nbody');
     });
+
+    testWidgets('up to 3 leading spaces still produce a heading (increment 03)', (tester) async {
+      for (final indent in <int>[0, 1, 2, 3]) {
+        TextfParser.clearCache();
+        final result = await parse(tester, '${' ' * indent}# Title');
+        final textSpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Title'));
+        expect(textSpan.style!.fontSize, 28.0, reason: 'indent $indent');
+      }
+    });
+
+    test('4 leading spaces disqualify the line as a heading', () {
+      final tokens = TextfParser.getCachedTokensAndPairs('    # Title').tokens;
+      expect(tokens.whereType<HeadingToken>(), isEmpty);
+      expect(tokens.whereType<TextToken>().map((t) => t.value).join(), '    # Title');
+    });
+
+    test('stripFormatting strips indentation along with the marker', () {
+      expect(FormattingUtils.stripFormatting('   # Title'), 'Title');
+      expect(FormattingUtils.stripFormatting('    # Title'), '    # Title');
+    });
   });
 }
