@@ -13,7 +13,7 @@ import 'package:textf/src/parsing/textf_tokenizer.dart';
 /// Deferred to later increments (each has its own conformance cases):
 ///  * tab separator + lone-`\r`/`\r\n` line starts  → increment 02 (done)
 ///  * 0–3 leading spaces of indentation             → increment 03 (done)
-///  * empty heading from a separator-less `#`        → increment 04
+///  * empty heading from a separator-less `#`        → increment 04 (done)
 ///  * closing `#` run + leading/trailing trimming    → increment 05
 ///
 /// Recognition rules exercised here:
@@ -130,13 +130,16 @@ void main() {
         expect(plainTextOf(tokens), input);
       });
 
-      test('Lone hash at end of string is plain text (empty heading is increment 04)', () {
+      test('Lone hash at end of string is an empty heading (increment 04)', () {
         const input = '#';
         final tokens = tokenizeBothModes(input);
 
-        expect(headings(tokens), isEmpty);
-        expect(plainTextOf(tokens), '#');
-        expect('#'.allMatches(plainTextOf(tokens)).length, 1);
+        final heading = headings(tokens).single;
+        expect(heading.level, 1);
+        expect(heading.length, 1);
+        expect(heading.contentStart, 1);
+        expect(heading.contentEnd, 1);
+        expect(plainTextOf(tokens), isEmpty);
       });
 
       test('Hash + trailing space with empty content is a heading (region only)', () {
@@ -472,6 +475,115 @@ void main() {
         expect(heads, hasLength(1));
         expect(heads.single.level, 1);
         expect(heads.single.position, 20);
+      });
+    });
+
+    // ========================================================================
+    // Increment 04 — empty headings
+    // ========================================================================
+
+    group('Increment 04 — empty headings', () {
+      test('Lone `#` at EOF is an empty H1 (end of line is a valid separator)', () {
+        const input = '#';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.level, 1);
+        expect(heading.length, 1, reason: 'just the hash — no separator character to consume');
+        expect(heading.contentStart, 1);
+        expect(heading.contentEnd, 1);
+        expect(plainTextOf(tokens), isEmpty);
+      });
+
+      test('Lone `#` followed by a newline is an empty H1', () {
+        const input = '#\nbody';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.level, 1);
+        expect(heading.contentStart, 1);
+        expect(heading.contentEnd, 1, reason: 'content ends right before the newline');
+        expect(heading.lineEndPosition, 1);
+        expect(plainTextOf(tokens), '\nbody');
+      });
+
+      test('Lone `#` followed by a lone CR is an empty H1', () {
+        const input = '#\rbody';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.contentStart, 1);
+        expect(heading.contentEnd, 1);
+        expect(heading.lineEndPosition, 1);
+      });
+
+      test('Lone `#` followed by CRLF is an empty H1', () {
+        const input = '#\r\nbody';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.contentStart, 1);
+        expect(heading.contentEnd, 1);
+        expect(heading.lineEndPosition, 1);
+      });
+
+      test('Every level alone at EOF is an empty heading of that level', () {
+        for (var level = 1; level <= 6; level++) {
+          final input = '#' * level;
+          final tokens = tokenizeBothModes(input);
+
+          final heading = headings(tokens).single;
+          expect(heading.level, level, reason: 'level $level');
+          expect(heading.contentStart, level);
+          expect(heading.contentEnd, level);
+        }
+      });
+
+      test('7+ hashes alone at EOF is still not a heading', () {
+        const input = '#######';
+        final tokens = tokenizeBothModes(input);
+
+        expect(headings(tokens), isEmpty);
+        expect(plainTextOf(tokens), input);
+      });
+
+      test('`## ` (trailing space only) is an empty H2', () {
+        const input = '## ';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.level, 2);
+        expect(heading.length, 3, reason: '2 hashes + 1 separator space');
+        expect(heading.contentStart, 3);
+        expect(heading.contentEnd, 3);
+        expect(plainTextOf(tokens), isEmpty);
+      });
+
+      test('Indented lone `#` at EOF is still an empty heading (increment 03 interaction)', () {
+        const input = '  #';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.level, 1);
+        expect(heading.position, 0);
+        expect(heading.length, 3, reason: '2 spaces + the hash');
+        expect(heading.contentStart, 3);
+        expect(heading.contentEnd, 3);
+        expect(plainTextOf(tokens), isEmpty);
+      });
+
+      test('Two consecutive empty headings, both back-patched correctly', () {
+        const input = '#\n##';
+        final tokens = tokenizeBothModes(input);
+
+        final heads = headings(tokens);
+        expect(heads.map((h) => h.level), [1, 2]);
+        expect(heads.first.contentEnd, 1);
+        expect(heads.first.lineEndPosition, 1);
+        expect(heads[1].position, 2);
+        expect(heads[1].contentStart, 4);
+        expect(heads[1].contentEnd, 4);
+        expect(heads[1].lineEndPosition, input.length);
       });
     });
   });

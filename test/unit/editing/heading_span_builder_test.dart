@@ -285,6 +285,54 @@ void main() {
     });
 
     // ========================================================================
+    // Increment 04 — empty headings
+    // ========================================================================
+
+    group('Increment 04 — empty headings', () {
+      testWidgets('lone `#` at EOF keeps its slot and shows no content', (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '#';
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+
+        final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '#');
+        expect(marker.text, '#');
+        expect(totalSlots(spans), input.length);
+      });
+
+      testWidgets('`## ` (trailing space only) preserves the marker + trailing-space slots',
+          (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '## ';
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+
+        final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '## ');
+        expect(marker.text, '## ');
+        expect(totalSlots(spans), input.length);
+      });
+
+      testWidgets('empty heading followed by a paragraph does not leak heading style',
+          (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '#\nNormal paragraph here.';
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+
+        final paragraph = styleOf(spans, 'Normal paragraph here');
+        expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no heading size bleed');
+        expect(totalSlots(spans), input.length);
+      });
+
+      testWidgets('indented lone `#` at EOF preserves indentation + hash slots', (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '  #';
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+
+        final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '  #');
+        expect(marker.text, '  #');
+        expect(totalSlots(spans), input.length);
+      });
+    });
+
+    // ========================================================================
     // Cursor-aware heading marker (O(1) via lineEndPosition)
     // ========================================================================
 

@@ -385,11 +385,18 @@ class TextfTokenizer {
           final bool validLevel = count <= kMaxHeadingLevel;
           final bool hasSeparator = afterRun < length &&
               (text.codeUnitAt(afterRun) == kSpace || text.codeUnitAt(afterRun) == kTab);
+          // End of line (or EOF) right after the opening run is also a valid
+          // separator: it makes the heading empty rather than disqualifying it.
+          final bool atLineEnd = afterRun >= length ||
+              text.codeUnitAt(afterRun) == kNewline ||
+              text.codeUnitAt(afterRun) == kCarriageReturn;
 
-          if (validLevel && hasSeparator) {
+          if (validLevel && (hasSeparator || atLineEnd)) {
             final int headingStart = pos - indent;
             addTextToken(textStart, headingStart);
-            final int contentStart = afterRun + 1; // skip the single separator
+            // Skip the single separator character only when one is actually
+            // present; at line end there is nothing to skip.
+            final int contentStart = hasSeparator ? afterRun + 1 : afterRun;
             tokens.add(
               HeadingToken(
                 level: count,

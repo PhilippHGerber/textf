@@ -6,6 +6,7 @@ All notable changes to the `textf` package will be documented in this file.
 
 * Headings now also recognize a **tab** as the separator after the `#` run (`#\tTitle`), and are recognized after **CRLF (`\r\n`)** and **lone-CR (`\r`)** line endings, in addition to `\n`. Conforms to the CommonMark [ATX headings](https://spec.commonmark.org/current/#atx-headings) and [Characters and lines](https://spec.commonmark.org/current/#characters-and-lines) sections.
 * Headings now allow **up to 3 leading spaces** of indentation before the `#` run (e.g. `   ### Title`); 4 or more leading spaces disqualify the line as a heading. Conforms to the CommonMark [ATX headings](https://spec.commonmark.org/current/#atx-headings) up-to-three-space indentation rule.
+* Headings may now be **empty**: a `#` run followed directly by end of line (or end of input), or by trailing whitespace only (e.g. `#`, `## `), is recognized as an empty heading of that level instead of falling back to plain text. Conforms to the CommonMark [ATX headings](https://spec.commonmark.org/current/#atx-headings) empty-heading rule.
 
 ## 2.0.0-dev.1
 

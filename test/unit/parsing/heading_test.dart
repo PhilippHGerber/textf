@@ -154,5 +154,42 @@ void main() {
       expect(FormattingUtils.stripFormatting('   # Title'), 'Title');
       expect(FormattingUtils.stripFormatting('    # Title'), '    # Title');
     });
+
+    // Increment 04 — empty headings.
+    testWidgets('lone `#` at EOF renders no visible content (increment 04)', (tester) async {
+      final result = await parse(tester, '#');
+
+      // No content means no span is flushed at all — the heading is visually
+      // empty, matching the acceptance criterion.
+      expect(result, isEmpty);
+    });
+
+    test('lone `#` at EOF emits a HeadingToken with empty content', () {
+      final tokens = TextfParser.getCachedTokensAndPairs('#').tokens;
+      final heading = tokens.whereType<HeadingToken>().single;
+      expect(heading.level, 1);
+      expect(heading.contentStart, heading.contentEnd);
+      expect(tokens.whereType<TextToken>(), isEmpty);
+    });
+
+    testWidgets('`## ` (trailing space only) renders no visible content (increment 04)',
+        (tester) async {
+      final result = await parse(tester, '## ');
+
+      expect(result, isEmpty);
+    });
+
+    testWidgets('empty heading followed by a paragraph does not leak heading style',
+        (tester) async {
+      final result = await parse(tester, '#\nbody');
+
+      final bodySpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('body'));
+      expect(bodySpan.style!.fontSize, 14.0);
+    });
+
+    test('stripFormatting on an empty heading yields empty text', () {
+      expect(FormattingUtils.stripFormatting('#'), isEmpty);
+      expect(FormattingUtils.stripFormatting('## '), isEmpty);
+    });
   });
 }
