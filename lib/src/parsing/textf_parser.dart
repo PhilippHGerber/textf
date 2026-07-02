@@ -134,6 +134,14 @@ class TextfParser {
         continue;
       }
 
+      // Heading suffix (trailing whitespace + optional closing `#` run) is a
+      // consumed region: the read-only view renders nothing for it. The still
+      // buffered content flushes at the line terminator (or final flush).
+      if (token is HeadingSuffixToken) {
+        i++;
+        continue;
+      }
+
       // Link Handling
       if (token is LinkStartToken) {
         // Attempt to process a link.
@@ -184,6 +192,9 @@ class TextfParser {
         case HeadingToken(:final position, :final contentStart):
           // ignore: avoid-substring
           state.textBuffer.write(text.substring(position, contentStart));
+        case HeadingSuffixToken():
+          // Handled above (consumed, renders nothing); unreachable here.
+          break;
         case EscapeMarkerToken():
           // Do nothing. This effectively strips the '\' from the visual output.
           break;

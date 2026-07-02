@@ -119,6 +119,10 @@ class FormattingUtils {
         // Heading markers ('#' run) are stripped; the line's text content is
         // emitted by the following TextTokens.
         i++;
+      } else if (token is HeadingSuffixToken) {
+        // Trailing region (closing '#' run + surrounding whitespace) is a
+        // consumed marker and is stripped along with the opening run.
+        i++;
       } else if (token is EscapeMarkerToken) {
         // Skip the backslash itself. The escaped character is always the
         // next token (TextToken), which will be written in the next iteration.

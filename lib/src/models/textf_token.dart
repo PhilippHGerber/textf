@@ -188,3 +188,36 @@ final class HeadingToken extends TextfToken {
   String toString() => 'HeadingToken(h$level at $position, '
       'content $contentStart..$contentEnd, lineEnd $lineEndPosition)';
 }
+
+/// The trailing region of an ATX heading line: optional trailing spaces/tabs
+/// plus an optional closing `#` run (`spec.txt:1215`).
+///
+/// Emitted by the tokenizer immediately after the heading's content tokens,
+/// and only when that region `[position, position + length)` is non-empty. Like
+/// the opening region of a [HeadingToken] it is a **consumed** marker: the
+/// read-only pipeline renders nothing for it, while the editor renders it as a
+/// visible, dimmed span so every source character keeps exactly one cursor slot
+/// (the 1:1 invariant).
+final class HeadingSuffixToken extends TextfToken {
+  /// Creates a heading-suffix marker token spanning `[position, position +
+  /// length)`.
+  const HeadingSuffixToken({
+    required super.position,
+    required super.length,
+    required this.headingStart,
+    required this.lineEndPosition,
+  });
+
+  /// Start index of the owning heading's line construct (== the owning
+  /// [HeadingToken.position]). Together with [lineEndPosition] this reproduces
+  /// the same O(1) cursor-inside-line test the opening run uses.
+  final int headingStart;
+
+  /// Index of the line terminator, or `text.length` at end of input — the same
+  /// value carried on the owning [HeadingToken.lineEndPosition].
+  final int lineEndPosition;
+
+  @override
+  String toString() => 'HeadingSuffixToken(at $position, len $length, '
+      'line $headingStart..$lineEndPosition)';
+}

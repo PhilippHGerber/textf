@@ -420,5 +420,69 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(2000));
       });
     });
+
+    // ========================================================================
+    // Increment 05 — closing run + content trimming
+    // ========================================================================
+
+    group('Increment 05 — closing run and content trimming', () {
+      testWidgets('`## foo ##` shows the closing run dimmed and keeps every slot',
+          (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '## foo ##';
+        // Null cursor shows all markers with the dimmed-but-present style.
+        final spans = builder.build(input, testContext, baseStyle);
+
+        expect(totalSlots(spans), input.length);
+        // Opening run and the ` ##` suffix are both present as marker spans.
+        final texts = spans.whereType<TextSpan>().map((s) => s.text).toList();
+        expect(texts, containsAll(<String>['## ', ' ##']));
+        // Content `foo` is at H2 size.
+        expect(styleOf(spans, 'foo').fontSize, 21.0);
+      });
+
+      testWidgets('closing-run suffix is dimmed when the cursor is off the line', (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '## foo ##\nbody';
+        // Cursor on the body line (index into `body`), not the heading line.
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: input.length);
+
+        final suffix = spans.whereType<TextSpan>().firstWhere((s) => s.text == ' ##');
+        // Inactive/hidden marker style collapses the font size.
+        expect(suffix.style!.fontSize, lessThan(baseStyle.fontSize!));
+        expect(totalSlots(spans), input.length);
+      });
+
+      testWidgets('leading + trailing whitespace slots are preserved (`#   foo   `)',
+          (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '#   foo   ';
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+
+        expect(totalSlots(spans), input.length);
+        final texts = spans.whereType<TextSpan>().map((s) => s.text).toList();
+        // Leading `#   ` is the opening marker; the three trailing spaces are
+        // the suffix region.
+        expect(texts, containsAll(<String>['#   ', '   ']));
+      });
+
+      testWidgets('`### ###` keeps all seven slots with empty content', (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '### ###';
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+
+        expect(totalSlots(spans), input.length);
+        final texts = spans.whereType<TextSpan>().map((s) => s.text).toList();
+        expect(texts, containsAll(<String>['### ', '###']));
+      });
+
+      testWidgets('closing run inside a heading with a link keeps every slot', (tester) async {
+        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        const input = '# See [Docs](https://example.com) ##';
+        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+
+        expect(totalSlots(spans), input.length);
+      });
+    });
   });
 }

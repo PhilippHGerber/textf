@@ -33,18 +33,6 @@ class TextfTokenizer {
     // no second scan, no per-heading look-ahead at render time.
     int? pendingHeadingIndex;
 
-    void finalizePendingHeading(int lineEnd) {
-      final int? idx = pendingHeadingIndex;
-      if (idx == null) return;
-      final TextfToken token = tokens[idx];
-      if (token is HeadingToken) {
-        token
-          ..contentEnd = lineEnd
-          ..lineEndPosition = lineEnd;
-      }
-      pendingHeadingIndex = null;
-    }
-
     // Helper to add accumulated text as a token
     void addTextToken(int start, int end) {
       if (end > start) {
@@ -60,6 +48,44 @@ class TextfTokenizer {
             length: end - start,
           ),
         );
+      }
+    }
+
+    // Back-patches the pending heading at the line terminator (or EOF).
+    //
+    // The full heading line is only known now, so this is where the trailing
+    // region — trailing spaces/tabs plus an optional closing `#` run
+    // (`spec.txt:1174`, `1215`) — is resolved. The content is flushed up to the
+    // trimmed [HeadingToken.contentEnd], and the trailing region is folded into
+    // a single [HeadingSuffixToken] so every source character keeps exactly one
+    // slot (the 1:1 invariant). This stays O(N) single-pass: the trailing scan
+    // walks each line-end character at most a constant number of times.
+    void finalizePendingHeading(int lineEnd) {
+      final int? idx = pendingHeadingIndex;
+      if (idx == null) return;
+      pendingHeadingIndex = null;
+      final TextfToken token = tokens[idx];
+      if (token is! HeadingToken) return;
+
+      final int contentEnd = _headingContentEnd(text, token.contentStart, lineEnd);
+      token
+        ..contentEnd = contentEnd
+        ..lineEndPosition = lineEnd;
+
+      if (lineEnd > contentEnd) {
+        // Flush the trimmed content, then own the trailing region with one
+        // suffix marker token. `textStart` advances to the terminator so the
+        // line ending itself resumes as ordinary accumulating text.
+        addTextToken(textStart, contentEnd);
+        tokens.add(
+          HeadingSuffixToken(
+            position: contentEnd,
+            length: lineEnd - contentEnd,
+            headingStart: token.position,
+            lineEndPosition: lineEnd,
+          ),
+        );
+        textStart = lineEnd;
       }
     }
 
@@ -395,8 +421,16 @@ class TextfTokenizer {
             final int headingStart = pos - indent;
             addTextToken(textStart, headingStart);
             // Skip the single separator character only when one is actually
-            // present; at line end there is nothing to skip.
-            final int contentStart = hasSeparator ? afterRun + 1 : afterRun;
+            // present; at line end there is nothing to skip. Any further
+            // leading spaces/tabs fold into the consumed opening region
+            // (leading content trim, `spec.txt:1174`); the scan naturally stops
+            // at the first non-blank, at a line terminator, or at EOF.
+            int contentStart = hasSeparator ? afterRun + 1 : afterRun;
+            while (contentStart < length &&
+                (text.codeUnitAt(contentStart) == kSpace ||
+                    text.codeUnitAt(contentStart) == kTab)) {
+              contentStart++;
+            }
             tokens.add(
               HeadingToken(
                 level: count,
@@ -447,6 +481,50 @@ class TextfTokenizer {
 
     addTextToken(textStart, pos);
     return tokens;
+  }
+
+  /// Whether [codeUnit] is a space or a tab — the two ATX inline blanks.
+  bool _isSpaceOrTab(int codeUnit) => codeUnit == kSpace || codeUnit == kTab;
+
+  /// Resolves the end of an ATX heading's rendered content within
+  /// `[contentStart, lineEnd)`, applying CommonMark trailing-whitespace trimming
+  /// and optional closing-`#`-run removal (`spec.txt:1174`, `1215`).
+  ///
+  /// Returns the index one past the last content character. Everything in
+  /// `[contentEnd, lineEnd)` is the heading's trailing region (trailing
+  /// spaces/tabs plus an optional closing run) and is folded into a
+  /// [HeadingSuffixToken] by the caller.
+  int _headingContentEnd(String text, int contentStart, int lineEnd) {
+    // 1. Trim trailing spaces/tabs.
+    int end = lineEnd;
+    while (end > contentStart && _isSpaceOrTab(text.codeUnitAt(end - 1))) {
+      end--;
+    }
+
+    // 2. Peel back a trailing run of unescaped `#`.
+    int hashStart = end;
+    while (hashStart > contentStart && text.codeUnitAt(hashStart - 1) == kHash) {
+      hashStart--;
+    }
+
+    // A closing run only counts when it is non-empty and preceded by a space or
+    // tab (`spec.txt:1215`). That single check is also what makes it
+    // escape-aware: a `\` before the run (`### foo \###`) is not blank, so the
+    // run stays content (`spec.txt:1266`); likewise a run glued to a word
+    // (`# foo#`) is not blank-preceded and stays content (`spec.txt:1257`).
+    // Reading `hashStart - 1` is safe: a heading always has at least one opening
+    // `#`, so `hashStart >= contentStart >= 1`. The preceding blank may be the
+    // opening separator itself (e.g. `### ###`), which is correct — that still
+    // makes the heading empty.
+    if (hashStart < end && _isSpaceOrTab(text.codeUnitAt(hashStart - 1))) {
+      // Drop the closing run, then trim the spaces/tabs that preceded it.
+      end = hashStart;
+      while (end > contentStart && _isSpaceOrTab(text.codeUnitAt(end - 1))) {
+        end--;
+      }
+    }
+
+    return end;
   }
 
   /// Returns whether [codeUnit] is a whitespace character.

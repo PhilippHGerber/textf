@@ -154,17 +154,17 @@ void main() {
         expect(plainTextOf(tokens), isEmpty);
       });
 
-      test('A single space is the separator; extra spaces are (untrimmed) content', () {
-        // Trimming of leading content whitespace arrives in increment 05; here
-        // only ONE space is the separator, the rest is content.
+      test('Leading content whitespace folds into the opening region (increment 05)', () {
+        // Increment 05 trims leading spaces/tabs; the whole `#   ` run is the
+        // consumed opening region and only `Title` remains as content.
         const input = '#   Title';
         final tokens = tokenizeBothModes(input);
 
         final heading = headings(tokens).single;
         expect(heading.level, 1);
-        expect(heading.length, 2, reason: 'one hash + one separator space');
-        expect(heading.contentStart, 2);
-        expect(plainTextOf(tokens), '  Title');
+        expect(heading.length, 4, reason: 'one hash + three leading spaces');
+        expect(heading.contentStart, 4);
+        expect(plainTextOf(tokens), 'Title');
       });
 
       test('Hash not at line start is plain text', () {
@@ -584,6 +584,133 @@ void main() {
         expect(heads[1].contentStart, 4);
         expect(heads[1].contentEnd, 4);
         expect(heads[1].lineEndPosition, input.length);
+      });
+    });
+
+    // ========================================================================
+    // Increment 05 — closing '#' run and content trimming
+    // ========================================================================
+
+    group('Increment 05 — closing run and content trimming', () {
+      List<HeadingSuffixToken> suffixes(List<TextfToken> tokens) =>
+          tokens.whereType<HeadingSuffixToken>().toList();
+
+      test('`## foo ##` trims the closing run into a suffix token', () {
+        const input = '## foo ##';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.level, 2);
+        expect(heading.contentStart, 3);
+        expect(heading.contentEnd, 6, reason: 'content is `foo`');
+        expect(plainTextOf(tokens), 'foo');
+
+        final suffix = suffixes(tokens).single;
+        expect(suffix.position, 6);
+        expect(suffix.length, 3, reason: 'the ` ##` trailing region');
+        expect(suffix.headingStart, 0);
+        expect(suffix.lineEndPosition, input.length);
+      });
+
+      test('Closing run is length-independent (`# foo ##########`)', () {
+        const input = '# foo ##########';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.contentEnd, 5, reason: 'content is still `foo`');
+        expect(plainTextOf(tokens), 'foo');
+        // Space + ten hashes are one suffix region.
+        expect(suffixes(tokens).single.length, 11);
+      });
+
+      test('`# foo#` keeps `foo#` — closing run must be blank-preceded', () {
+        const input = '# foo#';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.contentEnd, input.length);
+        expect(plainTextOf(tokens), 'foo#');
+        expect(suffixes(tokens), isEmpty);
+      });
+
+      test(r'`### foo \###` keeps `foo ###` — escaped `#` does not close', () {
+        const input = r'### foo \###';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.contentEnd, input.length, reason: 'no closing run stripped');
+        // Escape strips the backslash; the three hashes remain content.
+        expect(plainTextOf(tokens), 'foo ###');
+        expect(suffixes(tokens), isEmpty);
+      });
+
+      test('`### foo ### b` keeps `foo ### b` — non-blank after the run', () {
+        const input = '### foo ### b';
+        final tokens = tokenizeBothModes(input);
+
+        expect(headings(tokens).single.contentEnd, input.length);
+        expect(plainTextOf(tokens), 'foo ### b');
+        expect(suffixes(tokens), isEmpty);
+      });
+
+      test('Leading and trailing spaces are trimmed (`#   foo   `)', () {
+        const input = '#   foo   ';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        // Leading `#   ` folds into the opening region.
+        expect(heading.length, 4);
+        expect(heading.contentStart, 4);
+        expect(heading.contentEnd, 7, reason: 'content is `foo`');
+        expect(plainTextOf(tokens), 'foo');
+        // Trailing spaces (no closing run) are their own suffix region.
+        expect(suffixes(tokens).single.length, 3);
+      });
+
+      test('`### ###` is an empty heading with the closing run as suffix', () {
+        const input = '### ###';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.level, 3);
+        expect(heading.contentStart, 4);
+        expect(heading.contentEnd, 4, reason: 'empty content');
+        expect(plainTextOf(tokens), isEmpty);
+
+        final suffix = suffixes(tokens).single;
+        expect(suffix.position, 4);
+        expect(suffix.length, 3, reason: 'the closing `###`');
+      });
+
+      test('Closing run followed by trailing spaces (`# foo ##  `)', () {
+        const input = '# foo ##  ';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.contentEnd, 5, reason: 'content is `foo`');
+        expect(plainTextOf(tokens), 'foo');
+        // ` ##  ` — the space, run, and trailing spaces are one suffix region.
+        expect(suffixes(tokens).single.length, 5);
+      });
+
+      test('Suffix region is excluded before a newline, terminator preserved', () {
+        const input = '# foo ##\nbody';
+        final tokens = tokenizeBothModes(input);
+
+        final heading = headings(tokens).single;
+        expect(heading.contentEnd, 5);
+        expect(heading.lineEndPosition, 8, reason: r'the `\n` index');
+        expect(suffixes(tokens).single.length, 3);
+        // The newline and body resume as ordinary text.
+        expect(plainTextOf(tokens), 'foo\nbody');
+      });
+
+      test('Tab-preceded closing run and tab trimming', () {
+        const input = '#\tfoo\t##';
+        final tokens = tokenizeBothModes(input);
+
+        expect(plainTextOf(tokens), 'foo');
+        expect(suffixes(tokens).single.length, 3, reason: 'tab + `##`');
       });
     });
   });

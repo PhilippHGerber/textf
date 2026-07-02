@@ -234,6 +234,20 @@ class _SpanBuildState with HeadingRegion {
         continue;
       }
 
+      // Heading suffix (trailing whitespace + optional closing `#` run):
+      // dimmed-but-present, exactly like the opening run. The still-active
+      // heading style is used as the marker root so the run matches the opening
+      // run's size, and its slots are preserved verbatim.
+      if (token is HeadingSuffixToken) {
+        emitMarker(
+          // ignore: avoid-substring
+          text.substring(token.position, token.position + token.length),
+          _headingLineMarkerStyle(token.headingStart, token.lineEndPosition),
+        );
+        i++;
+        continue;
+      }
+
       // Formatting Marker Handling
       if (token is FormatMarkerToken) {
         if (validPairs.containsKey(i)) {
@@ -333,6 +347,11 @@ class _SpanBuildState with HeadingRegion {
         case HeadingToken(:final position, :final contentStart):
           // ignore: avoid-substring
           textBuffer.write(text.substring(position, contentStart));
+        case HeadingSuffixToken(:final position, :final length):
+          // Handled above (emitted as a dimmed marker); this defensive branch
+          // keeps the slot count correct if ever reached.
+          // ignore: avoid-substring
+          textBuffer.write(text.substring(position, position + length));
         case EscapeMarkerToken():
           flushText();
           final TextStyle style;
@@ -517,12 +536,19 @@ class _SpanBuildState with HeadingRegion {
   /// marker is shown active (heading-sized, active marker color) when the cursor
   /// is on the heading line, and inactive/dimmed otherwise (including the
   /// hide-all-markers selection path, where `cursorPosition` is < 0).
-  TextStyle headingMarkerStyle(HeadingToken token) {
+  TextStyle headingMarkerStyle(HeadingToken token) =>
+      _headingLineMarkerStyle(token.position, token.lineEndPosition);
+
+  /// Shared marker styling for a heading line's consumed regions (opening run
+  /// and trailing suffix), keyed on whether the cursor sits on the line
+  /// `[lineStart, lineEnd]`. Both regions share the heading style as their root
+  /// so they render at the same size.
+  TextStyle _headingLineMarkerStyle(int lineStart, int lineEnd) {
     final style = headingStyle ?? baseStyle;
     final pos = cursorPosition;
     if (pos == null) return style.copyWith(color: activeMarkerStyle.color);
 
-    if (pos >= token.position && pos <= token.lineEndPosition) {
+    if (pos >= lineStart && pos <= lineEnd) {
       return style.copyWith(color: activeMarkerStyle.color);
     }
     return inactiveMarkerStyle;

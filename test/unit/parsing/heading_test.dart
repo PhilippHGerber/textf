@@ -113,14 +113,15 @@ void main() {
       }
     });
 
-    test('a single space is the separator; extra spaces remain (untrimmed) content', () {
-      // Increment 01 consumes exactly one separator space; trimming of leading
-      // content whitespace arrives in increment 05.
+    test('leading content whitespace folds into the opening region (increment 05)', () {
+      // Increment 05 trims leading spaces/tabs: the whole `#   ` run is consumed
+      // and only `Title` remains as content.
       final tokens = TextfParser.getCachedTokensAndPairs('#   Title').tokens;
       final heading = tokens.whereType<HeadingToken>().single;
       expect(heading.level, 1);
-      expect(heading.length, 2);
-      expect(tokens.whereType<TextToken>().map((t) => t.value).join(), '  Title');
+      expect(heading.length, 4, reason: 'hash + three leading spaces');
+      expect(heading.contentStart, 4);
+      expect(tokens.whereType<TextToken>().map((t) => t.value).join(), 'Title');
     });
 
     test('seven hashes is not a heading', () {
@@ -130,8 +131,8 @@ void main() {
 
     test('stripFormatting removes heading markers but keeps content', () {
       expect(FormattingUtils.stripFormatting('# Title'), 'Title');
-      // Only the single separator space is part of the marker (increment 01).
-      expect(FormattingUtils.stripFormatting('#   Title'), '  Title');
+      // Leading content whitespace folds into the marker (increment 05 trim).
+      expect(FormattingUtils.stripFormatting('#   Title'), 'Title');
       expect(FormattingUtils.stripFormatting('## Sub\nbody'), 'Sub\nbody');
     });
 
@@ -190,6 +191,55 @@ void main() {
     test('stripFormatting on an empty heading yields empty text', () {
       expect(FormattingUtils.stripFormatting('#'), isEmpty);
       expect(FormattingUtils.stripFormatting('## '), isEmpty);
+    });
+
+    // Increment 05 — closing run + content trimming.
+    String visibleText(List<InlineSpan> spans) =>
+        spans.whereType<TextSpan>().map((s) => s.text ?? '').join();
+
+    testWidgets('`## foo ##` renders `foo` and omits the closing run', (tester) async {
+      final result = await parse(tester, '## foo ##');
+
+      expect(visibleText(result), 'foo');
+      final span = result.whereType<TextSpan>().firstWhere((s) => s.text == 'foo');
+      expect(span.style!.fontSize, 21.0, reason: 'H2 sizing on the content');
+    });
+
+    testWidgets('leading and trailing whitespace is trimmed (`#   foo   `)', (tester) async {
+      final result = await parse(tester, '#   foo   ');
+
+      expect(visibleText(result), 'foo');
+    });
+
+    testWidgets('`### ###` renders no visible content', (tester) async {
+      final result = await parse(tester, '### ###');
+
+      expect(result.whereType<TextSpan>().where((s) => (s.text ?? '').isNotEmpty), isEmpty);
+    });
+
+    testWidgets('`# foo#` keeps the glued hash as content', (tester) async {
+      final result = await parse(tester, '# foo#');
+
+      expect(visibleText(result), 'foo#');
+    });
+
+    testWidgets(r'escaped closing run `### foo \###` renders `foo ###`', (tester) async {
+      final result = await parse(tester, r'### foo \###');
+
+      expect(visibleText(result), 'foo ###');
+    });
+
+    testWidgets('closing run does not leak heading style past the newline', (tester) async {
+      final result = await parse(tester, '## foo ##\nbody');
+
+      final bodySpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('body'));
+      expect(bodySpan.style!.fontSize, 14.0);
+    });
+
+    test('stripFormatting drops the closing run and trims content', () {
+      expect(FormattingUtils.stripFormatting('## foo ##'), 'foo');
+      expect(FormattingUtils.stripFormatting('#   foo   '), 'foo');
+      expect(FormattingUtils.stripFormatting('### ###'), isEmpty);
     });
   });
 }
