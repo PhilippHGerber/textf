@@ -109,11 +109,72 @@ void main() {
         expect(style.color, customColor);
         // Base family that the custom style did not touch survives the merge.
         expect(style.fontFamily, baseStyle.fontFamily);
+      });
 
-        // NOTE: merging the override on top of the DEFAULT heading style (so a
-        // color-only override still inherits the default bold/scale) is part of
-        // the styling-surface hardening in increment 06, not the walking
-        // skeleton. That assertion is added there.
+      test('a color-only override still inherits the default size and weight', () {
+        const customColor = Color(0xFFAB12CD);
+        final base = resolverWith();
+        final overridden = resolverWith(
+          options: const TextfOptionsData(h1Style: TextStyle(color: customColor)),
+        );
+
+        final defaultH1 = base.resolveHeadingStyle(1, baseStyle);
+        final overriddenH1 = overridden.resolveHeadingStyle(1, baseStyle);
+
+        // The delta (color) applies...
+        expect(overriddenH1.color, customColor);
+        // ...while the default heading scale and weight survive the merge.
+        expect(overriddenH1.fontSize, defaultH1.fontSize);
+        expect(overriddenH1.fontWeight, defaultH1.fontWeight);
+        expect(overriddenH1.height, defaultH1.height);
+      });
+
+      test('an override may replace the default size and weight', () {
+        final resolver = resolverWith(
+          options: const TextfOptionsData(
+            h3Style: TextStyle(fontSize: 99, fontWeight: FontWeight.w300),
+          ),
+        );
+
+        final style = resolver.resolveHeadingStyle(3, baseStyle);
+
+        expect(style.fontSize, 99);
+        expect(style.fontWeight, FontWeight.w300);
+        // Base color the override did not touch still survives.
+        expect(style.color, baseStyle.color);
+      });
+
+      test('per-level overrides are independent (h2 override does not affect h1)', () {
+        const h2Color = Color(0xFF00FF00);
+        final resolver = resolverWith(
+          options: const TextfOptionsData(h2Style: TextStyle(color: h2Color)),
+        );
+        final plain = resolverWith();
+
+        // h2 picks up the override.
+        expect(resolver.resolveHeadingStyle(2, baseStyle).color, h2Color);
+        // h1 is unaffected and matches the un-overridden default.
+        expect(
+          resolver.resolveHeadingStyle(1, baseStyle).color,
+          plain.resolveHeadingStyle(1, baseStyle).color,
+        );
+      });
+    });
+
+    group('cache correctness (re-resolution under a changed base)', () {
+      test('the same heading level under two base styles yields distinct sizes', () {
+        final resolver = resolverWith();
+
+        const smallBase = TextStyle(fontSize: 10);
+        const largeBase = TextStyle(fontSize: 40);
+
+        final small = resolver.resolveHeadingStyle(1, smallBase);
+        final large = resolver.resolveHeadingStyle(1, largeBase);
+
+        // Heading size scales off the base; a stale result would collide.
+        expect(small.fontSize, lessThan(large.fontSize!));
+        expect(small.fontSize, smallBase.fontSize! * 2.0);
+        expect(large.fontSize, largeBase.fontSize! * 2.0);
       });
     });
   });

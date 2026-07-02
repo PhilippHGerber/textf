@@ -45,6 +45,9 @@ class DefaultStyles {
   /// Default baseline offset factor for subscript (relative to font size).
   static const double subscriptBaselineFactor = 0.4; // Move down
 
+  /// Default line-height multiplier applied to ATX headings.
+  static const double headingLineHeight = 1.2;
+
   /// Relative font-size multipliers for H1–H6.
   static const List<double> headingFontSizeFactors = [
     2.00, // h1
@@ -67,7 +70,7 @@ class DefaultStyles {
     return baseStyle.copyWith(
       fontSize: baseSize * factor,
       fontWeight: baseStyle.fontWeight ?? FontWeight.bold,
-      height: 1.2,
+      height: headingLineHeight,
     );
   }
 

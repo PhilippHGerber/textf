@@ -108,6 +108,59 @@ void main() {
       );
     });
 
+    testWidgets('Re-resolves heading spans when the base style changes (no stale cache)',
+        (tester) async {
+      // 1. Initial base font size 10 -> H1 is 20.
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Textf('# Title', style: TextStyle(fontSize: 10)),
+        ),
+      );
+
+      final size1 = _getStyleForText(tester, 'Title')?.fontSize;
+      expect(size1, 20.0, reason: 'H1 scales 2x off the base size (10)');
+
+      // 2. Change base font size to 40 -> H1 must re-resolve to 80.
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Textf('# Title', style: TextStyle(fontSize: 40)),
+        ),
+      );
+
+      final size2 = _getStyleForText(tester, 'Title')?.fontSize;
+      expect(size2, 80.0, reason: 'H1 must re-resolve against the new base, not serve a stale span');
+    });
+
+    testWidgets('Updates heading style when TextfOptions h1Style changes', (tester) async {
+      // 1. Initial: h1Style color RED.
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: TextfOptions(
+            h1Style: TextStyle(color: Colors.red),
+            child: Textf('# Title'),
+          ),
+        ),
+      );
+
+      final style1 = _getStyleForText(tester, 'Title');
+      expect(style1?.color, Colors.red, reason: 'Initial heading color should be red');
+      // Color-only override still inherits the default (bold-ish) heading weight.
+      expect((style1?.fontWeight?.value ?? 0), greaterThanOrEqualTo(FontWeight.bold.value));
+
+      // 2. Update: h1Style color BLUE -> must re-parse.
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: TextfOptions(
+            h1Style: TextStyle(color: Colors.blue),
+            child: Textf('# Title'),
+          ),
+        ),
+      );
+
+      final style2 = _getStyleForText(tester, 'Title');
+      expect(style2?.color, Colors.blue, reason: 'Heading color should update to blue');
+    });
+
     testWidgets('Updates when Placeholders content changes', (tester) async {
       // 1. Initial State: {icon} is Star
       await tester.pumpWidget(

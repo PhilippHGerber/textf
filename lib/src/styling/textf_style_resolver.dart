@@ -240,25 +240,43 @@ class TextfStyleResolver {
 
   /// Resolves the final TextStyle for an ATX heading of [level] (1–6).
   ///
-  /// Checks the matching `h{n}Style` in [TextfOptionsData] first, then falls
-  /// back to [DefaultStyles.headingStyle]. The result is merged onto
-  /// [baseStyle].
+  /// The default heading style ([DefaultStyles.headingStyle]) — the scaled size,
+  /// bold weight and line height for [level] — is computed first. A matching
+  /// `h{n}Style` override from the [TextfOptionsData] hierarchy is then merged
+  /// on top of it, so a delta-only override (e.g. color alone) still inherits
+  /// the default size and weight. The whole result sits on [baseStyle].
   TextStyle resolveHeadingStyle(int level, TextStyle baseStyle) {
-    final opts = _options;
-    final TextStyle? optionsStyle = opts == null || level < 1 || level > 6
-        ? null
-        : <TextStyle?>[
-            opts.h1Style,
-            opts.h2Style,
-            opts.h3Style,
-            opts.h4Style,
-            opts.h5Style,
-            opts.h6Style,
-          ][level - 1];
+    final TextStyle headingBase = DefaultStyles.headingStyle(level, baseStyle);
+    final TextStyle? optionsStyle = _headingStyleFromOptions(level);
     if (optionsStyle != null) {
-      return mergeTextStyles(baseStyle, optionsStyle);
+      return mergeTextStyles(headingBase, optionsStyle);
     }
-    return DefaultStyles.headingStyle(level, baseStyle);
+    return headingBase;
+  }
+
+  /// Internal helper returning the per-level `h{n}Style` override, or null.
+  ///
+  /// Uses a `switch` (no per-call list allocation) and inherits through the
+  /// [TextfOptions] hierarchy via the pre-merged [_options].
+  TextStyle? _headingStyleFromOptions(int level) {
+    final opts = _options;
+    if (opts == null) return null;
+    switch (level) {
+      case 1:
+        return opts.h1Style;
+      case 2:
+        return opts.h2Style;
+      case 3:
+        return opts.h3Style;
+      case 4:
+        return opts.h4Style;
+      case 5:
+        return opts.h5Style;
+      case 6:
+        return opts.h6Style;
+      default:
+        return null;
+    }
   }
 
   // --- Private Helper Methods ---
