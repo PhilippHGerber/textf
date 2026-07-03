@@ -23,8 +23,16 @@ import 'internal/textf_renderer.dart';
 /// * `` `code` `` for `code` text
 /// * `[link text](url)` for [links](https://example.com)
 /// * `{key}` placeholders for inserting [InlineSpan]s (e.g., WidgetSpan) via [placeholders].
+/// * `# Heading` through `###### Heading` for ATX headings (levels 1–6)
 ///
 /// Links support nested formatting such as `[**bold** link](url)`.
+///
+/// ATX headings are the one block-level construct [Textf] supports. Recognition
+/// follows the CommonMark ATX specification (0–3 leading spaces, a 1–6 `#` run,
+/// a space/tab/end-of-line separator, optional trailing closing run, and content
+/// trimming). Inline formatting composes inside a heading. Other CommonMark
+/// block constructs — setext headings, lists, blockquotes, tables, code blocks —
+/// are not supported, and 4-space-indented lines render as plain text.
 ///
 /// ## Usage example
 /// ```dart
@@ -51,9 +59,11 @@ import 'internal/textf_renderer.dart';
 /// ## Limitations
 /// - Maximum nesting depth of 2 formatting levels
 /// - When nesting, use different marker types (e.g., **bold with _italic_**)
-/// - No support for block elements (headings, lists, quotes, etc.)
+/// - Inline-first: ATX headings are the only block-level element supported; no
+///   lists, blockquotes, tables, or other block constructs
 /// - No support for images (unless inserted via {key} placeholder)
-/// - Designed for inline formatting only, not full Markdown rendering
+/// - Conforms to the CommonMark spec for the subset it supports; it is not a
+///   full Markdown renderer
 ///
 /// To escape formatting characters use a backslash: `\*not italic\*`
 ///
