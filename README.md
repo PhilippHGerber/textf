@@ -87,7 +87,7 @@ Both widgets share the same formatting syntax and can be configured together wit
 
 | Limitation                 | Reason                                                                           |
 | -------------------------- | -------------------------------------------------------------------------------- |
-| **No block elements**      | Textf is for inline formatting only — no headings, lists, quotes, or images      |
+| **Inline-first**           | ATX headings (`#`–`######`) are the one block-level exception — no lists, quotes, tables, or images |
 | **Max 2 nesting levels**   | `**bold _italic_**` works, deeper nesting renders as plain text                  |
 | **Selection across links** | Links use `WidgetSpan`, so selection can't span across them (Flutter limitation) |
 | **Widget placeholders**    | `{key}` placeholders render as literal text in `TextfEditingController`          |
@@ -96,7 +96,9 @@ Both widgets share the same formatting syntax and can be configured together wit
 
 ## CommonMark Feature Support Status
 
-Because this package is designed as a Flutter `Text` widget (utilizing `TextSpan` and `WidgetSpan`), it focuses heavily on **Inline** formatting and some text-compatible **Block** elements. Complex block layouts (like nested lists or tables) are out of scope and require custom rendering.
+Because this package is designed as a Flutter `Text` widget (utilizing `TextSpan` and `WidgetSpan`), it is **inline-first**: it focuses on **Inline** formatting, with ATX headings as the single sanctioned **Block** exception. Other block layouts (lists, blockquotes, tables) are out of scope and require custom rendering.
+
+> **Partial coverage, full conformance.** Textf does not implement all of CommonMark, but every feature it *does* support conforms to the [CommonMark spec](https://spec.commonmark.org/current/). It is not "CommonMark compliant" as a whole. Notable divergences from a full renderer: **no setext headings** (`Heading\n===`), and **4-space-indented lines are plain text**, not indented code blocks.
 
 **Legend for Textf Status:**
 - [x] **Supported** - Fully implemented and tested.
@@ -130,7 +132,7 @@ Blocks that do not contain other blocks. Selected items here are parsed to enhan
 | Name                 | Example (raw)              | Textf |
 | :------------------- | :------------------------- | :---: |
 | Paragraphs           | `Line 1\n\nLine 2`         |  [ ]  |
-| ATX Headings         | `# Heading` to `###### H6` |  [~]  |
+| ATX Headings         | `# Heading` to `###### H6` |  [x]  |
 | Setext Headings      | `Heading\n===`             |  [ ]  |
 | Thematic Breaks      | `---`, `***`, or `___`     |  [ ]  |
 | Link Reference Defs  | `[label]: https://url.com` |  [ ]  |
@@ -153,7 +155,7 @@ Blocks that contain other blocks. These are traditionally difficult to handle in
 
 ## When to Use Textf
 
-Textf is intentionally limited to **inline formatting only**. It is not a Markdown renderer.
+Textf is **inline-first**: inline formatting plus ATX headings as the one block-level exception. It is not a full Markdown renderer.
 
 **✅ Great for:**
 
@@ -165,9 +167,9 @@ Textf is intentionally limited to **inline formatting only**. It is not a Markdo
 
 **❌ Not designed for:**
 
-- Full Markdown documents with headings, lists, or tables
+- Full Markdown documents with lists, tables, or blockquotes
 - HTML rendering
-- Block-level structure of any kind
+- Block-level structure beyond ATX headings
 
 ---
 
@@ -519,8 +521,8 @@ TextfOptions(
 | Parse complexity | O(N)                | Often O(N²) or worse   |
 | API familiarity  | Identical to `Text` | Custom widgets         |
 | Live editing     | ✅                  | Rarely                 |
-| Block elements   | ❌                  | ✅                     |
-| Best for         | Inline formatting   | Document rendering     |
+| Block elements   | Headings only       | Full                   |
+| Best for         | Inline + headings   | Document rendering     |
 
 ---
 
