@@ -76,6 +76,7 @@ class _FeatureBullets extends StatelessWidget {
     '++Underline++ with `++markers++`',
     'x^2^ superscript and H~2~O subscript',
     'Widget placeholders with `{key}` syntax',
+    'ATX headings from `# H1` to `###### H6`',
   ];
 
   @override
@@ -194,9 +195,9 @@ class _LimitationsTable extends StatelessWidget {
   const _LimitationsTable();
 
   static const _rows = [
-    ('No block elements', 'No headings, lists, blockquotes, or tables'),
+    ('Inline-first', 'ATX headings are the one block-level element; no lists, blockquotes, or tables'),
     ('Max 2 nesting levels', '`**bold _italic_**` works; deeper nesting renders as plain text'),
-    ('Inline only', 'Each `Textf` renders a single paragraph / inline span tree'),
+    ('Partial CommonMark', 'Conforms to the spec for its supported subset; no setext headings or indented code blocks'),
     ('No HTML', 'Raw HTML tags are not parsed or rendered'),
   ];
 
@@ -250,8 +251,8 @@ class _ComparisonTable extends StatelessWidget {
     ('Highlight, underline, super/sub', true, false),
     ('Widget placeholders', true, false),
     ('Live editing controller', true, false),
-    ('Block elements (headings, lists)', false, true),
-    ('Tables, blockquotes', false, true),
+    ('ATX headings', true, true),
+    ('Lists, tables, blockquotes', false, true),
     ('Zero dependencies', true, false),
     ('O(N) single-pass parser', true, false),
   ];
@@ -347,7 +348,7 @@ class _WhenToUse extends StatelessWidget {
 
   static const _notFor = [
     'Full Markdown documents',
-    'Headings and list rendering',
+    'List and table rendering',
     'Complex nested block structures',
     'HTML rendering',
   ];
