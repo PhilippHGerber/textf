@@ -29,6 +29,7 @@ void addTextfOptionsDebugProperties({
   required double? superscriptBaselineFactor,
   required double? subscriptBaselineFactor,
   required double? strikethroughThickness,
+  required Widget Function(BuildContext context)? thematicBreakBuilder,
 }) {
   properties
     ..add(
@@ -142,6 +143,12 @@ void addTextfOptionsDebugProperties({
         'strikethroughThickness',
         strikethroughThickness,
         defaultValue: null,
+      ),
+    )
+    ..add(
+      ObjectFlagProperty<Widget Function(BuildContext)?>.has(
+        'thematicBreakBuilder',
+        thematicBreakBuilder,
       ),
     );
 }

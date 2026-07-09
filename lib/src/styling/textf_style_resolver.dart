@@ -6,6 +6,7 @@ import '../core/textf_style_utils.dart';
 import '../models/textf_token.dart';
 import '../widgets/textf_options.dart';
 import '../widgets/textf_options_data.dart';
+import 'thematic_break.dart';
 
 /// A class responsible for resolving the final TextStyle for formatted text segments.
 ///
@@ -277,6 +278,20 @@ class TextfStyleResolver {
       default:
         return null;
     }
+  }
+
+  /// Resolves the [InlineSpan] rendered for a thematic break (`---`/`***`/`___`).
+  ///
+  /// A `thematicBreakBuilder` supplied anywhere in the [TextfOptions] hierarchy
+  /// (nearest ancestor wins, via the pre-merged [_options]) overrides the
+  /// default; its widget is placed in a middle-aligned [WidgetSpan]. Absent an
+  /// override, the guarded full-width default rule renders.
+  InlineSpan resolveThematicBreak() {
+    final Widget Function(BuildContext context)? builder = _options?.thematicBreakBuilder;
+    if (builder != null) {
+      return customThematicBreakSpan(builder);
+    }
+    return defaultThematicBreakSpan();
   }
 
   // --- Private Helper Methods ---

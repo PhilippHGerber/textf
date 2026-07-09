@@ -113,7 +113,11 @@ class TextfTokenizer {
             nextChar == kCloseParen ||
             nextChar == kOpenBrace ||
             nextChar == kCloseBrace ||
-            nextChar == kHash) {
+            nextChar == kHash ||
+            // `\-` escapes the thematic-break marker: emitting the escape marker
+            // on the `\` breaks the line-start marker run so `\---` renders as
+            // the literal text `---` rather than a rule (`spec.txt:1263`).
+            nextChar == kDash) {
           addTextToken(textStart, pos);
           tokens
             // 1. Emit the backslash as a distinct marker token
@@ -128,6 +132,32 @@ class TextfTokenizer {
             );
 
           pos += 2; // Skip escape character and the escaped character
+          textStart = pos;
+          continue;
+        }
+      }
+
+      // Whole-line thematic break (`---`, `***`, `___`) — the sole whole-line
+      // construct. Full CommonMark conformance: a line of ≥3 of a *single*
+      // marker character, optionally indented up to 3 spaces, with any amount
+      // of inner/trailing whitespace between the markers (`* * *`, `- - -`).
+      // The whole-line check *wins* over emphasis at line start, but bails at
+      // the first disqualifying character, so `***bold***` and `***Hello` fall
+      // through fail-fast to the emphasis/text branches below (total work stays
+      // O(N)). Escapes are handled natively: a `\` before the run is emitted as
+      // an EscapeMarkerToken above, breaking the line-start run so `\---` is
+      // literal text.
+      if (currentChar == kDash || currentChar == kAsterisk || currentChar == kUnderscore) {
+        final match = _tryThematicBreak(text, pos, length);
+        if (match != null) {
+          // Flush pending text up to the line start; the token then owns the
+          // whole line (indentation through trailing whitespace). The terminator
+          // is left to resume as ordinary text.
+          addTextToken(textStart, match.start);
+          tokens.add(
+            ThematicBreakToken(position: match.start, length: match.end - match.start),
+          );
+          pos = match.end;
           textStart = pos;
           continue;
         }
@@ -481,6 +511,76 @@ class TextfTokenizer {
 
     addTextToken(textStart, pos);
     return tokens;
+  }
+
+  /// Attempts to recognize a CommonMark whole-line thematic break whose first
+  /// marker character is at [pos].
+  ///
+  /// [pos] is the first `-`, `*`, or `_` on the line; any leading indentation
+  /// has already been accumulated into the pending text before it. Succeeds
+  /// when, per `spec.txt:1128`:
+  ///
+  ///  * the marker run begins at a line start (start of input, or immediately
+  ///    after a `\n`/`\r`) with **0–3 spaces** of indentation — 4+ spaces, or
+  ///    any non-space before the run, disqualify;
+  ///  * the rest of the line up to the terminator (`\n`, `\r`) or EOF contains
+  ///    **only** that one marker character and spaces/tabs — a different marker
+  ///    (`- * -`) or any other content (`--- foo`) disqualifies;
+  ///  * at least [kMinThematicBreakRun] marker characters are present.
+  ///
+  /// On success returns `(start, end)`, the half-open span of the whole consumed
+  /// line: `start` is the line start (the first indentation space, or [pos] when
+  /// unindented) and `end` is the line terminator index (or [length] at EOF).
+  /// The [ThematicBreakToken] is a **whole-line marker** — it owns the leading
+  /// indentation, the markers, and any inner/trailing whitespace, so the 1:1
+  /// slot-sum invariant holds and the read-only rule never has stray indentation
+  /// text beside it. Returns `null` on any miss so the caller falls back to
+  /// emphasis/text tokenization. The forward scan bails at the first
+  /// disqualifying character, and the backward indent scan bails at the first
+  /// non-space, so both are bounded by the leading marker run and total work
+  /// stays O(N).
+  ({int start, int end})? _tryThematicBreak(String text, int pos, int length) {
+    // Line start with 0–3 spaces of indentation: walk back over spaces to the
+    // line start. 4+ spaces, or a non-space before the run, disqualify.
+    // Indentation is spaces only — a leading tab counts as ≥4 columns of indent
+    // (`spec.txt:1128`) and so disqualifies, unlike the space-or-tab blanks
+    // permitted *between* markers in the forward scan below.
+    int indent = 0;
+    int back = pos - 1;
+    while (back >= 0 && text.codeUnitAt(back) == kSpace) {
+      indent++;
+      back--;
+    }
+    if (indent > kMaxThematicBreakIndent) return null;
+    if (back >= 0) {
+      final int prev = text.codeUnitAt(back);
+      if (prev != kNewline && prev != kCarriageReturn) return null;
+    }
+
+    // Forward scan: only the marker char and spaces/tabs up to the line
+    // terminator, with at least kMinThematicBreakRun markers. The scan stops at
+    // the terminator (or EOF), so trailing whitespace is consumed into the line.
+    final int marker = text.codeUnitAt(pos);
+    int markerCount = 0;
+    int scan = pos;
+    while (scan < length) {
+      final int c = text.codeUnitAt(scan);
+      if (c == kNewline || c == kCarriageReturn) break;
+      if (c == marker) {
+        markerCount++;
+        scan++;
+      } else if (_isSpaceOrTab(c)) {
+        scan++;
+      } else {
+        // A different marker character or any other content disqualifies.
+        return null;
+      }
+    }
+
+    if (markerCount < kMinThematicBreakRun) return null;
+
+    // Consume the whole line: leading indentation through the terminator.
+    return (start: pos - indent, end: scan);
   }
 
   /// Whether [codeUnit] is a space or a tab — the two ATX inline blanks.

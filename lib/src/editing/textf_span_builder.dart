@@ -248,6 +248,24 @@ class _SpanBuildState with HeadingRegion {
         continue;
       }
 
+      // Thematic-break Handling (whole-line construct: dimmed marker text).
+      // The rule's raw `-`/`*`/`_` (plus any leading/inner/trailing whitespace)
+      // stay visible as a single dimmed marker span — brightening to the active
+      // marker style when the cursor is on the line — so every source character
+      // keeps exactly one cursor slot. The read-only rule `WidgetSpan` is never
+      // produced here.
+      if (token is ThematicBreakToken) {
+        final lineStart = token.position;
+        final lineEnd = token.position + token.length;
+        emitMarker(
+          // ignore: avoid-substring
+          text.substring(lineStart, lineEnd),
+          _cursorOnLine(lineStart, lineEnd) ? activeMarkerStyle : inactiveMarkerStyle,
+        );
+        i++;
+        continue;
+      }
+
       // Formatting Marker Handling
       if (token is FormatMarkerToken) {
         if (validPairs.containsKey(i)) {
@@ -350,6 +368,11 @@ class _SpanBuildState with HeadingRegion {
         case HeadingSuffixToken(:final position, :final length):
           // Handled above (emitted as a dimmed marker); this defensive branch
           // keeps the slot count correct if ever reached.
+          // ignore: avoid-substring
+          textBuffer.write(text.substring(position, position + length));
+        case ThematicBreakToken(:final position, :final length):
+          // Handled above (emitted as a dimmed marker span); this defensive
+          // branch keeps the slot count correct if ever reached.
           // ignore: avoid-substring
           textBuffer.write(text.substring(position, position + length));
         case EscapeMarkerToken():
@@ -544,14 +567,21 @@ class _SpanBuildState with HeadingRegion {
   /// `[lineStart, lineEnd]`. Both regions share the heading style as their root
   /// so they render at the same size.
   TextStyle _headingLineMarkerStyle(int lineStart, int lineEnd) {
-    final style = headingStyle ?? baseStyle;
-    final pos = cursorPosition;
-    if (pos == null) return style.copyWith(color: activeMarkerStyle.color);
-
-    if (pos >= lineStart && pos <= lineEnd) {
-      return style.copyWith(color: activeMarkerStyle.color);
+    if (_cursorOnLine(lineStart, lineEnd)) {
+      return (headingStyle ?? baseStyle).copyWith(color: activeMarkerStyle.color);
     }
     return inactiveMarkerStyle;
+  }
+
+  /// Whether the cursor sits on the line `[lineStart, lineEnd]` (inclusive of
+  /// both ends), or is absent. A `null` cursor means "show every marker
+  /// dimmed-but-present", so it counts as on-line. Shared by the ATX-heading and
+  /// thematic-break marker-styling paths — both key their active/inactive choice
+  /// on this same O(1) line-membership test.
+  bool _cursorOnLine(int lineStart, int lineEnd) {
+    final pos = cursorPosition;
+    if (pos == null) return true;
+    return pos >= lineStart && pos <= lineEnd;
   }
 
   /// Flush text buffer and emit a marker span.

@@ -29,7 +29,10 @@ class FormattingUtils {
           char == kEscape ||
           char == kOpenBracket ||
           char == kOpenBrace ||
-          char == kHash) {
+          char == kHash ||
+          // `-` only ever matters as a thematic-break marker (`---`), but that
+          // is enough to force the tokenizer path so a bare rule is recognized.
+          char == kDash) {
         return true;
       }
     }
@@ -122,6 +125,10 @@ class FormattingUtils {
       } else if (token is HeadingSuffixToken) {
         // Trailing region (closing '#' run + surrounding whitespace) is a
         // consumed marker and is stripped along with the opening run.
+        i++;
+      } else if (token is ThematicBreakToken) {
+        // A thematic break is a whole-line marker with no textual content, so
+        // it strips away entirely (like heading markers do).
         i++;
       } else if (token is EscapeMarkerToken) {
         // Skip the backslash itself. The escaped character is always the

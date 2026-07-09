@@ -36,6 +36,9 @@ class _MockTextfStyleResolver implements TextfStyleResolver {
   TextStyle resolveHeadingStyle(int level, TextStyle baseStyle) => throw UnimplementedError();
 
   @override
+  InlineSpan resolveThematicBreak() => throw UnimplementedError();
+
+  @override
   TextStyle resolveLinkStyle(TextStyle baseStyle) => throw UnimplementedError();
   @override
   TextStyle resolveLinkHoverStyle(TextStyle baseStyle) => throw UnimplementedError();

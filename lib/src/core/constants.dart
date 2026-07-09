@@ -111,3 +111,17 @@ const int kMaxHeadingLevel = 6;
 /// ATX heading (CommonMark's up-to-three-space indentation rule). 4+ leading
 /// spaces disqualify the line as a heading.
 const int kMaxHeadingIndent = 3;
+
+/// Hyphen-minus character `-` (ASCII code 45)
+///
+/// One of the three CommonMark thematic-break markers (`---`, `***`, `___`).
+const int kDash = 0x2D;
+
+/// Minimum number of repeated marker characters that form a thematic break
+/// (`---`, `***`, `___`). A run of fewer than three is not a thematic break.
+const int kMinThematicBreakRun = 3;
+
+/// Maximum number of leading spaces before a thematic-break marker run that
+/// still counts as a break (CommonMark's up-to-three-space indentation rule,
+/// `spec.txt:1128`). 4+ leading spaces disqualify the line.
+const int kMaxThematicBreakIndent = 3;

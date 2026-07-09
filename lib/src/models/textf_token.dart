@@ -221,3 +221,23 @@ final class HeadingSuffixToken extends TextfToken {
   String toString() => 'HeadingSuffixToken(at $position, len $length, '
       'line $headingStart..$lineEndPosition)';
 }
+
+/// A CommonMark thematic break (`---`, `***`, `___`) — the sole **whole-line
+/// construct** in textf's admitted block roster.
+///
+/// Unlike [HeadingToken] (a line-*prefix* marker whose content follows as
+/// separate tokens), a thematic break is a **consumed whole-line marker with no
+/// content**: it spans the entire line region it consumes — `[position,
+/// position + length)`, from the leading indentation through the markers and any
+/// inner/trailing whitespace, stopping before the line terminator — so the
+/// per-token slot sum still equals the input length (the 1:1 invariant). The
+/// read-only pipeline renders a rule `WidgetSpan` for it (with no stray
+/// indentation text beside it); the editor renders its raw characters as dimmed
+/// marker text.
+final class ThematicBreakToken extends TextfToken {
+  /// Creates a thematic-break token spanning `[position, position + length)`.
+  const ThematicBreakToken({required super.position, required super.length});
+
+  @override
+  String toString() => 'ThematicBreakToken(at $position, len $length)';
+}

@@ -33,6 +33,7 @@ class TextfOptionsData {
     this.h4Style,
     this.h5Style,
     this.h6Style,
+    this.thematicBreakBuilder,
   });
 
   /// Callback function executed when tapping or clicking on a link.
@@ -139,6 +140,16 @@ class TextfOptionsData {
   /// The [TextStyle] for level-6 headings (`###### H6`). Merged onto the base style.
   final TextStyle? h6Style;
 
+  /// Builds the widget rendered for a thematic break (`---`, `***`, `___`).
+  ///
+  /// When supplied, its result replaces the guarded full-width default rule.
+  /// The builder owns the widget's appearance and its own width behaviour, so —
+  /// unlike the default — it carries no unbounded-width guard.
+  ///
+  /// Resolved with a "nearest ancestor wins" strategy, like the other callbacks
+  /// and values.
+  final Widget Function(BuildContext context)? thematicBreakBuilder;
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -167,7 +178,8 @@ class TextfOptionsData {
         other.h3Style == h3Style &&
         other.h4Style == h4Style &&
         other.h5Style == h5Style &&
-        other.h6Style == h6Style;
+        other.h6Style == h6Style &&
+        other.thematicBreakBuilder == thematicBreakBuilder;
   }
 
   @override
@@ -197,5 +209,6 @@ class TextfOptionsData {
         h4Style,
         h5Style,
         h6Style,
+        thematicBreakBuilder,
       ]);
 }

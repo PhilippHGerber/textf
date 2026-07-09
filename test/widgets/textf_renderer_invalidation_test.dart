@@ -128,7 +128,11 @@ void main() {
       );
 
       final size2 = _getStyleForText(tester, 'Title')?.fontSize;
-      expect(size2, 80.0, reason: 'H1 must re-resolve against the new base, not serve a stale span');
+      expect(
+        size2,
+        80.0,
+        reason: 'H1 must re-resolve against the new base, not serve a stale span',
+      );
     });
 
     testWidgets('Updates heading style when TextfOptions h1Style changes', (tester) async {
@@ -145,7 +149,7 @@ void main() {
       final style1 = _getStyleForText(tester, 'Title');
       expect(style1?.color, Colors.red, reason: 'Initial heading color should be red');
       // Color-only override still inherits the default (bold-ish) heading weight.
-      expect((style1?.fontWeight?.value ?? 0), greaterThanOrEqualTo(FontWeight.bold.value));
+      expect(style1?.fontWeight?.value ?? 0, greaterThanOrEqualTo(FontWeight.bold.value));
 
       // 2. Update: h1Style color BLUE -> must re-parse.
       await tester.pumpWidget(

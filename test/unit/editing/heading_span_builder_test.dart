@@ -426,8 +426,7 @@ void main() {
     // ========================================================================
 
     group('Increment 05 — closing run and content trimming', () {
-      testWidgets('`## foo ##` shows the closing run dimmed and keeps every slot',
-          (tester) async {
+      testWidgets('`## foo ##` shows the closing run dimmed and keeps every slot', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '## foo ##';
         // Null cursor shows all markers with the dimmed-but-present style.

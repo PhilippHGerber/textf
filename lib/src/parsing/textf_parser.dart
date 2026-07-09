@@ -142,6 +142,17 @@ class TextfParser {
         continue;
       }
 
+      // Thematic break (`---`, `***`, `___`): flush any pending text, then
+      // insert the rule as a WidgetSpan. The line terminator that followed the
+      // rule is a separate TextToken and resumes ordinary text after it.
+      if (token is ThematicBreakToken) {
+        state
+          ..flushText()
+          ..spans.add(resolver.resolveThematicBreak());
+        i++;
+        continue;
+      }
+
       // Link Handling
       if (token is LinkStartToken) {
         // Attempt to process a link.
@@ -194,6 +205,9 @@ class TextfParser {
           state.textBuffer.write(text.substring(position, contentStart));
         case HeadingSuffixToken():
           // Handled above (consumed, renders nothing); unreachable here.
+          break;
+        case ThematicBreakToken():
+          // Handled above (emits a WidgetSpan rule); unreachable here.
           break;
         case EscapeMarkerToken():
           // Do nothing. This effectively strips the '\' from the visual output.

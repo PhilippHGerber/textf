@@ -57,6 +57,7 @@ class TextfOptions extends StatelessWidget {
     this.h4Style,
     this.h5Style,
     this.h6Style,
+    this.thematicBreakBuilder,
   });
 
   /// The child subtree that will have access to the merged TextfOptions configuration.
@@ -170,6 +171,16 @@ class TextfOptions extends StatelessWidget {
   /// The [TextStyle] for level-6 headings (`###### H6`). Merged onto the base style.
   final TextStyle? h6Style;
 
+  /// Builds the widget rendered for a thematic break (`---`, `***`, `___`).
+  ///
+  /// Supplying a builder overrides the guarded full-width default rule. The
+  /// builder owns the widget's appearance and its own width behaviour, so —
+  /// unlike the default — it carries no unbounded-width guard.
+  ///
+  /// Resolved with a "nearest ancestor wins" strategy, like the other callbacks
+  /// and values.
+  final Widget Function(BuildContext context)? thematicBreakBuilder;
+
   /// Finds the nearest pre-merged [TextfOptionsData] ancestor in the widget tree.
   static TextfOptionsData? maybeOf(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<_TextfOptionsScope>()?.data;
@@ -210,6 +221,7 @@ class TextfOptions extends StatelessWidget {
       superscriptBaselineFactor: superscriptBaselineFactor,
       subscriptBaselineFactor: subscriptBaselineFactor,
       strikethroughThickness: strikethroughThickness,
+      thematicBreakBuilder: thematicBreakBuilder,
     );
   }
 
@@ -229,6 +241,7 @@ class TextfOptions extends StatelessWidget {
       superscriptBaselineFactor: superscriptBaselineFactor ?? parent?.superscriptBaselineFactor,
       subscriptBaselineFactor: subscriptBaselineFactor ?? parent?.subscriptBaselineFactor,
       scriptFontSizeFactor: scriptFontSizeFactor ?? parent?.scriptFontSizeFactor,
+      thematicBreakBuilder: thematicBreakBuilder ?? parent?.thematicBreakBuilder,
 
       // Intelligent merge for styles (Child overrides parent)
       linkStyle: _merge(parent?.linkStyle, linkStyle),
