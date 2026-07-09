@@ -2,6 +2,10 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 2.0.0-dev.3
+
+* **Thematic breaks (horizontal rules):** a line of three or more `-`, `*`, or `_` renders as a full-width divider, with full CommonMark conformance for the construct. Customizable via the new **`TextfOptions.thematicBreakBuilder`**; the default is a 1px line in the theme's divider color. In `TextfEditingController` the raw markers stay visible as dimmed marker text, preserving the 1:1 cursor invariant. Conforms to the CommonMark [thematic breaks](https://spec.commonmark.org/current/#thematic-breaks) section.
+
 ## 2.0.0-dev.2
 
 * Headings now also recognize a **tab** as the separator after the `#` run (`#\tTitle`), and are recognized after **CRLF (`\r\n`)** and **lone-CR (`\r`)** line endings, in addition to `\n`. Conforms to the CommonMark [ATX headings](https://spec.commonmark.org/current/#atx-headings) and [Characters and lines](https://spec.commonmark.org/current/#characters-and-lines) sections.

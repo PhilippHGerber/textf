@@ -85,71 +85,71 @@ Both widgets share the same formatting syntax and can be configured together wit
 
 ## Limitations
 
-| Limitation                 | Reason                                                                           |
-| -------------------------- | -------------------------------------------------------------------------------- |
+| Limitation                 | Reason                                                                                              |
+| -------------------------- | --------------------------------------------------------------------------------------------------- |
 | **Inline-first**           | ATX headings (`#`–`######`) are the one block-level exception — no lists, quotes, tables, or images |
-| **Max 2 nesting levels**   | `**bold _italic_**` works, deeper nesting renders as plain text                  |
-| **Selection across links** | Links use `WidgetSpan`, so selection can't span across them (Flutter limitation) |
-| **Widget placeholders**    | `{key}` placeholders render as literal text in `TextfEditingController`          |
+| **Max 2 nesting levels**   | `**bold _italic_**` works, deeper nesting renders as plain text                                     |
+| **Selection across links** | Links use `WidgetSpan`, so selection can't span across them (Flutter limitation)                    |
+| **Widget placeholders**    | `{key}` placeholders render as literal text in `TextfEditingController`                             |
 
 ---
 
 ## CommonMark Feature Support Status
 
-Because this package is designed as a Flutter `Text` widget (utilizing `TextSpan` and `WidgetSpan`), it is **inline-first**: it focuses on **Inline** formatting, with ATX headings as the single sanctioned **Block** exception. Other block layouts (lists, blockquotes, tables) are out of scope and require custom rendering.
+Textf is **inline-first** and engineered to run securely inside a `TextEditingController`. This imposes strict architectural rules:
+1. **Single-pass, O(N) parsing:** No AST, no look-behind, and no multi-pass resolution.
+2. **The 1:1 Invariant:** Every source character maps to exactly one cursor slot.
+3. **`TextSpan`-only layout:** No composed widgets (like `Column`, `Container`, or `Padding`), relying entirely on Flutter's `Text.rich` engine.
 
-> **Partial coverage, full conformance.** Textf does not implement all of CommonMark, but every feature it *does* support conforms to the [CommonMark spec](https://spec.commonmark.org/current/). It is not "CommonMark compliant" as a whole. Notable divergences from a full renderer: **no setext headings** (`Heading\n===`), and **4-space-indented lines are plain text**, not indented code blocks.
+Because of these constraints, Textf does not implement all of CommonMark. Features that require multi-pass parsing (Reference Links) or box-model layouts (Lists with hanging indents) are strictly excluded by design.
 
-**Legend for Textf Status:**
-- [x] **Supported** - Fully implemented and tested.
-- [~] **Partial** - Implemented with known limitations.
-- [ ] **Planned** - On the roadmap.
-- [-] **Out of Scope** - Unlikely to be supported within a continuous text layout.
+**Legend:**
+- ✅ **Supported** — Fully implemented and tested.
+- 🚧 **Coming in 2.0** — Architecturally viable and currently on the roadmap.
+- ❌ **Out of Scope** — Conflicts with single-pass parsing or `TextSpan` layout constraints.
 
-### Inlines (Core Text Formatting)
-These features map directly to Flutter's `TextSpan` and are the primary focus of `Textf`.
+### Inline Elements (Core)
+These elements map directly to Flutter's `TextSpan` and are the primary focus of `Textf`.
 
-| Name              | Example (raw)                    | Textf |
-| :---------------- | :------------------------------- | :---: |
-| Textual Content   | `Plain text`                     |  [x]  |
-| Emphasis          | `*italic*` or `_italic_`         |  [x]  |
-| Strong Emphasis   | `**bold**` or `__bold__`         |  [x]  |
-| Code Spans        | `` `inline code` ``              |  [x]  |
-| Inline Links      | `[text](https://url.com)`        |  [x]  |
-| Reference Links   | `[text][label]`                  |  [ ]  |
-| Shortcut Links    | `[text]`                         |  [ ]  |
-| Autolinks         | `<https://url.com>` or `<a@b.c>` |  [ ]  |
-| Images            | `![alt](url.png)`                |  [ ]  |
-| Hard Line Breaks  | `Line one\ ` (backslash)         |  [ ]  |
-| Soft Line Breaks  | `Line one\nLine two`             |  [ ]  |
-| Backslash Escapes | `\*literal asterisks\*`          |  [ ]  |
-| Entity References | `&amp;` or `&#35;`               |  [ ]  |
-| Raw HTML (Inline) | `<strong>text</strong>`          |  [ ]  |
+| Feature               | Syntax / Example          | Status | Notes                                         |
+| :-------------------- | :------------------------ | :----: | :-------------------------------------------- |
+| **Textual Content**   | `Plain text`              |   ✅   |                                               |
+| **Emphasis**          | `*italic*` or `_italic_`  |   ✅   |                                               |
+| **Strong Emphasis**   | `**bold**` or `__bold__`  |   ✅   |                                               |
+| **Code Spans**        | `` `inline code` ``       |   ✅   |                                               |
+| **Inline Links**      | `[text](https://url.com)` |   ✅   | Supports nested formatting inside link text   |
+| **Backslash Escapes** | `\*literal asterisks\*`   |   ✅   | Supported for all marker characters           |
+| **Images**            | `![alt](url.png)`         |   ❌   | Use `{key}` widget placeholders instead       |
+| **Reference Links**   | `[text][label]`           |   ❌   | Requires multi-pass definition lookup         |
+| **Autolinks**         | `<https://url.com>`       |   ❌   | Standard inline links `[text](url)` preferred |
+| **Raw HTML**          | `<strong>text</strong>`   |   ❌   | Not suitable for Flutter rendering            |
 
-### Leaf Blocks
-Blocks that do not contain other blocks. Selected items here are parsed to enhance the rich-text experience without breaking `Text` widget constraints.
+### Textf Extensions (GFM & Custom Inlines)
+Textf extends standard Markdown with highly requested inline features used in modern chat and document apps.
 
-| Name                 | Example (raw)              | Textf |
-| :------------------- | :------------------------- | :---: |
-| Paragraphs           | `Line 1\n\nLine 2`         |  [ ]  |
-| ATX Headings         | `# Heading` to `###### H6` |  [x]  |
-| Setext Headings      | `Heading\n===`             |  [ ]  |
-| Thematic Breaks      | `---`, `***`, or `___`     |  [ ]  |
-| Link Reference Defs  | `[label]: https://url.com` |  [ ]  |
-| Fenced Code Blocks   | ` ```dart\ncode\n``` `     |  [ ]  |
-| Indented Code Blocks | `    code` (4 spaces)      |  [ ]  |
-| HTML Blocks          | `<div>\nraw html\n</div>`  |  [ ]  |
+| Feature                 | Syntax / Example | Status | Notes                                     |
+| :---------------------- | :--------------- | :----: | :---------------------------------------- |
+| **Strikethrough**       | `~~strike~~`     |   ✅   |                                           |
+| **Underline**           | `++underline++`  |   ✅   |                                           |
+| **Highlight**           | `==highlight==`  |   ✅   |                                           |
+| **Superscript**         | `^super^`        |   ✅   |                                           |
+| **Subscript**           | `~sub~`          |   ✅   |                                           |
+| **Widget Placeholders** | `{key}`          |   ✅   | Renders embedded `WidgetSpan`s seamlessly |
 
-### Container Blocks
-Blocks that contain other blocks. These are traditionally difficult to handle inside a single `Text.rich` widget and may require custom widget composition.
+### Block Elements
+Block elements are tightly restricted. Only elements that are forward-parsable on a single line are supported.
 
-| Name               | Example (raw)                  | Textf |
-| :----------------- | :----------------------------- | :---: |
-| Block Quotes       | `> quote text`                 |  [ ]  |
-| Bullet Lists       | `- item` or `* item`           |  [ ]  |
-| Ordered Lists      | `1. item` or `1) item`         |  [ ]  |
-| List Items (Loose) | Items separated by blank lines |  [ ]  |
-| List Items (Tight) | Items with no blank lines      |  [ ]  |
+| Feature                  | Syntax / Example       | Status | Notes                                                                                    |
+| :----------------------- | :--------------------- | :----: | :--------------------------------------------------------------------------------------- |
+| **ATX Headings**         | `# H1` to `###### H6`  |   ✅   | Up to 3 leading spaces, respects trailing `#`                                            |
+| **Thematic Breaks**      | `---`, `***`, or `___` |   ✅   | Renders as a full-width divider; customizable via `TextfOptions.thematicBreakBuilder`    |
+| **Blockquotes**          | `> quote text`         |  🚧   | Will be visually stylized (e.g., italics + color) rather than using a left-margin border |
+| **Lists (Unordered)**    | `- item` or `* item`   |   ❌   | `TextSpan` does not support hanging indents                                              |
+| **Lists (Ordered)**      | `1. item`              |   ❌   | `TextSpan` does not support hanging indents                                              |
+| **Fenced Code Blocks**   | ` ```\ncode\n``` `     |   ❌   | `TextSpan` backgrounds cannot be padded                                                  |
+| **Indented Code Blocks** | `    code` (4 spaces)  |   ❌   | Whitespace tracking is ambiguous in edit mode                                            |
+| **Setext Headings**      | `Heading\n===`         |   ❌   | Requires look-behind / retroactive restyling                                             |
+| **Tables**               | `| A | B |`            |   ❌   | Requires a grid layout (`Table` widget)                                                  |
 
 ---
 
@@ -514,15 +514,15 @@ TextfOptions(
 
 ## Comparison
 
-| Feature          | Textf               | Full Markdown Packages |
-| ---------------- | ------------------- | ---------------------- |
-| Bundle size      | Tiny                | Large                  |
-| Dependencies     | Zero                | Multiple               |
-| Parse complexity | O(N)                | Often O(N²) or worse   |
-| API familiarity  | Identical to `Text` | Custom widgets         |
-| Live editing     | ✅                  | Rarely                 |
-| Block elements   | Headings only       | Full                   |
-| Best for         | Inline + headings   | Document rendering     |
+| Feature          | Textf                     | Full Markdown Packages |
+| ---------------- | ------------------------- | ---------------------- |
+| Bundle size      | Tiny                      | Large                  |
+| Dependencies     | Zero                      | Multiple               |
+| Parse complexity | O(N)                      | Often O(N²) or worse   |
+| API familiarity  | Identical to `Text`       | Custom widgets         |
+| Live editing     | ✅                        | Rarely                 |
+| Block elements   | Headings + rules          | Full                   |
+| Best for         | Inline + headings + rules | Document rendering     |
 
 ---
 
