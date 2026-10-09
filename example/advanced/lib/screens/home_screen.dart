@@ -14,7 +14,7 @@ import 'theme_example_screen.dart';
 import 'url_example_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({
+  const new({
     required this.currentThemeMode,
     required this.toggleThemeMode,
     super.key,
@@ -27,7 +27,8 @@ class HomeScreen extends StatelessWidget {
     // Determine the icon based on the current theme mode
     final Brightness currentBrightness = Theme.of(context).brightness;
     final IconData themeIcon = currentBrightness == Brightness.dark
-        ? Icons.light_mode_outlined // Icon to show when it's dark (will switch to light)
+        ? Icons
+              .light_mode_outlined // Icon to show when it's dark (will switch to light)
         : Icons.dark_mode_outlined; // Icon to show when it's light (will switch to dark)
 
     const WidgetSpan badgeNew = WidgetSpan(
@@ -76,7 +77,7 @@ class HomeScreen extends StatelessWidget {
             _buildExampleTile(
               context,
               const Text('Theme Examples'),
-              const Text('Show default link/code styling adapting to themes'),
+              const Text('Neutral link/code defaults in light and dark mode'),
               ThemeExampleScreen(
                 // Pass down theme info
                 currentThemeMode: currentThemeMode,

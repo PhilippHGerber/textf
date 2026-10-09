@@ -13,7 +13,7 @@ class ScalingReproScreen extends StatefulWidget {
   @Preview(
     name: 'Scaling Repro Screen',
   )
-  const ScalingReproScreen({super.key});
+  const new({super.key});
 
   @override
   State<ScalingReproScreen> createState() => _ScalingReproScreenState();
@@ -119,7 +119,7 @@ class _ScalingReproScreenState extends State<ScalingReproScreen> {
 // ---------------------------------------------------------------------------
 
 class _PreviewTab extends StatelessWidget {
-  const _PreviewTab({required this.fontSize, required this.textScaleFactor});
+  const new({required this.fontSize, required this.textScaleFactor});
   final double fontSize;
   final double textScaleFactor;
 
@@ -166,7 +166,7 @@ class _PreviewTab extends StatelessWidget {
 }
 
 class _EditorTab extends StatelessWidget {
-  const _EditorTab({
+  const new({
     required this.fontSize,
     required this.textScaleFactor,
     required this.controller,
@@ -244,7 +244,7 @@ class _EditorTab extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _ScalingControls extends StatelessWidget {
-  const _ScalingControls({
+  const new({
     required this.fontSize,
     required this.textScaleFactor,
     required this.onFontSizeChanged,
@@ -286,7 +286,7 @@ class _ScalingControls extends StatelessWidget {
 }
 
 class _FormatChips extends StatelessWidget {
-  const _FormatChips({required this.onInsert, required this.theme});
+  const new({required this.onInsert, required this.theme});
   final ValueChanged<String> onInsert;
   final ThemeData theme;
 

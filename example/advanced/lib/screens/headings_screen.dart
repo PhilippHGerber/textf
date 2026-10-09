@@ -4,7 +4,7 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class HeadingsScreen extends StatelessWidget {
-  const HeadingsScreen({
+  const new({
     required this.toggleThemeMode,
     super.key,
   });
@@ -13,8 +13,9 @@ class HeadingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Headings'),

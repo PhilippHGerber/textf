@@ -39,11 +39,12 @@ final directories = <_widgetbook.WidgetbookNode>[
         useCases: [
           _widgetbook.WidgetbookUseCase(
             name: 'Live Editing',
-            builder: _widgetbook_textf_use_cases_textf_editing_controller_use_case
-                .textfEditingControllerUseCase,
-          )
+            builder:
+                _widgetbook_textf_use_cases_textf_editing_controller_use_case
+                    .textfEditingControllerUseCase,
+          ),
         ],
-      )
+      ),
     ],
   ),
   _widgetbook.WidgetbookFolder(
@@ -54,20 +55,24 @@ final directories = <_widgetbook.WidgetbookNode>[
         useCases: [
           _widgetbook.WidgetbookUseCase(
             name: 'Basic Formatting',
-            builder: _widgetbook_textf_use_cases_basic_formatting_use_case.basicFormattingUseCase,
+            builder: _widgetbook_textf_use_cases_basic_formatting_use_case
+                .basicFormattingUseCase,
             designLink: 'https://www.example.com',
           ),
           _widgetbook.WidgetbookUseCase(
             name: 'Link Formatting',
-            builder: _widgetbook_textf_use_cases_link_formatting_use_case.linkFormattingUseCase,
+            builder: _widgetbook_textf_use_cases_link_formatting_use_case
+                .linkFormattingUseCase,
           ),
           _widgetbook.WidgetbookUseCase(
             name: 'Nested Formatting',
-            builder: _widgetbook_textf_use_cases_nested_formatting_use_case.nestedFormattingUseCase,
+            builder: _widgetbook_textf_use_cases_nested_formatting_use_case
+                .nestedFormattingUseCase,
           ),
           _widgetbook.WidgetbookUseCase(
             name: 'Overflow Handling',
-            builder: _widgetbook_textf_use_cases_overflow_use_case.overflowUseCase,
+            builder:
+                _widgetbook_textf_use_cases_overflow_use_case.overflowUseCase,
           ),
           _widgetbook.WidgetbookUseCase(
             name: 'RTL Support',
@@ -75,18 +80,21 @@ final directories = <_widgetbook.WidgetbookNode>[
           ),
           _widgetbook.WidgetbookUseCase(
             name: 'Style Inheritance',
-            builder: _widgetbook_textf_use_cases_style_inheritance_use_case.styleInheritanceUseCase,
+            builder: _widgetbook_textf_use_cases_style_inheritance_use_case
+                .styleInheritanceUseCase,
           ),
           _widgetbook.WidgetbookUseCase(
             name: 'Text Properties',
-            builder: _widgetbook_textf_use_cases_text_properties_use_case.textPropertiesUseCase,
+            builder: _widgetbook_textf_use_cases_text_properties_use_case
+                .textPropertiesUseCase,
           ),
           _widgetbook.WidgetbookUseCase(
             name: 'TextfOptions Customization',
-            builder: _widgetbook_textf_use_cases_textf_options_use_case.textfOptionsUseCase,
+            builder: _widgetbook_textf_use_cases_textf_options_use_case
+                .textfOptionsUseCase,
           ),
         ],
-      )
+      ),
     ],
   ),
 ];

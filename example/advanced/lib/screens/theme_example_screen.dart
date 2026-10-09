@@ -5,7 +5,7 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class ThemeExampleScreen extends StatelessWidget {
-  const ThemeExampleScreen({
+  const new({
     required this.currentThemeMode,
     required this.toggleThemeMode,
     super.key,
@@ -16,13 +16,14 @@ class ThemeExampleScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
     final String themeName = currentBrightness == Brightness.dark ? 'Dark' : 'Light';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Theme Awareness'),
+        title: const Text('Light & Dark Defaults'),
         actions: [
           IconButton(
             icon: Icon(themeIcon),
@@ -37,7 +38,7 @@ class ThemeExampleScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: Text(
-              'Textf automatically adapts the default styling for links and inline code to the current application theme ($themeName Theme). Use the toggle button in the AppBar to see the changes.',
+              "Textf's default colors follow the text, not the theme ($themeName Theme). Links keep a fixed blue (#1A73E8); inline code gets a faint tint of the text color, stronger in dark mode. Use the toggle button in the AppBar to see the changes, and TextfOptions color options to use theme colors instead.",
               style: Theme.of(context).textTheme.bodyLarge,
               textAlign: TextAlign.center,
             ),
@@ -45,7 +46,7 @@ class ThemeExampleScreen extends StatelessWidget {
           const Divider(height: 20),
           ExampleCard(
             title: 'Default Link Styling',
-            description: "Links ([text](url)) use the theme's primary color by default.",
+            description: 'Links ([text](url)) use a fixed blue (#1A73E8) by default. Set TextfOptions.linkColor to use a brand color.',
             code: '''
 Textf(
   '==Visit== the [Flutter website](https://flutter.dev) '
@@ -61,7 +62,7 @@ Textf(
           const SizedBox(height: 16),
           ExampleCard(
             title: 'Default Code Styling',
-            description: 'Inline code (`code`) uses theme-appropriate background and text colors.',
+            description: 'Inline code (`code`) keeps the text color on a faint tint of it (5% in light mode, 15% in dark mode).',
             code: '''
 Textf(
   'Check the `pubspec.yaml` and the `main.dart` files.'

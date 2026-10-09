@@ -5,7 +5,7 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class BasicFormattingScreen extends StatelessWidget {
-  const BasicFormattingScreen({
+  const new({
     required this.currentThemeMode,
     required this.toggleThemeMode,
     super.key,
@@ -17,8 +17,9 @@ class BasicFormattingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine the icon based on the current theme mode
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Basic Formatting'),
@@ -71,14 +72,15 @@ class BasicFormattingScreen extends StatelessWidget {
             SizedBox(height: 16),
             ExampleCard(
               title: 'Highlight',
-              description: 'Use == for highlighted text (theme-aware default)',
+              description: 'Use == for highlighted text (translucent yellow by default)',
               code: "Textf('This is ==highlighted== text')",
               child: Textf('This is ==highlighted== text'),
             ),
             SizedBox(height: 16),
             ExampleCard(
               title: 'Code',
-              description: 'Use backticks for inline code (theme-aware default)',
+              description:
+                  'Use backticks for inline code (faint tint of the text color by default)',
               code: "Textf('This is `code` text')",
               child: Textf('This is `code` text'),
             ),
@@ -86,8 +88,7 @@ class BasicFormattingScreen extends StatelessWidget {
             ExampleCard(
               title: 'Escaped Characters',
               description: 'Use backslash to escape formatting characters',
-              code:
-                  r"Textf('Escape: \*bold\*, \_italic\_, \~\~strike\~\~, \+\+underline\+\+, \=\=highlight\=\=, \`code\`')",
+              code: r"Textf('Escape: \*bold\*, \_italic\_, \~\~strike\~\~, \+\+underline\+\+, \=\=highlight\=\=, \`code\`')",
               child: Textf(
                 r'Escape: \*bold\*, \_italic\_, \~\~strike\~\~, \+\+underline\+\+, \=\=highlight\=\=, \`code\`',
               ),

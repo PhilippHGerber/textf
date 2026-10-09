@@ -1,71 +1,57 @@
-# Textf + FlexColorScheme Example App
+# Textf + FlexColorScheme on `material_ui`
 
-This example application demonstrates the integration of the `textf` widget with the popular `flex_color_scheme` package, showcasing how `textf`'s theme-aware features adapt to dynamically changing application themes.
+A workspace-only example (not published) showing how `textf` 2.0 picks up brand colors in an app
+built on [`material_ui`](https://pub.dev/packages/material_ui) `^1.0.0` and
+[`flex_color_scheme`](https://pub.dev/packages/flex_color_scheme) `^9.0.0`.
 
-## Purpose
+## Why a recipe is needed
 
-* Showcase how `textf` automatically styles links and code blocks based on the active `ThemeData`.
-* Demonstrate dynamic theme switching using various `FlexColorScheme` schemes.
-* Provide visual examples of different `textf` formatting options within themed cards.
-* Illustrate how `TextfOptions` can be used to override theme-based default styles.
-* Show various standard Flutter UI elements adapting to the selected theme alongside `textf`.
+`textf` is design-system-neutral: it never calls `Theme.of`, so it works the same under SDK
+Material, `material_ui`, Cupertino and a bare `WidgetsApp`. Out of the box, links are
+`#1A73E8` and code chips are a light tint of the text color. To use your theme's colors instead,
+pass them to `TextfOptions` once, in `MaterialApp.builder`:
 
-## Features Demonstrated
+```dart
+MaterialApp(
+  theme: FlexThemeData.light(scheme: FlexScheme.material),
+  darkTheme: FlexThemeData.dark(scheme: FlexScheme.material),
+  builder: (context, child) {
+    final theme = Theme.of(context);
+    return TextfOptions(
+      linkColor: theme.colorScheme.primary,
+      codeBackgroundColor: theme.colorScheme.surfaceContainer,
+      highlightColor: theme.colorScheme.tertiaryContainer,
+      thematicBreakColor: theme.dividerColor,
+      child: child ?? const SizedBox.shrink(),
+    );
+  },
+  home: const HomeScreen(),
+);
+```
 
-* **Dynamic Theme Selection:** Choose from all available `FlexColorScheme` schemes via a dropdown in the AppBar.
-* **Theme Mode Switching:** Toggle between Light, Dark, and System theme modes.
-* **`textf` Theme Adaptation:** Observe how the default appearance of `[links](url)` (using `colorScheme.primary`) and `` `code` `` (using theme-appropriate background/text colors) changes with the theme.
-* **Basic `textf` Formatting:** Examples of **bold**, *italic*, ~~strikethrough~~.
-* **`TextfOptions` Overrides:** Examples showing how to customize specific styles (like link color or strikethrough thickness) using `TextfOptions`, taking precedence over the theme defaults.
-* **UI Element Theming:** A dedicated card shows various Flutter widgets (Buttons, Chips, Slider, TextField, etc.) adopting the colors from the currently selected `FlexColorScheme` theme.
+`builder` runs below the theme, so every descendant `Textf` follows scheme and light/dark changes.
+Color options only tint the built-in defaults: links keep their underline and code keeps its
+monospace font stack.
 
-## Getting Started
+Import `package:material_ui/material_ui.dart` (not `package:flutter/material.dart`) in every file
+that touches `Theme`, `ThemeData` or `ThemeMode`, and list `material_ui` as a direct dependency.
+`flex_color_scheme` 9 returns `material_ui`'s `ThemeData`, which is a different type from the SDK's.
 
-1. **Navigate to the example directory:**
+## What the app shows
 
-    ```bash
-    cd example/textf_flex
-    ```
+- A scheme picker (every `FlexScheme`) and a light / dark / system toggle in the app bar.
+- A "Brand Colors" card rendering a link, inline code, a highlight and a `---` rule with the colors
+  from the recipe.
+- Cards for basic formatting, links, and a `TextfOptions.linkStyle` override (a style option
+  replaces the default, so it wins over `linkColor`).
 
-2. **Ensure Full Project Structure:**
-    Run the following command within the `textf_flex` directory. This ensures all necessary platform-specific directories (`android`, `ios`, `web`, etc.) and files are present, even if they were missing (e.g., after cloning). It will *not* overwrite your existing code in `lib/` or your `pubspec.yaml`.
+## Running
 
-    ```bash
-    flutter create .
-    ```
+```bash
+cd example/textf_flex
+flutter run
+flutter test   # T-MIG-01: the recipe renders brand colors and follows theme-mode switches
+```
 
-3. **Ensure Dependencies are Installed:**
-    Make sure you have the necessary dependencies listed in `pubspec.yaml`, especially `flex_color_scheme` and the local path dependency for `textf`:
-
-    ```yaml
-    # example/textf_flex_example/pubspec.yaml
-    dependencies:
-      flutter:
-        sdk: flutter
-      flex_color_scheme: ^7.3.1 # Or latest
-      textf:
-        path: ../../ # Path to the main textf package
-    ```
-
-    Then, fetch the packages:
-
-    ```bash
-    flutter pub get
-    ```
-
-4. **Run the app:**
-
-    ```bash
-    flutter run
-    ```
-
-## How it Works
-
-* **`main.dart`**: Manages the application's theme state (`selectedScheme`, `themeMode`). It uses `FlexThemeData.light()` and `FlexThemeData.dark()` to generate the `ThemeData` based on the selected scheme and passes the state and update callbacks down to the `HomeScreen`.
-* **`home_screen.dart`**: Displays the main UI.
-  * The `AppBar` contains the `DropdownButton` for selecting the `FlexScheme` and an `IconButton` to toggle the `ThemeMode`.
-  * The body displays a `ListView` of `Card`s.
-  * The `_buildExampleCard` helper function creates each card. Crucially, the `Textf` widgets within these cards are instantiated *without* an explicit `style` property, allowing them to inherit the base text style from the `DefaultTextStyle` provided by the theme. This enables the automatic theme adaptation for links and code.
-  * Specific examples demonstrate wrapping `Textf` with `TextfOptions` to show how overrides work.
-
-This setup clearly shows how `textf` integrates with Flutter's theming system, especially when using powerful theming packages like `FlexColorScheme`.
+The package resolves `textf` from the repository root through the pub workspace declared in the
+root `pubspec_overrides.yaml`.

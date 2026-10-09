@@ -28,7 +28,7 @@ class BenchmarkConfig {
 class BenchmarkResult {
   // For list scenarios
 
-  BenchmarkResult({
+  new({
     required this.scenarioName,
     required this.targetName,
     required this.medianBuildTimeMs,
@@ -85,7 +85,7 @@ class ScrollingScenario extends BenchmarkScenario {
       final buffer = StringBuffer();
       final int segments =
           random.nextInt(BenchmarkConfig.maxSegments - BenchmarkConfig.minSegments) +
-              BenchmarkConfig.minSegments;
+          BenchmarkConfig.minSegments;
       for (int i = 0; i < segments; i++) {
         buffer
           ..write(parts[random.nextInt(parts.length)])
@@ -198,9 +198,10 @@ class OptionsRebuildScenario extends BenchmarkScenario {
   String get name => 'Options Rebuild (Cache Stress)';
 
   // Generate a heavy string to make the cost of re-parsing obvious
-  final String heavyText =
-      List.generate(100, (i) => 'Item $i: **Bold**, *Italic*, [Link](https://google.com)')
-          .join('\n');
+  final String heavyText = List.generate(
+    100,
+    (i) => 'Item $i: **Bold**, *Italic*, [Link](https://google.com)',
+  ).join('\n');
 
   @override
   Widget build(BuildContext context, BenchmarkTarget target, int offset) {
@@ -231,7 +232,7 @@ class OptionsRebuildScenario extends BenchmarkScenario {
 
 // --- App ---
 class BenchmarkApp extends StatelessWidget {
-  const BenchmarkApp({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +248,7 @@ class BenchmarkApp extends StatelessWidget {
 }
 
 class BenchmarkHome extends StatefulWidget {
-  const BenchmarkHome({super.key});
+  const new({super.key});
 
   @override
   State<BenchmarkHome> createState() => _BenchmarkHomeState();
@@ -319,7 +320,7 @@ class _BenchmarkHomeState extends State<BenchmarkHome> with SingleTickerProvider
       _offset = 0;
     });
 
-    unawaited(_ticker.start());
+    _ticker.start();
 
     // Wait for ticker to finish (it stops in _finishCurrentRun)
     while (_ticker.isActive) {
@@ -419,7 +420,7 @@ class _BenchmarkHomeState extends State<BenchmarkHome> with SingleTickerProvider
 }
 
 class _Dashboard extends StatelessWidget {
-  const _Dashboard({required this.results, required this.isRunning});
+  const new({required this.results, required this.isRunning});
   final List<BenchmarkResult> results;
   final bool isRunning;
 
@@ -438,15 +439,16 @@ class _Dashboard extends StatelessWidget {
             padding: EdgeInsets.only(bottom: 16),
             child: LinearProgressIndicator(),
           ),
-        ...grouped.entries
-            .map((entry) => _ScenarioResultGroup(name: entry.key, results: entry.value)),
+        ...grouped.entries.map(
+          (entry) => _ScenarioResultGroup(name: entry.key, results: entry.value),
+        ),
       ],
     );
   }
 }
 
 class _ScenarioResultGroup extends StatelessWidget {
-  const _ScenarioResultGroup({required this.name, required this.results});
+  const new({required this.name, required this.results});
   final String name;
   final List<BenchmarkResult> results;
 

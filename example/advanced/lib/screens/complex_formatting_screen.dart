@@ -7,7 +7,7 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class ComplexFormattingScreen extends StatelessWidget {
-  const ComplexFormattingScreen({
+  const new({
     required this.currentThemeMode,
     required this.toggleThemeMode,
     super.key,
@@ -19,8 +19,9 @@ class ComplexFormattingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine the icon based on the current theme mode
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Complex Formatting'),
@@ -136,8 +137,7 @@ Textf(
             const ExampleCard(
               title: 'Combined Decorations',
               description: 'Demonstrating combined strikethrough and underline',
-              code:
-                  "Textf('This text is ++~~both underlined and strikethrough~~++. And also ~~++vice versa++~~.')",
+              code: "Textf('This text is ++~~both underlined and strikethrough~~++. And also ~~++vice versa++~~.')",
               child: Textf(
                 'This text is ++~~both underlined and strikethrough~~++. And also ~~++vice versa++~~.',
               ),

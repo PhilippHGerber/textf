@@ -6,7 +6,7 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class ChatExampleScreen extends StatelessWidget {
-  const ChatExampleScreen({
+  const new({
     required this.currentThemeMode,
     required this.toggleThemeMode,
     super.key,
@@ -19,8 +19,9 @@ class ChatExampleScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Add theme icon logic
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
 
     return Scaffold(
       appBar: AppBar(
@@ -65,8 +66,7 @@ Container(
                     child: const ChatBubble(
                       // Use const if no params change
                       isMe: true,
-                      message:
-                          'Hey! Did you read that **important** article I sent you about _Flutter performance_?',
+                      message: 'Hey! Did you read that **important** article I sent you about _Flutter performance_?',
                     ),
                   ),
                 ),
@@ -83,8 +83,7 @@ Container(
                   child: const ChatBubble(
                     // Use const
                     isMe: false,
-                    message:
-                        'Yes! I found the section about **widget rebuilds** particularly _insightful_. We should apply those techniques to our ~~slow~~ `app`!',
+                    message: 'Yes! I found the section about **widget rebuilds** particularly _insightful_. We should apply those techniques to our ~~slow~~ `app`!',
                   ),
                 ),
               ),
@@ -106,7 +105,7 @@ Container(
 }
 
 class ChatBubble extends StatelessWidget {
-  const ChatBubble({
+  const new({
     required this.isMe,
     required this.message,
     super.key,
@@ -118,8 +117,9 @@ class ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context); // Get theme
     // Use theme colors for bubbles
-    final bubbleColor =
-        isMe ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHighest;
+    final bubbleColor = isMe
+        ? theme.colorScheme.primaryContainer
+        : theme.colorScheme.surfaceContainerHighest;
     // Determine appropriate text color based on bubble color for contrast
     final textColor = isMe
         ? theme.colorScheme.onPrimaryContainer
@@ -146,7 +146,7 @@ class ChatBubble extends StatelessWidget {
 }
 
 class ChatExample extends StatefulWidget {
-  const ChatExample({super.key});
+  const new({super.key});
 
   @override
   State<ChatExample> createState() => _ChatExampleState();
@@ -169,8 +169,7 @@ class _ChatExampleState extends State<ChatExample> {
       isMe: false,
     ),
     ChatMessage(
-      message:
-          'Also check out the default [link](https://flutter.dev) and `code` styling, ++underline++ and ==highlighting==.',
+      message: 'Also check out the default [link](https://flutter.dev) and `code` styling, ++underline++ and ==highlighting==.',
       isMe: true,
     ),
   ];
@@ -322,7 +321,7 @@ class _ChatExampleState extends State<ChatExample> {
 
 // ChatMessage class remains the same
 class ChatMessage {
-  ChatMessage({
+  new({
     required this.message,
     required this.isMe,
   });

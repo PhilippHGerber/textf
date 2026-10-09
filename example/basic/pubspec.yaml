@@ -5,17 +5,20 @@ version: 1.0.0
 resolution: workspace
 
 environment:
-  sdk: ^3.5.0
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 dependencies:
+  cupertino_ui: ^1.0.0
   flutter:
     sdk: flutter
+  material_ui: ^1.0.0
   textf: any
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  very_good_analysis: ^10.2.0
+  very_good_analysis: ^11.0.0
 
 flutter:
   uses-material-design: true

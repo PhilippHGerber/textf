@@ -6,7 +6,7 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class PlaceholderExampleScreen extends StatelessWidget {
-  const PlaceholderExampleScreen({
+  const new({
     required this.currentThemeMode,
     required this.toggleThemeMode,
     super.key,
@@ -34,8 +34,7 @@ class PlaceholderExampleScreen extends StatelessWidget {
           children: [
             ExampleCard(
               title: 'Dynamic Widget Insertion',
-              description:
-                  'Seamlessly inject custom Flutter widgets directly into your formatted text flow.',
+              description: 'Seamlessly inject custom Flutter widgets directly into your formatted text flow.',
               code: '''
 Textf(
   'Hello! This is a star icon: {star}. And this is a ~~cat~~ bird: {bird}',
@@ -76,8 +75,7 @@ Textf(
             const SizedBox(height: 24),
             ExampleCard(
               title: 'Rich Media Support',
-              description:
-                  'Support for animated GIFs and other media assets, allowing for more dynamic content.',
+              description: 'Support for animated GIFs and other media assets, allowing for more dynamic content.',
               code: '''
 Textf(
   'Witness the flight of the bird: {bird}',
@@ -106,8 +104,7 @@ Textf(
             const SizedBox(height: 24),
             ExampleCard(
               title: 'Contextual Style Inheritance',
-              description:
-                  'Inserted spans automatically inherit the formatting of the surrounding text, such as **bold** or _italic_ styles.',
+              description: 'Inserted spans automatically inherit the formatting of the surrounding text, such as **bold** or _italic_ styles.',
               code: '''
 Textf(
   'This is **bold {icon}** and _italic {coffee}_.',
@@ -138,8 +135,7 @@ Textf(
             const SizedBox(height: 24),
             ExampleCard(
               title: 'Interactive Links with Media',
-              description:
-                  'Create rich, interactive links by embedding icons or images directly within the clickable area.',
+              description: 'Create rich, interactive links by embedding icons or images directly within the clickable area.',
               code: '''
 TextfOptions(
   onLinkTap: (url, _) => print(url),
@@ -175,8 +171,7 @@ TextfOptions(
             const SizedBox(height: 24),
             ExampleCard(
               title: 'Custom Inline Components',
-              description:
-                  'Build complex inline elements like badges, tags, or status indicators using standard Flutter widgets.',
+              description: 'Build complex inline elements like badges, tags, or status indicators using standard Flutter widgets.',
               code: '''
 Textf(
   'The user {admin} has been successfully verified.',

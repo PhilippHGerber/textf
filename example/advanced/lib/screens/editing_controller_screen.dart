@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 
 class EditingControllerScreen extends StatefulWidget {
-  const EditingControllerScreen({
+  const new({
     required this.currentThemeMode,
     required this.toggleThemeMode,
     super.key,
@@ -109,8 +109,9 @@ Check out the [Documentation](https://pub.dev/packages/textf) for more details.
       forceStrutHeight: false,
     );
     final brightness = theme.brightness;
-    final themeIcon =
-        brightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final themeIcon = brightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
 
     return Scaffold(
       appBar: AppBar(
@@ -213,7 +214,8 @@ Check out the [Documentation](https://pub.dev/packages/textf) for more details.
             ),
             child: TextField(
               controller: TextfEditingController(
-                text: '**Primary bold** with *tertiary italic* and '
+                text:
+                    '**Primary bold** with *tertiary italic* and '
                     '`styled code`',
               ),
               maxLines: 2,
@@ -308,7 +310,7 @@ Check out the [Documentation](https://pub.dev/packages/textf) for more details.
 // ---------------------------------------------------------------------------
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.theme});
+  const new({required this.title, required this.theme});
   final String title;
   final ThemeData theme;
 
@@ -324,7 +326,7 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _MarkerVisibilityToggle extends StatelessWidget {
-  const _MarkerVisibilityToggle({
+  const new({
     required this.visibility,
     required this.onChanged,
     required this.theme,
@@ -356,7 +358,7 @@ class _MarkerVisibilityToggle extends StatelessWidget {
 }
 
 class _FormatChips extends StatelessWidget {
-  const _FormatChips({required this.onInsert, required this.theme});
+  const new({required this.onInsert, required this.theme});
   final ValueChanged<String> onInsert;
   final ThemeData theme;
 
@@ -403,7 +405,7 @@ class _FormatChips extends StatelessWidget {
 }
 
 class _ChatDemo extends StatelessWidget {
-  const _ChatDemo({
+  const new({
     required this.controller,
     required this.messages,
     required this.onSend,
@@ -509,7 +511,7 @@ class _ChatDemo extends StatelessWidget {
 }
 
 class _SideBySideComparison extends StatefulWidget {
-  const _SideBySideComparison({required this.theme});
+  const new({required this.theme});
   final ThemeData theme;
 
   @override

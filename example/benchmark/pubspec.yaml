@@ -5,10 +5,11 @@ version: 1.0.0
 resolution: workspace
 
 environment:
-  sdk: ^3.5.0
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 dependencies:
-  flex_color_scheme: ^8.4.0
+  flex_color_scheme: ^9.0.0
   flutter:
     sdk: flutter
   textf: any
@@ -16,7 +17,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  very_good_analysis: ^10.2.0
+  very_good_analysis: ^11.0.0
 
 flutter:
   uses-material-design: true

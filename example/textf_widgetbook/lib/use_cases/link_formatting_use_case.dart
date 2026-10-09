@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
@@ -10,8 +10,7 @@ import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 Widget linkFormattingUseCase(BuildContext context) {
   final text = context.knobs.string(
     label: 'Text with Links',
-    initialValue:
-        'Visit the [Flutter website](https://flutter.dev) or check out [**bold link**](https://dart.dev).',
+    initialValue: 'Visit the [Flutter website](https://flutter.dev) or check out [**bold link**](https://dart.dev).',
     description: 'Enter text with links using [text](url) syntax',
   );
 

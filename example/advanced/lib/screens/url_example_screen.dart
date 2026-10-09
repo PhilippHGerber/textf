@@ -10,7 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../widgets/example_card.dart';
 
 class UrlExampleScreen extends StatefulWidget {
-  const UrlExampleScreen({
+  const new({
     required this.currentThemeMode,
     required this.toggleThemeMode,
     super.key,
@@ -137,9 +137,10 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
               child: Text(
                 url,
                 style: TextStyle(
-                  color: Theme.of(context) //
-                      .colorScheme
-                      .onSurfaceVariant,
+                  color:
+                      Theme.of(context) //
+                          .colorScheme
+                          .onSurfaceVariant,
                   fontSize: 12,
                   decoration: TextDecoration.none, // Prevent underline here
                 ),
@@ -231,8 +232,9 @@ class _UrlExampleScreenState extends State<UrlExampleScreen> {
   Widget build(BuildContext context) {
     // Determine the icon based on the current theme mode
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
     return Scaffold(
       appBar: AppBar(
         title: const Text('URL Examples'),

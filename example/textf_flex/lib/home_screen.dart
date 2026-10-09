@@ -1,11 +1,15 @@
 // ignore_for_file: no-magic-number
 
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/material.dart';
-import 'package:textf/textf.dart'; // Import your textf package
+import 'package:material_ui/material_ui.dart';
+import 'package:textf/textf.dart';
+
+/// Key of the [Textf] in the "Brand colors" card, which renders every construct that the
+/// `MaterialApp.builder` adapter recipe in `main.dart` colors.
+const Key brandColorsTextfKey = ValueKey<String>('brand-colors-textf');
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({
+  const new({
     required this.selectedScheme,
     required this.themeMode,
     required this.onSchemeChanged,
@@ -189,6 +193,36 @@ class HomeScreen extends StatelessWidget {
           // --- Example Cards ---
           _buildExampleCard(
             context: context,
+            title: 'Brand Colors',
+            description: const Textf(
+              '**One builder, every `Textf`.**\n'
+              'textf never reads `Theme`. `MaterialApp.builder` hands the active scheme to '
+              '`TextfOptions` once, so links, code, highlights and rules follow every scheme '
+              'and theme-mode change.',
+            ),
+            code:
+                'MaterialApp(\n'
+                '  builder: (context, child) {\n'
+                '    final theme = Theme.of(context);\n'
+                '    return TextfOptions(\n'
+                '      linkColor: theme.colorScheme.primary,\n'
+                '      codeBackgroundColor: theme.colorScheme.surfaceContainer,\n'
+                '      highlightColor: theme.colorScheme.tertiaryContainer,\n'
+                '      thematicBreakColor: theme.dividerColor,\n'
+                '      child: child ?? const SizedBox.shrink(),\n'
+                '    );\n'
+                '  },\n'
+                ')',
+            textf: const Textf(
+              key: brandColorsTextfKey,
+              'A [brand link](https://docs.flexcolorscheme.com/), some `brand code` '
+              'and a ==brand highlight==.\n'
+              '---\n'
+              'The rule above uses the theme divider color.',
+            ),
+          ),
+          _buildExampleCard(
+            context: context,
             title: 'Basic Formatting',
             description: const Textf(
               '**No boilerplate. No TextSpan pain. Just** `Textf`.\n'
@@ -201,10 +235,11 @@ class HomeScreen extends StatelessWidget {
             context: context,
             title: 'Links',
             description: const Textf(
-              '**Themed links out of the box.**\n'
-              'Textf automatically styles links to match your app’s theme — no extra setup needed.',
+              '**Brand links, no boilerplate.**\n'
+              'Links take `linkColor` from the builder above and keep their default underline.',
             ),
-            code: 'Textf(\n'
+            code:
+                'Textf(\n'
                 "  'Visit the \\[Flutter Website](https://flutter.dev) '\n"
                 "  'or \\[DartPad](https://dartpad.dev)',\n"
                 ')',
@@ -220,7 +255,8 @@ class HomeScreen extends StatelessWidget {
               '**Customize everything.**\n'
               'Freely override link styles, hover effects, and tap behavior using `TextfOptions`.',
             ),
-            code: 'TextfOptions(\n'
+            code:
+                'TextfOptions(\n'
                 '  _linkStyle_: TextStyle(\n'
                 '    _color: colorScheme.secondary_,\n'
                 '    fontWeight: FontWeight.bold,\n'

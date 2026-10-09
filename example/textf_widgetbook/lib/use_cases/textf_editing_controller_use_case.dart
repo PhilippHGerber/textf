@@ -1,6 +1,6 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
@@ -37,7 +37,7 @@ Widget textfEditingControllerUseCase(BuildContext context) {
 
 /// Demo widget for the [TextfEditingController] use case.
 class TextfEditingControllerUseCase extends StatefulWidget {
-  const TextfEditingControllerUseCase({
+  const new({
     required this.markerVisibility,
     required this.showCustomStyles,
     required this.showPlainText,
@@ -181,7 +181,7 @@ class _TextfEditingControllerUseCaseState extends State<TextfEditingControllerUs
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.text);
+  const new(this.text);
   final String text;
 
   @override
@@ -189,8 +189,8 @@ class _SectionHeader extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-          ),
+        color: Theme.of(context).colorScheme.primary,
+      ),
     );
   }
 }
