@@ -1,126 +1,107 @@
 ---
 name: "textf-usage"
-description: "pkg:textf - Inline Markdown-like text formatting for Flutter (drop-in replacements for Text and TextEditingController)"
-user-invocable: false
-metadata:
-  version: "1.2.3"
+description: "textf: inline Markdown-like text formatting for Flutter. Use when writing code with `Textf`, `TextfEditingController` or `TextfOptions`, or when a string needs bold, links or headings without a full Markdown renderer."
 ---
 
-## When to use this skill
+# textf
 
-Load when:
-- Adding formatted text display to a Flutter UI (bold, italic, links, code, highlights, etc.)
-- Implementing a rich-text input field where formatting renders live as the user types
-- Configuring scoped styles or a link tap handler via `TextfOptions`
-- Extracting plain text from a formatted string with `stripFormatting()`
-
-## Decision: which component?
+`import 'package:textf/textf.dart';` is the whole public API. textf is design-system neutral: it builds on Flutter's `widgets` layer and never reads a `Theme`.
 
 | Goal | Use |
 |---|---|
-| Display formatted text (read-only) | `Textf` |
-| Rich-text input (formatting as user types) | `TextfEditingController` + `TextField` |
-| Scoped styles or link callbacks | `TextfOptions` ancestor |
-| Plain text from a formatted string | `String.stripFormatting()` |
+| Display formatted text | `Textf(data, …)`: every `Text` parameter, plus `placeholders`. `'…'.textf(…)` is the same call. |
+| Live formatting in a text field | `TextfEditingController` as the `controller` of any `TextField` |
+| Styles, colors, link callbacks | a `TextfOptions` ancestor, which configures both of the above |
+| Plain text from a formatted string | `'…'.stripFormatting()`, `controller.plainText` |
 
-## Syntax reference
+## Syntax
 
-| Format | Syntax | Alternate | Pitfall |
-|---|---|---|---|
-| Bold | `**bold**` | `__bold__` | |
-| Italic | `*italic*` | `_italic_` | |
-| Bold + Italic | `***both***` | `___both___` | |
-| Strikethrough | `~~strike~~` | | |
-| Underline | `++underline++` | | |
-| Highlight | `==highlight==` | | |
-| Inline code | `` `code` `` | | |
-| Superscript | `^super^` | | |
-| Subscript | `~sub~` | | |
-| Link | `[label](url)` | | nested formatting supported |
-| Placeholder | `{key}` | | literal text inside `TextfEditingController` |
+| Format | Syntax |
+|---|---|
+| Bold | `**bold**` or `__bold__` |
+| Italic | `*italic*` or `_italic_` |
+| Bold + italic | `***both***` or `___both___` |
+| Strikethrough | `~~strike~~` |
+| Underline | `++underline++` |
+| Highlight | `==highlight==` |
+| Inline code | `` `code` `` |
+| Superscript, subscript | `^super^`, `~sub~` |
+| Link | `[label](url)`; the label takes formatting, and a URL without a scheme gets `https://` |
+| Widget placeholder | `{key}`, with keys of letters, digits and underscores |
+| Heading | `# ` through `###### ` at the start of a line |
+| Thematic break | a line of three or more `-`, `*` or `_` |
 
-## Common recipes
+Any other Markdown (lists, blockquotes, tables, images, fenced code, HTML) renders as plain text; a document that needs it calls for a full Markdown package.
 
-### Display text with formatting
+- **Flanking**: a marker hugs its text. `*italic*` formats, `* italic *` stays literal, so `2 * 3` and `* item` are safe.
+- **Nesting** goes two levels deep (`**bold _italic_**`); a third level renders its markers as plain text.
+- **Unpaired** markers render as plain text and the rest of the string still formats.
+- **Escape** with a backslash in a raw string: `r'\*literal\* \{not_a_key}'`.
+
+## `Textf`
+
 ```dart
 Textf(
-  '**Bold**, *italic*, `code`, and ~~strike~~',
-  style: const TextStyle(fontSize: 16),
+  'Tap {icon} or read the [docs](https://dart.dev)',
+  placeholders: {'icon': WidgetSpan(child: Icon(Icons.star, size: 16))},
 )
 ```
 
-### Link with tap handler
+- Links render as `WidgetSpan`s, so a text selection stops at them.
+- Parsed spans are cached (LRU) and invalidate on their own; `Textf.clearCache()` frees the memory.
+
+## `TextfEditingController`
+
 ```dart
-TextfOptions(
-  onLinkTap: (url, text) => launchUrl(Uri.parse(url)),
-  child: const Textf('[Open docs](https://dart.dev)'),
+final controller = TextfEditingController(
+  text: 'Hello **bold**',
+  markerVisibility: MarkerVisibility.whenActive, // default: always
+  maxLiveFormattingLength: 5000, // the default; longer text renders plain
+);
+```
+
+- `controller.text` keeps the raw markers; `controller.plainText` strips them.
+- `MarkerVisibility.always` shows every marker dimmed; `whenActive` shows only the markers around the cursor. It is settable at runtime.
+- The editor styles text and substitutes nothing: `{key}` stays literal, a link shows its full `[label](url)` and is not tappable, a thematic break stays dimmed marker text.
+- Markers pair within one line.
+- Headings need a strut that lets a line grow: `strutStyle: StrutStyle.fromTextStyle(style, forceStrutHeight: false)` on the `TextField`.
+
+## `TextfOptions`
+
+| Group | Properties |
+|---|---|
+| Style options (`TextStyle?`) | `boldStyle`, `italicStyle`, `boldItalicStyle`, `strikethroughStyle`, `underlineStyle`, `highlightStyle`, `codeStyle`, `superscriptStyle`, `subscriptStyle`, `linkStyle`, `linkHoverStyle`, `h1Style`–`h6Style` |
+| Color options (`Color?`) | `linkColor`, `codeBackgroundColor`, `highlightColor`, `thematicBreakColor` |
+| Links | `onLinkTap(url, displayText)`, `onLinkHover(url, displayText, {required bool isHovering})`, `linkMouseCursor`, `linkAlignment` |
+| Scripts (`double?`) | `scriptFontSizeFactor` (0.6), `superscriptBaselineFactor`, `subscriptBaselineFactor` |
+| Other | `strikethroughThickness` (used while `strikethroughStyle` is null), `thematicBreakBuilder(context)` (owns its own width) |
+
+A **style option replaces** the built-in style: a `boldStyle` without a `fontWeight` is not bold, and a `codeStyle` needs its own font family and background. Heading and script styles are the exception and merge onto the built-in size. A **color option tints** the built-in style and keeps its typography, so reach for it to change only a color.
+
+Precedence, highest first: style option (or `thematicBreakBuilder`) → color option → built-in default.
+
+Nested `TextfOptions`: style options **merge** down the tree, so set only the properties that differ. Callbacks, cursors, color options and the builder take the **nearest** ancestor that sets them.
+
+`TextfOptions.of(context)` and `maybeOf` return the merged `TextfOptionsData`.
+
+## Colors and theme
+
+Built-in colors derive from the surrounding text style: links are a fixed `#1A73E8` with an underline, code and highlight backgrounds are tints, code text keeps the surrounding text color. textf infers a dark surface from a light text color, so on mid-tone or gradient backgrounds set `codeBackgroundColor` and `highlightColor` yourself.
+
+To use the app theme's colors (the 1.x behaviour), pass them once below the theme:
+
+```dart
+MaterialApp(
+  builder: (context, child) {
+    final theme = Theme.of(context);
+    return TextfOptions(
+      linkColor: theme.colorScheme.primary,
+      codeBackgroundColor: theme.colorScheme.surfaceContainer,
+      thematicBreakColor: theme.dividerColor,
+      child: child ?? const SizedBox.shrink(),
+    );
+  },
 )
 ```
 
-### Widget placeholder (icon, badge, etc.)
-```dart
-Textf(
-  'Tap {icon} to continue',
-  placeholders: {'icon': const WidgetSpan(child: Icon(Icons.star))},
-)
-```
-
-### Rich-text input field
-```dart
-final controller = TextfEditingController();
-
-TextField(
-  controller: controller,
-  maxLines: null,
-)
-```
-
-### Scoped style overrides
-```dart
-TextfOptions(
-  boldStyle: const TextStyle(fontWeight: FontWeight.w900),
-  onLinkTap: (url, _) => launchUrl(Uri.parse(url)),
-  child: Column(
-    children: [
-      const Textf('**Inherits bold style**'),
-      TextfOptions(
-        boldStyle: const TextStyle(color: Colors.red), // overrides only color; weight inherited
-        child: const Textf('**Red bold**'),
-      ),
-    ],
-  ),
-)
-```
-
-### Strip formatting for plain text
-```dart
-final plain = '**Hello** *world*'.stripFormatting(); // → 'Hello world'
-```
-
-## Pitfalls
-
-**Flanking rule — spaces break markers:**
-`*italic*` → italic ✓
-`* italic *` → literal `* italic *` ✗
-
-**Nesting cap — max 2 levels:**
-`**_bold italic_**` ✓
-`**_~~third level~~_**` → `~~third level~~` renders as plain text, no error ✗
-
-**Placeholders don't work in the editor:**
-`{key}` renders as the literal string `{key}` inside `TextfEditingController`. Widget injection only works in `Textf`.
-
-**Callback vs style inheritance — different rules:**
-- `onLinkTap`, `onLinkHover`: nearest `TextfOptions` ancestor wins — no merging.
-- Style properties (`boldStyle`, `italicStyle`, …): merged property-by-property up the tree — only set the properties you want to override.
-
-**Escaping markers:**
-Use a raw string: `r'\**not bold\**'`
-
-## `TextfOptions` API
-
-**Style properties** (all `TextStyle?`):
-`boldStyle`, `italicStyle`, `boldItalicStyle`, `strikethroughStyle`, `underlineStyle`, `highlightStyle`, `codeStyle`, `superscriptStyle`, `subscriptStyle`, `linkStyle`, `linkHoverStyle`
-
-**Callbacks:**
-`onLinkTap(String url, String text)`, `onLinkHover(String? url, String? text)`
+With `material_ui`, import `Theme` from that package: the SDK's `Theme` class is a different one and silently returns the fallback theme.
