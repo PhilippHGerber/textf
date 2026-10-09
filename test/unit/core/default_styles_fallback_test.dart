@@ -3,13 +3,14 @@
 
 // ignore_for_file: avoid-non-null-assertion, binary-expression-operand-order, no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
+import 'package:textf/src/styling/textf_palette.dart';
 
 void main() {
   group('DefaultStyles Fallback Methods', () {
-    const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
+    const baseStyle = TextStyle(fontSize: 16, color: Color(0xFF000000));
 
     group('superscriptStyle', () {
       test('applies reduced font size based on scriptFontSizeFactor', () {
@@ -23,7 +24,7 @@ void main() {
       });
 
       test('uses defaultFontSize when baseStyle has no fontSize', () {
-        const noSizeStyle = TextStyle(color: Colors.blue);
+        const noSizeStyle = TextStyle(color: Color(0xFF2196F3));
         final result = DefaultStyles.superscriptStyle(noSizeStyle);
 
         expect(
@@ -36,12 +37,12 @@ void main() {
       test('preserves other style properties', () {
         const styledBase = TextStyle(
           fontSize: 20,
-          color: Colors.red,
+          color: Color(0xFFF44336),
           fontWeight: FontWeight.bold,
         );
         final result = DefaultStyles.superscriptStyle(styledBase);
 
-        expect(result.color, Colors.red);
+        expect(result.color, const Color(0xFFF44336));
         expect(result.fontWeight, FontWeight.bold);
         expect(result.fontSize, 20 * DefaultStyles.scriptFontSizeFactor);
       });
@@ -59,7 +60,7 @@ void main() {
       });
 
       test('uses defaultFontSize when baseStyle has no fontSize', () {
-        const noSizeStyle = TextStyle(color: Colors.green);
+        const noSizeStyle = TextStyle(color: Color(0xFF4CAF50));
         final result = DefaultStyles.subscriptStyle(noSizeStyle);
 
         expect(
@@ -69,41 +70,27 @@ void main() {
       });
     });
 
-    group('highlightStyle', () {
-      test('applies dark alpha when text color is dark', () {
-        // Dark text (black) triggers isDark=true → highlightAlphaDark
-        const darkTextStyle = TextStyle(color: Colors.black);
-        final result = DefaultStyles.highlightStyle(darkTextStyle);
+    group('highlightStyle with the surface inferred by TextfPalette', () {
+      TextStyle highlight(TextStyle style) =>
+          DefaultStyles.highlightStyle(style, TextfPalette(style).surface);
 
-        expect(result.backgroundColor, isNotNull);
-        expect(
-          result.backgroundColor!.a,
-          closeTo(DefaultStyles.highlightAlphaDark, 0.01),
-        );
+      test('dark text implies a light surface → light tint at highlightAlphaLight', () {
+        final result = highlight(const TextStyle(color: Color(0xFF000000)));
+
+        expect(result.backgroundColor, const Color(0xFFFFEB3B).withValues(alpha: 0.5));
       });
 
-      test('applies light alpha when text color is light', () {
-        // Light text (white) triggers isDark=false → highlightAlphaLight
-        const lightTextStyle = TextStyle(color: Colors.white);
-        final result = DefaultStyles.highlightStyle(lightTextStyle);
+      test('light text implies a dark surface → dark tint at highlightAlphaDark', () {
+        final result = highlight(const TextStyle(color: Color(0xFFFFFFFF)));
 
-        expect(result.backgroundColor, isNotNull);
-        expect(
-          result.backgroundColor!.a,
-          closeTo(DefaultStyles.highlightAlphaLight, 0.01),
-        );
+        expect(result.backgroundColor, const Color(0xFFFBC02D).withValues(alpha: 0.4));
       });
 
-      test('handles null color gracefully', () {
-        const noColorStyle = TextStyle(fontSize: 14);
-        // Null color → isDark=false → uses highlightAlphaLight
-        final result = DefaultStyles.highlightStyle(noColorStyle);
+      test('a color-less style is treated as dark text on a light surface', () {
+        final result = highlight(const TextStyle(fontSize: 14));
 
-        expect(result.backgroundColor, isNotNull);
-        expect(
-          result.backgroundColor!.a,
-          closeTo(DefaultStyles.highlightAlphaLight, 0.01),
-        );
+        expect(result.backgroundColor, const Color(0xFFFFEB3B).withValues(alpha: 0.5));
+        expect(result.color, isNull);
       });
     });
   });

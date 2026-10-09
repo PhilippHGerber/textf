@@ -2,10 +2,12 @@
 
 // ignore_for_file: avoid-late-keyword
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/widgets/textf_options.dart';
 import 'package:textf/src/widgets/textf_options_data.dart';
+
+import '../../widgets/pump_textf_widget.dart';
 
 void main() {
   group('TextfOptions Error Handling', () {
@@ -13,8 +15,8 @@ void main() {
       late BuildContext capturedContext;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               capturedContext = context;
               return const SizedBox.shrink();
@@ -34,8 +36,8 @@ void main() {
       late BuildContext capturedContext;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               capturedContext = context;
               return const SizedBox.shrink();
@@ -52,8 +54,8 @@ void main() {
     testWidgets('TextfOptionsData notifies when styles differ', (tester) async {
       // Verify that two TextfOptionsData with different styles are not equal,
       // which causes _TextfOptionsScope.updateShouldNotify to return true.
-      const data1 = TextfOptionsData(boldStyle: TextStyle(color: Colors.red));
-      const data2 = TextfOptionsData(boldStyle: TextStyle(color: Colors.blue));
+      const data1 = TextfOptionsData(boldStyle: TextStyle(color: Color(0xFFF44336)));
+      const data2 = TextfOptionsData(boldStyle: TextStyle(color: Color(0xFF2196F3)));
 
       expect(data1 == data2, isFalse);
       expect(data1.hashCode == data2.hashCode, isFalse);
@@ -62,8 +64,8 @@ void main() {
     testWidgets('TextfOptionsData does not notify when styles match', (tester) async {
       // Verify that two TextfOptionsData with equal styles are considered equal,
       // which causes _TextfOptionsScope.updateShouldNotify to return false.
-      const data1 = TextfOptionsData(boldStyle: TextStyle(color: Colors.red));
-      const data2 = TextfOptionsData(boldStyle: TextStyle(color: Colors.red));
+      const data1 = TextfOptionsData(boldStyle: TextStyle(color: Color(0xFFF44336)));
+      const data2 = TextfOptionsData(boldStyle: TextStyle(color: Color(0xFFF44336)));
 
       expect(data1 == data2, isTrue);
       expect(data1.hashCode, data2.hashCode);

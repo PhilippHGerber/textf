@@ -1,6 +1,6 @@
 // ignore_for_file: no-magic-number, avoid-non-null-assertion
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
 
@@ -22,9 +22,9 @@ void main() {
       return spans;
     }
 
-    // The default rule paints an opaque [ColoredBox] in the theme's
-    // dividerColor; Material chrome contributes a separate *transparent* one, so
-    // match on a non-zero alpha to isolate the rule.
+    // The default rule paints a [ColoredBox] with a non-zero alpha (the text color at alpha
+    // 0.20); host chrome may contribute a separate *transparent* one, so match on a non-zero
+    // alpha to isolate the rule.
     final ruleBox = find.byWidgetPredicate(
       (w) => w is ColoredBox && w.color.a > 0,
     );
@@ -60,11 +60,9 @@ void main() {
 
     testWidgets('the rule fills the paragraph width in a bounded frame', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: Center(
-              child: SizedBox(width: 300, child: Textf('---')),
-            ),
+        neutralTestApp(
+          child: const Center(
+            child: SizedBox(width: 300, child: Textf('---')),
           ),
         ),
       );

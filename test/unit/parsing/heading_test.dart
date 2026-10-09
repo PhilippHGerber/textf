@@ -1,10 +1,12 @@
 // ignore_for_file: no-magic-number, avoid-non-null-assertion
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/formatting_utils.dart';
 import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
+
+import '../../widgets/pump_textf_widget.dart';
 
 void main() {
   group('ATX headings', () {
@@ -18,8 +20,8 @@ void main() {
     Future<List<InlineSpan>> parse(WidgetTester tester, String text) async {
       late List<InlineSpan> result;
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               result = parser.parse(text, context, const TextStyle(fontSize: 14));
               return const SizedBox();
@@ -41,8 +43,9 @@ void main() {
     testWidgets('heading terminates at newline', (tester) async {
       final result = await parse(tester, '# Heading\nbody');
 
-      final headingSpan =
-          result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Heading'));
+      final headingSpan = result.whereType<TextSpan>().firstWhere(
+        (s) => s.text!.contains('Heading'),
+      );
       final bodySpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('body'));
       expect(headingSpan.style!.fontSize, 28.0);
       expect(bodySpan.style!.fontSize, 14.0);
@@ -51,8 +54,9 @@ void main() {
     testWidgets('heading terminates at CRLF (increment 02)', (tester) async {
       final result = await parse(tester, '# Heading\r\nbody');
 
-      final headingSpan =
-          result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Heading'));
+      final headingSpan = result.whereType<TextSpan>().firstWhere(
+        (s) => s.text!.contains('Heading'),
+      );
       final bodySpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('body'));
       expect(headingSpan.style!.fontSize, 28.0);
       expect(bodySpan.style!.fontSize, 14.0);
@@ -61,8 +65,9 @@ void main() {
     testWidgets('heading terminates at a lone CR (increment 02)', (tester) async {
       final result = await parse(tester, '# Heading\rbody');
 
-      final headingSpan =
-          result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Heading'));
+      final headingSpan = result.whereType<TextSpan>().firstWhere(
+        (s) => s.text!.contains('Heading'),
+      );
       final bodySpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('body'));
       expect(headingSpan.style!.fontSize, 28.0);
       expect(bodySpan.style!.fontSize, 14.0);
@@ -79,8 +84,9 @@ void main() {
     testWidgets('heading terminates inside cross-line formatting', (tester) async {
       final result = await parse(tester, '# **Heading\nbody**');
 
-      final headingSpan =
-          result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Heading'));
+      final headingSpan = result.whereType<TextSpan>().firstWhere(
+        (s) => s.text!.contains('Heading'),
+      );
       final bodySpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('body'));
       expect(headingSpan.style!.fontSize, 28.0);
       expect(bodySpan.style!.fontSize, 14.0);
@@ -173,15 +179,17 @@ void main() {
       expect(tokens.whereType<TextToken>(), isEmpty);
     });
 
-    testWidgets('`## ` (trailing space only) renders no visible content (increment 04)',
-        (tester) async {
+    testWidgets('`## ` (trailing space only) renders no visible content (increment 04)', (
+      tester,
+    ) async {
       final result = await parse(tester, '## ');
 
       expect(result, isEmpty);
     });
 
-    testWidgets('empty heading followed by a paragraph does not leak heading style',
-        (tester) async {
+    testWidgets('empty heading followed by a paragraph does not leak heading style', (
+      tester,
+    ) async {
       final result = await parse(tester, '#\nbody');
 
       final bodySpan = result.whereType<TextSpan>().firstWhere((s) => s.text!.contains('body'));
@@ -240,6 +248,47 @@ void main() {
       expect(FormattingUtils.stripFormatting('## foo ##'), 'foo');
       expect(FormattingUtils.stripFormatting('#   foo   '), 'foo');
       expect(FormattingUtils.stripFormatting('### ###'), isEmpty);
+    });
+
+    testWidgets('large heading-dense input parses in linear time', (tester) async {
+      const int lineCount = 400;
+      final buffer = StringBuffer();
+      for (var i = 0; i < lineCount; i++) {
+        buffer
+          ..write('## ')
+          ..write('Heading $i ${'word ' * 40}')
+          ..write('\n')
+          ..write('body $i ${'word ' * 40}')
+          ..write('\n');
+      }
+      final input = buffer.toString();
+      late BuildContext context;
+      await tester.pumpWidget(
+        neutralTestApp(
+          child: Builder(
+            builder: (ctx) {
+              context = ctx;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+
+      // Each heading boundary rebuilds the format stack and splits the text
+      // run at its newline. Both are bounded per line; the generous bound only
+      // guards against a super-linear (O(N²)) regression, not micro-timing.
+      final stopwatch = Stopwatch()..start();
+      final result = parser.parse(input, context, const TextStyle(fontSize: 14));
+      stopwatch.stop();
+
+      final textSpans = result.whereType<TextSpan>();
+      final headings = textSpans.where((s) => (s.text ?? '').startsWith('Heading '));
+      final bodies = textSpans.where((s) => (s.text ?? '').contains('body '));
+      expect(headings, hasLength(lineCount));
+      expect(headings.every((s) => s.style!.fontSize == 21.0), isTrue);
+      expect(bodies, hasLength(lineCount));
+      expect(bodies.every((s) => s.style!.fontSize == 14.0), isTrue);
+      expect(stopwatch.elapsedMilliseconds, lessThan(2000));
     });
   });
 }

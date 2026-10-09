@@ -1,12 +1,14 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/parser_state.dart';
 import 'package:textf/src/parsing/components/link_handler.dart';
 import 'package:textf/src/parsing/textf_tokenizer.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
+
+import '../../../widgets/pump_textf_widget.dart';
 
 void main() {
   group('LinkHandler Tests', () {
@@ -25,8 +27,8 @@ void main() {
       // ignore: avoid-late-keyword
       late BuildContext buildContext;
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               buildContext = context;
               return const SizedBox();

@@ -1,9 +1,11 @@
 // ignore_for_file: no-magic-number, no-empty-block
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
 import 'package:textf/textf.dart';
+
+import 'pump_textf_widget.dart';
 
 // Helper to extract the TextStyle of a specific text span
 TextStyle? _getStyleForText(WidgetTester tester, String textToFind) {
@@ -27,34 +29,38 @@ void main() {
     testWidgets('Updates visual style when TextfOptions boldStyle changes', (tester) async {
       // 1. Initial State: Bold is RED
       await tester.pumpWidget(
-        const MaterialApp(
-          home: TextfOptions(
-            boldStyle: TextStyle(color: Colors.red),
+        neutralTestApp(
+          child: const TextfOptions(
+            boldStyle: TextStyle(color: Color(0xFFF44336)),
             child: Textf('**BoldText**'),
           ),
         ),
       );
 
       final style1 = _getStyleForText(tester, 'BoldText');
-      expect(style1?.color, Colors.red, reason: 'Initial bold color should be red');
+      expect(style1?.color, const Color(0xFFF44336), reason: 'Initial bold color should be red');
 
       // 2. Update State: Bold is BLUE
       // This forces the TextfRenderer to compare the new Options with the cached ones.
       // If hasSameStyle() works correctly, this will trigger a re-parse.
       await tester.pumpWidget(
-        const MaterialApp(
-          home: TextfOptions(
-            boldStyle: TextStyle(color: Colors.blue),
+        neutralTestApp(
+          child: const TextfOptions(
+            boldStyle: TextStyle(color: Color(0xFF2196F3)),
             child: Textf('**BoldText**'),
           ),
         ),
       );
 
       final style2 = _getStyleForText(tester, 'BoldText');
-      expect(style2?.color, Colors.blue, reason: 'Bold color should update to blue');
+      expect(style2?.color, const Color(0xFF2196F3), reason: 'Bold color should update to blue');
     });
 
-    testWidgets('Updates visual style when Theme changes (Light -> Dark)', (tester) async {
+    // T-COLOPT-01 × cache: an app switching light -> dark passes a new `linkColor` through
+    // TextfOptions (the adapter recipe); the changed option must invalidate the cached spans.
+    testWidgets('Updates link color when the linkColor option changes (light -> dark)', (
+      tester,
+    ) async {
       Color? getLinkColor() {
         final hoverableFinder = find.byType(HoverableLinkSpan);
         if (hoverableFinder.evaluate().isEmpty) return null;
@@ -62,58 +68,42 @@ void main() {
         return widget.normalStyle.color;
       }
 
-      // 1. Initial State: Light Theme
-      final lightTheme = ThemeData.light();
+      const lightBrand = Color(0xFF6750A4);
+      const darkBrand = Color(0xFFD0BCFF);
+
+      // 1. Initial State: the light-mode brand color
       await tester.pumpWidget(
-        MaterialApp(
-          theme: lightTheme,
-          home: const Textf('[Link](https://example.com)'),
+        neutralTestApp(
+          child: const TextfOptions(
+            linkColor: lightBrand,
+            child: Textf('[Link](https://example.com)'),
+          ),
         ),
       );
-
-      // waits until all animations and rebuilds complete.
-      await tester.pumpAndSettle();
-
       final lightLinkColor = getLinkColor();
 
-      // 2. Update State: Dark Theme
-      final darkTheme = ThemeData.dark();
+      // 2. Update State: the dark-mode brand color
       await tester.pumpWidget(
-        MaterialApp(
-          theme: darkTheme,
-          home: const Textf('[Link](https://example.com)'),
+        neutralTestApp(
+          child: const TextfOptions(
+            linkColor: darkBrand,
+            child: Textf('[Link](https://example.com)'),
+          ),
         ),
       );
-      await tester.pumpAndSettle(); // <-- Add this
-
       final darkLinkColor = getLinkColor();
 
-      // Verify
-      expect(lightLinkColor, isNotNull);
-      expect(darkLinkColor, isNotNull);
-      expect(
-        lightLinkColor,
-        lightTheme.colorScheme.primary,
-        reason: 'Light theme link should use primary color',
-      );
-      expect(
-        darkLinkColor,
-        darkTheme.colorScheme.primary,
-        reason: 'Dark theme link should use primary color',
-      );
-      expect(
-        lightLinkColor,
-        isNot(darkLinkColor),
-        reason: 'Link color should change when theme changes',
-      );
+      expect(lightLinkColor, lightBrand, reason: 'Light link should use the light brand color');
+      expect(darkLinkColor, darkBrand, reason: 'Link color should follow the changed option');
     });
 
-    testWidgets('Re-resolves heading spans when the base style changes (no stale cache)',
-        (tester) async {
+    testWidgets('Re-resolves heading spans when the base style changes (no stale cache)', (
+      tester,
+    ) async {
       // 1. Initial base font size 10 -> H1 is 20.
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Textf('# Title', style: TextStyle(fontSize: 10)),
+        neutralTestApp(
+          child: const Textf('# Title', style: TextStyle(fontSize: 10)),
         ),
       );
 
@@ -122,8 +112,8 @@ void main() {
 
       // 2. Change base font size to 40 -> H1 must re-resolve to 80.
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Textf('# Title', style: TextStyle(fontSize: 40)),
+        neutralTestApp(
+          child: const Textf('# Title', style: TextStyle(fontSize: 40)),
         ),
       );
 
@@ -138,62 +128,62 @@ void main() {
     testWidgets('Updates heading style when TextfOptions h1Style changes', (tester) async {
       // 1. Initial: h1Style color RED.
       await tester.pumpWidget(
-        const MaterialApp(
-          home: TextfOptions(
-            h1Style: TextStyle(color: Colors.red),
+        neutralTestApp(
+          child: const TextfOptions(
+            h1Style: TextStyle(color: Color(0xFFF44336)),
             child: Textf('# Title'),
           ),
         ),
       );
 
       final style1 = _getStyleForText(tester, 'Title');
-      expect(style1?.color, Colors.red, reason: 'Initial heading color should be red');
+      expect(style1?.color, const Color(0xFFF44336), reason: 'Initial heading color should be red');
       // Color-only override still inherits the default (bold-ish) heading weight.
       expect(style1?.fontWeight?.value ?? 0, greaterThanOrEqualTo(FontWeight.bold.value));
 
       // 2. Update: h1Style color BLUE -> must re-parse.
       await tester.pumpWidget(
-        const MaterialApp(
-          home: TextfOptions(
-            h1Style: TextStyle(color: Colors.blue),
+        neutralTestApp(
+          child: const TextfOptions(
+            h1Style: TextStyle(color: Color(0xFF2196F3)),
             child: Textf('# Title'),
           ),
         ),
       );
 
       final style2 = _getStyleForText(tester, 'Title');
-      expect(style2?.color, Colors.blue, reason: 'Heading color should update to blue');
+      expect(style2?.color, const Color(0xFF2196F3), reason: 'Heading color should update to blue');
     });
 
     testWidgets('Updates when Placeholders content changes', (tester) async {
       // 1. Initial State: {icon} is Star
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Textf(
+        neutralTestApp(
+          child: const Textf(
             'Hello {icon}',
             placeholders: {
-              'icon': WidgetSpan(child: Icon(Icons.star)),
+              'icon': WidgetSpan(child: SizedBox(key: Key('star'), width: 8, height: 8)),
             },
           ),
         ),
       );
 
-      expect(find.byIcon(Icons.star), findsOneWidget);
+      expect(find.byKey(const Key('star')), findsOneWidget);
 
       // 2. Update State: {icon} is Heart
       // Renderer uses mapEquals. Since content changed, it must re-parse.
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Textf(
+        neutralTestApp(
+          child: const Textf(
             'Hello {icon}',
             placeholders: {
-              'icon': WidgetSpan(child: Icon(Icons.favorite)),
+              'icon': WidgetSpan(child: SizedBox(key: Key('heart'), width: 8, height: 8)),
             },
           ),
         ),
       );
 
-      expect(find.byIcon(Icons.favorite), findsOneWidget);
+      expect(find.byKey(const Key('heart')), findsOneWidget);
     });
 
     testWidgets('Invalidates cache when TextfOptions.linkAlignment changes', (tester) async {
@@ -218,10 +208,10 @@ void main() {
 
       // 1. Initial State: linkAlignment is baseline (default)
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             linkAlignment: PlaceholderAlignment.baseline,
-            onLinkTap: (_, __) {}, // Enable link rendering
+            onLinkTap: (_, _) {}, // Enable link rendering
             child: const Textf('[Link](https://example.com)'),
           ),
         ),
@@ -237,10 +227,10 @@ void main() {
 
       // 2. Update State: linkAlignment changes to middle
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             linkAlignment: PlaceholderAlignment.middle,
-            onLinkTap: (_, __) {},
+            onLinkTap: (_, _) {},
             child: const Textf('[Link](https://example.com)'),
           ),
         ),

@@ -1,14 +1,16 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
+
+import 'pump_textf_widget.dart';
 
 void main() {
   group('TextfExt', () {
     testWidgets('renders identically to Textf constructor', (tester) async {
       // Build both variants side by side
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Column(
+        neutralTestApp(
+          child: const Column(
             children: [
               Textf('Hello **bold** *italic*'),
             ],
@@ -23,8 +25,8 @@ void main() {
 
       // Now build the extension version
       await tester.pumpWidget(
-        MaterialApp(
-          home: Column(
+        neutralTestApp(
+          child: Column(
             children: [
               'Hello **bold** *italic*'.textf(),
             ],
@@ -47,8 +49,8 @@ void main() {
       const testStyle = TextStyle(fontSize: 20);
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: 'Test **text**'.textf(
+        neutralTestApp(
+          child: 'Test **text**'.textf(
             style: testStyle,
             textAlign: TextAlign.center,
             maxLines: 1,
@@ -69,10 +71,10 @@ void main() {
 
     testWidgets('forwards placeholders', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: 'Hello {icon}'.textf(
+        neutralTestApp(
+          child: 'Hello {icon}'.textf(
             placeholders: {
-              'icon': const WidgetSpan(child: Icon(Icons.star)),
+              'icon': const WidgetSpan(child: SizedBox(width: 16, height: 16)),
             },
           ),
         ),

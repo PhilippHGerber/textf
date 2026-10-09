@@ -1,27 +1,27 @@
 // ignore_for_file: avoid-non-null-assertion, no-magic-number, no-empty-block
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
 import 'package:textf/textf.dart';
+
+import '../widgets/pump_textf_widget.dart';
 
 void main() {
   group('Link TextScaler Regression Tests', () {
     group('HoverableLinkSpan inner Text uses noScaling', () {
       testWidgets('plain link text has TextScaler.noScaling', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: HoverableLinkSpan(
-                url: 'https://example.com',
-                rawDisplayText: 'Example',
-                initialChildrenSpans: [],
-                initialPlainText: 'Example',
-                normalStyle: TextStyle(color: Colors.blue, fontSize: 16),
-                hoverStyle: TextStyle(color: Colors.red, fontSize: 16),
-                tapRecognizer: null,
-                mouseCursor: SystemMouseCursors.click,
-              ),
+          neutralTestApp(
+            child: const HoverableLinkSpan(
+              url: 'https://example.com',
+              rawDisplayText: 'Example',
+              initialChildrenSpans: [],
+              initialPlainText: 'Example',
+              normalStyle: TextStyle(color: Color(0xFF2196F3), fontSize: 16),
+              hoverStyle: TextStyle(color: Color(0xFFF44336), fontSize: 16),
+              tapRecognizer: null,
+              mouseCursor: SystemMouseCursors.click,
             ),
           ),
         );
@@ -44,23 +44,24 @@ void main() {
         const childSpans = [
           TextSpan(
             text: 'bold',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+            style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2196F3)),
           ),
-          TextSpan(text: ' link', style: TextStyle(color: Colors.blue)),
+          TextSpan(
+            text: ' link',
+            style: TextStyle(color: Color(0xFF2196F3)),
+          ),
         ];
 
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: HoverableLinkSpan(
-                url: 'https://example.com',
-                rawDisplayText: 'bold link',
-                initialChildrenSpans: childSpans,
-                normalStyle: TextStyle(color: Colors.blue, fontSize: 16),
-                hoverStyle: TextStyle(color: Colors.red, fontSize: 16),
-                tapRecognizer: null,
-                mouseCursor: SystemMouseCursors.click,
-              ),
+          neutralTestApp(
+            child: const HoverableLinkSpan(
+              url: 'https://example.com',
+              rawDisplayText: 'bold link',
+              initialChildrenSpans: childSpans,
+              normalStyle: TextStyle(color: Color(0xFF2196F3), fontSize: 16),
+              hoverStyle: TextStyle(color: Color(0xFFF44336), fontSize: 16),
+              tapRecognizer: null,
+              mouseCursor: SystemMouseCursors.click,
             ),
           ),
         );
@@ -81,18 +82,16 @@ void main() {
         const double scaleFactor = 2;
 
         await tester.pumpWidget(
-          const MaterialApp(
-            home: MediaQuery(
+          neutralTestApp(
+            child: const MediaQuery(
               data: MediaQueryData(
                 textScaler: TextScaler.linear(scaleFactor),
               ),
-              child: Scaffold(
-                body: TextfOptions(
-                  onLinkTap: _noopLinkTap, // Enable link rendering
-                  child: Textf(
-                    '[Flutter](https://flutter.dev)',
-                    style: TextStyle(fontSize: baseFontSize),
-                  ),
+              child: TextfOptions(
+                onLinkTap: _noopLinkTap, // Enable link rendering
+                child: Textf(
+                  '[Flutter](https://flutter.dev)',
+                  style: TextStyle(fontSize: baseFontSize),
                 ),
               ),
             ),
@@ -135,15 +134,13 @@ void main() {
         const double scaleFactor = 1.5;
 
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: TextfOptions(
-                onLinkTap: _noopLinkTap,
-                child: Textf(
-                  '[Link](https://example.com)',
-                  style: TextStyle(fontSize: baseFontSize),
-                  textScaler: TextScaler.linear(scaleFactor),
-                ),
+          neutralTestApp(
+            child: const TextfOptions(
+              onLinkTap: _noopLinkTap,
+              child: Textf(
+                '[Link](https://example.com)',
+                style: TextStyle(fontSize: baseFontSize),
+                textScaler: TextScaler.linear(scaleFactor),
               ),
             ),
           ),
@@ -180,18 +177,16 @@ void main() {
         const double scaleFactor = 2;
 
         await tester.pumpWidget(
-          const MaterialApp(
-            home: MediaQuery(
+          neutralTestApp(
+            child: const MediaQuery(
               data: MediaQueryData(
                 textScaler: TextScaler.linear(scaleFactor),
               ),
-              child: Scaffold(
-                body: TextfOptions(
-                  onLinkTap: _noopLinkTap,
-                  child: Textf(
-                    'Hello [World](https://example.com)!',
-                    style: TextStyle(fontSize: 16),
-                  ),
+              child: TextfOptions(
+                onLinkTap: _noopLinkTap,
+                child: Textf(
+                  'Hello [World](https://example.com)!',
+                  style: TextStyle(fontSize: 16),
                 ),
               ),
             ),
@@ -222,18 +217,16 @@ void main() {
         const double scaleFactor = 2;
 
         await tester.pumpWidget(
-          const MaterialApp(
-            home: MediaQuery(
+          neutralTestApp(
+            child: const MediaQuery(
               data: MediaQueryData(
                 textScaler: TextScaler.linear(scaleFactor),
               ),
-              child: Scaffold(
-                body: TextfOptions(
-                  onLinkTap: _noopLinkTap,
-                  child: Textf(
-                    'E = mc^2^ and [link](url)',
-                    style: TextStyle(fontSize: 16),
-                  ),
+              child: TextfOptions(
+                onLinkTap: _noopLinkTap,
+                child: Textf(
+                  'E = mc^2^ and [link](url)',
+                  style: TextStyle(fontSize: 16),
                 ),
               ),
             ),

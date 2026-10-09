@@ -1,166 +1,115 @@
-// ignore_for_file: avoid-late-keyword, avoid-non-null-assertion
+// ignore_for_file: avoid-non-null-assertion
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
 import 'package:textf/src/models/textf_token.dart';
+import 'package:textf/src/styling/textf_palette.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 
 void main() {
   group('TextfStyleResolver Without TextfOptions', () {
-    const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
+    const Color black = Color(0xFF000000);
+    const baseStyle = TextStyle(fontSize: 16, color: black);
+    final palette = TextfPalette(baseStyle);
 
-    /// Pumps a minimal widget tree without TextfOptions.
-    Future<BuildContext> pumpWithoutOptions(WidgetTester tester) async {
-      late BuildContext capturedContext;
+    // No options and no BuildContext: the resolver is context-free.
+    final resolver = TextfStyleResolver.withState(options: null);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
-            builder: (context) {
-              capturedContext = context;
-              return const SizedBox.shrink();
-            },
-          ),
-        ),
-      );
-
-      return capturedContext;
-    }
-
-    testWidgets('resolves bold using DefaultStyles fallback', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
-
-      final result = resolver.resolveStyle(FormatMarkerType.bold, baseStyle);
+    test('resolves bold using DefaultStyles fallback', () {
+      final result = resolver.resolveStyle(FormatMarkerType.bold, baseStyle, palette);
 
       expect(result.fontWeight, FontWeight.bold);
       expect(result.fontSize, baseStyle.fontSize);
     });
 
-    testWidgets('resolves italic using DefaultStyles fallback', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
-
-      final result = resolver.resolveStyle(FormatMarkerType.italic, baseStyle);
+    test('resolves italic using DefaultStyles fallback', () {
+      final result = resolver.resolveStyle(FormatMarkerType.italic, baseStyle, palette);
 
       expect(result.fontStyle, FontStyle.italic);
     });
 
-    testWidgets('resolves boldItalic using DefaultStyles fallback', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
-
-      final result = resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle);
+    test('resolves boldItalic using DefaultStyles fallback', () {
+      final result = resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle, palette);
 
       expect(result.fontWeight, FontWeight.bold);
       expect(result.fontStyle, FontStyle.italic);
     });
 
-    testWidgets('resolves strikethrough with default thickness', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
-
-      final result = resolver.resolveStyle(FormatMarkerType.strikethrough, baseStyle);
+    test('resolves strikethrough with default thickness', () {
+      final result = resolver.resolveStyle(FormatMarkerType.strikethrough, baseStyle, palette);
 
       expect(result.decoration, TextDecoration.lineThrough);
-      expect(
-        result.decorationThickness,
-        DefaultStyles.defaultStrikethroughThickness,
-      );
+      expect(result.decorationThickness, DefaultStyles.defaultStrikethroughThickness);
     });
 
-    testWidgets('resolves code with theme-based styling', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
-
-      final result = resolver.resolveStyle(FormatMarkerType.code, baseStyle);
+    test('resolves code with the neutral palette-derived styling', () {
+      final result = resolver.resolveStyle(FormatMarkerType.code, baseStyle, palette);
 
       expect(result.fontFamily, 'monospace');
-      expect(result.backgroundColor, isNotNull);
+      expect(result.fontFamilyFallback, DefaultStyles.defaultCodeFontFamilyFallback);
+      expect(result.color, black, reason: 'code text keeps the segment color');
+      expect(result.backgroundColor, black.withValues(alpha: 0.05));
     });
 
-    testWidgets('resolves underline using DefaultStyles fallback', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
+    test('code background derives from the palette, not the segment color', () {
+      final darkSurface = TextfPalette(const TextStyle(color: Color(0xFFFFFFFF)));
 
-      final result = resolver.resolveStyle(FormatMarkerType.underline, baseStyle);
+      final result = resolver.resolveStyle(FormatMarkerType.code, baseStyle, darkSurface);
+
+      expect(result.backgroundColor, const Color(0xFFFFFFFF).withValues(alpha: 0.15));
+      expect(result.color, black);
+    });
+
+    test('resolves underline using DefaultStyles fallback', () {
+      final result = resolver.resolveStyle(FormatMarkerType.underline, baseStyle, palette);
 
       expect(result.decoration, TextDecoration.underline);
     });
 
-    testWidgets('resolves highlight with theme-based background', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
+    test('resolves highlight with the neutral light-surface tint', () {
+      final result = resolver.resolveStyle(FormatMarkerType.highlight, baseStyle, palette);
 
-      final result = resolver.resolveStyle(FormatMarkerType.highlight, baseStyle);
-
-      expect(result.backgroundColor, isNotNull);
+      expect(result.backgroundColor, const Color(0xFFFFEB3B).withValues(alpha: 0.5));
+      expect(result.color, black);
     });
 
-    testWidgets('resolves superscript with scaled font size', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
+    test('highlight on a dark surface uses the dark tint and white fallback text', () {
+      final darkSurface = TextfPalette(const TextStyle(color: Color(0xFFFFFFFF)));
 
-      final result = resolver.resolveStyle(FormatMarkerType.superscript, baseStyle);
-
-      expect(
-        result.fontSize,
-        baseStyle.fontSize! * DefaultStyles.scriptFontSizeFactor,
+      final result = resolver.resolveStyle(
+        FormatMarkerType.highlight,
+        const TextStyle(fontSize: 16),
+        darkSurface,
       );
+
+      expect(result.backgroundColor, const Color(0xFFFBC02D).withValues(alpha: 0.4));
+      expect(result.color, const Color(0xFFFFFFFF));
     });
 
-    testWidgets('resolves subscript with scaled font size', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
+    test('resolves superscript with scaled font size', () {
+      final result = resolver.resolveStyle(FormatMarkerType.superscript, baseStyle, palette);
 
-      final result = resolver.resolveStyle(FormatMarkerType.subscript, baseStyle);
-
-      expect(
-        result.fontSize,
-        baseStyle.fontSize! * DefaultStyles.scriptFontSizeFactor,
-      );
+      expect(result.fontSize, baseStyle.fontSize! * DefaultStyles.scriptFontSizeFactor);
     });
 
-    testWidgets('resolves link style from theme', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
-      final theme = Theme.of(context);
+    test('resolves subscript with scaled font size', () {
+      final result = resolver.resolveStyle(FormatMarkerType.subscript, baseStyle, palette);
 
-      final result = resolver.resolveLinkStyle(baseStyle);
-
-      expect(result.color, theme.colorScheme.primary);
-      expect(result.decoration, TextDecoration.underline);
+      expect(result.fontSize, baseStyle.fontSize! * DefaultStyles.scriptFontSizeFactor);
     });
 
-    testWidgets('resolves link hover style from theme', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
-      Theme.of(context);
+    test('resolves link configuration using neutral defaults and DefaultStyles fallback', () {
+      final config = resolver.resolveLinkConfiguration(baseStyle);
 
-      final result = resolver.resolveLinkHoverStyle(baseStyle);
-
-      // Hover typically uses a variant of the primary color
-      expect(result.decoration, TextDecoration.underline);
-      expect(result.color, isNotNull);
-    });
-
-    testWidgets('resolves link mouse cursor to default', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
-
-      final cursor = resolver.resolveLinkMouseCursor();
-
-      expect(cursor, DefaultStyles.linkMouseCursor);
-    });
-
-    testWidgets('resolves link alignment to baseline', (tester) async {
-      final context = await pumpWithoutOptions(tester);
-      final resolver = TextfStyleResolver(context);
-
-      final alignment = resolver.resolveLinkAlignment();
-
-      expect(alignment, PlaceholderAlignment.baseline);
+      expect(config.style.color, const Color(0xFF1A73E8));
+      expect(config.style.decoration, TextDecoration.underline);
+      expect(config.style.decorationColor, const Color(0xFF1A73E8));
+      expect(config.hoverStyle, config.style);
+      expect(config.cursor, DefaultStyles.linkMouseCursor);
+      expect(config.onTap, isNull);
+      expect(config.onHover, isNull);
+      expect(config.alignment, PlaceholderAlignment.baseline);
     });
   });
 }

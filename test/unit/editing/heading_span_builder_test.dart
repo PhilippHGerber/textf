@@ -1,8 +1,11 @@
 // ignore_for_file: no-magic-number, avoid-late-keyword, avoid-non-null-assertion
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:textf/src/editing/marker_render_mode.dart';
 import 'package:textf/src/editing/textf_span_builder.dart';
+
+import '../../widgets/pump_textf_widget.dart';
 
 /// Test-first specification for heading rendering in the editor span builder
 /// (cases A5, A6, B2, B3, B4, B7, B8).
@@ -38,8 +41,8 @@ void main() {
     });
 
     Widget hostWidget(Widget Function(BuildContext) child) {
-      return MaterialApp(
-        home: Builder(
+      return neutralTestApp(
+        child: Builder(
           builder: (context) {
             testContext = context;
             return child(context);
@@ -104,11 +107,17 @@ void main() {
     // ========================================================================
 
     group('1:1 character invariant', () {
-      testWidgets('B7 — heading with emoji content keeps slot count == text.length',
-          (tester) async {
+      testWidgets('B7 — heading with emoji content keeps slot count == text.length', (
+        tester,
+      ) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# Title 🚀 with emoji';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         // 🚀 is two UTF-16 code units; the invariant counts code units.
         expect(totalSlots(spans), input.length);
@@ -117,14 +126,24 @@ void main() {
       testWidgets('B2 — heading with bold and italic keeps slot count', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# Title with **bold** and *italic*';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
         expect(totalSlots(spans), input.length);
       });
 
       testWidgets('B8 — heading with a link keeps slot count', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# See [Docs](https://example.com)';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
         expect(totalSlots(spans), input.length);
       });
 
@@ -132,14 +151,24 @@ void main() {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# Title **bold';
         // Cursor at end (simulating mid-typing).
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: input.length);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(input.length),
+        );
         expect(totalSlots(spans), input.length);
       });
 
       testWidgets('A6 — two headings with an open marker keep slot count', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# One **still open\n## Two';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
         expect(totalSlots(spans), input.length);
       });
 
@@ -150,7 +179,7 @@ void main() {
           input,
           testContext,
           baseStyle,
-          cursorPosition: TextfSpanBuilder.hideAllMarkers,
+          renderMode: MarkerRenderMode.hidden,
         );
         expect(totalSlots(spans), input.length);
       });
@@ -164,7 +193,12 @@ void main() {
       testWidgets('B3 — paragraph after a heading uses the base style', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# Heading\nNormal text afterwards.';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         final paragraph = styleOf(spans, 'Normal text afterwards');
         expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no enlarged heading size leak');
@@ -175,7 +209,12 @@ void main() {
       testWidgets('B4 — every paragraph between headings stays at base style', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# First\nParagraph one.\n## Second\nParagraph two.';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         for (final needle in <String>['Paragraph one', 'Paragraph two']) {
           final style = styleOf(spans, needle);
@@ -185,13 +224,19 @@ void main() {
         expect(totalSlots(spans), input.length);
       });
 
-      testWidgets('A5/A6 — an open `**` on a heading line does not bold the next paragraph',
-          (tester) async {
+      testWidgets('A5/A6 — an open `**` on a heading line does not bold the next paragraph', (
+        tester,
+      ) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         // The `**` is left open on the heading line; the following plain
         // paragraph must NOT inherit bold nor the heading size.
         const input = '# Title **still open\nNormal paragraph here.';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         final paragraph = styleOf(spans, 'Normal paragraph here');
         expect(paragraph.fontWeight, baseStyle.fontWeight, reason: 'no bold bleed from open **');
@@ -208,7 +253,12 @@ void main() {
       testWidgets('heading content is larger than the base text', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# Big Title';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         final title = styleOf(spans, 'Big Title');
         expect(
@@ -227,29 +277,46 @@ void main() {
       testWidgets('tab separator is preserved verbatim in the dimmed marker span', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '#\tTitle';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '#\t');
         expect(totalSlots(spans), input.length);
         expect(marker.text, '#\t');
       });
 
-      testWidgets('CRLF heading keeps slot count and terminates style at the paragraph',
-          (tester) async {
+      testWidgets('CRLF heading keeps slot count and terminates style at the paragraph', (
+        tester,
+      ) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# Heading\r\nNormal text afterwards.';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         final paragraph = styleOf(spans, 'Normal text afterwards');
         expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no enlarged heading size leak');
         expect(totalSlots(spans), input.length);
       });
 
-      testWidgets('lone-CR heading keeps slot count and terminates style at the paragraph',
-          (tester) async {
+      testWidgets('lone-CR heading keeps slot count and terminates style at the paragraph', (
+        tester,
+      ) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# Heading\rNormal text afterwards.';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         final paragraph = styleOf(spans, 'Normal text afterwards');
         expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no enlarged heading size leak');
@@ -262,11 +329,17 @@ void main() {
     // ========================================================================
 
     group('Increment 03 — up to three-space indentation', () {
-      testWidgets('leading spaces are preserved verbatim in the dimmed marker span',
-          (tester) async {
+      testWidgets('leading spaces are preserved verbatim in the dimmed marker span', (
+        tester,
+      ) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '   # Title';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '   # ');
         expect(marker.text, '   # ');
@@ -276,7 +349,12 @@ void main() {
       testWidgets('4-space indent is plain text, not a dimmed heading marker', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '    # Title';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         final title = styleOf(spans, 'Title');
         expect(title.fontSize, baseStyle.fontSize, reason: '4 spaces disqualifies the heading');
@@ -292,29 +370,46 @@ void main() {
       testWidgets('lone `#` at EOF keeps its slot and shows no content', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '#';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '#');
         expect(marker.text, '#');
         expect(totalSlots(spans), input.length);
       });
 
-      testWidgets('`## ` (trailing space only) preserves the marker + trailing-space slots',
-          (tester) async {
+      testWidgets('`## ` (trailing space only) preserves the marker + trailing-space slots', (
+        tester,
+      ) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '## ';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '## ');
         expect(marker.text, '## ');
         expect(totalSlots(spans), input.length);
       });
 
-      testWidgets('empty heading followed by a paragraph does not leak heading style',
-          (tester) async {
+      testWidgets('empty heading followed by a paragraph does not leak heading style', (
+        tester,
+      ) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '#\nNormal paragraph here.';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         final paragraph = styleOf(spans, 'Normal paragraph here');
         expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no heading size bleed');
@@ -324,7 +419,12 @@ void main() {
       testWidgets('indented lone `#` at EOF preserves indentation + hash slots', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '  #';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '  #');
         expect(marker.text, '  #');
@@ -345,7 +445,12 @@ void main() {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# Title\nbody';
         // Cursor at index 3 — inside the heading line.
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 3);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(3),
+        );
 
         final marker = markerSpan(spans);
         // Active marker keeps the heading font size (28 for base 14)…
@@ -358,7 +463,12 @@ void main() {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# Title\nbody';
         // Cursor at index 10 — in "body", past the heading line's terminator.
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 10);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(10),
+        );
 
         final marker = markerSpan(spans);
         expect(marker.style!.color!.a, 0, reason: 'marker hidden off-line');
@@ -372,7 +482,7 @@ void main() {
           input,
           testContext,
           baseStyle,
-          cursorPosition: TextfSpanBuilder.hideAllMarkers,
+          renderMode: MarkerRenderMode.hidden,
         );
 
         final marker = markerSpan(spans);
@@ -413,7 +523,12 @@ void main() {
         // comfortably fast. The generous bound only guards against a
         // super-linear (O(N²)) regression, not micro-timing.
         final stopwatch = Stopwatch()..start();
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
         stopwatch.stop();
 
         expect(totalSlots(spans), input.length);
@@ -444,7 +559,12 @@ void main() {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '## foo ##\nbody';
         // Cursor on the body line (index into `body`), not the heading line.
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: input.length);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(input.length),
+        );
 
         final suffix = spans.whereType<TextSpan>().firstWhere((s) => s.text == ' ##');
         // Inactive/hidden marker style collapses the font size.
@@ -452,11 +572,17 @@ void main() {
         expect(totalSlots(spans), input.length);
       });
 
-      testWidgets('leading + trailing whitespace slots are preserved (`#   foo   `)',
-          (tester) async {
+      testWidgets('leading + trailing whitespace slots are preserved (`#   foo   `)', (
+        tester,
+      ) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '#   foo   ';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         expect(totalSlots(spans), input.length);
         final texts = spans.whereType<TextSpan>().map((s) => s.text).toList();
@@ -468,7 +594,12 @@ void main() {
       testWidgets('`### ###` keeps all seven slots with empty content', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '### ###';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         expect(totalSlots(spans), input.length);
         final texts = spans.whereType<TextSpan>().map((s) => s.text).toList();
@@ -478,7 +609,12 @@ void main() {
       testWidgets('closing run inside a heading with a link keeps every slot', (tester) async {
         await tester.pumpWidget(hostWidget((_) => const SizedBox()));
         const input = '# See [Docs](https://example.com) ##';
-        final spans = builder.build(input, testContext, baseStyle, cursorPosition: 0);
+        final spans = builder.build(
+          input,
+          testContext,
+          baseStyle,
+          renderMode: const MarkerRenderMode.active(0),
+        );
 
         expect(totalSlots(spans), input.length);
       });

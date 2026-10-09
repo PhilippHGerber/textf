@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/textf_limits.dart';
 import 'package:textf/textf.dart';
 
+import 'pump_textf_widget.dart';
+
 void main() {
   group('TextfEditingController', () {
     late TextfEditingController controller;
@@ -38,8 +40,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -59,8 +61,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -86,8 +88,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -113,8 +115,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -132,8 +134,9 @@ void main() {
         expect(child.style?.decoration, TextDecoration.underline);
       });
 
-      testWidgets('applies composing underline while preserving existing decoration',
-          (tester) async {
+      testWidgets('applies composing underline while preserving existing decoration', (
+        tester,
+      ) async {
         controller = TextfEditingController(text: '~~strike~~')
           ..value = const TextEditingValue(
             text: '~~strike~~',
@@ -142,8 +145,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -178,8 +181,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -202,8 +205,9 @@ void main() {
         expect(composing.style?.decoration, TextDecoration.underline);
       });
 
-      testWidgets('composing underline over bold span (null decoration) uses underline only',
-          (tester) async {
+      testWidgets('composing underline over bold span (null decoration) uses underline only', (
+        tester,
+      ) async {
         // Covers the else-if(existingDeco == null) branch in the composing injection loop.
         // A bold span has a non-null style but null decoration.
         controller = TextfEditingController()
@@ -214,8 +218,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -229,9 +233,10 @@ void main() {
         );
 
         expect(result.children, isNotNull);
-        final boldSpan = result.children!
-            .whereType<TextSpan>()
-            .firstWhere((s) => s.text == 'bold', orElse: () => const TextSpan());
+        final boldSpan = result.children!.whereType<TextSpan>().firstWhere(
+          (s) => s.text == 'bold',
+          orElse: () => const TextSpan(),
+        );
         expect(boldSpan.style?.fontWeight, FontWeight.bold);
         expect(boldSpan.style?.decoration, TextDecoration.underline);
       });
@@ -242,8 +247,8 @@ void main() {
         controller = TextfEditingController(text: 'hello world');
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 // First call: fills _cachedParsedSpans and _cachedFinalChildren.
                 controller.buildTextSpan(
@@ -267,50 +272,41 @@ void main() {
         );
       });
 
-      testWidgets('different themes trigger full reparse via _isSameTheme', (tester) async {
-        // Covers lines 115-118 (_isSameTheme body):
-        // Uses nested Theme widgets within a single pump so the two ThemeData
-        // objects are guaranteed to be non-identical Dart instances with
-        // different colorScheme.primary values, forcing the comparison.
+      // Negative Theme test (T-CACHE-02): the controller reads no design-system theme. A
+      // `Theme` is the one Material widget put in scope here, explicitly, to prove that neither
+      // its colors nor a light→dark switch reach the spans.
+      testWidgets('a Theme neither colors markers nor invalidates the cache', (tester) async {
         controller = TextfEditingController(text: '**bold**');
-
-        // Two ThemeData objects created from the SAME seed → same colorScheme
-        // property values but different Dart object identities (!identical).
-        // All four comparisons in _isSameTheme evaluate (none short-circuit)
-        // and return true, covering lines 115-118.
-        final themeA = ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        final dark = ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFFE91E63),
+            brightness: Brightness.dark,
+          ),
         );
-        final themeB = ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        );
+        late TextSpan underLight;
+        late TextSpan underDark;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Theme(
-              data: themeA,
+          neutralTestApp(
+            child: Theme(
+              data: ThemeData(),
               child: Builder(
-                builder: (ctxA) {
-                  // First call: sets _lastTheme = themeA.
-                  controller.buildTextSpan(
-                    context: ctxA,
+                builder: (lightContext) {
+                  underLight = controller.buildTextSpan(
+                    context: lightContext,
                     style: const TextStyle(),
                     withComposing: false,
                   );
                   return Theme(
-                    data: themeB,
+                    data: dark,
                     child: Builder(
-                      builder: (ctxB) {
-                        // Second call: _lastTheme=themeA, current=themeB.
-                        // Not identical but all four color fields match
-                        // → lines 115-118 are all evaluated, returns true.
-                        final result = controller.buildTextSpan(
-                          context: ctxB,
+                      builder: (darkContext) {
+                        underDark = controller.buildTextSpan(
+                          context: darkContext,
                           style: const TextStyle(),
                           withComposing: false,
                         );
-                        expect(result.children, isNotNull);
-                        return Container();
+                        return const SizedBox();
                       },
                     ),
                   );
@@ -319,6 +315,10 @@ void main() {
             ),
           ),
         );
+
+        final marker = underDark.children!.first as TextSpan;
+        expect(marker.style?.color, const Color(0xFF000000).withValues(alpha: 0.4));
+        expect(identical(underLight.children, underDark.children), isTrue);
       });
 
       testWidgets('no composing when withComposing is false', (tester) async {
@@ -330,8 +330,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -356,10 +356,8 @@ void main() {
         controller = TextfEditingController(text: '**bold** text');
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: TextField(controller: controller),
-            ),
+          _materialFieldHost(
+            TextField(controller: controller),
           ),
         );
 
@@ -370,10 +368,8 @@ void main() {
         controller = TextfEditingController(text: '*italic* text');
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: TextFormField(controller: controller),
-            ),
+          _materialFieldHost(
+            TextFormField(controller: controller),
           ),
         );
 
@@ -384,10 +380,8 @@ void main() {
         controller = TextfEditingController();
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: TextField(controller: controller),
-            ),
+          _materialFieldHost(
+            TextField(controller: controller),
           ),
         );
 
@@ -399,19 +393,74 @@ void main() {
       });
     });
 
+    group('Thematic break in an editable', () {
+      Future<void> pumpEditable(WidgetTester tester) {
+        return tester.pumpWidget(
+          neutralTestApp(
+            child: Center(
+              child: SizedBox(
+                width: 300,
+                child: EditableText(
+                  controller: controller,
+                  focusNode: FocusNode(),
+                  maxLines: null,
+                  style: const TextStyle(fontSize: 16, color: Color(0xFF000000)),
+                  cursorColor: const Color(0xFF000000),
+                  backgroundCursorColor: const Color(0xFF000000),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      testWidgets('draws a full-width rule while the cursor is off the line', (tester) async {
+        controller = TextfEditingController(text: 'above\n- - -  \nbelow')
+          ..markerVisibility = MarkerVisibility.whenActive
+          ..selection = const TextSelection.collapsed(offset: 0);
+        await pumpEditable(tester);
+
+        final Rect field = tester.getRect(find.byType(EditableText));
+        final Rect rule = tester.getRect(find.byType(ColoredBox));
+        expect(rule.left, field.left);
+        expect(rule.width, field.width);
+        expect(rule.center.dy, field.center.dy, reason: 'rule sits on the middle line');
+      });
+
+      testWidgets('the drawn rule does not add a line to the field', (tester) async {
+        controller = TextfEditingController(text: 'above\n---\nbelow')
+          ..markerVisibility = MarkerVisibility.whenActive
+          ..selection = const TextSelection.collapsed(offset: 0);
+        await pumpEditable(tester);
+        final double ruleHeight = tester.getSize(find.byType(EditableText)).height;
+
+        controller.markerVisibility = MarkerVisibility.always;
+        await tester.pump();
+        expect(find.byType(ColoredBox), findsNothing);
+        expect(tester.getSize(find.byType(EditableText)).height, ruleHeight);
+      });
+
+      testWidgets('shows the marker text while the cursor is on the line', (tester) async {
+        controller = TextfEditingController(text: 'above\n---\nbelow')
+          ..markerVisibility = MarkerVisibility.whenActive
+          ..selection = const TextSelection.collapsed(offset: 7);
+        await pumpEditable(tester);
+
+        expect(find.byType(ColoredBox), findsNothing);
+      });
+    });
+
     group('TextfOptions Integration', () {
       testWidgets('respects TextfOptions from widget tree', (tester) async {
         controller = TextfEditingController(text: '**bold**');
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: TextfOptions(
-                boldStyle: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                ),
-                child: TextField(controller: controller),
+          _materialFieldHost(
+            TextfOptions(
+              boldStyle: const TextStyle(
+                fontWeight: FontWeight.w900,
               ),
+              child: TextField(controller: controller),
             ),
           ),
         );
@@ -446,8 +495,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 // Set selection to position 0 (on opening marker)
                 controller.selection = const TextSelection.collapsed(offset: 0);
@@ -518,8 +567,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -551,8 +600,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -611,8 +660,9 @@ void main() {
     });
 
     group('Super/Subscript Preview Mode', () {
-      testWidgets('buildTextSpan emits WidgetSpans for superscript when cursor outside',
-          (tester) async {
+      testWidgets('buildTextSpan emits WidgetSpans for superscript when cursor outside', (
+        tester,
+      ) async {
         controller = TextfEditingController(
           text: 'E=mc^2^',
           markerVisibility: MarkerVisibility.whenActive,
@@ -620,8 +670,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 // Place cursor at position 0 (outside ^2^)
                 controller.selection = const TextSelection.collapsed(offset: 0);
@@ -652,8 +702,9 @@ void main() {
         expect(totalSlots, 'E=mc^2^'.length);
       });
 
-      testWidgets('buildTextSpan: cursor inside uses TextSpan markers, WidgetSpan content',
-          (tester) async {
+      testWidgets('buildTextSpan: cursor inside uses TextSpan markers, WidgetSpan content', (
+        tester,
+      ) async {
         controller = TextfEditingController(
           text: 'H~2~O',
           markerVisibility: MarkerVisibility.whenActive,
@@ -661,8 +712,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 // Place cursor at position 2 (inside ~2~)
                 controller.selection = const TextSelection.collapsed(offset: 2);
@@ -692,4 +743,18 @@ void main() {
       });
     });
   });
+}
+
+/// Material interop host for the `TextField` / `TextFormField` integration tests.
+///
+/// Those Material fields need a `Material` ancestor and `MaterialLocalizations`; both are added
+/// here on top of the neutral [neutralTestApp] harness rather than via `MaterialApp`.
+Widget _materialFieldHost(Widget field) {
+  return neutralTestApp(
+    localizationsDelegates: const [
+      DefaultMaterialLocalizations.delegate,
+      DefaultWidgetsLocalizations.delegate,
+    ],
+    child: Material(child: field),
+  );
 }

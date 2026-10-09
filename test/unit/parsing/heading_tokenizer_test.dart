@@ -464,18 +464,20 @@ void main() {
         expect(plainTextOf(tokens), 'Tabbed');
       });
 
-      test('4-space indent still allows a heading later on the SAME line to matter only per-line',
-          () {
-        // The disqualified line is plain text; a following well-formed heading
-        // line is unaffected.
-        const input = '    # not a heading\n# real heading';
-        final tokens = tokenizeBothModes(input);
+      test(
+        '4-space indent still allows a heading later on the SAME line to matter only per-line',
+        () {
+          // The disqualified line is plain text; a following well-formed heading
+          // line is unaffected.
+          const input = '    # not a heading\n# real heading';
+          final tokens = tokenizeBothModes(input);
 
-        final heads = headings(tokens);
-        expect(heads, hasLength(1));
-        expect(heads.single.level, 1);
-        expect(heads.single.position, 20);
-      });
+          final heads = headings(tokens);
+          expect(heads, hasLength(1));
+          expect(heads.single.level, 1);
+          expect(heads.single.position, 20);
+        },
+      );
     });
 
     // ========================================================================

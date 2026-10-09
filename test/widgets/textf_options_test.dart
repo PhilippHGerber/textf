@@ -1,16 +1,19 @@
 // ignore_for_file: avoid-non-null-assertion
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
 import 'package:textf/src/models/textf_token.dart';
+import 'package:textf/src/styling/textf_palette.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/textf_options.dart';
+
+import 'pump_textf_widget.dart';
 
 // ----- Helper Class and Callbacks -----
 // ignore: prefer-match-file-name
 class _ResolvedOptions {
-  _ResolvedOptions({
+  new({
     this.linkStyle,
     this.linkHoverStyle,
     this.linkMouseCursor,
@@ -24,20 +27,23 @@ class _ResolvedOptions {
   });
 
   // Factory to create from context using TextfStyleResolver
-  factory _ResolvedOptions.fromContext(BuildContext context, TextStyle baseStyle) {
+  factory fromContext(BuildContext context, TextStyle baseStyle) {
     final resolver = TextfStyleResolver(context);
+    final palette = TextfPalette(baseStyle);
+
+    final linkConfig = resolver.resolveLinkConfiguration(baseStyle);
 
     return _ResolvedOptions(
-      boldStyle: resolver.resolveStyle(FormatMarkerType.bold, baseStyle),
-      italicStyle: resolver.resolveStyle(FormatMarkerType.italic, baseStyle),
-      boldItalicStyle: resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle),
-      strikethroughStyle: resolver.resolveStyle(FormatMarkerType.strikethrough, baseStyle),
-      codeStyle: resolver.resolveStyle(FormatMarkerType.code, baseStyle),
-      linkStyle: resolver.resolveLinkStyle(baseStyle),
-      linkHoverStyle: resolver.resolveLinkHoverStyle(baseStyle),
-      linkMouseCursor: resolver.resolveLinkMouseCursor(),
-      onLinkTap: resolver.resolveOnLinkTap(),
-      onLinkHover: resolver.resolveOnLinkHover(),
+      boldStyle: resolver.resolveStyle(FormatMarkerType.bold, baseStyle, palette),
+      italicStyle: resolver.resolveStyle(FormatMarkerType.italic, baseStyle, palette),
+      boldItalicStyle: resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle, palette),
+      strikethroughStyle: resolver.resolveStyle(FormatMarkerType.strikethrough, baseStyle, palette),
+      codeStyle: resolver.resolveStyle(FormatMarkerType.code, baseStyle, palette),
+      linkStyle: linkConfig.style,
+      linkHoverStyle: linkConfig.hoverStyle,
+      linkMouseCursor: linkConfig.cursor,
+      onLinkTap: linkConfig.onTap,
+      onLinkHover: linkConfig.onHover,
     );
   }
   final TextStyle? linkStyle;
@@ -60,47 +66,64 @@ void _dummyTap1(String u, String d) {
 void _dummyHover2(String u, String d, {required bool isHovering}) {
   debugPrint('Dummy hover 2: $u, $d, hovering: $isHovering');
 }
+
+// Ambient style for tests that resolve against `DefaultTextStyle.of(context)`. The neutral
+// harness provides no ambient style of its own, so the test supplies one explicitly.
+const _ambientStyle = TextStyle(fontSize: 14, color: Color(0xFF000000));
+
+// The neutral defaults: no design-system theme is consulted. Links use one fixed blue; code
+// keeps the base text color on a chip of the foreground at alpha 0.05 (dark text implies a light
+// surface).
+const Color _neutralLinkColor = Color(0xFF1A73E8);
+const double _lightSurfaceCodeAlpha = 0.05;
 // ----------------------------------------------------------
 
 void main() {
   // --- Test Styles & Callbacks (Keep as before) ---
-  // Note: baseStyle here is only used when *no* DefaultTextStyle is in context,
-  // which isn't the case in these tests due to MaterialApp.
-  const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
-  const rootBoldStyle = TextStyle(fontWeight: FontWeight.w900, color: Colors.red);
-  const rootLinkStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
+  // Note: baseStyle is passed explicitly as the resolver's base style in most tests.
+  const baseStyle = TextStyle(fontSize: 16, color: Color(0xFF000000));
+  const rootBoldStyle = TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFF44336));
+  const rootLinkStyle = TextStyle(color: Color(0xFF2196F3), decoration: TextDecoration.none);
   const rootCursor = SystemMouseCursors.text;
   const rootOnTap = _dummyTap1;
 
-  const childLinkStyle = TextStyle(color: Colors.green, fontSize: 18);
-  const childItalicStyle = TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
+  const childLinkStyle = TextStyle(color: Color(0xFF4CAF50), fontSize: 18);
+  const childItalicStyle = TextStyle(
+    fontStyle: FontStyle.normal,
+    backgroundColor: Color(0xFFFFEB3B),
+  );
 
   // ----------------------------------------------------
 
   group('TextfOptions Inheritance Tests', () {
     testWidgets('Falls back to defaults when no TextfOptions is present', (tester) async {
       _ResolvedOptions? resolved;
-      final theme = ThemeData.light(); // Use a specific theme
       TextStyle? capturedDefaultStyle; // To capture the style from context
 
       await tester.pumpWidget(
-        MaterialApp(
-          theme: theme, // Provide theme
-          home: Builder(
-            builder: (context) {
-              // Capture the actual DefaultTextStyle from the context where resolved is calculated
-              capturedDefaultStyle = DefaultTextStyle.of(context).style;
-              // Ensure we captured something sensible before proceeding
-              expect(capturedDefaultStyle, isNotNull, reason: 'Failed to capture DefaultTextStyle');
-              expect(
-                capturedDefaultStyle!.fontSize,
-                isNotNull,
-                reason: 'Captured DefaultTextStyle must have a fontSize',
-              );
-              // Pass the captured style explicitly as the base style
-              resolved = _ResolvedOptions.fromContext(context, capturedDefaultStyle!);
-              return const SizedBox();
-            },
+        neutralTestApp(
+          child: DefaultTextStyle(
+            style: _ambientStyle,
+            child: Builder(
+              builder: (context) {
+                // Capture the actual DefaultTextStyle from the context where resolved is calculated
+                capturedDefaultStyle = DefaultTextStyle.of(context).style;
+                // Ensure we captured something sensible before proceeding
+                expect(
+                  capturedDefaultStyle,
+                  isNotNull,
+                  reason: 'Failed to capture DefaultTextStyle',
+                );
+                expect(
+                  capturedDefaultStyle!.fontSize,
+                  isNotNull,
+                  reason: 'Captured DefaultTextStyle must have a fontSize',
+                );
+                // Pass the captured style explicitly as the base style
+                resolved = _ResolvedOptions.fromContext(context, capturedDefaultStyle!);
+                return const SizedBox();
+              },
+            ),
           ),
         ),
       );
@@ -134,11 +157,11 @@ void main() {
         capturedDefaultStyle!.fontFamily,
         reason: 'Link style font family should match the DefaultTextStyle font family',
       );
-      // Check properties overridden by theme link style
+      // Check properties set by the neutral default link style
       expect(
         resolved!.linkStyle?.color,
-        theme.colorScheme.primary,
-        reason: 'Link style color should be theme primary color',
+        _neutralLinkColor,
+        reason: 'Link style color should be the fixed default link blue',
       );
       expect(
         resolved!.linkStyle?.decoration,
@@ -147,8 +170,8 @@ void main() {
       );
       expect(
         resolved!.linkStyle?.decorationColor,
-        theme.colorScheme.primary,
-        reason: 'Link style decoration color should be theme primary color',
+        _neutralLinkColor,
+        reason: 'Link style decoration color should match the default link blue',
       );
 
       // --- Check other styles (ensure they also use the correct base) ---
@@ -172,15 +195,22 @@ void main() {
         DefaultStyles.italicStyle(capturedDefaultStyle!).fontStyle,
       );
 
-      // Code Style: Check against theme defaults merged with base
+      // Code Style: Check against the neutral defaults merged with base
       expect(
         resolved!.codeStyle?.fontSize,
         capturedDefaultStyle!.fontSize,
         reason: 'Code style font size should match default',
       );
       expect(resolved!.codeStyle?.fontFamily, 'monospace');
-      expect(resolved!.codeStyle?.color, theme.colorScheme.onSurfaceVariant);
-      expect(resolved!.codeStyle?.backgroundColor, theme.colorScheme.surfaceContainer);
+      expect(
+        resolved!.codeStyle?.color,
+        capturedDefaultStyle!.color,
+        reason: 'Code keeps text color',
+      );
+      expect(
+        resolved!.codeStyle?.backgroundColor,
+        capturedDefaultStyle!.color!.withValues(alpha: _lightSurfaceCodeAlpha),
+      );
 
       // --- Check non-style properties ---
       expect(resolved!.linkMouseCursor, DefaultStyles.linkMouseCursor);
@@ -190,12 +220,10 @@ void main() {
 
     testWidgets('Uses values from single ancestor', (tester) async {
       _ResolvedOptions? resolved;
-      final theme = ThemeData.light();
 
       await tester.pumpWidget(
-        MaterialApp(
-          theme: theme,
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             boldStyle: rootBoldStyle,
             linkStyle: rootLinkStyle, // blue, no decoration
             linkMouseCursor: rootCursor,
@@ -231,23 +259,26 @@ void main() {
       expect(resolved!.onLinkHover, isNull);
     });
 
-    testWidgets('Child properties correctly merge with and override parent properties',
-        (tester) async {
+    testWidgets('Child properties correctly merge with and override parent properties', (
+      tester,
+    ) async {
       // SETUP
-      const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
-      const rootLinkStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
+      const baseStyle = TextStyle(fontSize: 16, color: Color(0xFF000000));
+      const rootLinkStyle = TextStyle(color: Color(0xFF2196F3), decoration: TextDecoration.none);
       // ignore: no-empty-block
       void rootOnTap(String u, String d) {}
-      const rootItalicStyle = TextStyle(fontStyle: FontStyle.italic, color: Colors.purple);
+      const rootItalicStyle = TextStyle(fontStyle: FontStyle.italic, color: Color(0xFF9C27B0));
 
-      const childLinkStyle =
-          TextStyle(color: Colors.green, fontSize: 18); // No decoration specified
+      const childLinkStyle = TextStyle(
+        color: Color(0xFF4CAF50),
+        fontSize: 18,
+      ); // No decoration specified
       // ignore: no-empty-block
       void childOnTap(String u, String d) {}
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             // Root
             linkStyle: rootLinkStyle,
             onLinkTap: rootOnTap,
@@ -268,7 +299,8 @@ void main() {
       final resolver = TextfStyleResolver(context);
 
       // --- ASSERT MERGED Link STYLE ---
-      final resolvedLinkStyle = resolver.resolveLinkStyle(baseStyle);
+      final linkConfig = resolver.resolveLinkConfiguration(baseStyle);
+      final resolvedLinkStyle = linkConfig.style;
 
       // Properties from child should win
       expect(
@@ -289,7 +321,11 @@ void main() {
       );
 
       // --- ASSERT INHERITED ITALIC STYLE ---
-      final resolvedItalicStyle = resolver.resolveStyle(FormatMarkerType.italic, baseStyle);
+      final resolvedItalicStyle = resolver.resolveStyle(
+        FormatMarkerType.italic,
+        baseStyle,
+        TextfPalette(baseStyle),
+      );
       expect(
         resolvedItalicStyle.color,
         rootItalicStyle.color,
@@ -303,7 +339,7 @@ void main() {
 
       // --- ASSERT CALLBACK (NEAREST WINS) ---
       expect(
-        resolver.resolveOnLinkTap(),
+        linkConfig.onTap,
         childOnTap,
         reason: 'Callback should come from the nearest (child) ancestor.',
       );
@@ -311,21 +347,23 @@ void main() {
 
     testWidgets('Unspecified child properties are correctly inherited from parent', (tester) async {
       // SETUP
-      const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
-      const rootBoldStyle = TextStyle(fontWeight: FontWeight.w900, color: Colors.red);
+      const baseStyle = TextStyle(fontSize: 16, color: Color(0xFF000000));
+      const rootBoldStyle = TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFF44336));
       // ignore: no-empty-block
       void rootOnTap(String u, String d) {}
-      const rootLinkStyle = TextStyle(color: Colors.blue, decoration: TextDecoration.none);
+      const rootLinkStyle = TextStyle(color: Color(0xFF2196F3), decoration: TextDecoration.none);
 
-      const childLinkStyle = TextStyle(color: Colors.green, fontSize: 18);
-      const childItalicStyle =
-          TextStyle(fontStyle: FontStyle.normal, backgroundColor: Colors.yellow);
+      const childLinkStyle = TextStyle(color: Color(0xFF4CAF50), fontSize: 18);
+      const childItalicStyle = TextStyle(
+        fontStyle: FontStyle.normal,
+        backgroundColor: Color(0xFFFFEB3B),
+      );
       // ignore: no-empty-block
       void childOnHover(String u, String d, {required bool isHovering}) {}
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             // Root (provides bold, tap, rootUrl)
             boldStyle: rootBoldStyle,
             onLinkTap: rootOnTap,
@@ -346,13 +384,18 @@ void main() {
       final resolver = TextfStyleResolver(context);
 
       // --- 1. Assert properties specified ONLY in Child ---
-      final resolvedItalic = resolver.resolveStyle(FormatMarkerType.italic, baseStyle);
+      final resolvedItalic = resolver.resolveStyle(
+        FormatMarkerType.italic,
+        baseStyle,
+        TextfPalette(baseStyle),
+      );
       expect(resolvedItalic.fontStyle, childItalicStyle.fontStyle);
       expect(resolvedItalic.backgroundColor, childItalicStyle.backgroundColor);
-      expect(resolver.resolveOnLinkHover(), childOnHover);
+      final linkConfig = resolver.resolveLinkConfiguration(baseStyle);
+      expect(linkConfig.onHover, childOnHover);
 
       // --- 2. Assert properties MERGED between Parent and Child ---
-      final resolvedLink = resolver.resolveLinkStyle(baseStyle);
+      final resolvedLink = linkConfig.style;
       expect(
         resolvedLink.color,
         childLinkStyle.color, // Green from Child wins
@@ -365,20 +408,22 @@ void main() {
       );
 
       // --- 3. Assert properties inherited from Parent because Child did not specify them ---
-      final resolvedBold = resolver.resolveStyle(FormatMarkerType.bold, baseStyle);
+      final resolvedBold = resolver.resolveStyle(
+        FormatMarkerType.bold,
+        baseStyle,
+        TextfPalette(baseStyle),
+      );
       expect(resolvedBold.fontWeight, rootBoldStyle.fontWeight);
       expect(resolvedBold.color, rootBoldStyle.color);
-      expect(resolver.resolveOnLinkTap(), rootOnTap);
+      expect(linkConfig.onTap, rootOnTap);
     });
 
     testWidgets('Inheritance works across multiple levels', (tester) async {
       _ResolvedOptions? resolved;
-      final theme = ThemeData.light();
 
       await tester.pumpWidget(
-        MaterialApp(
-          theme: theme,
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             // Level 1 (Root: bold, tap)
             boldStyle: rootBoldStyle, // w900, red
             onLinkTap: rootOnTap,
@@ -420,34 +465,42 @@ void main() {
         'monospace', // Expect default monospace
         reason: 'Code style fallback should use monospace font',
       );
-      expect(resolved!.codeStyle?.color, theme.colorScheme.onSurfaceVariant); // Theme color
+      expect(resolved!.codeStyle?.color, baseStyle.color); // Neutral default keeps the text color
+      expect(
+        resolved!.codeStyle?.backgroundColor,
+        baseStyle.color!.withValues(alpha: _lightSurfaceCodeAlpha),
+      );
       expect(resolved!.linkMouseCursor, DefaultStyles.linkMouseCursor); // Default cursor
     });
 
     testWidgets('Correctly merges styles with baseStyle', (tester) async {
       _ResolvedOptions? resolved;
-      final theme = ThemeData.light();
       // Use a distinct base style
-      const specificBaseStyle = TextStyle(fontSize: 10, fontFamily: 'Arial', color: Colors.grey);
+      const specificBaseStyle = TextStyle(
+        fontSize: 10,
+        fontFamily: 'Arial',
+        color: Color(0xFF9E9E9E),
+      );
 
       await tester.pumpWidget(
-        MaterialApp(
-          theme: theme,
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             boldStyle: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.red,
+              color: Color(0xFFF44336),
             ), // Override weight and color
             italicStyle: const TextStyle(fontStyle: FontStyle.italic), // Only specify italic effect
             linkStyle: const TextStyle(
               // Specify only decoration properties
               decoration: TextDecoration.lineThrough,
-              decorationColor: Colors.orange,
+              decorationColor: Color(0xFFFF9800),
             ),
             child: Builder(
               builder: (context) {
-                resolved =
-                    _ResolvedOptions.fromContext(context, specificBaseStyle); // grey, 10, Arial
+                resolved = _ResolvedOptions.fromContext(
+                  context,
+                  specificBaseStyle,
+                ); // grey, 10, Arial
                 return const SizedBox();
               },
             ),
@@ -458,7 +511,7 @@ void main() {
 
       // Bold: Should have specific base props + override props
       expect(resolved!.boldStyle?.fontWeight, FontWeight.bold); // from override
-      expect(resolved!.boldStyle?.color, Colors.red); // from override
+      expect(resolved!.boldStyle?.color, const Color(0xFFF44336)); // from override
       expect(resolved!.boldStyle?.fontSize, specificBaseStyle.fontSize); // from base
       expect(resolved!.boldStyle?.fontFamily, specificBaseStyle.fontFamily); // from base
 
@@ -469,7 +522,7 @@ void main() {
 
       // Link: Should have base props + override props. Color comes from base as option didn't specify it.
       expect(resolved!.linkStyle?.decoration, TextDecoration.lineThrough); // from override
-      expect(resolved!.linkStyle?.decorationColor, Colors.orange); // from override
+      expect(resolved!.linkStyle?.decorationColor, const Color(0xFFFF9800)); // from override
       expect(
         resolved!.linkStyle?.color,
         specificBaseStyle.color, // Should be grey from base
@@ -479,8 +532,9 @@ void main() {
       expect(resolved!.linkStyle?.fontFamily, specificBaseStyle.fontFamily); // from base
     });
     group('TextDecoration Merging Logic', () {
-      testWidgets('Partial Overlap: Child subset decoration does not remove parent decoration',
-          (tester) async {
+      testWidgets('Partial Overlap: Child subset decoration does not remove parent decoration', (
+        tester,
+      ) async {
         // SCENARIO:
         // Parent has: underline | lineThrough
         // Child specifies: underline
@@ -496,9 +550,9 @@ void main() {
         const childDeco = TextDecoration.underline;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: TextfOptions(
-              linkStyle: TextStyle(decoration: parentDeco, color: Colors.blue),
+          neutralTestApp(
+            child: TextfOptions(
+              linkStyle: TextStyle(decoration: parentDeco, color: const Color(0xFF2196F3)),
               child: TextfOptions(
                 linkStyle: const TextStyle(decoration: childDeco), // Color inherited
                 child: Builder(
@@ -532,9 +586,9 @@ void main() {
         const childDeco = TextDecoration.lineThrough;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: TextfOptions(
-              linkStyle: const TextStyle(decoration: parentDeco, color: Colors.blue),
+          neutralTestApp(
+            child: TextfOptions(
+              linkStyle: const TextStyle(decoration: parentDeco, color: Color(0xFF2196F3)),
               child: TextfOptions(
                 linkStyle: const TextStyle(decoration: childDeco),
                 child: Builder(
@@ -556,15 +610,16 @@ void main() {
         );
       });
 
-      testWidgets('Explicit None: Child decoration.none removes all parent decorations',
-          (tester) async {
+      testWidgets('Explicit None: Child decoration.none removes all parent decorations', (
+        tester,
+      ) async {
         _ResolvedOptions? resolved;
         const parentDeco = TextDecoration.underline;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: TextfOptions(
-              linkStyle: const TextStyle(decoration: parentDeco, color: Colors.blue),
+          neutralTestApp(
+            child: TextfOptions(
+              linkStyle: const TextStyle(decoration: parentDeco, color: Color(0xFF2196F3)),
               child: TextfOptions(
                 linkStyle: const TextStyle(decoration: TextDecoration.none),
                 child: Builder(

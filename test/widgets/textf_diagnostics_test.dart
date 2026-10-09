@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
 
@@ -22,7 +22,7 @@ void main() {
       final description = _diagnosticsForWidget(
         const Textf(
           'Hello **world**',
-          style: TextStyle(color: Colors.red),
+          style: TextStyle(color: Color(0xFFF44336)),
           textAlign: TextAlign.center,
           textDirection: TextDirection.rtl,
           maxLines: 2,
@@ -34,7 +34,7 @@ void main() {
           strutStyle: StrutStyle(fontSize: 16),
           textWidthBasis: TextWidthBasis.longestLine,
           textHeightBehavior: TextHeightBehavior(),
-          selectionColor: Colors.yellow,
+          selectionColor: Color(0xFFFFEB3B),
           placeholders: {
             'icon': WidgetSpan(child: SizedBox.shrink()),
           },
@@ -96,11 +96,11 @@ void main() {
           strikethroughStyle: TextStyle(decoration: TextDecoration.lineThrough),
           codeStyle: TextStyle(fontFamily: 'monospace'),
           underlineStyle: TextStyle(decoration: TextDecoration.underline),
-          highlightStyle: TextStyle(backgroundColor: Colors.yellow),
+          highlightStyle: TextStyle(backgroundColor: Color(0xFFFFEB3B)),
           superscriptStyle: TextStyle(fontSize: 10),
           subscriptStyle: TextStyle(fontSize: 10),
-          linkStyle: TextStyle(color: Colors.blue),
-          linkHoverStyle: TextStyle(color: Colors.lightBlue),
+          linkStyle: TextStyle(color: Color(0xFF2196F3)),
+          linkHoverStyle: TextStyle(color: Color(0xFF03A9F4)),
           scriptFontSizeFactor: 0.7,
           superscriptBaselineFactor: 0.3,
           subscriptBaselineFactor: 0.2,

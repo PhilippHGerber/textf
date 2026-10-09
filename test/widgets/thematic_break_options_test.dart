@@ -1,8 +1,10 @@
 // ignore_for_file: no-magic-number, avoid-non-null-assertion
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
+
+import 'pump_textf_widget.dart';
 
 /// Ticket 3 (options seam) checks for thematic breaks:
 ///  - the guarded default rule fills the paragraph width in a bounded frame and
@@ -11,9 +13,9 @@ import 'package:textf/textf.dart';
 ///  - the builder resolves through the option hierarchy (nearest ancestor wins).
 void main() {
   group('Textf — thematic break options seam', () {
-    // The default rule paints an opaque [ColoredBox] in the theme's
-    // dividerColor; Material chrome contributes a separate *transparent* one, so
-    // match on a non-zero alpha to isolate the rule.
+    // The default rule paints a [ColoredBox] with a non-zero alpha (the text color at alpha
+    // 0.20); host chrome may contribute a separate *transparent* one, so match on a non-zero
+    // alpha to isolate the rule.
     final defaultRule = find.byWidgetPredicate(
       (w) => w is ColoredBox && w.color.a > 0,
     );
@@ -22,9 +24,9 @@ void main() {
     const outerKey = Key('outer-rule');
     const innerKey = Key('inner-rule');
 
-    Widget host(Widget child) => MaterialApp(
-          home: Scaffold(body: Center(child: child)),
-        );
+    Widget host(Widget child) => neutralTestApp(
+      child: Center(child: child),
+    );
 
     testWidgets('default rule fills the paragraph width in a bounded frame', (tester) async {
       await tester.pumpWidget(
@@ -91,4 +93,5 @@ void main() {
 
 /// A const-constructible thematic-break builder rendering a keyed, colorless
 /// [SizedBox] — so it never registers as the default rule's opaque `ColoredBox`.
-Widget Function(BuildContext) _sizedRule(Key key) => (context) => SizedBox(key: key, height: 8);
+Widget Function(BuildContext) _sizedRule(Key key) =>
+    (context) => SizedBox(key: key, height: 8);

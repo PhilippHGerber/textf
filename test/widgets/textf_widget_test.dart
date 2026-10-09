@@ -148,7 +148,8 @@ void main() {
     });
 
     testWidgets('Applies maxLines and overflow correctly', (tester) async {
-      const text = 'This is **very long text** that will definitely overflow '
+      const text =
+          'This is **very long text** that will definitely overflow '
           'when maxLines is set to one.';
       await pumpTextfWidget(
         tester,
@@ -289,17 +290,23 @@ void main() {
       expect(plainSpan2.style?.fontSize, explicitStyle.fontSize); // Parsed with explicitStyle
     });
 
+    // Material interop: SelectionArea is a Material widget, so this test (and only this
+    // test) supplies the Material localizations it needs on top of the neutral harness.
     testWidgets('Integrates with SelectionArea', (tester) async {
       const text = 'Select **this** text';
 
       await pumpTextfWidget(
         tester,
         data: text,
-        wrapInSelectionArea: true, // <<< TELL THE HELPER TO WRAP
+        localizationsDelegates: const [
+          DefaultMaterialLocalizations.delegate,
+          DefaultWidgetsLocalizations.delegate,
+        ],
+        wrap: (child) => SelectionArea(child: child),
       );
 
       // Verify the core widgets are present
-      expect(find.byType(SelectionArea), findsOneWidget); // <<< THIS SHOULD PASS NOW
+      expect(find.byType(SelectionArea), findsOneWidget);
       expect(_findRichText(), findsOneWidget);
 
       // Verify the text content is rendered somewhere within the RichText

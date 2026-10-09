@@ -1,12 +1,15 @@
 // ignore_for_file: avoid-non-null-assertion, no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
 
+import '../widgets/pump_textf_widget.dart';
+
 void main() {
-  testWidgets('Textf respects DefaultTextStyle fontSize and textScaler for scripts',
-      (tester) async {
+  testWidgets('Textf respects DefaultTextStyle fontSize and textScaler for scripts', (
+    tester,
+  ) async {
     const double baseFontSize = 30;
     // We expect the logical size (30 * 0.66 = 19.8).
     // We do NOT multiply by scaleFactor here because your implementation
@@ -15,9 +18,9 @@ void main() {
     const double scaleFactor = 2;
 
     await tester.pumpWidget(
-      const MaterialApp(
-        home: DefaultTextStyle(
-          style: TextStyle(fontSize: baseFontSize, color: Colors.black),
+      neutralTestApp(
+        child: const DefaultTextStyle(
+          style: TextStyle(fontSize: baseFontSize, color: Color(0xFF000000)),
           child: Textf(
             '^super^',
             textScaler: TextScaler.linear(scaleFactor),

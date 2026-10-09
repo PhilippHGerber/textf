@@ -1,8 +1,10 @@
 // ignore_for_file: no-magic-number, avoid-non-null-assertion, avoid-late-keyword
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
+
+import '../../widgets/pump_textf_widget.dart';
 
 void main() {
   group('TextfParser coverage', () {
@@ -19,8 +21,8 @@ void main() {
       late List<InlineSpan> result;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               result = parser.parse(longText, context, const TextStyle());
               return const SizedBox();
@@ -32,13 +34,14 @@ void main() {
       expect(result, isNotEmpty);
     });
 
-    testWidgets('PlaceholderToken renders as plain text when no placeholders provided',
-        (tester) async {
+    testWidgets('PlaceholderToken renders as plain text when no placeholders provided', (
+      tester,
+    ) async {
       late List<InlineSpan> result;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               result = parser.parse('{icon}', context, const TextStyle());
               return const SizedBox();
@@ -57,8 +60,8 @@ void main() {
       late List<InlineSpan> result;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               // A standalone [ without matching ](url) should render as plain text
               result = parser.parse('[broken', context, const TextStyle());

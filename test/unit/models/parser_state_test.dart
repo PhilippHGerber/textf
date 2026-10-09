@@ -1,8 +1,10 @@
 // ignore_for_file: cascade_invocations // cascade_invocations for readability and chaining methods.
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/parser_state.dart';
 import 'package:textf/src/models/textf_token.dart';
+import 'package:textf/src/styling/link_style_configuration.dart';
+import 'package:textf/src/styling/textf_palette.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 
 // ---- Mock class for TextfStyleResolver ----
@@ -13,13 +15,17 @@ import 'package:textf/src/styling/textf_style_resolver.dart';
 class _MockTextfStyleResolver implements TextfStyleResolver {
   final Map<FormatMarkerType, TextStyle> _styleMap = {};
 
+  /// The palette of the most recent [resolveStyle] call.
+  TextfPalette? lastPalette;
+
   // A method to configure the mock for a specific test.
   void whenResolveStyle(FormatMarkerType type, TextStyle styleToReturn) {
     _styleMap[type] = styleToReturn;
   }
 
   @override
-  TextStyle resolveStyle(FormatMarkerType type, TextStyle baseStyle) {
+  TextStyle resolveStyle(FormatMarkerType type, TextStyle baseStyle, TextfPalette palette) {
+    lastPalette = palette;
     final style = _styleMap[type];
     if (style != null) {
       // Simulate the real resolver's behavior: the option style is
@@ -36,29 +42,17 @@ class _MockTextfStyleResolver implements TextfStyleResolver {
   TextStyle resolveHeadingStyle(int level, TextStyle baseStyle) => throw UnimplementedError();
 
   @override
-  InlineSpan resolveThematicBreak() => throw UnimplementedError();
+  InlineSpan resolveThematicBreak(TextfPalette palette) => throw UnimplementedError();
 
   @override
-  TextStyle resolveLinkStyle(TextStyle baseStyle) => throw UnimplementedError();
-  @override
-  TextStyle resolveLinkHoverStyle(TextStyle baseStyle) => throw UnimplementedError();
-  @override
-  MouseCursor resolveLinkMouseCursor() => throw UnimplementedError();
-  @override
-  void Function(String url, String displayText)? resolveOnLinkTap() => throw UnimplementedError();
-  @override
-  void Function(String url, String displayText, {required bool isHovering})? resolveOnLinkHover() =>
+  LinkStyleConfiguration resolveLinkConfiguration(TextStyle inheritedStyle) =>
       throw UnimplementedError();
-
-  @override
-  PlaceholderAlignment resolveLinkAlignment() => throw UnimplementedError();
 
   @override
   EdgeInsetsGeometry resolveScriptPadding({
     required TextStyle style,
     required bool isSuperscript,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   InlineSpan createScriptSpan({
@@ -72,24 +66,24 @@ class _MockTextfStyleResolver implements TextfStyleResolver {
 }
 
 void main() {
-  const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
+  const baseStyle = TextStyle(fontSize: 16, color: Color(0xFF000000));
   const boldStyle = TextStyle(fontWeight: FontWeight.bold);
-  const italicStyle = TextStyle(fontStyle: FontStyle.italic, color: Colors.red);
+  const italicStyle = TextStyle(fontStyle: FontStyle.italic, color: Color(0xFFF44336));
   const italicClosingIndex = 2;
 
   List<TextfToken> nestedFormatTokens() => const <TextfToken>[
-        FormatMarkerToken(FormatMarkerType.bold, '**', position: 0, length: 2),
-        FormatMarkerToken(FormatMarkerType.italic, '_', position: 2, length: 1),
-        FormatMarkerToken(FormatMarkerType.italic, '_', position: 3, length: 1),
-        FormatMarkerToken(FormatMarkerType.bold, '**', position: 4, length: 2),
-      ];
+    FormatMarkerToken(FormatMarkerType.bold, '**', position: 0, length: 2),
+    FormatMarkerToken(FormatMarkerType.italic, '_', position: 2, length: 1),
+    FormatMarkerToken(FormatMarkerType.italic, '_', position: 3, length: 1),
+    FormatMarkerToken(FormatMarkerType.bold, '**', position: 4, length: 2),
+  ];
 
   Map<int, int> nestedFormatPairs() => const <int, int>{
-        0: 3,
-        1: 2,
-        2: 1,
-        3: 0,
-      };
+    0: 3,
+    1: 2,
+    2: 1,
+    3: 0,
+  };
 
   ParserState createState({
     List<TextfToken>? tokens,
@@ -128,7 +122,7 @@ void main() {
       final resolvedStyle = state.currentStyle();
       expect(resolvedStyle.fontWeight, FontWeight.bold);
       expect(resolvedStyle.fontStyle, FontStyle.italic);
-      expect(resolvedStyle.color, Colors.red);
+      expect(resolvedStyle.color, const Color(0xFFF44336));
       expect(resolvedStyle.fontSize, baseStyle.fontSize);
     });
 
@@ -238,7 +232,7 @@ void main() {
       expect(span.style?.fontStyle, FontStyle.italic, reason: 'Italic style should be applied');
       expect(
         span.style?.color,
-        Colors.red,
+        const Color(0xFFF44336),
         reason: 'Italic style color should override base and bold color',
       );
       expect(
@@ -247,6 +241,56 @@ void main() {
         reason: 'Font size should be inherited from base',
       );
       expect(state.textBuffer, isEmpty);
+    });
+  });
+
+  group('ParserState palette', () {
+    ParserState stateFor(TextStyle rootStyle, {TextfPalette? palette}) => ParserState(
+      tokens: const <TextfToken>[],
+      baseStyle: rootStyle,
+      matchingPairs: const <int, int>{},
+      styleResolver: _MockTextfStyleResolver(),
+      palette: palette,
+    );
+
+    test('is derived from baseStyle, the effective root style, when omitted', () {
+      const rootStyle = TextStyle(color: Color(0xFFFFFFFF));
+      final state = stateFor(rootStyle);
+
+      expect(state.palette, TextfPalette(rootStyle));
+      expect(state.palette.surface, Brightness.dark);
+    });
+
+    test('a supplied palette (nested parse) wins over baseStyle', () {
+      final rootPalette = TextfPalette(const TextStyle(color: Color(0xFF000000)));
+      final state = stateFor(const TextStyle(color: Color(0xFFFFFFFF)), palette: rootPalette);
+
+      expect(state.palette, same(rootPalette));
+      expect(state.palette.surface, Brightness.light);
+    });
+
+    test('pushFormat resolves with the state palette, not the segment color', () {
+      final resolver = _MockTextfStyleResolver()
+        ..whenResolveStyle(FormatMarkerType.bold, const TextStyle(color: Color(0xFFFFFFFF)));
+      final rootPalette = TextfPalette(const TextStyle(color: Color(0xFF000000)));
+      final state = ParserState(
+        tokens: const <TextfToken>[
+          FormatMarkerToken(FormatMarkerType.bold, '**', position: 0, length: 2),
+          FormatMarkerToken(FormatMarkerType.code, '`', position: 2, length: 1),
+          FormatMarkerToken(FormatMarkerType.code, '`', position: 3, length: 1),
+          FormatMarkerToken(FormatMarkerType.bold, '**', position: 4, length: 2),
+        ],
+        baseStyle: const TextStyle(color: Color(0xFF000000)),
+        matchingPairs: const <int, int>{0: 3, 3: 0, 1: 2, 2: 1},
+        styleResolver: resolver,
+        palette: rootPalette,
+      );
+
+      state
+        ..pushFormat(0)
+        ..pushFormat(1);
+
+      expect(resolver.lastPalette, same(rootPalette));
     });
   });
 }

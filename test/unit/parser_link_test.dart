@@ -1,7 +1,7 @@
 // ignore_for_file: avoid-late-keyword, no-magic-number
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
@@ -9,6 +9,12 @@ import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
 import 'package:textf/src/widgets/textf_options.dart';
 
 import '../widgets/pump_textf_widget.dart';
+
+// Neutral defaults (no design-system theme is consulted): links use one fixed blue; inline code
+// keeps the segment's text color on a chip of the root text color (black when unset) at alpha
+// 0.05. Inside a link, the segment color is the link blue.
+const Color _linkColor = Color(0xFF1A73E8);
+final Color _codeBackground = const Color(0xFF000000).withValues(alpha: 0.05);
 
 void main() {
   group('Link Parsing Tests', () {
@@ -25,8 +31,8 @@ void main() {
       WidgetTester tester,
       Widget Function(BuildContext) builder,
     ) {
-      return MaterialApp(
-        home: Builder(
+      return neutralTestApp(
+        child: Builder(
           builder: (context) {
             mockContext = context;
             return builder(context);
@@ -38,13 +44,11 @@ void main() {
     group('Basic Link Parsing', () {
       testWidgets('simple link without formatting', (tester) async {
         late BuildContext mockContext; // Capture context
-        final lightTheme = ThemeData.light(); // Use a specific theme
 
-        // Setup context with the light theme
+        // Setup context
         await tester.pumpWidget(
-          MaterialApp(
-            theme: lightTheme,
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 mockContext = context;
                 return Container();
@@ -84,21 +88,21 @@ void main() {
         expect(hoverableWidget.initialChildrenSpans, isEmpty);
 
         // --- Verify the style passed to HoverableLinkSpan ---
-        // The 'normalStyle' should now reflect the theme's primary color.
-        // Calculate expected style by merging base with theme default link style
+        // The normalStyle carries the neutral default link color.
+        // Calculate expected style by merging base with the default link style
         final expectedNormalStyle = baseStyle.merge(
-          TextStyle(
-            color: lightTheme.colorScheme.primary, // Expect theme primary color
+          const TextStyle(
+            color: _linkColor, // Expect the default link blue
             decoration: TextDecoration.underline,
-            decorationColor: lightTheme.colorScheme.primary,
+            decorationColor: _linkColor,
           ),
         );
 
         expect(
           hoverableWidget.normalStyle.color,
-          // Expect theme primary color instead of old hardcoded blue
-          lightTheme.colorScheme.primary,
-          reason: 'Normal style color should match theme primary color', // Updated reason
+          // Expect the fixed default link blue
+          _linkColor,
+          reason: 'Normal style color should match the default link color', // Updated reason
         );
         expect(
           hoverableWidget.normalStyle.decoration,
@@ -107,23 +111,23 @@ void main() {
         );
         expect(
           hoverableWidget.normalStyle.decorationColor,
-          // Expect theme primary color for decoration
-          lightTheme.colorScheme.primary,
+          // Expect the default link blue for decoration
+          _linkColor,
           reason:
-              'Normal style decoration color should match theme primary color', // Updated reason
+              'Normal style decoration color should match the default link color', // Updated reason
         );
 
         // Hover style check (assuming default hover = normal style when no options)
-        final expectedHoverStyle = expectedNormalStyle; // In theme fallback, hover == normal
+        final expectedHoverStyle = expectedNormalStyle; // Without a hover option, hover == normal
         expect(
           hoverableWidget.hoverStyle.color,
           expectedHoverStyle.color,
-          reason: 'Hover style color should match normal theme style',
+          reason: 'Hover style color should match normal default style',
         );
         expect(
           hoverableWidget.hoverStyle.decorationColor,
           expectedHoverStyle.decorationColor,
-          reason: 'Hover style decoration color should match normal theme style',
+          reason: 'Hover style decoration color should match normal default style',
         );
 
         // --- Verify other interaction properties (optional but good) ---
@@ -363,13 +367,11 @@ void main() {
 
       testWidgets('code text in link', (tester) async {
         late BuildContext mockContext;
-        final lightTheme = ThemeData.light();
 
         // Setup context
         await tester.pumpWidget(
-          MaterialApp(
-            theme: lightTheme,
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 mockContext = context;
                 return Container();
@@ -401,16 +403,16 @@ void main() {
         final innerSpan = hoverableWidget.initialChildrenSpans.first as TextSpan;
 
         // Calculate expected code style merged with the *link's normal style*
-        // The link's normal style gets the theme primary color.
-        final linkNormalStyle = baseStyle.merge(TextStyle(color: lightTheme.colorScheme.primary));
+        // The link's normal style gets the default link color.
+        final linkNormalStyle = baseStyle.merge(const TextStyle(color: _linkColor));
         final expectedInnerCodeStyle = linkNormalStyle.copyWith(
           // Apply code style onto link style
           fontFamily: 'monospace',
           fontFamilyFallback: ['RobotoMono', 'Menlo', 'Courier New'],
-          // Expect theme background color
-          backgroundColor: lightTheme.colorScheme.surfaceContainer,
-          // Code text color should come from theme, overriding link color
-          color: lightTheme.colorScheme.onSurfaceVariant,
+          // Expect the neutral code background
+          backgroundColor: _codeBackground,
+          // Code text keeps the segment (link) color
+          color: _linkColor,
           letterSpacing: 0,
         );
 
@@ -422,15 +424,15 @@ void main() {
         );
         expect(
           innerSpan.style?.backgroundColor,
-          // Expect theme surfaceContainer color
-          lightTheme.colorScheme.surfaceContainer,
-          reason: 'Inner span should have theme code background',
+          // Expect the neutral code background
+          _codeBackground,
+          reason: 'Inner span should have the neutral code background',
         );
         expect(
           innerSpan.style?.color,
-          // Expect theme code text color
-          lightTheme.colorScheme.onSurfaceVariant,
-          reason: 'Inner span should have theme code text color',
+          // Code text keeps the link color
+          _linkColor,
+          reason: 'Inner span should keep the link color',
         );
       });
     });
@@ -541,12 +543,16 @@ void main() {
     });
 
     group('Style Inheritance', () {
-      testWidgets('link style is properly applied to formatted text from TextfOptions',
-          (tester) async {
+      testWidgets('link style is properly applied to formatted text from TextfOptions', (
+        tester,
+      ) async {
         // Define styles and options
-        const baseStyle = TextStyle(fontSize: 16, color: Colors.black);
-        const optionsLinkStyle =
-            TextStyle(color: Colors.red, fontSize: 18, decoration: TextDecoration.none);
+        const baseStyle = TextStyle(fontSize: 16, color: Color(0xFF000000));
+        const optionsLinkStyle = TextStyle(
+          color: Color(0xFFF44336),
+          fontSize: 18,
+          decoration: TextDecoration.none,
+        );
         const optionsBoldStyle = TextStyle(
           fontWeight: FontWeight.w900,
           decoration: TextDecoration.underline,
@@ -555,8 +561,8 @@ void main() {
         // Setup widget tree with TextfOptions
         late BuildContext testContext;
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 // Provide base style via DefaultTextStyle for context resolution
                 return DefaultTextStyle(
@@ -632,13 +638,11 @@ void main() {
 
       testWidgets('base style is properly inherited by links and nested formats', (tester) async {
         late BuildContext mockContext;
-        final lightTheme = ThemeData.light();
 
         // Setup context
         await tester.pumpWidget(
-          MaterialApp(
-            theme: lightTheme,
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 mockContext = context;
                 return Container();
@@ -651,7 +655,7 @@ void main() {
           fontFamily: 'Roboto',
           fontSize: 20,
           height: 1.5,
-          color: Colors.purple,
+          color: Color(0xFF9C27B0),
         );
         final parser = TextfParser();
 
@@ -669,15 +673,15 @@ void main() {
         expect(widgetSpan.child, isA<HoverableLinkSpan>());
         final hoverableWidget = widgetSpan.child as HoverableLinkSpan;
 
-        // Verify the normal style passed to HoverableLinkSpan (Base + Theme Link)
+        // Verify the normal style passed to HoverableLinkSpan (Base + default link)
         expect(hoverableWidget.normalStyle.fontFamily, baseStyle.fontFamily);
         expect(hoverableWidget.normalStyle.fontSize, baseStyle.fontSize);
         expect(hoverableWidget.normalStyle.height, baseStyle.height);
         expect(
           hoverableWidget.normalStyle.color,
-          // Expect theme primary color, overriding base purple
-          lightTheme.colorScheme.primary,
-          reason: 'Theme link color should override base color',
+          // Expect the default link blue, overriding base purple
+          _linkColor,
+          reason: 'Default link color should override base color',
         );
         expect(hoverableWidget.normalStyle.decoration, TextDecoration.underline);
 
@@ -694,9 +698,9 @@ void main() {
         expect(innerSpan.style?.height, baseStyle.height);
         expect(
           innerSpan.style?.color,
-          // Expect theme primary color
-          lightTheme.colorScheme.primary,
-          reason: 'Inner span should inherit theme link color',
+          // Expect the default link blue
+          _linkColor,
+          reason: 'Inner span should inherit the default link color',
         );
         expect(innerSpan.style?.decoration, TextDecoration.underline);
 
@@ -941,13 +945,11 @@ void main() {
 
       testWidgets('links within formatted text', (tester) async {
         late BuildContext mockContext;
-        final lightTheme = ThemeData.light();
 
         // Setup context
         await tester.pumpWidget(
-          MaterialApp(
-            theme: lightTheme,
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 mockContext = context;
                 return Container();
@@ -955,7 +957,7 @@ void main() {
             ),
           ),
         );
-        const baseStyle = TextStyle(color: Colors.black); // Base style is black
+        const baseStyle = TextStyle(color: Color(0xFF000000)); // Base style is black
         final parser = TextfParser();
         const text = '**Bold text with [a link](https://example.com) inside**';
 
@@ -1000,9 +1002,9 @@ void main() {
         );
         expect(
           hoverableWidget.normalStyle.color,
-          // Expect theme primary color, overriding base/bold color
-          lightTheme.colorScheme.primary,
-          reason: "Link's normal style should have theme link color (over base/bold color)",
+          // Expect the default link blue, overriding base/bold color
+          _linkColor,
+          reason: "Link's normal style should have the default link color (over base/bold color)",
         );
         expect(
           hoverableWidget.normalStyle.decoration,
@@ -1013,13 +1015,11 @@ void main() {
 
       testWidgets('link text with mixed and nested formatting', (tester) async {
         late BuildContext mockContext;
-        final lightTheme = ThemeData.light();
 
         // Setup context
         await tester.pumpWidget(
-          MaterialApp(
-            theme: lightTheme,
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 mockContext = context;
                 return Container();
@@ -1049,7 +1049,7 @@ void main() {
         final innerSpans = hoverableWidget.initialChildrenSpans;
 
         // --- Verify *inner* spans ---
-        final linkNormalColor = lightTheme.colorScheme.primary; // Use theme color
+        const linkNormalColor = _linkColor; // Neutral default link color
         expect(innerSpans.first, isA<TextSpan>());
         expect((innerSpans.first as TextSpan).text, 'Bold');
         expect((innerSpans.first as TextSpan).style?.fontWeight, FontWeight.bold);
@@ -1079,14 +1079,15 @@ void main() {
 
         // Check Code span (index 6)
         final codeSpan = innerSpans[6] as TextSpan;
-        final linkNormalStyle =
-            baseStyle.merge(TextStyle(color: linkNormalColor)); // Base style for code inside link
+        final linkNormalStyle = baseStyle.merge(
+          const TextStyle(color: linkNormalColor),
+        ); // Base style for code inside link
         final expectedInnerCodeStyle = linkNormalStyle.copyWith(
           // Apply code style onto link style
           fontFamily: 'monospace',
           fontFamilyFallback: ['RobotoMono', 'Menlo', 'Courier New'],
-          backgroundColor: lightTheme.colorScheme.surfaceContainer, // Expect theme background
-          color: lightTheme.colorScheme.onSurfaceVariant, // Expect theme text color
+          backgroundColor: _codeBackground, // Neutral code background
+          color: _linkColor, // Code keeps the link color
           letterSpacing: 0,
         );
 
@@ -1094,9 +1095,9 @@ void main() {
         expect(codeSpan.style?.fontFamily, expectedInnerCodeStyle.fontFamily);
         expect(
           codeSpan.style?.backgroundColor,
-          // Expect theme background color
-          lightTheme.colorScheme.surfaceContainer,
-          reason: 'Code segment inside link should use theme background',
+          // Expect the neutral code background
+          _codeBackground,
+          reason: 'Code segment inside link should use the neutral code background',
         );
         expect(codeSpan.style?.color, expectedInnerCodeStyle.color);
 

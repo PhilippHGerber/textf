@@ -1,8 +1,10 @@
 // ignore_for_file: no-magic-number, avoid-non-null-assertion, avoid-late-keyword
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
+
+import '../../widgets/pump_textf_widget.dart';
 
 void main() {
   group('TextfEditingController edge cases', () {
@@ -39,8 +41,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -64,8 +66,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -98,8 +100,8 @@ void main() {
         late TextSpan result;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 result = controller.buildTextSpan(
                   context: context,
@@ -132,8 +134,8 @@ void main() {
         late TextSpan result1;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 // Use buildTextSpan twice with same text to hit cache
                 controller.buildTextSpan(

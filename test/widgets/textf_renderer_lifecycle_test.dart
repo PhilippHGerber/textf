@@ -2,12 +2,15 @@
 
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
+import 'package:textf/src/styling/textf_palette.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/internal/textf_renderer.dart';
 import 'package:textf/textf.dart';
+
+import 'pump_textf_widget.dart';
 
 // --- Spy ---
 
@@ -23,6 +26,7 @@ class SpyTextfParser implements TextfParser {
     TextScaler? textScaler,
     Map<String, InlineSpan>? placeholders,
     TextfStyleResolver? styleResolver,
+    TextfPalette? palette,
   }) {
     parseCallCount++;
     // Return a dummy span to allow the widget to build without errors
@@ -32,12 +36,10 @@ class SpyTextfParser implements TextfParser {
 
 // --- Helper Wrapper ---
 
-/// Helper to wrap TextfRenderer in the necessary ancestors
+/// Hosts a bare TextfRenderer in the neutral test app.
 Widget _wrap(Widget child) {
-  return MaterialApp(
-    home: Scaffold(
-      body: child,
-    ),
+  return neutralTestApp(
+    child: child,
   );
 }
 
@@ -133,8 +135,9 @@ void main() {
       );
     });
 
-    testWidgets('Layout properties invalidate cache (Regression Fix: Alignment Issue)',
-        (tester) async {
+    testWidgets('Layout properties invalidate cache (Regression Fix: Alignment Issue)', (
+      tester,
+    ) async {
       // 1. Initial Build
       await tester.pumpWidget(
         _wrap(
@@ -191,8 +194,9 @@ void main() {
       );
     });
 
-    testWidgets('Changing other layout props (maxLines, overflow) also invalidates cache',
-        (tester) async {
+    testWidgets('Changing other layout props (maxLines, overflow) also invalidates cache', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           TextfRenderer(
@@ -245,8 +249,9 @@ void main() {
       );
     });
 
-    testWidgets('Changing non-layout props (selectionColor) DOES NOT invalidate cache',
-        (tester) async {
+    testWidgets('Changing non-layout props (selectionColor) DOES NOT invalidate cache', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           TextfRenderer(
@@ -264,7 +269,7 @@ void main() {
             semanticsLabel: null,
             textWidthBasis: TextWidthBasis.parent,
             textHeightBehavior: null,
-            selectionColor: Colors.red,
+            selectionColor: const Color(0xFFF44336),
           ),
         ),
       );
@@ -288,7 +293,7 @@ void main() {
             semanticsLabel: null,
             textWidthBasis: TextWidthBasis.parent,
             textHeightBehavior: null,
-            selectionColor: Colors.blue, // Changed
+            selectionColor: const Color(0xFF2196F3), // Changed
           ),
         ),
       );
@@ -345,11 +350,12 @@ void main() {
       );
     });
 
-    testWidgets('Cache persists when Parent rebuilds with identical TextfOptions values',
-        (tester) async {
+    testWidgets('Cache persists when Parent rebuilds with identical TextfOptions values', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             boldStyle: const TextStyle(fontWeight: FontWeight.bold),
             child: TextfRenderer(
               data: 'Text',
@@ -377,8 +383,8 @@ void main() {
       // Rebuild the tree. This creates a NEW TextfOptions instance,
       // but with the SAME boldStyle value.
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             boldStyle: const TextStyle(fontWeight: FontWeight.bold),
             child: TextfRenderer(
               data: 'Text',
@@ -411,10 +417,10 @@ void main() {
     testWidgets('linkAlignment change triggers re-parse', (tester) async {
       // 1. Initial Build with baseline alignment
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             linkAlignment: PlaceholderAlignment.baseline,
-            onLinkTap: (_, __) {},
+            onLinkTap: (_, _) {},
             child: TextfRenderer(
               data: '[Link](https://example.com)',
               style: const TextStyle(fontSize: 10),
@@ -439,10 +445,10 @@ void main() {
 
       // 2. Change linkAlignment -> Should trigger re-parse
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             linkAlignment: PlaceholderAlignment.middle, // Changed
-            onLinkTap: (_, __) {},
+            onLinkTap: (_, _) {},
             child: TextfRenderer(
               data: '[Link](https://example.com)',
               style: const TextStyle(fontSize: 10),
@@ -471,180 +477,36 @@ void main() {
       );
     });
 
-    testWidgets('Cache persists when Theme instance changes but relevant colors are identical',
-        (tester) async {
-      // Two different ThemeData instances with SAME relevant colors
-      final theme1 = ThemeData(
-        colorScheme: const ColorScheme.light(
-          primary: Colors.blue,
-          onSurfaceVariant: Colors.grey,
-          surfaceContainer: Colors.white,
-        ),
-      );
-
-      final theme2 = ThemeData(
-        colorScheme: const ColorScheme.light(
-          primary: Colors.blue, // Same
-          onSurfaceVariant: Colors.grey, // Same
-          surfaceContainer: Colors.white, // Same
-          // But different tertiary (irrelevant to Textf)
-          tertiary: Colors.purple,
-        ),
-      );
-
-      // Sanity check: these are different instances
-      expect(identical(theme1, theme2), isFalse);
-
-      // 1. Initial build with theme1
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: theme1,
-          home: TextfRenderer(
-            data: '**Bold** and `code` and [link](https://example.com)',
-            style: const TextStyle(fontSize: 10),
-            parser: spyParser,
-            strutStyle: null,
-            textAlign: null,
-            textDirection: null,
-            locale: null,
-            softWrap: null,
-            overflow: null,
-            textScaler: null,
-            maxLines: null,
-            semanticsLabel: null,
-            textWidthBasis: null,
-            textHeightBehavior: null,
-            selectionColor: null,
-          ),
-        ),
-      );
-      expect(spyParser.parseCallCount, 1);
-
-      // 2. Rebuild with theme2 (different instance, same relevant colors)
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: theme2,
-          home: TextfRenderer(
-            data: '**Bold** and `code` and [link](https://example.com)',
-            style: const TextStyle(fontSize: 10),
-            parser: spyParser,
-            strutStyle: null,
-            textAlign: null,
-            textDirection: null,
-            locale: null,
-            softWrap: null,
-            overflow: null,
-            textScaler: null,
-            maxLines: null,
-            semanticsLabel: null,
-            textWidthBasis: null,
-            textHeightBehavior: null,
-            selectionColor: null,
-          ),
-        ),
-      );
-
-      // Should NOT re-parse because relevant colors are identical
-      expect(
-        spyParser.parseCallCount,
-        1,
-        reason: 'Should not re-parse when only irrelevant theme properties change',
-      );
-    });
-
-    testWidgets('Cache invalidates when Theme relevant colors change', (tester) async {
-      final theme1 = ThemeData(
-        colorScheme: const ColorScheme.light(
-          primary: Colors.blue,
-          onSurfaceVariant: Colors.grey,
-          surfaceContainer: Colors.white,
-        ),
-      );
-
-      final theme2 = ThemeData(
-        colorScheme: const ColorScheme.light(
-          primary: Colors.red, // Different!
-          onSurfaceVariant: Colors.grey,
-          surfaceContainer: Colors.white,
-        ),
-      );
-
-      // Simple wrapper without MaterialApp's theme animation
-      Widget buildWithTheme(ThemeData theme) {
-        return Theme(
-          data: theme,
-          child: Directionality(
-            textDirection: TextDirection.ltr,
-            child: MediaQuery(
-              data: const MediaQueryData(),
-              child: TextfRenderer(
-                data: '[link](https://example.com)',
-                style: const TextStyle(fontSize: 10),
-                parser: spyParser,
-                strutStyle: null,
-                textAlign: null,
-                textDirection: null,
-                locale: null,
-                softWrap: null,
-                overflow: null,
-                textScaler: null,
-                maxLines: null,
-                semanticsLabel: null,
-                textWidthBasis: null,
-                textHeightBehavior: null,
-                selectionColor: null,
-              ),
-            ),
-          ),
-        );
-      }
-
-      // 1. Initial build with theme1
-      await tester.pumpWidget(buildWithTheme(theme1));
-      expect(spyParser.parseCallCount, 1);
-
-      // 2. Switch to theme2 (different primary color)
-      await tester.pumpWidget(buildWithTheme(theme2));
-
-      expect(
-        spyParser.parseCallCount,
-        2,
-        reason: 'Should re-parse when theme primary color changes',
-      );
-    });
-
-    testWidgets('Cache invalidates when ancestor (non-nearest) TextfOptions changes',
-        (tester) async {
+    testWidgets('Cache invalidates when ancestor (non-nearest) TextfOptions changes', (
+      tester,
+    ) async {
       Widget buildTree({required Color grandparentBoldColor}) {
-        return Theme(
-          data: ThemeData.light(),
-          child: Directionality(
-            textDirection: TextDirection.ltr,
-            child: MediaQuery(
-              data: const MediaQueryData(),
+        return Directionality(
+          textDirection: TextDirection.ltr,
+          child: MediaQuery(
+            data: const MediaQueryData(),
+            child: TextfOptions(
+              // Grandparent - provides boldStyle
+              boldStyle: TextStyle(color: grandparentBoldColor),
               child: TextfOptions(
-                // Grandparent - provides boldStyle
-                boldStyle: TextStyle(color: grandparentBoldColor),
-                child: TextfOptions(
-                  // Parent (nearest) - provides italicStyle only
-                  italicStyle: const TextStyle(fontStyle: FontStyle.italic),
-                  child: TextfRenderer(
-                    data: '**bold**',
-                    style: const TextStyle(fontSize: 10),
-                    parser: spyParser,
-                    strutStyle: null,
-                    textAlign: null,
-                    textDirection: null,
-                    locale: null,
-                    softWrap: null,
-                    overflow: null,
-                    textScaler: null,
-                    maxLines: null,
-                    semanticsLabel: null,
-                    textWidthBasis: null,
-                    textHeightBehavior: null,
-                    selectionColor: null,
-                  ),
+                // Parent (nearest) - provides italicStyle only
+                italicStyle: const TextStyle(fontStyle: FontStyle.italic),
+                child: TextfRenderer(
+                  data: '**bold**',
+                  style: const TextStyle(fontSize: 10),
+                  parser: spyParser,
+                  strutStyle: null,
+                  textAlign: null,
+                  textDirection: null,
+                  locale: null,
+                  softWrap: null,
+                  overflow: null,
+                  textScaler: null,
+                  maxLines: null,
+                  semanticsLabel: null,
+                  textWidthBasis: null,
+                  textHeightBehavior: null,
+                  selectionColor: null,
                 ),
               ),
             ),
@@ -653,11 +515,11 @@ void main() {
       }
 
       // 1. Initial: grandparent boldStyle is blue
-      await tester.pumpWidget(buildTree(grandparentBoldColor: Colors.blue));
+      await tester.pumpWidget(buildTree(grandparentBoldColor: const Color(0xFF2196F3)));
       expect(spyParser.parseCallCount, 1);
 
       // 2. Change grandparent boldStyle to red (nearest TextfOptions unchanged)
-      await tester.pumpWidget(buildTree(grandparentBoldColor: Colors.red));
+      await tester.pumpWidget(buildTree(grandparentBoldColor: const Color(0xFFF44336)));
 
       // Should re-parse because effective boldStyle changed
       expect(
@@ -673,8 +535,8 @@ void main() {
       void handleHover(String url, String text, {required bool isHovering}) {}
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             onLinkTap: handleTap,
             onLinkHover: handleHover,
             child: TextfRenderer(
@@ -701,8 +563,8 @@ void main() {
 
       // Rebuild with SAME callback references
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             onLinkTap: handleTap,
             onLinkHover: handleHover,
             child: TextfRenderer(
@@ -733,12 +595,13 @@ void main() {
       );
     });
 
-    testWidgets('Cache invalidates when inline callbacks change (expected v1.1 behavior)',
-        (tester) async {
+    testWidgets('Cache invalidates when inline callbacks change (expected v1.1 behavior)', (
+      tester,
+    ) async {
       // First build with inline callback
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             onLinkTap: (url, text) {}, // Inline closure #1
             child: TextfRenderer(
               data: '[Link](https://example.com)',
@@ -764,8 +627,8 @@ void main() {
 
       // Rebuild with new inline callback (different instance)
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             onLinkTap: (url, text) {}, // Inline closure #2 - NEW instance
             child: TextfRenderer(
               data: '[Link](https://example.com)',
@@ -802,9 +665,9 @@ void main() {
     group('textHeightBehavior Cache Invalidation', () {
       testWidgets('Cache invalidates when textHeightBehavior changes', (tester) async {
         const behavior1 = ui.TextHeightBehavior(
-            // applyHeightToFirstAscent: true,
-            // applyHeightToLastDescent: true,
-            );
+          // applyHeightToFirstAscent: true,
+          // applyHeightToLastDescent: true,
+        );
         const behavior2 = ui.TextHeightBehavior(
           applyHeightToFirstAscent: false,
           applyHeightToLastDescent: false,
@@ -865,8 +728,9 @@ void main() {
         );
       });
 
-      testWidgets('Cache invalidates when textHeightBehavior changes from null to value',
-          (tester) async {
+      testWidgets('Cache invalidates when textHeightBehavior changes from null to value', (
+        tester,
+      ) async {
         const behavior = ui.TextHeightBehavior(
           applyHeightToFirstAscent: false,
           // applyHeightToLastDescent: true,
@@ -923,13 +787,13 @@ void main() {
         expect(
           spyParser.parseCallCount,
           1,
-          reason:
-              'Parser should NOT be called when textHeightBehavior changes from null to value (layout-only prop)',
+          reason: 'Parser should NOT be called when textHeightBehavior changes from null to value (layout-only prop)',
         );
       });
 
-      testWidgets('Cache invalidates when textHeightBehavior changes from value to null',
-          (tester) async {
+      testWidgets('Cache invalidates when textHeightBehavior changes from value to null', (
+        tester,
+      ) async {
         const behavior = ui.TextHeightBehavior(
           // applyHeightToFirstAscent: true,
           applyHeightToLastDescent: false,
@@ -986,16 +850,15 @@ void main() {
         expect(
           spyParser.parseCallCount,
           1,
-          reason:
-              'Parser should NOT be called when textHeightBehavior changes from value to null (layout-only prop)',
+          reason: 'Parser should NOT be called when textHeightBehavior changes from value to null (layout-only prop)',
         );
       });
 
       testWidgets('Cache persists when textHeightBehavior is identical', (tester) async {
         const behavior = ui.TextHeightBehavior(
-            // applyHeightToFirstAscent: true,
-            // applyHeightToLastDescent: true,
-            );
+          // applyHeightToFirstAscent: true,
+          // applyHeightToLastDescent: true,
+        );
 
         // 1. Initial build
         await tester.pumpWidget(
@@ -1052,8 +915,9 @@ void main() {
         );
       });
 
-      testWidgets('Cache persists when textHeightBehavior has equal values (different instance)',
-          (tester) async {
+      testWidgets('Cache persists when textHeightBehavior has equal values (different instance)', (
+        tester,
+      ) async {
         // Two different instances with same values
         const behavior1 = ui.TextHeightBehavior(
           // applyHeightToFirstAscent: true,
@@ -1123,9 +987,9 @@ void main() {
       });
     });
 
-// -----------------------------------------------------------------------------
-// ISSUE #2: locale Cache Invalidation Tests
-// -----------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------
+    // ISSUE #2: locale Cache Invalidation Tests
+    // -----------------------------------------------------------------------------
 
     group('locale Cache Invalidation', () {
       testWidgets('Cache invalidates when locale changes', (tester) async {
@@ -1241,8 +1105,7 @@ void main() {
         expect(
           spyParser.parseCallCount,
           1,
-          reason:
-              'Parser should NOT be called when locale changes from null to value (layout-only prop)',
+          reason: 'Parser should NOT be called when locale changes from null to value (layout-only prop)',
         );
       });
 
@@ -1300,8 +1163,7 @@ void main() {
         expect(
           spyParser.parseCallCount,
           1,
-          reason:
-              'Parser should NOT be called when locale changes from value to null (layout-only prop)',
+          reason: 'Parser should NOT be called when locale changes from value to null (layout-only prop)',
         );
       });
 
@@ -1481,8 +1343,9 @@ void main() {
         );
       });
 
-      testWidgets('Cache persists when locale has equal values (different instance)',
-          (tester) async {
+      testWidgets('Cache persists when locale has equal values (different instance)', (
+        tester,
+      ) async {
         // Two different instances with same values
         const locale1 = Locale('ar', 'SA');
         const locale2 = Locale('ar', 'SA');
@@ -1545,8 +1408,9 @@ void main() {
         );
       });
 
-      testWidgets('Cache invalidates for RTL locale change (regression test for i18n)',
-          (tester) async {
+      testWidgets('Cache invalidates for RTL locale change (regression test for i18n)', (
+        tester,
+      ) async {
         // This specifically tests RTL support which is advertised
         const ltrLocale = Locale('en', 'US');
         const rtlLocale = Locale('ar', 'SA'); // Arabic - RTL
@@ -1602,22 +1466,22 @@ void main() {
         expect(
           spyParser.parseCallCount,
           1,
-          reason:
-              'Parser should NOT be called when switching between LTR and RTL locales (layout-only prop)',
+          reason: 'Parser should NOT be called when switching between LTR and RTL locales (layout-only prop)',
         );
       });
     });
 
-// -----------------------------------------------------------------------------
-// COMBINED TEST: Both properties change simultaneously
-// -----------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------
+    // COMBINED TEST: Both properties change simultaneously
+    // -----------------------------------------------------------------------------
 
     group('Combined textHeightBehavior and locale Cache Invalidation', () {
-      testWidgets('Cache invalidates when both textHeightBehavior and locale change',
-          (tester) async {
+      testWidgets('Cache invalidates when both textHeightBehavior and locale change', (
+        tester,
+      ) async {
         const behavior1 = ui.TextHeightBehavior(
-            // applyHeightToFirstAscent: true
-            );
+          // applyHeightToFirstAscent: true
+        );
         const behavior2 = ui.TextHeightBehavior(applyHeightToFirstAscent: false);
         const locale1 = Locale('en');
         const locale2 = Locale('de');
@@ -1673,8 +1537,7 @@ void main() {
         expect(
           spyParser.parseCallCount,
           1,
-          reason:
-              'Parser should NOT be called when only layout-only props change (locale and textHeightBehavior)',
+          reason: 'Parser should NOT be called when only layout-only props change (locale and textHeightBehavior)',
         );
       });
     });

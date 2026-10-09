@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:textf/src/editing/marker_render_mode.dart';
 import 'package:textf/src/editing/textf_span_builder.dart';
 
 void main() {
@@ -18,7 +19,7 @@ void main() {
     final builder = TextfSpanBuilder();
 
     // 3. Warmup (Compile JIT, initialize statics)
-    builder.build(heavyText, context, baseStyle, cursorPosition: 0);
+    builder.build(heavyText, context, baseStyle, renderMode: const MarkerRenderMode.active(0));
 
     // 4. Run the Benchmark
     // We simulate 1000 cursor movements/blinks without changing the text.
@@ -31,7 +32,7 @@ void main() {
         heavyText,
         context,
         baseStyle,
-        cursorPosition: i % heavyText.length,
+        renderMode: MarkerRenderMode.active(i % heavyText.length),
       );
     }
 

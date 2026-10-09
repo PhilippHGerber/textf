@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
 
+import 'pump_textf_widget.dart';
+
 void main() {
   group('TextfRenderer Edge Cases', () {
     testWidgets('handles rapid text changes without errors', (tester) async {
@@ -13,14 +15,14 @@ void main() {
       String currentText = 'Initial **text**';
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: StatefulBuilder(
+        neutralTestApp(
+          child: StatefulBuilder(
             builder: (context, setState) {
               return Column(
                 children: [
                   Textf(currentText),
-                  ElevatedButton(
-                    onPressed: () {
+                  GestureDetector(
+                    onTap: () {
                       setState(() {
                         currentText = 'Updated *text* ${DateTime.now().millisecond}';
                       });
@@ -36,7 +38,7 @@ void main() {
 
       // Rapidly update the text multiple times
       for (int i = 0; i < 10; i++) {
-        await tester.tap(find.byType(ElevatedButton));
+        await tester.tap(find.text('Update'));
         await tester.pump();
       }
 
@@ -44,37 +46,36 @@ void main() {
       expect(find.byType(Textf), findsOneWidget);
     });
 
+    // Material interop: an explicit `Theme` (not `MaterialApp`) is toggled between light and
+    // dark. Textf reads no design-system theme, so this guards that ancestor Theme churn does
+    // not break rendering.
     testWidgets('handles theme changes gracefully', (tester) async {
-      ThemeMode themeMode = ThemeMode.light;
+      bool isDark = false;
 
       await tester.pumpWidget(
-        StatefulBuilder(
-          builder: (context, setState) {
-            return MaterialApp(
-              themeMode: themeMode,
-              theme: ThemeData.light(),
-              darkTheme: ThemeData.dark(),
-              home: Column(
-                children: [
-                  const Textf('Some **bold** and `code` text'),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        themeMode = themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-                      });
-                    },
-                    child: const Text('Toggle'),
-                  ),
-                ],
-              ),
-            );
-          },
+        neutralTestApp(
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              return Theme(
+                data: isDark ? ThemeData.dark() : ThemeData.light(),
+                child: Column(
+                  children: [
+                    const Textf('Some **bold** and `code` text'),
+                    GestureDetector(
+                      onTap: () => setState(() => isDark = !isDark),
+                      child: const Text('Toggle'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       );
 
       // Toggle theme multiple times
       for (int i = 0; i < 5; i++) {
-        await tester.tap(find.byType(ElevatedButton));
+        await tester.tap(find.text('Toggle'));
         await tester.pumpAndSettle();
       }
 
@@ -87,12 +88,12 @@ void main() {
       await tester.pumpWidget(
         StatefulBuilder(
           builder: (context, setState) {
-            return MaterialApp(
-              home: Column(
+            return neutralTestApp(
+              child: Column(
                 children: [
                   if (showTextf) const Textf('**Bold** with [link](url)'),
-                  ElevatedButton(
-                    onPressed: () => setState(() => showTextf = !showTextf),
+                  GestureDetector(
+                    onTap: () => setState(() => showTextf = !showTextf),
                     child: const Text('Toggle'),
                   ),
                 ],
@@ -105,13 +106,13 @@ void main() {
       expect(find.byType(Textf), findsOneWidget);
 
       // Remove Textf from tree
-      await tester.tap(find.byType(ElevatedButton));
+      await tester.tap(find.text('Toggle'));
       await tester.pumpAndSettle();
 
       expect(find.byType(Textf), findsNothing);
 
       // Add it back
-      await tester.tap(find.byType(ElevatedButton));
+      await tester.tap(find.text('Toggle'));
       await tester.pumpAndSettle();
 
       expect(find.byType(Textf), findsOneWidget);
@@ -121,8 +122,8 @@ void main() {
       final longText = 'Word ' * 1000 + '**bold**';
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: SingleChildScrollView(
+        neutralTestApp(
+          child: SingleChildScrollView(
             child: Textf(longText),
           ),
         ),
@@ -133,8 +134,8 @@ void main() {
 
     testWidgets('handles text with only formatting markers', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Textf('********'),
+        neutralTestApp(
+          child: const Textf('********'),
         ),
       );
 
@@ -145,8 +146,8 @@ void main() {
     testWidgets('handles deeply nested formatting', (tester) async {
       // Tests nesting limit behavior
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Textf('**bold _italic `code` end_ end**'),
+        neutralTestApp(
+          child: const Textf('**bold _italic `code` end_ end**'),
         ),
       );
 

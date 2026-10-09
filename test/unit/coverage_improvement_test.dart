@@ -1,22 +1,26 @@
 // ignore_for_file: no-magic-number, avoid-non-null-assertion, avoid-late-keyword
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/textf_token.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
+import 'package:textf/src/styling/textf_palette.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/textf.dart';
 
+import '../widgets/pump_textf_widget.dart';
+
 void main() {
   group('TextfStyleResolver with TextfOptions for various format types', () {
-    const baseStyle = TextStyle(fontSize: 14, color: Colors.black);
+    const baseStyle = TextStyle(fontSize: 14, color: Color(0xFF000000));
+    final palette = TextfPalette(baseStyle);
 
     testWidgets('resolves boldItalic style from TextfOptions', (tester) async {
       late TextStyle? result;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             boldItalicStyle: const TextStyle(
               fontWeight: FontWeight.w900,
               fontStyle: FontStyle.italic,
@@ -24,7 +28,7 @@ void main() {
             child: Builder(
               builder: (context) {
                 final resolver = TextfStyleResolver(context);
-                result = resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle);
+                result = resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle, palette);
                 return const SizedBox();
               },
             ),
@@ -40,16 +44,16 @@ void main() {
       late TextStyle? result;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             underlineStyle: const TextStyle(
               decoration: TextDecoration.underline,
-              color: Colors.green,
+              color: Color(0xFF4CAF50),
             ),
             child: Builder(
               builder: (context) {
                 final resolver = TextfStyleResolver(context);
-                result = resolver.resolveStyle(FormatMarkerType.underline, baseStyle);
+                result = resolver.resolveStyle(FormatMarkerType.underline, baseStyle, palette);
                 return const SizedBox();
               },
             ),
@@ -58,20 +62,20 @@ void main() {
       );
 
       expect(result, isNotNull);
-      expect(result!.color, Colors.green);
+      expect(result!.color, const Color(0xFF4CAF50));
     });
 
     testWidgets('resolves superscript style from TextfOptions', (tester) async {
       late TextStyle? result;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             superscriptStyle: const TextStyle(fontSize: 10),
             child: Builder(
               builder: (context) {
                 final resolver = TextfStyleResolver(context);
-                result = resolver.resolveStyle(FormatMarkerType.superscript, baseStyle);
+                result = resolver.resolveStyle(FormatMarkerType.superscript, baseStyle, palette);
                 return const SizedBox();
               },
             ),
@@ -87,13 +91,13 @@ void main() {
       late TextStyle? result;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             subscriptStyle: const TextStyle(fontSize: 10),
             child: Builder(
               builder: (context) {
                 final resolver = TextfStyleResolver(context);
-                result = resolver.resolveStyle(FormatMarkerType.subscript, baseStyle);
+                result = resolver.resolveStyle(FormatMarkerType.subscript, baseStyle, palette);
                 return const SizedBox();
               },
             ),
@@ -105,24 +109,13 @@ void main() {
       expect(result!.fontSize, 10);
     });
 
-    testWidgets('resolves highlight style in dark theme', (tester) async {
-      late TextStyle? result;
+    test('resolves highlight style on a dark surface (light text)', () {
+      final darkSurface = TextfPalette(const TextStyle(color: Color(0xFFFFFFFF)));
+      final resolver = TextfStyleResolver.withState(options: null);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.dark(),
-          home: Builder(
-            builder: (context) {
-              final resolver = TextfStyleResolver(context);
-              result = resolver.resolveStyle(FormatMarkerType.highlight, baseStyle);
-              return const SizedBox();
-            },
-          ),
-        ),
-      );
+      final result = resolver.resolveStyle(FormatMarkerType.highlight, baseStyle, darkSurface);
 
-      expect(result, isNotNull);
-      expect(result!.backgroundColor, isNotNull);
+      expect(result.backgroundColor, const Color(0xFFFBC02D).withValues(alpha: 0.4));
     });
   });
 
@@ -131,28 +124,28 @@ void main() {
       TextfOptionsData? data;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
-            italicStyle: const TextStyle(color: Colors.red),
+        neutralTestApp(
+          child: TextfOptions(
+            italicStyle: const TextStyle(color: Color(0xFFF44336)),
             boldItalicStyle: const TextStyle(fontWeight: FontWeight.bold),
             strikethroughStyle: const TextStyle(decoration: TextDecoration.lineThrough),
             codeStyle: const TextStyle(fontFamily: 'monospace'),
             underlineStyle: const TextStyle(decoration: TextDecoration.underline),
-            highlightStyle: const TextStyle(backgroundColor: Colors.yellow),
+            highlightStyle: const TextStyle(backgroundColor: Color(0xFFFFEB3B)),
             superscriptStyle: const TextStyle(fontSize: 8),
             subscriptStyle: const TextStyle(fontSize: 8),
-            linkStyle: const TextStyle(color: Colors.blue),
-            linkHoverStyle: const TextStyle(color: Colors.purple),
+            linkStyle: const TextStyle(color: Color(0xFF2196F3)),
+            linkHoverStyle: const TextStyle(color: Color(0xFF9C27B0)),
             child: TextfOptions(
               // Same properties at a second level to hit merge branches
               italicStyle: const TextStyle(fontStyle: FontStyle.italic),
               boldItalicStyle: const TextStyle(fontStyle: FontStyle.italic),
-              strikethroughStyle: const TextStyle(color: Colors.grey),
+              strikethroughStyle: const TextStyle(color: Color(0xFF9E9E9E)),
               codeStyle: const TextStyle(fontSize: 12),
-              underlineStyle: const TextStyle(color: Colors.green),
-              highlightStyle: const TextStyle(color: Colors.black),
-              superscriptStyle: const TextStyle(color: Colors.orange),
-              subscriptStyle: const TextStyle(color: Colors.orange),
+              underlineStyle: const TextStyle(color: Color(0xFF4CAF50)),
+              highlightStyle: const TextStyle(color: Color(0xFF000000)),
+              superscriptStyle: const TextStyle(color: Color(0xFFFF9800)),
+              subscriptStyle: const TextStyle(color: Color(0xFFFF9800)),
               linkStyle: const TextStyle(decoration: TextDecoration.underline),
               linkHoverStyle: const TextStyle(decoration: TextDecoration.underline),
               child: Builder(
@@ -171,9 +164,12 @@ void main() {
       // Child italic color (from child) should be merged on top of parent red
       expect(data!.italicStyle?.fontStyle, FontStyle.italic); // from child
       // Child underline color wins
-      expect(data!.underlineStyle?.color, Colors.green); // from child
+      expect(data!.underlineStyle?.color, const Color(0xFF4CAF50)); // from child
       // Parent link color merged with child decoration
-      expect(data!.linkStyle?.color, Colors.blue); // from parent (child didn't specify color)
+      expect(
+        data!.linkStyle?.color,
+        const Color(0xFF2196F3),
+      ); // from parent (child didn't specify color)
     });
   });
 
@@ -192,8 +188,8 @@ void main() {
       late TextSpan result;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               // Cursor at 0 means ^2^ is in preview mode (WidgetSpans)
               controller
@@ -228,8 +224,8 @@ void main() {
       late TextSpan result;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               // Cursor at 0 means ^2^ is in preview mode (WidgetSpans)
               // Composing range covers the whole string including WidgetSpan positions
@@ -260,8 +256,8 @@ void main() {
       late TextSpan result;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               controller.value = controller.value.copyWith(
                 composing: const TextRange(start: 2, end: 7), // "hello"
@@ -296,8 +292,8 @@ void main() {
       late TextSpan result;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               result = controller.buildTextSpan(
                 context: context,
@@ -329,57 +325,6 @@ void main() {
     });
   });
 
-  group('TextfRenderer theme comparison', () {
-    testWidgets('rebuilds when theme color changes', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          ),
-          home: const Textf('**bold** and `code`'),
-        ),
-      );
-
-      // Change theme to force renderer to compare theme colors
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
-          ),
-          home: const Textf('**bold** and `code`'),
-        ),
-      );
-
-      // Should rebuild successfully without errors
-      expect(find.byType(Textf), findsOneWidget);
-    });
-
-    testWidgets('skips rebuild when relevant theme colors match', (tester) async {
-      // Use a specific ColorScheme so both themes have identical relevant colors
-      final colorScheme = ColorScheme.fromSeed(seedColor: Colors.blue);
-
-      await tester.pumpWidget(
-        MaterialApp(
-          // First theme - creates cached spans
-          theme: ThemeData(colorScheme: colorScheme, fontFamily: 'Roboto'),
-          home: const Textf('**bold** and `code`'),
-        ),
-      );
-
-      await tester.pumpWidget(
-        MaterialApp(
-          // Different ThemeData object (different fontFamily) but same colorScheme
-          // This forces the renderer to compare individual color properties
-          // since lastTheme != theme (different objects)
-          theme: ThemeData(colorScheme: colorScheme, fontFamily: 'Arial'),
-          home: const Textf('**bold** and `code`'),
-        ),
-      );
-
-      expect(find.byType(Textf), findsOneWidget);
-    });
-  });
-
   group('TextfParser orphan link tokens as plain text', () {
     late TextfParser parser;
 
@@ -394,8 +339,8 @@ void main() {
       late List<InlineSpan> result;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               // [text](url) is a valid link - it will be handled by LinkHandler
               // To test fallthrough, we need tokens that exist but aren't handled

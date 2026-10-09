@@ -1,6 +1,6 @@
 // ignore_for_file: no-magic-number, avoid-late-keyword, avoid-non-null-assertion
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/textf_options_data.dart';
@@ -35,10 +35,7 @@ void main() {
     );
 
     TextfStyleResolver resolverWith({TextfOptionsData? options}) {
-      return TextfStyleResolver.withState(
-        theme: ThemeData.light(),
-        options: options,
-      );
+      return TextfStyleResolver.withState(options: options);
     }
 
     group('default scale', () {
