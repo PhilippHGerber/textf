@@ -416,12 +416,14 @@ class TextfTokenizer {
         // itself).
         int indent = 0;
         int checkPos = pos - 1;
-        while (
-            checkPos >= 0 && indent <= kMaxHeadingIndent && text.codeUnitAt(checkPos) == kSpace) {
+        while (checkPos >= 0 &&
+            indent <= kMaxHeadingIndent &&
+            text.codeUnitAt(checkPos) == kSpace) {
           indent++;
           checkPos--;
         }
-        final bool atLineStart = indent <= kMaxHeadingIndent &&
+        final bool atLineStart =
+            indent <= kMaxHeadingIndent &&
             (checkPos < 0 ||
                 text.codeUnitAt(checkPos) == kNewline ||
                 text.codeUnitAt(checkPos) == kCarriageReturn);
@@ -439,11 +441,13 @@ class TextfTokenizer {
           }
           final int afterRun = pos + count;
           final bool validLevel = count <= kMaxHeadingLevel;
-          final bool hasSeparator = afterRun < length &&
+          final bool hasSeparator =
+              afterRun < length &&
               (text.codeUnitAt(afterRun) == kSpace || text.codeUnitAt(afterRun) == kTab);
           // End of line (or EOF) right after the opening run is also a valid
           // separator: it makes the heading empty rather than disqualifying it.
-          final bool atLineEnd = afterRun >= length ||
+          final bool atLineEnd =
+              afterRun >= length ||
               text.codeUnitAt(afterRun) == kNewline ||
               text.codeUnitAt(afterRun) == kCarriageReturn;
 

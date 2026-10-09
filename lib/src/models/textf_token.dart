@@ -4,7 +4,7 @@
 /// so adding a new token kind forces all consumers to handle it.
 sealed class TextfToken {
   /// Base constructor shared by all token types.
-  const TextfToken({required this.position, required this.length});
+  const new({required this.position, required this.length});
 
   /// The starting position of this token in the original string.
   final int position;
@@ -16,7 +16,7 @@ sealed class TextfToken {
 /// Regular text content with no special formatting.
 final class TextToken extends TextfToken {
   /// Creates a text token with the given [value].
-  const TextToken(this.value, {required super.position, required super.length});
+  const new(this.value, {required super.position, required super.length});
 
   /// The actual text content of this token.
   final String value;
@@ -58,7 +58,7 @@ enum FormatMarkerType {
 /// A formatting marker token such as `**`, `~~`, `` ` ``, etc.
 final class FormatMarkerToken extends TextfToken {
   /// Creates a formatting marker token.
-  const FormatMarkerToken(
+  const new(
     this.markerType,
     this.value, {
     required super.position,
@@ -86,14 +86,15 @@ final class FormatMarkerToken extends TextfToken {
   final bool canClose;
 
   @override
-  String toString() => 'FormatMarkerToken($markerType, "$value" at $position, '
+  String toString() =>
+      'FormatMarkerToken($markerType, "$value" at $position, '
       'canOpen: $canOpen, canClose: $canClose)';
 }
 
 /// Opening square bracket `[` that begins a link structure.
 final class LinkStartToken extends TextfToken {
   /// Creates a link start token.
-  const LinkStartToken({required super.position, required super.length});
+  const new({required super.position, required super.length});
 
   @override
   String toString() => 'LinkStartToken(at $position)';
@@ -102,7 +103,7 @@ final class LinkStartToken extends TextfToken {
 /// The separator `](` between link text and URL.
 final class LinkSeparatorToken extends TextfToken {
   /// Creates a link separator token.
-  const LinkSeparatorToken({required super.position, required super.length});
+  const new({required super.position, required super.length});
 
   @override
   String toString() => 'LinkSeparatorToken(at $position)';
@@ -111,7 +112,7 @@ final class LinkSeparatorToken extends TextfToken {
 /// Closing parenthesis `)` that ends a link structure.
 final class LinkEndToken extends TextfToken {
   /// Creates a link end token.
-  const LinkEndToken({required super.position, required super.length});
+  const new({required super.position, required super.length});
 
   @override
   String toString() => 'LinkEndToken(at $position)';
@@ -120,7 +121,7 @@ final class LinkEndToken extends TextfToken {
 /// A placeholder token `{key}` for widget substitution.
 final class PlaceholderToken extends TextfToken {
   /// Creates a placeholder token with the given [key].
-  const PlaceholderToken(this.key, {required super.position, required super.length});
+  const new(this.key, {required super.position, required super.length});
 
   /// The identifier between the braces (e.g., `icon` from `{icon}`).
   final String key;
@@ -132,7 +133,7 @@ final class PlaceholderToken extends TextfToken {
 /// A marker token representing an escape character `\`.
 final class EscapeMarkerToken extends TextfToken {
   /// Creates an escape marker token.
-  const EscapeMarkerToken({required super.position, required super.length});
+  const new({required super.position, required super.length});
 
   @override
   String toString() => 'EscapeMarkerToken(at $position)';
@@ -162,7 +163,7 @@ final class HeadingToken extends TextfToken {
   /// ([contentStart] − [position]) so the per-token slot sum still equals the
   /// input length (the 1:1 invariant). The inline content follows as separate
   /// [TextToken]s.
-  HeadingToken({
+  new({
     required this.level,
     required super.position,
     required this.contentStart,
@@ -185,7 +186,8 @@ final class HeadingToken extends TextfToken {
   int lineEndPosition;
 
   @override
-  String toString() => 'HeadingToken(h$level at $position, '
+  String toString() =>
+      'HeadingToken(h$level at $position, '
       'content $contentStart..$contentEnd, lineEnd $lineEndPosition)';
 }
 
@@ -201,7 +203,7 @@ final class HeadingToken extends TextfToken {
 final class HeadingSuffixToken extends TextfToken {
   /// Creates a heading-suffix marker token spanning `[position, position +
   /// length)`.
-  const HeadingSuffixToken({
+  const new({
     required super.position,
     required super.length,
     required this.headingStart,
@@ -218,7 +220,8 @@ final class HeadingSuffixToken extends TextfToken {
   final int lineEndPosition;
 
   @override
-  String toString() => 'HeadingSuffixToken(at $position, len $length, '
+  String toString() =>
+      'HeadingSuffixToken(at $position, len $length, '
       'line $headingStart..$lineEndPosition)';
 }
 
@@ -236,7 +239,7 @@ final class HeadingSuffixToken extends TextfToken {
 /// marker text.
 final class ThematicBreakToken extends TextfToken {
   /// Creates a thematic-break token spanning `[position, position + length)`.
-  const ThematicBreakToken({required super.position, required super.length});
+  const new({required super.position, required super.length});
 
   @override
   String toString() => 'ThematicBreakToken(at $position, len $length)';

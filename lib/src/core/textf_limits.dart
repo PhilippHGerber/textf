@@ -3,7 +3,7 @@
 /// Keeping these values in one place makes them discoverable
 /// and avoids scattering magic numbers across the codebase.
 final class TextfLimits {
-  TextfLimits._();
+  new _();
 
   /// Maximum number of entries in the parser LRU cache.
   /// Increased to 1000 to better support long list views and chat applications

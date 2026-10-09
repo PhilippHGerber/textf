@@ -99,10 +99,10 @@ class FormattingUtils {
           i++;
         }
       } else if (token is LinkStartToken) {
-        if (LinkValidator.isCompleteLink(tokens, i)) {
+        final parsedLink = LinkValidator.validate(tokens, i);
+        if (parsedLink != null) {
           // Extract the link text and recursively strip any nested formatting
-          final linkText = (tokens[i + kLinkTextOffset] as TextToken).value;
-          buffer.write(stripFormatting(linkText));
+          buffer.write(stripFormatting(parsedLink.displayText));
           i += kLinkTokenCount; // Skip the entire link token structure
         } else {
           // Broken link syntax, write literal bracket

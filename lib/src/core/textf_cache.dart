@@ -7,7 +7,7 @@ import 'dart:collection';
 /// prevents memory bloat when caching many long strings.
 class TextfCache<K, V> {
   /// Creates a new dual-bounded LRU cache.
-  TextfCache({
+  new({
     required this.maxEntries,
     required this.maxTotalChars,
     required this.getCharCount,

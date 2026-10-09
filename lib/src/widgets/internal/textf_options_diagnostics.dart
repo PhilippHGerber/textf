@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 /// Type alias for the diagnostics builder used by addTextfOptionsDebugProperties.
 typedef TextfOptionsDiagnosticPropertiesBuilder = DiagnosticPropertiesBuilder;
@@ -30,6 +30,10 @@ void addTextfOptionsDebugProperties({
   required double? subscriptBaselineFactor,
   required double? strikethroughThickness,
   required Widget Function(BuildContext context)? thematicBreakBuilder,
+  required Color? linkColor,
+  required Color? codeBackgroundColor,
+  required Color? highlightColor,
+  required Color? thematicBreakColor,
 }) {
   properties
     ..add(
@@ -150,5 +154,9 @@ void addTextfOptionsDebugProperties({
         'thematicBreakBuilder',
         thematicBreakBuilder,
       ),
-    );
+    )
+    ..add(ColorProperty('linkColor', linkColor, defaultValue: null))
+    ..add(ColorProperty('codeBackgroundColor', codeBackgroundColor, defaultValue: null))
+    ..add(ColorProperty('highlightColor', highlightColor, defaultValue: null))
+    ..add(ColorProperty('thematicBreakColor', thematicBreakColor, defaultValue: null));
 }

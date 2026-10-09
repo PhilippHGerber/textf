@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../core/default_styles.dart';
 import '../core/textf_limits.dart';
@@ -6,56 +6,56 @@ import '../core/textf_style_utils.dart';
 import '../models/textf_token.dart';
 import '../widgets/textf_options.dart';
 import '../widgets/textf_options_data.dart';
+import 'link_style_configuration.dart';
+import 'textf_palette.dart';
 import 'thematic_break.dart';
 
 /// A class responsible for resolving the final TextStyle for formatted text segments.
 ///
-/// It orchestrates the application of styles based on the following precedence:
-/// 1. Explicit styles defined in the pre-merged `TextfOptionsData` from the widget tree.
-/// 2. Theme-based default styles derived from the application's `ThemeData`
-///    (for code, links, highlight).
-/// 3. Relative default styles from `DefaultStyles`
-///    (for bold, italic, strikethrough, underline).
+/// It is design-system-neutral: its only state is the pre-merged
+/// [TextfOptionsData], and the colors of the built-in defaults come from the
+/// [TextfPalette] passed in per call. Styles resolve in four tiers:
+/// 1. An explicit style option (`codeStyle`, `linkStyle`, …) from the
+///    `TextfOptionsData`. It replaces the built-in default and is merged onto
+///    the base style.
+/// 2. An explicit color option (`linkColor`, `codeBackgroundColor`,
+///    `highlightColor`, `thematicBreakColor`). It tints the built-in default and
+///    leaves its typography and decoration intact.
+/// 3. Neutral defaults derived from the [TextfPalette] (code background,
+///    highlight tint, thematic-break rule) or fixed in `DefaultStyles` (link
+///    blue).
+/// 4. Relative defaults from `DefaultStyles` (bold, italic, strikethrough,
+///    underline, script and heading sizes).
 ///
 /// The resolved style is always merged with the provided `baseStyle`.
 class TextfStyleResolver {
-  /// Creates a style resolver from the given context.
+  /// Creates a style resolver from the [TextfOptionsData] in scope at [context].
   ///
-  /// Extracts [ThemeData] and the pre-merged [TextfOptionsData] immediately.
-  /// This ensures that no [BuildContext] is retained in the instance,
-  /// preventing memory leaks when the resolver is cached by controllers
-  /// that outlive the widget tree.
-  factory TextfStyleResolver(BuildContext context) {
-    return TextfStyleResolver.withState(
-      theme: Theme.of(context),
-      options: TextfOptions.maybeOf(context),
-    );
+  /// Only the pre-merged options are read; no [BuildContext] is retained in
+  /// the instance, preventing memory leaks when the resolver is cached by
+  /// controllers that outlive the widget tree.
+  factory(BuildContext context) {
+    return TextfStyleResolver.withState(options: TextfOptions.maybeOf(context));
   }
 
-  /// Creates a style resolver directly from dependencies.
-  ///
-  /// Use this constructor if you have already extracted the theme and
-  /// options from the context.
-  TextfStyleResolver.withState({
-    required ThemeData theme,
-    required TextfOptionsData? options,
-  })  : _theme = theme,
-        _options = options;
+  /// Creates a style resolver directly from already-extracted options.
+  new withState({required this._options});
 
-  final ThemeData _theme;
   final TextfOptionsData? _options;
 
   /// Resolves the final TextStyle for a given format marker type and base style.
   ///
   /// Use this for standard formatting types like bold, italic, code, strikethrough,
   /// underline, highlight.
-  /// For links, use `resolveLinkStyle` and `resolveLinkHoverStyle`.
+  /// For links, use [resolveLinkConfiguration].
   ///
   /// - [type]: The type of formatting marker (e.g., `FormatMarkerType.bold`).
   /// - [baseStyle]: The style of the text segment *before* applying this format.
+  /// - [palette]: The render pass's palette, derived from the *effective root
+  ///   style* (not from [baseStyle]); it colors the code and highlight defaults.
   ///
   /// Returns the final `TextStyle` to be applied.
-  TextStyle resolveStyle(FormatMarkerType type, TextStyle baseStyle) {
+  TextStyle resolveStyle(FormatMarkerType type, TextStyle baseStyle, TextfPalette palette) {
     // Handle script font size adjustment first
     TextStyle effectiveBaseStyle = baseStyle;
 
@@ -77,7 +77,7 @@ class TextfStyleResolver {
       // Precedence 1: Use the style derived from TextfOptions
       return mergeTextStyles(effectiveBaseStyle, optionsStyle);
     } else {
-      // Precedence 2 & 3: No TextfOptions override found, use Theme or Default fallback
+      // Precedence 2–4: no style option; color option, neutral or relative default
       switch (type) {
         case FormatMarkerType.bold:
           return DefaultStyles.boldStyle(effectiveBaseStyle); // Relative default
@@ -97,11 +97,11 @@ class TextfStyleResolver {
             thickness: finalThickness,
           );
         case FormatMarkerType.code:
-          return _getThemeBasedCodeStyle(effectiveBaseStyle); // Theme-based default
+          return _defaultCodeStyle(effectiveBaseStyle, palette); // Color option or neutral
         case FormatMarkerType.underline:
           return DefaultStyles.underlineStyle(effectiveBaseStyle); // Relative default
         case FormatMarkerType.highlight:
-          return _getThemeBasedHighlightStyle(effectiveBaseStyle); // Theme-based default
+          return _defaultHighlightStyle(effectiveBaseStyle, palette); // Color option or neutral
         case FormatMarkerType.superscript:
           return effectiveBaseStyle;
         case FormatMarkerType.subscript:
@@ -110,69 +110,43 @@ class TextfStyleResolver {
     }
   }
 
-  /// Resolves the final NORMAL TextStyle for a link.
+  /// Resolves all link-related styling, interaction callbacks, and geometry into
+  /// a [LinkStyleConfiguration].
   ///
-  /// Checks TextfOptions first, then falls back to a theme-based style.
-  /// Merges the result with the provided `baseStyle`.
+  /// Combines normal and hover [TextStyle]s, [MouseCursor], tap and hover
+  /// callbacks, and [PlaceholderAlignment].
   ///
-  /// - [baseStyle]: The style of the link text *before* applying link-specific formatting
-  ///                (might already include bold, italic etc. if the link is nested).
-  ///
-  /// Returns the final normal `TextStyle` for the link.
-  TextStyle resolveLinkStyle(TextStyle baseStyle) {
+  /// - [inheritedStyle]: The style of the link text before applying link formatting.
+  LinkStyleConfiguration resolveLinkConfiguration(TextStyle inheritedStyle) {
+    final TextStyle baseLinkStyle = _resolveLinkStyle(inheritedStyle);
+    final TextStyle hoverLinkStyle = _resolveLinkHoverStyle(baseLinkStyle);
+    final MouseCursor cursor = _options?.linkMouseCursor ?? DefaultStyles.linkMouseCursor;
+    final PlaceholderAlignment alignment = _options?.linkAlignment ?? PlaceholderAlignment.baseline;
+
+    return LinkStyleConfiguration(
+      style: baseLinkStyle,
+      hoverStyle: hoverLinkStyle,
+      cursor: cursor,
+      onTap: _options?.onLinkTap,
+      onHover: _options?.onLinkHover,
+      alignment: alignment,
+    );
+  }
+
+  TextStyle _resolveLinkStyle(TextStyle baseStyle) {
     final TextStyle? optionsStyle = _options?.linkStyle;
 
     if (optionsStyle != null) {
       return mergeTextStyles(baseStyle, optionsStyle);
     }
-    return _getThemeBasedLinkStyle(baseStyle);
+    return _defaultLinkStyle(baseStyle);
   }
 
-  /// Resolves the final HOVER TextStyle for a link.
-  ///
-  /// Checks TextfOptions first, then falls back to the normal link style.
-  /// Merges the result with the provided `baseStyle`.
-  ///
-  /// - [baseStyle]: The style of the link text *before* applying link-specific formatting.
-  ///
-  /// Returns the final hover `TextStyle` for the link.
-  TextStyle resolveLinkHoverStyle(TextStyle baseStyle) {
-    // 1. Resolve the normal link style first
-    final TextStyle normalLinkStyle = resolveLinkStyle(baseStyle);
-
-    // 2. Try to get a hover-specific style from options, merging it onto the normalLinkStyle
+  TextStyle _resolveLinkHoverStyle(TextStyle normalLinkStyle) {
     final TextStyle? optionsStyle = _options?.linkHoverStyle;
 
     if (optionsStyle == null) return normalLinkStyle;
     return mergeTextStyles(normalLinkStyle, optionsStyle);
-  }
-
-  /// Resolves the effective MouseCursor for a link.
-  ///
-  /// Checks TextfOptions first, then falls back to `DefaultStyles.linkMouseCursor`.
-  MouseCursor resolveLinkMouseCursor() {
-    return _options?.linkMouseCursor ?? DefaultStyles.linkMouseCursor;
-  }
-
-  /// Resolves the effective onLinkTap callback for a link.
-  ///
-  /// Checks TextfOptions for the callback. Returns null if none found.
-  void Function(String url, String displayText)? resolveOnLinkTap() {
-    return _options?.onLinkTap;
-  }
-
-  /// Resolves the effective onLinkHover callback for a link.
-  ///
-  /// Checks TextfOptions for the callback. Returns null if none found.
-  void Function(String url, String displayText, {required bool isHovering})? resolveOnLinkHover() {
-    return _options?.onLinkHover;
-  }
-
-  /// Resolves the effective placeholder alignment for a link widget.
-  ///
-  /// Checks TextfOptions. Defaults to [PlaceholderAlignment.baseline] if not found.
-  PlaceholderAlignment resolveLinkAlignment() {
-    return _options?.linkAlignment ?? PlaceholderAlignment.baseline;
   }
 
   /// Calculates the vertical padding required to achieve the script's visual
@@ -191,10 +165,12 @@ class TextfStyleResolver {
   }) {
     final double fontSize = style.fontSize ?? DefaultStyles.defaultFontSize;
 
-    final double? optionFactor =
-        isSuperscript ? _options?.superscriptBaselineFactor : _options?.subscriptBaselineFactor;
+    final double? optionFactor = isSuperscript
+        ? _options?.superscriptBaselineFactor
+        : _options?.subscriptBaselineFactor;
 
-    final double offsetFactor = optionFactor ??
+    final double offsetFactor =
+        optionFactor ??
         (isSuperscript
             ? DefaultStyles.superscriptBaselineFactor
             : DefaultStyles.subscriptBaselineFactor);
@@ -284,14 +260,18 @@ class TextfStyleResolver {
   ///
   /// A `thematicBreakBuilder` supplied anywhere in the [TextfOptions] hierarchy
   /// (nearest ancestor wins, via the pre-merged [_options]) overrides the
-  /// default; its widget is placed in a middle-aligned [WidgetSpan]. Absent an
-  /// override, the guarded full-width default rule renders.
-  InlineSpan resolveThematicBreak() {
+  /// default; its widget is placed in a middle-aligned [WidgetSpan]. Absent a
+  /// builder, the guarded full-width 1px default rule renders, colored by the
+  /// `thematicBreakColor` option or, failing that, by the [palette]'s
+  /// foreground at [DefaultStyles.thematicBreakAlpha].
+  InlineSpan resolveThematicBreak(TextfPalette palette) {
     final Widget Function(BuildContext context)? builder = _options?.thematicBreakBuilder;
     if (builder != null) {
       return customThematicBreakSpan(builder);
     }
-    return defaultThematicBreakSpan();
+    return defaultThematicBreakSpan(
+      _options?.thematicBreakColor ?? DefaultStyles.thematicBreakColor(palette.foreground),
+    );
   }
 
   // --- Private Helper Methods ---
@@ -321,56 +301,42 @@ class TextfStyleResolver {
     }
   }
 
-  /// Internal helper to create the default code style based on the current theme.
-  TextStyle _getThemeBasedCodeStyle(TextStyle baseStyle) {
-    final ColorScheme colorScheme = _theme.colorScheme;
-
-    final Color codeBackgroundColor = colorScheme.surfaceContainer;
-    final Color codeForegroundColor = colorScheme.onSurfaceVariant;
-
-    // Use monospace font family
-    const String codeFontFamily = 'monospace';
-    // Use the constant list directly from DefaultStyles
-    const List<String> codeFontFamilyFallback = DefaultStyles.defaultCodeFontFamilyFallback;
-
-    // Merge theme defaults with the base style
+  /// The default code style: monospace family and fallbacks on the base style,
+  /// on the `codeBackgroundColor` option or the palette-derived tint. The code
+  /// text keeps the segment's color.
+  TextStyle _defaultCodeStyle(TextStyle baseStyle, TextfPalette palette) {
     return baseStyle.copyWith(
-      fontFamily: codeFontFamily,
-      fontFamilyFallback: codeFontFamilyFallback,
-      backgroundColor: codeBackgroundColor,
-      color: codeForegroundColor,
+      fontFamily: DefaultStyles.defaultCodeFontFamily,
+      fontFamilyFallback: DefaultStyles.defaultCodeFontFamilyFallback,
+      backgroundColor:
+          _options?.codeBackgroundColor ??
+          DefaultStyles.codeBackgroundColor(palette.foreground, palette.surface),
       letterSpacing: baseStyle.letterSpacing ?? 0,
     );
   }
 
-  /// Internal helper to create the default link style based on the current theme.
-  TextStyle _getThemeBasedLinkStyle(TextStyle baseStyle) {
-    final Color themeLinkColor = _theme.colorScheme.primary;
+  /// The default link style: underline, with text and underline colored by the
+  /// `linkColor` option or the fixed default link blue.
+  TextStyle _defaultLinkStyle(TextStyle baseStyle) {
+    final Color linkColor = _options?.linkColor ?? DefaultStyles.defaultLinkColor;
 
-    // Merge theme link appearance (color, decoration) ON TOP of the base style.
     return baseStyle.merge(
       TextStyle(
-        color: themeLinkColor,
+        color: linkColor,
         decoration: TextDecoration.underline,
-        decorationColor: themeLinkColor,
+        decorationColor: linkColor,
       ),
     );
   }
 
-  /// Internal helper to create the default highlight style based on the current theme.
-  TextStyle _getThemeBasedHighlightStyle(TextStyle baseStyle) {
-    final ColorScheme colorScheme = _theme.colorScheme;
-
-    // A common "highlighter yellow":
-    final Color highlightBgColor = colorScheme.brightness == Brightness.light
-        ? Colors.yellow.withValues(alpha: DefaultStyles.highlightAlphaLight)
-        : Colors.yellow.shade700.withValues(alpha: DefaultStyles.highlightAlphaDark);
-    final Color highlightTextColor = baseStyle.color ??
-        (colorScheme.brightness == Brightness.light ? Colors.black87 : Colors.white);
-
+  /// The default highlight style: the `highlightColor` option or the
+  /// palette-derived tint as the background. The text keeps the segment's
+  /// color, or takes a surface-appropriate one when the segment has none.
+  TextStyle _defaultHighlightStyle(TextStyle baseStyle, TextfPalette palette) {
     return baseStyle.copyWith(
-      backgroundColor: highlightBgColor,
-      color: highlightTextColor,
+      backgroundColor:
+          _options?.highlightColor ?? DefaultStyles.highlightBackgroundColor(palette.surface),
+      color: baseStyle.color ?? DefaultStyles.highlightTextColor(palette.surface),
     );
   }
 }

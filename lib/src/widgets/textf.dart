@@ -1,6 +1,6 @@
 import 'dart:ui' as ui show TextHeightBehavior;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../parsing/textf_parser.dart';
 import 'internal/textf_diagnostics.dart';
@@ -87,7 +87,7 @@ class Textf extends StatelessWidget {
   /// The base [style] will be applied to all text, with formatting markers
   /// modifying it where specified. For example, bold markers will apply
   /// FontWeight.bold to the specified text segments.
-  const Textf(
+  const new(
     this.data, {
     super.key,
     this.style,

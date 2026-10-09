@@ -13,7 +13,7 @@ import 'textf_token.dart';
 /// stack depth, making style lookups O(1) instead of O(depth) per flush.
 class FormatStackEntry {
   /// Creates a new format stack entry.
-  const FormatStackEntry({
+  const new({
     required this.index,
     required this.matchingIndex,
     required this.type,

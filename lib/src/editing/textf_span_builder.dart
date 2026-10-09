@@ -1,13 +1,17 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../core/constants.dart';
+import '../core/default_styles.dart';
 import '../core/formatting_utils.dart';
 import '../core/textf_token_cache.dart';
 import '../models/format_stack_entry.dart';
 import '../models/textf_token.dart';
 import '../parsing/components/link_validator.dart';
 import '../parsing/heading_region.dart';
+import '../styling/textf_palette.dart';
 import '../styling/textf_style_resolver.dart';
+import '../styling/thematic_break.dart';
+import 'marker_render_mode.dart';
 
 /// Builds a list of [InlineSpan] objects from formatted text.
 ///
@@ -40,7 +44,7 @@ import '../styling/textf_style_resolver.dart';
 ///
 class TextfSpanBuilder {
   /// Creates a new [TextfSpanBuilder] instance.
-  TextfSpanBuilder();
+  new();
 
   /// Near-zero font size for fully hidden markers.
   static const double _hiddenFontSize = 0.01;
@@ -48,45 +52,30 @@ class TextfSpanBuilder {
   /// Multiplier for negative letterSpacing to collapse hidden marker width.
   static const double _hiddenLetterSpacingFactor = 2;
 
-  /// Opacity factor for dimmed marker characters.
-  static const double _markerOpacity = 0.4;
-
-  /// Sentinel value for [build]'s `cursorPosition` parameter that hides ALL
-  /// formatting markers.
-  ///
-  /// When passed as `cursorPosition`, no marker will match (since token
-  /// positions are always ≥ 0), causing every marker to receive the hidden
-  /// style. Used by 'TextfEditingController' during text selection to prevent
-  /// layout jumps on mobile.
-  static const int hideAllMarkers = -1;
-
   /// Clears the shared token cache used by the builder.
   static void clearCache() => TextfTokenCache.clearCache();
 
   /// Builds a list of [InlineSpan] from formatted text.
   ///
-  /// Every character in the input[text] appears in the output spans,
+  /// Every character in the input [text] appears in the output spans,
   /// ensuring 1:1 cursor-to-character mapping. Formatting markers are
   /// rendered with a dimmed style; content between markers is styled
   /// according to the formatting type.
   ///
   /// - [text]: Input string with formatting markers.
-  /// - [context]: BuildContext for style resolution via[TextfStyleResolver].
+  /// - [context]: BuildContext for style resolution via [TextfStyleResolver].
   /// - [baseStyle]: Base style for unformatted text segments.
-  /// - [cursorPosition]: Controls marker visibility in smart-hide mode.
-  ///   Pass `null` to show all markers with dimmed styling (default).
-  ///   Pass a valid offset (≥ 0) to show markers only at that cursor
-  ///   position. Pass [hideAllMarkers] (-1) to hide ALL markers — used
-  ///   during text selection to prevent layout jumps on mobile.
+  /// - [renderMode]: Controls formatting marker visibility. Defaults to
+  ///   [MarkerRenderMode.always].
   /// - [styleResolver]: Optional cached [TextfStyleResolver] to prevent
   ///   expensive re-creation on every frame.
   ///
-  /// Returns a list of [InlineSpan] objects ([TextSpan] and[WidgetSpan]).
+  /// Returns a list of [InlineSpan] objects ([TextSpan] and [WidgetSpan]).
   List<InlineSpan> build(
     String text,
     BuildContext context,
     TextStyle baseStyle, {
-    int? cursorPosition,
+    MarkerRenderMode renderMode = MarkerRenderMode.always,
     TextfStyleResolver? styleResolver,
   }) {
     // Fast path for empty text
@@ -105,10 +94,12 @@ class TextfSpanBuilder {
 
     final resolver = styleResolver ?? TextfStyleResolver(context);
 
-    final activeMarkerStyle = _resolveMarkerStyle(baseStyle, context);
-    final inactiveMarkerStyle = cursorPosition != null //
-        ? _resolveHiddenMarkerStyle()
-        : activeMarkerStyle;
+    final palette = TextfPalette(baseStyle);
+    final activeMarkerStyle = _resolveMarkerStyle(baseStyle, palette);
+    final inactiveMarkerStyle = switch (renderMode) {
+      MarkerRenderModeAlways() => activeMarkerStyle,
+      MarkerRenderModeActive() || MarkerRenderModeHidden() => _resolveHiddenMarkerStyle(),
+    };
 
     final state = _SpanBuildState(
       text: text,
@@ -117,8 +108,9 @@ class TextfSpanBuilder {
       baseStyle: baseStyle,
       activeMarkerStyle: activeMarkerStyle,
       inactiveMarkerStyle: inactiveMarkerStyle,
-      cursorPosition: cursorPosition,
+      renderMode: renderMode,
       resolver: resolver,
+      palette: palette,
     );
 
     return state.build();
@@ -126,16 +118,16 @@ class TextfSpanBuilder {
 
   /// Creates a dimmed style for formatting markers.
   ///
-  /// Falls back to `Theme.of(context).colorScheme.onSurface` when
-  /// [baseStyle] carries no explicit color, ensuring correct appearance
-  /// on both light and dark themes.
-  TextStyle _resolveMarkerStyle(TextStyle baseStyle, BuildContext context) {
-    final effectiveColor = baseStyle.color ?? Theme.of(context).colorScheme.onSurface;
+  /// The color is [palette]'s foreground at [DefaultStyles.editingMarkerAlpha].
+  /// [palette] is built from [baseStyle], so that foreground is
+  /// `baseStyle.color`, or opaque black when the style sets no color. Markers
+  /// therefore depend on the text style alone, never on a design-system theme.
+  TextStyle _resolveMarkerStyle(TextStyle baseStyle, TextfPalette palette) {
     // Only carry color and fontSize from baseStyle. fontWeight, fontStyle,
     // and other typographic properties are intentionally reset so that markers
     // always appear as lightweight dim metadata, regardless of ambient style.
     return TextStyle(
-      color: effectiveColor.withValues(alpha: _markerOpacity),
+      color: DefaultStyles.editingMarkerColor(palette.foreground),
       fontSize: baseStyle.fontSize,
     );
   }
@@ -162,15 +154,16 @@ class TextfSpanBuilder {
 ///
 /// Extracted to avoid multiple interacting closures allocating contexts and closure objects on the heap.
 class _SpanBuildState with HeadingRegion {
-  _SpanBuildState({
+  new({
     required this.text,
     required this.tokens,
     required this.validPairs,
     required this.baseStyle,
     required this.activeMarkerStyle,
     required this.inactiveMarkerStyle,
-    required this.cursorPosition,
+    required this.renderMode,
     required this.resolver,
+    required this.palette,
   });
   final String text;
   final List<TextfToken> tokens;
@@ -179,8 +172,10 @@ class _SpanBuildState with HeadingRegion {
   final TextStyle baseStyle;
   final TextStyle activeMarkerStyle;
   final TextStyle inactiveMarkerStyle;
-  final int? cursorPosition;
+  final MarkerRenderMode renderMode;
   final TextfStyleResolver resolver;
+  @override
+  final TextfPalette palette;
 
   final List<InlineSpan> spans = <InlineSpan>[];
   @override
@@ -248,20 +243,22 @@ class _SpanBuildState with HeadingRegion {
         continue;
       }
 
-      // Thematic-break Handling (whole-line construct: dimmed marker text).
-      // The rule's raw `-`/`*`/`_` (plus any leading/inner/trailing whitespace)
-      // stay visible as a single dimmed marker span — brightening to the active
-      // marker style when the cursor is on the line — so every source character
-      // keeps exactly one cursor slot. The read-only rule `WidgetSpan` is never
-      // produced here.
+      // Thematic-break Handling (whole-line construct).
+      // While the line's markers are shown — the cursor is on the line, or all
+      // markers are visible — the raw `-`/`*`/`_` (plus any leading/inner/
+      // trailing whitespace) render as a single dimmed marker span. Otherwise
+      // the markers are the line's only content, so hiding them like any other
+      // marker would make the line vanish; the rule is drawn in their place.
+      // Either way every source character keeps exactly one cursor slot.
       if (token is ThematicBreakToken) {
         final lineStart = token.position;
         final lineEnd = token.position + token.length;
-        emitMarker(
+        if (_cursorOnLine(lineStart, lineEnd)) {
           // ignore: avoid-substring
-          text.substring(lineStart, lineEnd),
-          _cursorOnLine(lineStart, lineEnd) ? activeMarkerStyle : inactiveMarkerStyle,
-        );
+          emitMarker(text.substring(lineStart, lineEnd), activeMarkerStyle);
+        } else {
+          emitThematicBreakRule(token.length);
+        }
         i++;
         continue;
       }
@@ -295,7 +292,11 @@ class _SpanBuildState with HeadingRegion {
             }
 
             // Compute resolved style at this stack depth for O(1) lookup.
-            final TextStyle resolved = resolver.resolveStyle(token.markerType, currentStyle());
+            final TextStyle resolved = resolver.resolveStyle(
+              token.markerType,
+              currentStyle(),
+              palette,
+            );
 
             formatStack.add(
               FormatStackEntry(
@@ -377,13 +378,7 @@ class _SpanBuildState with HeadingRegion {
           textBuffer.write(text.substring(position, position + length));
         case EscapeMarkerToken():
           flushText();
-          final TextStyle style;
-          final pos = cursorPosition;
-          style = pos != null
-              ? pos >= token.position && pos <= token.position + 1
-                  ? activeMarkerStyle
-                  : inactiveMarkerStyle
-              : activeMarkerStyle;
+          final TextStyle style = _markerStyleForRange(token.position, token.position + 1);
           spans.add(TextSpan(text: r'\', style: style));
       }
       i++;
@@ -407,14 +402,12 @@ class _SpanBuildState with HeadingRegion {
   /// (preview mode). Content always uses WidgetSpan regardless.
   ///
   /// Preview mode activates when:
-  ///  1. cursorPosition != null (MarkerVisibility.whenActive)
-  ///  2. Cursor is outside[openPos, closeEnd]
+  ///  1. In active mode and cursor is outside [openPos, closeEnd]
+  ///  2. In hidden mode (all markers suppressed)
   bool isScriptPreviewMode(int openIndex, int closeIndex) {
-    final pos = cursorPosition;
-    if (pos == null) return false;
     final openPos = tokens[openIndex].position;
     final closeEnd = tokens[closeIndex].position + tokens[closeIndex].length;
-    return !(pos >= openPos && pos <= closeEnd);
+    return !renderMode.isActiveInRange(openPos, closeEnd);
   }
 
   /// True when the format stack contains ANY active script entry.
@@ -539,16 +532,16 @@ class _SpanBuildState with HeadingRegion {
     textBuffer.clear();
   }
 
-  /// Resolve marker style based on cursor position relative to pair.
+  /// Resolves active vs inactive marker style depending on whether this
+  /// render mode considers the range `[start, end]` active.
+  TextStyle _markerStyleForRange(int start, int end) =>
+      renderMode.isActiveInRange(start, end) ? activeMarkerStyle : inactiveMarkerStyle;
+
+  /// Resolve marker style based on render mode and cursor position relative to pair.
   TextStyle markerStyleForPair(int openIndex, int closeIndex) {
-    final pos = cursorPosition;
-    if (pos == null) return activeMarkerStyle;
     final openPos = tokens[openIndex].position;
     final closeEnd = tokens[closeIndex].position + tokens[closeIndex].length;
-    if (pos >= openPos && pos <= closeEnd) {
-      return activeMarkerStyle;
-    }
-    return inactiveMarkerStyle;
+    return _markerStyleForRange(openPos, closeEnd);
   }
 
   /// Resolve the heading marker style based on cursor position relative to the
@@ -557,8 +550,7 @@ class _SpanBuildState with HeadingRegion {
   /// O(1): the line end is read directly from the token's back-patched
   /// [HeadingToken.lineEndPosition] — no per-heading forward token scan. The
   /// marker is shown active (heading-sized, active marker color) when the cursor
-  /// is on the heading line, and inactive/dimmed otherwise (including the
-  /// hide-all-markers selection path, where `cursorPosition` is < 0).
+  /// is on the heading line, and inactive/dimmed otherwise.
   TextStyle headingMarkerStyle(HeadingToken token) =>
       _headingLineMarkerStyle(token.position, token.lineEndPosition);
 
@@ -574,15 +566,10 @@ class _SpanBuildState with HeadingRegion {
   }
 
   /// Whether the cursor sits on the line `[lineStart, lineEnd]` (inclusive of
-  /// both ends), or is absent. A `null` cursor means "show every marker
-  /// dimmed-but-present", so it counts as on-line. Shared by the ATX-heading and
+  /// both ends), or all markers are shown. Shared by the ATX-heading and
   /// thematic-break marker-styling paths — both key their active/inactive choice
   /// on this same O(1) line-membership test.
-  bool _cursorOnLine(int lineStart, int lineEnd) {
-    final pos = cursorPosition;
-    if (pos == null) return true;
-    return pos >= lineStart && pos <= lineEnd;
-  }
+  bool _cursorOnLine(int lineStart, int lineEnd) => renderMode.isActiveInRange(lineStart, lineEnd);
 
   /// Flush text buffer and emit a marker span.
   ///
@@ -599,6 +586,21 @@ class _SpanBuildState with HeadingRegion {
     }
   }
 
+  /// Flush text buffer and emit the thematic-break rule in place of a rule
+  /// line's [slotCount] hidden marker characters.
+  ///
+  /// The rule itself is the same span the read-only pipeline renders (so it
+  /// honors `thematicBreakBuilder` and `thematicBreakColor`), re-wrapped so it
+  /// cannot wrap the editable's line. It takes the first slot; a zero-size
+  /// [WidgetSpan] fills each remaining slot.
+  void emitThematicBreakRule(int slotCount) {
+    flushText();
+    spans.add(editingThematicBreakSpan(resolver.resolveThematicBreak(palette)));
+    for (var c = 1; c < slotCount; c++) {
+      spans.add(const WidgetSpan(child: SizedBox.shrink()));
+    }
+  }
+
   /// Processes a link structure as styled [TextSpan]s.
   ///
   /// Returns the index after the link structure if valid, or `null` if the
@@ -608,36 +610,28 @@ class _SpanBuildState with HeadingRegion {
   /// token must be a single [TextToken]. A link like `[*italic* text](url)`
   /// or `[text {placeholder}](url)` fails the completeness check and falls
   /// through to individual token rendering, producing garbled output with
-  /// stray `[](` characters. Extend [LinkValidator.isCompleteLink] to fix this.
+  /// stray `[](` characters. Extend [LinkValidator.validate] to fix this.
   int? processLinkAsText(int index) {
     // Verify complete link structure: [text](url)
-    if (!LinkValidator.isCompleteLink(tokens, index)) {
+    final parsedLink = LinkValidator.validate(tokens, index);
+    if (parsedLink == null) {
       return null;
     }
 
     // Flush any preceding text with current formatting.
     flushText();
 
-    final linkTextToken = tokens[index + kLinkTextOffset] as TextToken;
-    final linkUrlToken = tokens[index + kLinkUrlOffset] as TextToken;
-    final linkText = linkTextToken.value;
-    final linkUrl = linkUrlToken.value;
+    final linkText = parsedLink.displayText;
+    final linkUrl = parsedLink.url;
 
     // Resolve link styling based on the current inherited style.
-    final linkStyle = resolver.resolveLinkStyle(currentStyle());
+    final linkStyle = resolver.resolveLinkConfiguration(currentStyle()).style;
 
-    // Determine marker style based on cursor position.
-    final TextStyle markerStyle;
-    final pos = cursorPosition;
-    if (pos != null) {
-      final linkStart = tokens[index].position;
-      final linkEnd =
-          tokens[index + kLinkEndTokenOffset].position + tokens[index + kLinkEndTokenOffset].length;
-      final cursorInside = pos >= linkStart && pos <= linkEnd;
-      markerStyle = cursorInside ? activeMarkerStyle : inactiveMarkerStyle;
-    } else {
-      markerStyle = activeMarkerStyle;
-    }
+    // Determine marker style based on render mode.
+    final TextStyle markerStyle = _markerStyleForRange(
+      parsedLink.startPosition,
+      parsedLink.endPosition,
+    );
 
     // Emit opening bracket.
     spans.add(TextSpan(text: '[', style: markerStyle));
@@ -656,6 +650,7 @@ class _SpanBuildState with HeadingRegion {
         linkStyle: linkStyle,
         markerStyle: markerStyle,
         resolver: resolver,
+        palette: palette,
       );
     } else {
       spans.add(TextSpan(text: linkText, style: linkStyle));
@@ -688,6 +683,7 @@ class _SpanBuildState with HeadingRegion {
     required TextStyle linkStyle,
     required TextStyle markerStyle,
     required TextfStyleResolver resolver,
+    required TextfPalette palette,
   }) {
     final nestedFormatStack = <FormatStackEntry>[];
     final nestedTextBuffer = StringBuffer();
@@ -718,7 +714,9 @@ class _SpanBuildState with HeadingRegion {
             // Opening marker.
             flushNestedBuffer();
             spans.add(TextSpan(text: token.value, style: markerStyle));
-            final TextStyle prevStyle = nestedFormatStack.isEmpty //
+            final TextStyle prevStyle =
+                nestedFormatStack
+                    .isEmpty //
                 ? linkStyle
                 : nestedFormatStack.last.resolvedStyle;
             nestedFormatStack.add(
@@ -726,7 +724,7 @@ class _SpanBuildState with HeadingRegion {
                 index: i,
                 matchingIndex: matchingIndex,
                 type: token.markerType,
-                resolvedStyle: resolver.resolveStyle(token.markerType, prevStyle),
+                resolvedStyle: resolver.resolveStyle(token.markerType, prevStyle, palette),
               ),
             );
           } else {

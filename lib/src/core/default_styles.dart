@@ -1,24 +1,115 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 /// Provides default styling behaviours used as fallbacks by TextfStyleResolver.
 ///
-/// This class centralizes fallback styling configurations when neither
-/// TextfOptions nor the application Theme provide specific guidance for a
-/// particular formatting type.
+/// This class centralizes the design-system-neutral constants and relative
+/// fallback styles for the formatting types. Nothing here reads a
+/// design-system theme: colors are fixed constants or derived from a text
+/// foreground and its inferred surface brightness (see `TextfPalette`).
 class DefaultStyles {
   /// Default mouse cursor for links.
   /// Used as a fallback by TextfStyleResolver when no cursor is specified
   /// via TextfOptions in the widget tree.
   static const MouseCursor linkMouseCursor = SystemMouseCursors.click;
 
-  /// Default alpha values for highlight background color.
-  static const highlightAlphaDark = 0.4;
+  /// Foreground color assumed when the effective text style sets no color.
+  ///
+  /// Opaque black, matching what Flutter paints for a color-less [TextStyle].
+  static const Color defaultForegroundColor = Color(0xFF000000);
 
-  /// Default alpha values for highlight background color.
-  static const highlightAlphaLight = 0.5;
+  /// Default link color: `#1A73E8`, a single fixed blue for every surface.
+  ///
+  /// It is deliberately *not* derived from the inferred surface brightness:
+  /// that guess can be wrong, and for links a wrong guess is an accessibility
+  /// failure rather than a cosmetic one. This blue reaches about 4.51:1
+  /// against white and 4.16:1 against a `#121212` dark surface, so it stays
+  /// legible whichever surface the text actually sits on.
+  static const Color defaultLinkColor = Color(0xFF1A73E8);
+
+  /// Alpha applied to the foreground color for the inline-code background on
+  /// a light surface.
+  static const double codeBackgroundAlphaLight = 0.05;
+
+  /// Alpha applied to the foreground color for the inline-code background on
+  /// a dark surface.
+  static const double codeBackgroundAlphaDark = 0.15;
+
+  /// Base color of the highlight (`==text==`) background on a light surface.
+  static const Color highlightColorLight = Color(0xFFFFEB3B);
+
+  /// Base color of the highlight (`==text==`) background on a dark surface.
+  static const Color highlightColorDark = Color(0xFFFBC02D);
+
+  /// Alpha applied to [highlightColorLight] for the highlight background.
+  static const double highlightAlphaLight = 0.5;
+
+  /// Alpha applied to [highlightColorDark] for the highlight background.
+  static const double highlightAlphaDark = 0.4;
+
+  /// Highlight (`==text==`) text color on a light surface, used only when the
+  /// segment itself sets no color: black at 87% opacity.
+  static const Color highlightTextColorLight = Color(0xDD000000);
+
+  /// Highlight (`==text==`) text color on a dark surface, used only when the
+  /// segment itself sets no color: opaque white.
+  static const Color highlightTextColorDark = Color(0xFFFFFFFF);
+
+  /// Alpha applied to the ambient text color for the default thematic-break
+  /// rule.
+  static const double thematicBreakAlpha = 0.20;
+
+  /// Alpha applied to the text color for dimmed formatting markers in
+  /// `TextfEditingController`.
+  static const double editingMarkerAlpha = 0.4;
+
+  /// Font family of the default inline-code style.
+  static const String defaultCodeFontFamily = 'monospace';
+
+  /// The default inline-code background: [foreground] tinted at
+  /// [codeBackgroundAlphaLight] on a light [surface], or
+  /// [codeBackgroundAlphaDark] on a dark one.
+  ///
+  /// The alpha replaces any alpha [foreground] already carries.
+  static Color codeBackgroundColor(Color foreground, Brightness surface) {
+    return foreground.withValues(
+      alpha: surface == Brightness.light ? codeBackgroundAlphaLight : codeBackgroundAlphaDark,
+    );
+  }
+
+  /// The default highlight background for the given [surface]:
+  /// [highlightColorLight] at [highlightAlphaLight], or [highlightColorDark]
+  /// at [highlightAlphaDark].
+  static Color highlightBackgroundColor(Brightness surface) {
+    return surface == Brightness.light
+        ? highlightColorLight.withValues(alpha: highlightAlphaLight)
+        : highlightColorDark.withValues(alpha: highlightAlphaDark);
+  }
+
+  /// The highlight text color for the given [surface], used when the segment
+  /// sets no color of its own: [highlightTextColorLight] on a light surface,
+  /// [highlightTextColorDark] on a dark one.
+  static Color highlightTextColor(Brightness surface) {
+    return surface == Brightness.light ? highlightTextColorLight : highlightTextColorDark;
+  }
+
+  /// The default thematic-break rule color: [foreground] at
+  /// [thematicBreakAlpha].
+  ///
+  /// The alpha replaces any alpha [foreground] already carries.
+  static Color thematicBreakColor(Color foreground) {
+    return foreground.withValues(alpha: thematicBreakAlpha);
+  }
+
+  /// The dimmed formatting-marker color in `TextfEditingController`:
+  /// [foreground] at [editingMarkerAlpha].
+  ///
+  /// The alpha replaces any alpha [foreground] already carries.
+  static Color editingMarkerColor(Color foreground) {
+    return foreground.withValues(alpha: editingMarkerAlpha);
+  }
 
   /// Default font family fallback list for inline code (`code`).
-  /// Used by TextfStyleResolver when applying theme-based code styling
+  /// Used by TextfStyleResolver when applying the default code styling
   /// if no specific `codeStyle` (with font information) is provided via TextfOptions.
   /// Includes 'monospace' as a final generic fallback.
   static const List<String> defaultCodeFontFamilyFallback = [
@@ -154,25 +245,11 @@ class DefaultStyles {
     );
   }
 
-  /// Applies a simple default highlight formatting (`==highlight==`) to a base style.
-  /// This is a very basic fallback. A theme-aware highlight style is generally preferred
-  /// and would be implemented in `TextfStyleResolver`.
-  /// Used as a fallback by TextfStyleResolver if no `highlightStyle` is found via TextfOptions
-  /// AND no theme-based default is implemented or chosen in the resolver.
-  static TextStyle highlightStyle(TextStyle baseStyle) {
-    // A common, though not necessarily theme-adaptive, highlight color.
-    // Brightness check could make it slightly more adaptive if used as a true last resort.
-    final baseStyleColor = baseStyle.color;
-    final bool isDark = baseStyleColor != null &&
-        ThemeData.estimateBrightnessForColor(baseStyleColor) == Brightness.dark;
-
-    return baseStyle.copyWith(
-      backgroundColor: isDark
-          ? Colors.yellow.withValues(alpha: highlightAlphaDark)
-          : Colors.yellow.withValues(alpha: highlightAlphaLight),
-      // Retain the original text color unless a specific contrast logic is needed.
-      // color: baseStyle.color, // Text color usually remains the same for highlight
-    );
+  /// Applies the default highlight formatting (`==highlight==`) to a base
+  /// style: the [highlightBackgroundColor] for [surface] as the background,
+  /// keeping the base text color.
+  static TextStyle highlightStyle(TextStyle baseStyle, Brightness surface) {
+    return baseStyle.copyWith(backgroundColor: highlightBackgroundColor(surface));
   }
 
   /// Applies default superscript formatting (`^superscript^`) to a base style.

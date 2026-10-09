@@ -1,6 +1,6 @@
 // Override of buildTextSpan must match Flutter's parameter order.
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../core/formatting_utils.dart';
 import '../core/textf_limits.dart';
@@ -9,12 +9,14 @@ import '../styling/textf_style_resolver.dart';
 import '../widgets/textf_ext.dart';
 import '../widgets/textf_options.dart';
 import '../widgets/textf_options_data.dart';
+import 'marker_render_mode.dart';
 import 'marker_visibility.dart';
 import 'textf_span_builder.dart';
 
 /// A [TextEditingController] that renders textf-formatted text in text fields.
 ///
-/// Use this controller with any [TextField] or [TextFormField] to display
+/// Use this controller with any text field built on [EditableText] (such as
+/// `TextField`, `TextFormField` or `CupertinoTextField`) to display
 /// live-formatted text while the user types. The user edits plain text with
 /// formatting markers, and the controller renders them with applied styles.
 ///
@@ -44,7 +46,7 @@ import 'textf_span_builder.dart';
 ///
 /// ```dart
 /// TextfOptions(
-///   boldStyle: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+///   boldStyle: TextStyle(color: Color(0xFFD32F2F), fontWeight: FontWeight.bold),
 ///   child: TextField(controller: TextfEditingController()),
 /// )
 /// ```
@@ -66,6 +68,11 @@ import 'textf_span_builder.dart';
 /// while the content between them gets the resolved formatting. This ensures
 /// cursor positions map 1:1 to the raw text.
 ///
+/// The dimmed marker color is the field's text color at 40% opacity (opaque
+/// black when the text style sets no color). It is derived from the style the
+/// field passes to [buildTextSpan] alone; no design-system theme is read, so
+/// the controller behaves the same under any app shell.
+///
 /// ## Limitations
 ///
 /// - Widget placeholders (`{key}`) render as literal text (no substitution).
@@ -75,21 +82,18 @@ import 'textf_span_builder.dart';
 /// - Links show their full `[text](url)` syntax with styling applied.
 class TextfEditingController extends TextEditingController {
   /// Creates a [TextfEditingController] with optional initial text.
-  TextfEditingController({
+  new({
     super.text,
-    MarkerVisibility markerVisibility = MarkerVisibility.always,
-    int maxLiveFormattingLength = TextfLimits.maxLiveFormattingLength,
-  })  : _markerVisibility = markerVisibility,
-        _maxLiveFormattingLength = maxLiveFormattingLength;
+    this._markerVisibility = MarkerVisibility.always,
+    this._maxLiveFormattingLength = TextfLimits.maxLiveFormattingLength,
+  });
 
   /// Creates a [TextfEditingController] from a [TextEditingValue].
-  TextfEditingController.fromValue(
+  new fromValue(
     super.value, {
-    MarkerVisibility markerVisibility = MarkerVisibility.always,
-    int maxLiveFormattingLength = TextfLimits.maxLiveFormattingLength,
-  })  : _markerVisibility = markerVisibility,
-        _maxLiveFormattingLength = maxLiveFormattingLength,
-        super.fromValue();
+    this._markerVisibility = MarkerVisibility.always,
+    this._maxLiveFormattingLength = TextfLimits.maxLiveFormattingLength,
+  }) : super.fromValue();
 
   static final TextfSpanBuilder _spanBuilder = TextfSpanBuilder();
 
@@ -99,23 +103,13 @@ class TextfEditingController extends TextEditingController {
   List<InlineSpan>? _cachedParsedSpans;
   List<InlineSpan>? _cachedFinalChildren;
   String? _lastText;
-  int? _lastCursorPos;
+  MarkerRenderMode? _lastRenderMode;
   MarkerVisibility? _lastVisibility;
   TextStyle? _lastStyle;
-  ThemeData? _lastTheme;
   TextfOptionsData? _lastOptionsData;
   TextRange? _lastComposing;
   bool? _lastWithComposing;
   TextfStyleResolver? _cachedResolver;
-
-  bool _isSameTheme(ThemeData? a, ThemeData? b) {
-    if (identical(a, b)) return true;
-    if (a == null || b == null) return false;
-    return a.colorScheme.primary == b.colorScheme.primary &&
-        a.colorScheme.onSurfaceVariant == b.colorScheme.onSurfaceVariant &&
-        a.colorScheme.surfaceContainer == b.colorScheme.surfaceContainer &&
-        a.colorScheme.brightness == b.colorScheme.brightness;
-  }
 
   /// Returns the plain text content with all formatting markers stripped.
   ///
@@ -175,6 +169,16 @@ class TextfEditingController extends TextEditingController {
     notifyListeners();
   }
 
+  /// Computes the [MarkerRenderMode] for the given [visibility] and [selection].
+  @visibleForTesting
+  static MarkerRenderMode computeRenderMode({
+    required MarkerVisibility visibility,
+    required TextSelection selection,
+  }) => MarkerRenderMode.fromVisibility(
+    visibility: visibility,
+    selection: selection,
+  );
+
   /// Builds a [TextSpan] tree with live formatting applied.
   ///
   /// Parses the current [text] for formatting markers and returns styled
@@ -194,31 +198,27 @@ class TextfEditingController extends TextEditingController {
       return TextSpan(style: style, text: text);
     }
 
-    // 2. Resolve cursor position for smart-hide mode (O(1)).
-    final int? cursorPos;
-    if (_markerVisibility == MarkerVisibility.whenActive) {
-      final sel = value.selection;
-      cursorPos =
-          sel.isValid && sel.isCollapsed ? sel.extentOffset : TextfSpanBuilder.hideAllMarkers;
-    } else {
-      cursorPos = null;
-    }
+    // 2. Resolve marker render mode for smart-hide mode (O(1)).
+    final MarkerRenderMode renderMode = MarkerRenderMode.fromVisibility(
+      visibility: _markerVisibility,
+      selection: value.selection,
+    );
 
     // 3. Extract inputs for cache matching (O(1)).
-    final ThemeData theme = Theme.of(context);
-
-    // We fetch the pre-merged Data class, allowing instant O(1) equality check
+    // The spans depend only on the text, the render-relevant projection of the
+    // selection and visibility (renderMode), marker visibility, [style] and the
+    // pre-merged TextfOptionsData — no design-system theme is read. Dimmed marker
+    // colors derive from [style] alone, so a [style] change already covers them.
     final TextfOptionsData? currentOptionsData = TextfOptions.maybeOf(context);
 
-    final bool themeMatch = _isSameTheme(_lastTheme, theme);
     final bool optionsMatch = _lastOptionsData == currentOptionsData;
 
-    final bool coreCacheHit = _cachedParsedSpans != null &&
+    final bool coreCacheHit =
+        _cachedParsedSpans != null &&
         _lastText == text &&
-        _lastCursorPos == cursorPos &&
+        _lastRenderMode == renderMode &&
         _lastVisibility == _markerVisibility &&
         _lastStyle == style &&
-        themeMatch &&
         optionsMatch;
 
     // 4. FULL CACHE HIT (Core Spans + Composing Region)
@@ -239,25 +239,24 @@ class TextfEditingController extends TextEditingController {
       if (text.length > _maxLiveFormattingLength) {
         fullSpans = <InlineSpan>[TextSpan(text: text)];
       } else {
-        if (_cachedResolver == null || !themeMatch || !optionsMatch) {
-          _cachedResolver = TextfStyleResolver.withState(theme: theme, options: currentOptionsData);
+        if (_cachedResolver == null || !optionsMatch) {
+          _cachedResolver = TextfStyleResolver.withState(options: currentOptionsData);
         }
 
         fullSpans = _spanBuilder.build(
           text,
           context,
           style ?? const TextStyle(),
-          cursorPosition: cursorPos,
+          renderMode: renderMode,
           styleResolver: _cachedResolver,
         );
       }
 
       _cachedParsedSpans = fullSpans;
       _lastText = text;
-      _lastCursorPos = cursorPos;
+      _lastRenderMode = renderMode;
       _lastVisibility = _markerVisibility;
       _lastStyle = style;
-      _lastTheme = theme;
       _lastOptionsData = currentOptionsData;
     }
 
@@ -299,8 +298,10 @@ class TextfEditingController extends TextEditingController {
           if (endInSpan > startInSpan) {
             final TextStyle mergedStyle;
             if (span.style case final TextStyle spanStyle?) {
-              final TextDecoration? combined =
-                  combineTextDecorations(spanStyle.decoration, TextDecoration.underline);
+              final TextDecoration? combined = combineTextDecorations(
+                spanStyle.decoration,
+                TextDecoration.underline,
+              );
               mergedStyle = spanStyle.copyWith(decoration: combined);
             } else {
               mergedStyle = composingStyle;

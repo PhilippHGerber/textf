@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../core/constants.dart';
 import '../models/format_stack_entry.dart';
+import '../styling/textf_palette.dart';
 import '../styling/textf_style_resolver.dart';
 
 /// Shared ATX-heading line logic for the read path (`ParserState`) and the edit
@@ -26,6 +27,9 @@ mixin HeadingRegion {
 
   /// Resolver used for heading and inline-marker styles.
   TextfStyleResolver get headingResolver;
+
+  /// The palette inline-marker styles are resolved with.
+  TextfPalette get palette;
 
   /// The host's active formatting stack (re-resolved when a heading ends).
   List<FormatStackEntry> get formatStack;
@@ -57,7 +61,7 @@ mixin HeadingRegion {
     var previousStyle = baseStyle;
     for (var i = 0; i < formatStack.length; i++) {
       final entry = formatStack[i];
-      final resolved = headingResolver.resolveStyle(entry.type, previousStyle);
+      final resolved = headingResolver.resolveStyle(entry.type, previousStyle, palette);
       formatStack[i] = FormatStackEntry(
         index: entry.index,
         matchingIndex: entry.matchingIndex,
@@ -86,7 +90,8 @@ mixin HeadingRegion {
     // `\r\n` is a single terminator; a lone `\r` or `\n` is one code unit. All
     // three cases are single BMP code units (or a pair of them), never half of
     // a surrogate pair, so these substrings never bisect an emoji.
-    final bool isCrLf = value.codeUnitAt(terminatorStart) == kCarriageReturn &&
+    final bool isCrLf =
+        value.codeUnitAt(terminatorStart) == kCarriageReturn &&
         terminatorStart + 1 < value.length &&
         value.codeUnitAt(terminatorStart + 1) == kNewline;
     final int terminatorEnd = terminatorStart + (isCrLf ? _crLfLength : 1);

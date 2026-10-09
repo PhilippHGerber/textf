@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 /// Holds the pre-merged, effective configuration for Textf widgets.
 ///
@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 @immutable
 class TextfOptionsData {
   /// Creates a new TextfOptionsData instance with the given properties.
-  const TextfOptionsData({
+  const new({
     this.onLinkTap,
     this.onLinkHover,
     this.linkMouseCursor,
@@ -34,6 +34,10 @@ class TextfOptionsData {
     this.h5Style,
     this.h6Style,
     this.thematicBreakBuilder,
+    this.linkColor,
+    this.codeBackgroundColor,
+    this.highlightColor,
+    this.thematicBreakColor,
   });
 
   /// Callback function executed when tapping or clicking on a link.
@@ -150,6 +154,19 @@ class TextfOptionsData {
   /// and values.
   final Widget Function(BuildContext context)? thematicBreakBuilder;
 
+  // Color options (Nearest wins)
+  /// {@macro textf.options.linkColor}
+  final Color? linkColor;
+
+  /// {@macro textf.options.codeBackgroundColor}
+  final Color? codeBackgroundColor;
+
+  /// {@macro textf.options.highlightColor}
+  final Color? highlightColor;
+
+  /// {@macro textf.options.thematicBreakColor}
+  final Color? thematicBreakColor;
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -179,36 +196,44 @@ class TextfOptionsData {
         other.h4Style == h4Style &&
         other.h5Style == h5Style &&
         other.h6Style == h6Style &&
-        other.thematicBreakBuilder == thematicBreakBuilder;
+        other.thematicBreakBuilder == thematicBreakBuilder &&
+        other.linkColor == linkColor &&
+        other.codeBackgroundColor == codeBackgroundColor &&
+        other.highlightColor == highlightColor &&
+        other.thematicBreakColor == thematicBreakColor;
   }
 
   @override
   int get hashCode => Object.hashAll([
-        onLinkTap,
-        onLinkHover,
-        linkMouseCursor,
-        linkAlignment,
-        strikethroughThickness,
-        superscriptBaselineFactor,
-        subscriptBaselineFactor,
-        scriptFontSizeFactor,
-        linkStyle,
-        linkHoverStyle,
-        boldStyle,
-        italicStyle,
-        boldItalicStyle,
-        strikethroughStyle,
-        codeStyle,
-        underlineStyle,
-        highlightStyle,
-        superscriptStyle,
-        subscriptStyle,
-        h1Style,
-        h2Style,
-        h3Style,
-        h4Style,
-        h5Style,
-        h6Style,
-        thematicBreakBuilder,
-      ]);
+    onLinkTap,
+    onLinkHover,
+    linkMouseCursor,
+    linkAlignment,
+    strikethroughThickness,
+    superscriptBaselineFactor,
+    subscriptBaselineFactor,
+    scriptFontSizeFactor,
+    linkStyle,
+    linkHoverStyle,
+    boldStyle,
+    italicStyle,
+    boldItalicStyle,
+    strikethroughStyle,
+    codeStyle,
+    underlineStyle,
+    highlightStyle,
+    superscriptStyle,
+    subscriptStyle,
+    h1Style,
+    h2Style,
+    h3Style,
+    h4Style,
+    h5Style,
+    h6Style,
+    thematicBreakBuilder,
+    linkColor,
+    codeBackgroundColor,
+    highlightColor,
+    thematicBreakColor,
+  ]);
 }
