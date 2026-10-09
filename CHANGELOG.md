@@ -2,6 +2,29 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 2.0.0-dev.4
+
+**Ready for Flutter's decoupled future.** In support of Flutter's [Material and Cupertino decoupling](https://flutter.dev/blog/decoupling-material-cupertino), Textf 2.0 is now completely design-system neutral. Built purely on Flutter's foundational `widgets` layer, Textf runs identically across legacy SDK Material, `material_ui`, Cupertino, `cupertino_ui`, custom design systems, or a bare `WidgetsApp`.
+
+
+### Breaking Changes
+
+* **Design-system-neutral styling:** Built-in link, code, highlight, and thematic-break colors now derive from ambient text rather than `ThemeData` / `ColorScheme`. Links default to `#1A73E8` and code chips to a contextual tint of text color. The package no longer imports `material.dart` or `cupertino.dart`.
+  * **Migrating from 1.x:** to keep your theme's colors, pass them to `TextfOptions` once in `MaterialApp.builder`. See [Using Your App's Theme Colors](https://github.com/PhilippHGerber/textf#using-your-apps-theme-colors) in the README.
+* **SDK floor:** Raised to `sdk: ^3.13.0` / `flutter: ">=3.47.0"`.
+
+### Added
+
+* **Color options on `TextfOptions`:** Added `linkColor`, `codeBackgroundColor`, `highlightColor`, and `thematicBreakColor` to `TextfOptions` and `TextfOptionsData` for effortless brand adaptation without overriding typography.
+
+### Fixed
+
+* **Heading font scaling:** Headings (`#`–`######`) and super/subscripts now scale proportionally from ambient `DefaultTextStyle` font size.
+
+### Internal
+
+* Deepened link handling and marker rendering abstractions (`LinkStyleConfiguration`, `ParsedLink`, `MarkerRenderMode`).
+
 ## 2.0.0-dev.3
 
 * **Thematic breaks (horizontal rules):** a line of three or more `-`, `*`, or `_` renders as a full-width divider, with full CommonMark conformance for the construct. Customizable via the new **`TextfOptions.thematicBreakBuilder`**; the default is a 1px line in the theme's divider color. In `TextfEditingController` the raw markers stay visible as dimmed marker text, preserving the 1:1 cursor invariant. Conforms to the CommonMark [thematic breaks](https://spec.commonmark.org/current/#thematic-breaks) section.

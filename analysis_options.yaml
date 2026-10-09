@@ -10,6 +10,7 @@ analyzer:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
     - "docs-jaspr/**"
+    - build/**
 
   errors:
     unused_import: warning

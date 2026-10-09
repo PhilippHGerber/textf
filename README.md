@@ -9,6 +9,8 @@ Inline Markdown-like formatting for Flutter — as drop-in replacements for `Tex
 
 ---
 
+> ⚠️ **Upgrading from 1.x?** Textf 2.0 no longer reads your app's `Theme`. Links now default to a fixed `#1A73E8` blue, and code chips to a faint tint of the text color, in every app: Material, `material_ui`, Cupertino or a bare `WidgetsApp`. To keep using your theme's colors, pass them to `TextfOptions` once in `MaterialApp.builder`. See [Theming](#theming).
+>
 > ⚠️ **Upgrading from 1.1.x?** Version 1.2.0 introduces strict flanking rules for formatting markers. Markers with surrounding whitespace — such as `* spaced *` — no longer trigger formatting. Update these to `*not-spaced*`. See [Flanking Rules](#flanking-rules) for details.
 
 ---
@@ -177,7 +179,6 @@ Textf is **inline-first**: inline formatting plus ATX headings as the one block-
 
 Both `Textf` and `TextfEditingController` use the same syntax:
 
-![Formatting markers showcase](https://github.com/PhilippHGerber/textf/raw/main/images/formatting_markers.png)
 
 | Format        | Syntax              | Alternate           | Result                         |
 | ------------- | ------------------- | ------------------- | ------------------------------ |
@@ -315,7 +316,7 @@ SelectionArea(
 
 ### Performance
 
-`Textf` caches parsed span trees using an LRU cache. Re-renders skip re-parsing when text, style, theme, and `TextfOptions` are unchanged — important for animated lists or chat feeds with many items. The cache invalidates automatically on changes.
+`Textf` caches parsed span trees using an LRU cache. Re-renders skip re-parsing when the text, the effective root style (the ambient `DefaultTextStyle` merged with `style`), the text scaler and `TextfOptions` are unchanged — important for animated lists or chat feeds with many items. The cache invalidates automatically on changes. Textf doesn't read the theme, so a theme change re-parses only if it changes the ambient text style (for example its color in dark mode).
 
 To free memory in low-memory situations:
 
@@ -437,6 +438,9 @@ TextfOptions(
 | `subscriptStyle`     | `~sub~`                 |
 | `linkStyle`          | Links — normal state    |
 | `linkHoverStyle`     | Links — hover state     |
+| `h1Style`–`h6Style`  | `#` – `######` headings |
+
+A style option **replaces** the built-in style for its marker (for example, a `boldStyle` without a `fontWeight` is not bold). Heading and script styles are the exception: they merge onto the built-in heading size and weight or the script size, so `h1Style: TextStyle(color: …)` keeps the heading size. To change only a color and keep the built-in typography (the link underline, the monospace code font), use a [color option](#color-options) instead.
 
 ### Link Options
 
@@ -471,7 +475,7 @@ TextfOptions(
 )
 ```
 
-**Callback and cursor properties use nearest-ancestor-wins.** The closest `TextfOptions` in the tree takes effect. This prevents double-firing when options are nested — only one handler should respond to a tap.
+**Callback, cursor and [color](#color-options) properties use nearest-ancestor-wins.** The closest `TextfOptions` in the tree that sets the property takes effect. This prevents double-firing when options are nested — only one handler should respond to a tap.
 
 ```dart
 TextfOptions(
@@ -485,28 +489,114 @@ TextfOptions(
 
 ---
 
-## Theme Integration
+## Theming
 
-`Textf` automatically adapts to the active `ThemeData` — no configuration needed:
+Textf is **design-system-neutral**: it never reads `Theme`, `CupertinoTheme` or any other design-system theme. Its built-in colors come from the text they render in, so `Textf` looks and behaves the same under SDK Material, [`material_ui`](https://pub.dev/packages/material_ui), Cupertino, [`cupertino_ui`](https://pub.dev/packages/cupertino_ui), a bare `WidgetsApp` or your own design system. The package imports only Flutter's core layers (`widgets`, `painting`, `gestures`, `foundation`).
 
-- **Links** use `colorScheme.primary`
-- **Code background** uses `colorScheme.surfaceContainer`
-- **Code text** uses `colorScheme.onSurfaceVariant`
+### Built-in Defaults
 
-Override any theme default with `TextfOptions`:
+Every default derives from the **effective root style**, which Textf computes exactly like `Text` computes its effective text style: the ambient `DefaultTextStyle` merged with `Textf.style` (or `Textf.style` alone when its `inherit` is `false`), made bold when `MediaQuery.boldTextOf` is set. Headings and super/subscripts scale from its font size.
+
+| Element               | Default                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| **Link**              | Fixed `#1A73E8`, underlined in the same color                                            |
+| **Code background**   | The text color at 5% opacity on light surfaces, 15% on dark surfaces                     |
+| **Code text**         | The surrounding text color (so code inside a link is link-blue), monospace font          |
+| **Highlight**         | Translucent yellow: `#FFEB3B` at 50% on light surfaces, `#FBC02D` at 40% on dark ones    |
+| **Thematic break**    | A 1px full-width rule in the text color at 20% opacity                                   |
+| **Editing markers**   | The field's text color (black if it has none) at 40% opacity, in `TextfEditingController` |
+
+Textf never sees the background. It **assumes a dark surface when the text color is light**, and a light surface otherwise. On mid-tone or gradient backgrounds, where that guess can be wrong, set `codeBackgroundColor` and `highlightColor` explicitly.
+
+The link blue does not depend on the surface at all. It has a contrast of 4.51:1 on white and ≈ 4.16:1 on a dark `#121212` surface, and links are always underlined, so they never rely on color alone. If your dark surfaces need a 4.5:1 link color, set `linkColor`.
+
+### Color Options
+
+Color options tint a built-in default and keep everything else about it, such as the link underline or the monospace font stack. That is the difference from the matching style option, which replaces the default completely.
+
+| Property              | Colors                                        | Overridden by          |
+| --------------------- | --------------------------------------------- | ---------------------- |
+| `linkColor`           | Link text and its underline                   | `linkStyle`            |
+| `codeBackgroundColor` | The background behind `` `code` ``            | `codeStyle`            |
+| `highlightColor`      | The background behind `==highlight==`         | `highlightStyle`       |
+| `thematicBreakColor`  | The default `---` rule                        | `thematicBreakBuilder` |
 
 ```dart
 TextfOptions(
-  linkStyle: TextStyle(color: Colors.teal, fontWeight: FontWeight.w600),
-  child: Textf('A [custom colored](https://example.com) link.'),
+  linkColor: Color(0xFF00796B),
+  codeBackgroundColor: Color(0x1A00796B),
+  child: Textf('A [brand-colored](https://example.com) link and `code`.'),
 )
 ```
+
+Colors are applied verbatim, alpha included. Like callbacks, a color option is taken from the nearest `TextfOptions` that sets it.
+
+### Resolution Precedence
+
+For each formatted segment, the first of these that applies wins:
+
+1. **Style option** (`linkStyle`, `codeStyle`, `highlightStyle`, …): replaces the built-in style and is merged onto the surrounding text style. Heading and script style options merge onto their built-in sizes instead.
+2. **Color option** (`linkColor`, `codeBackgroundColor`, `highlightColor`): the built-in style, in that color.
+3. **Neutral default**: derived from the effective root style, as in the table above.
+4. **Relative default**: the typographic fallbacks, such as bold weight, italic, and script and heading size factors.
+
+For thematic breaks the order is: `thematicBreakBuilder`, then `thematicBreakColor`, then the text color at 20% opacity.
+
+### Using Your App's Theme Colors
+
+To give Textf your theme's colors, as 1.x did automatically, pass them down as color options once, in `MaterialApp.builder`:
+
+```dart
+import 'package:material_ui/material_ui.dart';
+import 'package:textf/textf.dart';
+
+void main() => runApp(const MyApp());
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData(colorSchemeSeed: Colors.teal),
+      darkTheme: ThemeData(colorSchemeSeed: Colors.teal, brightness: Brightness.dark),
+      // `builder` runs below the theme, so the colors follow scheme and light/dark changes.
+      builder: (context, child) {
+        final theme = Theme.of(context);
+        return TextfOptions(
+          linkColor: theme.colorScheme.primary,
+          codeBackgroundColor: theme.colorScheme.surfaceContainer,
+          thematicBreakColor: theme.dividerColor,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
+      home: const Scaffold(
+        body: Center(
+          child: Textf('A [link](https://example.com), `code` and a ==highlight==.'),
+        ),
+      ),
+    );
+  }
+}
+```
+
+> **Using `material_ui`?** Import `Theme` from `package:material_ui/material_ui.dart` in that file, not from `package:flutter/material.dart`. The two libraries define different `Theme` classes. A lookup through the wrong one silently returns `ThemeData.fallback()` instead of your theme ([flutter#192920](https://github.com/flutter/flutter/issues/192920)). Textf itself is immune because it never looks up a theme.
+
+Verified recipes for each environment, with tests, live in the repository:
+
+- [`example/textf_flex`](https://github.com/PhilippHGerber/textf/tree/main/example/textf_flex): `material_ui` + `flex_color_scheme` 9 (the recipe above)
+- [`example/textf_cupertino`](https://github.com/PhilippHGerber/textf/tree/main/example/textf_cupertino): `cupertino_ui` and SDK Cupertino, using `CupertinoTheme` and `CupertinoColors` in `CupertinoApp.builder`
+- [`example/textf_bare`](https://github.com/PhilippHGerber/textf/tree/main/example/textf_bare): a bare `WidgetsApp` with only a brand `linkColor`
+
+**Coming from 1.x?** The one remaining difference is code text: 1.x drew it in `colorScheme.onSurfaceVariant`, and 2.0 always uses the surrounding text color. To restore it, set a full `codeStyle` instead of `codeBackgroundColor` (a style option replaces the whole default, so include the font family and background).
 
 ---
 
 ## Accessibility
 
 - **Text Scaling** — Respects `MediaQuery.textScalerOf(context)` and system font scaling settings
+- **Bold Text** — Honors the system bold-text setting (`MediaQuery.boldTextOf`), like `Text`
+- **Link Contrast** — Default links are underlined and use `#1A73E8` (4.51:1 on white); see [Theming](#theming)
 - **Screen Readers** — Links are wrapped in `Semantics(link: true)` for TalkBack and VoiceOver
 - **RTL Support** — Bidirectional text and RTL languages work correctly throughout
 
