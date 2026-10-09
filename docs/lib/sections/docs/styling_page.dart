@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '/sections/styling/styling_section.dart';
 import '/widgets/docs_pager.dart';
@@ -6,7 +6,7 @@ import '../../router/docs_routes.dart';
 
 /// Styling documentation page — wraps the existing StylingSection.
 class StylingPage extends StatelessWidget {
-  const StylingPage({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {

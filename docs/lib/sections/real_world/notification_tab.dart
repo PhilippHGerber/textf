@@ -1,10 +1,10 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 
 class NotificationTab extends StatelessWidget {
-  const NotificationTab({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +64,7 @@ class NotificationTab extends StatelessWidget {
 }
 
 class _NotificationCard extends StatelessWidget {
-  const _NotificationCard({
+  const new({
     required this.icon,
     required this.appName,
     required this.title,

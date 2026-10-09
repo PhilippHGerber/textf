@@ -3,7 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -11,7 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 ///
 /// Shows a [PageView] with code + live Textf preview pairs and page indicator dots.
 class ExampleCarousel extends StatefulWidget {
-  const ExampleCarousel({super.key});
+  const new({super.key});
 
   @override
   State<ExampleCarousel> createState() => _ExampleCarouselState();
@@ -49,12 +49,10 @@ class _ExampleCarouselState extends State<ExampleCarousel> {
     _timer = Timer.periodic(_autoAdvanceDuration, (_) {
       if (!mounted) return;
       final next = (_currentPage + 1) % _examples.length;
-      unawaited(
-        _pageController.animateToPage(
-          next,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-        ),
+      _pageController.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
       );
     });
   }

@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 
 import '/widgets/example_card.dart';
 
 class BasicFormattingTab extends StatelessWidget {
-  const BasicFormattingTab({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {

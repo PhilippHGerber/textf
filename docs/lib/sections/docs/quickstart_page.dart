@@ -1,8 +1,8 @@
 // ignore_for_file: no-magic-number
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '/widgets/docs_pager.dart';
 import '/widgets/section_header.dart';
@@ -10,7 +10,7 @@ import '../../router/docs_routes.dart';
 
 /// Quickstart documentation page — up and running in 3 steps.
 class QuickstartPage extends StatelessWidget {
-  const QuickstartPage({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +72,7 @@ TextField(
 }
 
 class _Step extends StatelessWidget {
-  const _Step({
+  const new({
     required this.number,
     required this.title,
     required this.description,
@@ -135,7 +135,7 @@ class _Step extends StatelessWidget {
 }
 
 class _CodeBlock extends StatelessWidget {
-  const _CodeBlock({required this.code});
+  const new({required this.code});
 
   final String code;
 

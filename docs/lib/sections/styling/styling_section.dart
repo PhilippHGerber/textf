@@ -1,6 +1,6 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -8,7 +8,7 @@ import '/widgets/code_panel.dart';
 import '/widgets/section_header.dart';
 
 class StylingSection extends StatefulWidget {
-  const StylingSection({super.key});
+  const new({super.key});
 
   @override
   State<StylingSection> createState() => _StylingSectionState();
@@ -80,7 +80,8 @@ class _StylingSectionState extends State<StylingSection> {
       'FontWeight.w900',
     ][_boldWeightIdx];
 
-    final generatedCode = '''
+    final generatedCode =
+        '''
 TextfOptions(
   boldStyle: TextStyle(
     fontWeight: $boldWeightName,
@@ -103,7 +104,8 @@ TextfOptions(
             children: [
               const SectionHeader(
                 title: 'Live Style Customizer',
-                subtitle: 'Every marker type — bold, italic, code, highlight, links and more — '
+                subtitle:
+                    'Every marker type — bold, italic, code, highlight, links and more — '
                     'can be fully customized with any TextStyle property.',
               ),
               const SizedBox(height: 16),
@@ -186,15 +188,16 @@ TextfOptions(
               const SizedBox(height: 32),
               const SectionHeader(
                 title: 'Hierarchical Merging',
-                subtitle:
-                    'Inner TextfOptions override outer ones. Other styles are inherited from the parent.',
+                subtitle: 'Inner TextfOptions override outer ones. Other styles are inherited from the parent.',
               ),
               const SizedBox(height: 16),
               _HierarchyDemo(),
               const SizedBox(height: 32),
               const SectionHeader(
-                title: 'Theme-Aware Defaults',
-                subtitle: 'Code and link styles adapt automatically to light and dark themes.',
+                title: 'Neutral Defaults',
+                subtitle:
+                    'Default colors follow the text, not the theme, so they work in light and dark '
+                    'mode and in any design system. Color options pass in brand colors.',
               ),
               const SizedBox(height: 12),
               TextfOptions(
@@ -208,8 +211,8 @@ TextfOptions(
                     border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
                   ),
                   child: const Textf(
-                    'Default `inline code` and [link](https://pub.dev/packages/textf) '
-                    'styling adapts to the current theme.',
+                    'Default `inline code` is a faint tint of the text color, and the default '
+                    '[link](https://pub.dev/packages/textf) blue reads on light and dark surfaces.',
                   ),
                 ),
               ),
@@ -223,7 +226,7 @@ TextfOptions(
 }
 
 class _StyleControl extends StatelessWidget {
-  const _StyleControl({
+  const new({
     required this.label,
     required this.segments,
     required this.selected,
@@ -257,8 +260,8 @@ class _StyleControl extends StatelessWidget {
             final onSwatch = isNone
                 ? cs.outline
                 : ThemeData.estimateBrightnessForColor(swatchColor) == Brightness.dark
-                    ? Colors.white
-                    : Colors.black87;
+                ? Colors.white
+                : Colors.black87;
             return Tooltip(
               message: segments[i],
               child: GestureDetector(
@@ -274,8 +277,8 @@ class _StyleControl extends StatelessWidget {
                       color: isSelected
                           ? cs.onSurface
                           : isNone
-                              ? cs.outline.withValues(alpha: 0.5)
-                              : cs.outline.withValues(alpha: 0.3),
+                          ? cs.outline.withValues(alpha: 0.5)
+                          : cs.outline.withValues(alpha: 0.3),
                       width: isSelected ? 2.5 : 1,
                     ),
                     boxShadow: isSelected && !isNone
@@ -291,8 +294,8 @@ class _StyleControl extends StatelessWidget {
                   child: isSelected
                       ? Icon(Icons.check, size: 14, color: onSwatch)
                       : isNone
-                          ? Icon(Icons.block, size: 14, color: cs.outline)
-                          : null,
+                      ? Icon(Icons.block, size: 14, color: cs.outline)
+                      : null,
                 ),
               ),
             );
@@ -304,7 +307,7 @@ class _StyleControl extends StatelessWidget {
 }
 
 class _ChipControl extends StatelessWidget {
-  const _ChipControl({
+  const new({
     required this.label,
     required this.options,
     required this.selected,

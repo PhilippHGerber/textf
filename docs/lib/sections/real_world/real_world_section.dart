@@ -1,13 +1,13 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'article_tab.dart';
 import 'chat_tab.dart';
 import 'notification_tab.dart';
 
 class RealWorldSection extends StatelessWidget {
-  const RealWorldSection({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -3,15 +3,15 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A code snippet panel with a copy-to-clipboard button.
 ///
 /// Use [borderRadius] to connect it visually to a result container below:
 /// pass top-only corners when paired, or the default full radius for standalone use.
 class CodePanel extends StatelessWidget {
-  const CodePanel({
+  const new({
     required this.code,
     this.title,
     this.borderRadius = const BorderRadius.all(Radius.circular(8)),

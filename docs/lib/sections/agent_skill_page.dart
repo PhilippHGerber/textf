@@ -1,6 +1,6 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -9,7 +9,7 @@ import '/widgets/section_header.dart';
 
 /// AI Agent Skill documentation page.
 class AgentSkillPage extends StatelessWidget {
-  const AgentSkillPage({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +44,7 @@ class AgentSkillPage extends StatelessWidget {
 }
 
 class _WhatIsItSection extends StatelessWidget {
-  const _WhatIsItSection({required this.cs, required this.theme});
+  const new({required this.cs, required this.theme});
 
   final ColorScheme cs;
   final ThemeData theme;
@@ -69,7 +69,7 @@ class _WhatIsItSection extends StatelessWidget {
 }
 
 class _InstallSection extends StatelessWidget {
-  const _InstallSection({required this.cs, required this.theme});
+  const new({required this.cs, required this.theme});
 
   final ColorScheme cs;
   final ThemeData theme;
@@ -100,7 +100,7 @@ class _InstallSection extends StatelessWidget {
 }
 
 class _WhatItKnowsSection extends StatelessWidget {
-  const _WhatItKnowsSection({required this.cs, required this.theme});
+  const new({required this.cs, required this.theme});
 
   final ColorScheme cs;
   final ThemeData theme;
@@ -122,8 +122,7 @@ class _WhatItKnowsSection extends StatelessWidget {
         ),
         _BulletItem(
           theme: theme,
-          text:
-              '**`TextfEditingController`** — live formatting in `TextField`, marker visibility modes',
+          text: '**`TextfEditingController`** — live formatting in `TextField`, marker visibility modes',
         ),
         _BulletItem(
           theme: theme,
@@ -139,7 +138,7 @@ class _WhatItKnowsSection extends StatelessWidget {
 }
 
 class _BulletItem extends StatelessWidget {
-  const _BulletItem({required this.theme, required this.text});
+  const new({required this.theme, required this.text});
 
   final ThemeData theme;
   final String text;

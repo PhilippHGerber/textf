@@ -1,11 +1,11 @@
 // ignore_for_file: no-magic-number, avoid-late-keyword
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ChatTab extends StatefulWidget {
-  const ChatTab({super.key});
+  const new({super.key});
 
   @override
   State<ChatTab> createState() => _ChatTabState();
@@ -144,7 +144,7 @@ class _ChatTabState extends State<ChatTab> {
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.message});
+  const new({required this.message});
 
   final _ChatMessage message;
 
@@ -172,7 +172,7 @@ class _Bubble extends StatelessWidget {
 }
 
 class _ChatMessage {
-  _ChatMessage({required this.text, required this.isMe});
+  new({required this.text, required this.isMe});
 
   final String text;
   final bool isMe;

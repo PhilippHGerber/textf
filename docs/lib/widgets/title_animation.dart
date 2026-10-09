@@ -2,12 +2,12 @@
 
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TitleAnimation extends StatefulWidget {
-  const TitleAnimation({super.key});
+  const new({super.key});
 
   @override
   State<TitleAnimation> createState() => _TitleAnimationState();
@@ -213,8 +213,9 @@ class _TitleAnimationState extends State<TitleAnimation> {
   ) async {
     // Find common prefix
     int prefixLen = 0;
-    while (
-        prefixLen < prev.length && prefixLen < next.length && prev[prefixLen] == next[prefixLen]) {
+    while (prefixLen < prev.length &&
+        prefixLen < next.length &&
+        prev[prefixLen] == next[prefixLen]) {
       prefixLen++;
     }
 
@@ -295,7 +296,10 @@ class _TitleAnimationState extends State<TitleAnimation> {
             fontWeight: FontWeight.w700,
           ),
           child: _showFinalFrame
-              ? SizedBox(width: double.infinity, child: Textf(finalText, style: _style))
+              ? SizedBox(
+                  width: double.infinity,
+                  child: Textf(finalText, style: _style),
+                )
               : ExcludeSemantics(
                   child: IgnorePointer(
                     child: TextField(

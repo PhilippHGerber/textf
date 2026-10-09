@@ -1,12 +1,12 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'links_tab.dart';
 import 'widgets_tab.dart';
 
 class LinksWidgetsSection extends StatelessWidget {
-  const LinksWidgetsSection({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {

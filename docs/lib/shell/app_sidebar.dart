@@ -1,10 +1,11 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../generated/textf_version.dart';
 import '../router/docs_routes.dart' show DocsRoutes;
 import '../theme/theme_mode_notifier.dart';
 
@@ -13,7 +14,7 @@ import '../theme/theme_mode_notifier.dart';
 /// Shows the logo, primary navigation (Home, Docs, Live Editor),
 /// expandable Docs sub-items, and bottom action buttons.
 class AppSidebar extends StatefulWidget {
-  const AppSidebar({required this.navigationShell, super.key});
+  const new({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
@@ -166,6 +167,21 @@ class _AppSidebarState extends State<AppSidebar> {
                 color: cs.onSurfaceVariant,
               ),
             ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                'v$textfVersion',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -203,8 +219,9 @@ class _AppSidebarState extends State<AppSidebar> {
                 icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
                 tooltip: 'Toggle theme',
                 onPressed: () {
-                  themeNotifier.value =
-                      themeNotifier.value == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+                  themeNotifier.value = themeNotifier.value == ThemeMode.light
+                      ? ThemeMode.dark
+                      : ThemeMode.light;
                 },
               ),
             ],
@@ -216,7 +233,7 @@ class _AppSidebarState extends State<AppSidebar> {
 }
 
 class _NavItem extends StatelessWidget {
-  const _NavItem({
+  const new({
     required this.icon,
     required this.label,
     required this.selected,
@@ -262,7 +279,7 @@ class _NavItem extends StatelessWidget {
                 ),
               ),
             ),
-            if (trailing case final t?) t,
+            ?trailing,
           ],
         ),
       ),
@@ -271,7 +288,7 @@ class _NavItem extends StatelessWidget {
 }
 
 class _SubNavItem extends StatelessWidget {
-  const _SubNavItem({
+  const new({
     required this.icon,
     required this.label,
     required this.selected,

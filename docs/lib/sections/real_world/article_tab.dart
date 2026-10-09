@@ -1,11 +1,11 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ArticleTab extends StatelessWidget {
-  const ArticleTab({super.key});
+  const new({super.key});
 
   Future<void> _launchUrl(String url) async {
     await launchUrl(Uri.parse(url));
