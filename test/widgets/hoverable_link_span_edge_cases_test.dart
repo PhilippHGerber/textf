@@ -3,16 +3,17 @@
 // ignore_for_file: no-empty-block, no-magic-number
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
+
+import 'pump_textf_widget.dart';
 
 void main() {
   group('HoverableLinkSpan Edge Cases', () {
     testWidgets('handles null onTap callback gracefully', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: const TextfOptions(
             child: Textf('[Click me](https://example.com)'),
           ),
         ),
@@ -26,8 +27,8 @@ void main() {
 
     testWidgets('handles rapid hover state changes', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             onLinkTap: (url, displayText) {},
             onLinkHover: (url, displayText, {required isHovering}) {},
             child: const Textf('[Link](https://example.com)'),
@@ -60,8 +61,8 @@ void main() {
 
     testWidgets('link with empty URL is handled', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Textf('[Empty link]()'),
+        neutralTestApp(
+          child: const Textf('[Empty link]()'),
         ),
       );
 
@@ -72,8 +73,8 @@ void main() {
 
     testWidgets('multiple links render independently', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             onLinkTap: (url, displayText) {},
             child: const Textf('[First](https://first.com) and [Second](https://second.com)'),
           ),

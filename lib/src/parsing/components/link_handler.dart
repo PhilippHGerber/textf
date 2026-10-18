@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../core/constants.dart';
 import '../../models/parser_state.dart';
@@ -15,7 +15,7 @@ import 'link_validator.dart';
 /// interactive `WidgetSpan`s containing `HoverableLinkSpan` widgets.
 /// It utilizes the `TextfStyleResolver` from the `ParserState` to determine
 /// link-specific styling (normal, hover), mouse cursor, and interaction callbacks,
-/// considering `TextfOptions`, `Theme`, and defaults.
+/// considering `TextfOptions` and the built-in defaults.
 class LinkHandler {
   /// Processes a potential link structure starting at the given `index`.
   ///
@@ -31,7 +31,8 @@ class LinkHandler {
     // 1. Fast Check: Do we have a valid link structure?
     // We check this BEFORE flushing text. If it's not a link, we want the
     // '[' character to remain part of the previous text buffer to preserve ligatures.
-    if (!LinkValidator.isCompleteLink(tokens, index)) {
+    final parsedLink = LinkValidator.validate(tokens, index);
+    if (parsedLink == null) {
       return null;
     }
 
@@ -41,23 +42,21 @@ class LinkHandler {
     // Valid Link Processing
 
     // Extract raw text and URL
-    final linkTextToken = tokens[index + kLinkTextOffset] as TextToken;
-    final linkUrlToken = tokens[index + kLinkUrlOffset] as TextToken;
-    final rawLinkText = linkTextToken.value;
-    final rawLinkUrl = linkUrlToken.value;
+    final rawLinkText = parsedLink.displayText;
+    final rawLinkUrl = parsedLink.url;
     final normalizedUrl = normalizeUrl(rawLinkUrl);
 
     // Calculate the style inherited from formatting markers outside the link.
     final TextStyle inheritedStyle = state.currentStyle();
 
     // Resolve link-specific styles and callbacks
-    final TextStyle finalLinkStyle = state.styleResolver.resolveLinkStyle(inheritedStyle);
-    final TextStyle finalLinkHoverStyle = state.styleResolver.resolveLinkHoverStyle(inheritedStyle);
-    final MouseCursor effectiveCursor = state.styleResolver.resolveLinkMouseCursor();
-    final void Function(String url, String displayText)? effectiveOnTap =
-        state.styleResolver.resolveOnLinkTap();
+    final linkConfig = state.styleResolver.resolveLinkConfiguration(inheritedStyle);
+    final TextStyle finalLinkStyle = linkConfig.style;
+    final TextStyle finalLinkHoverStyle = linkConfig.hoverStyle;
+    final MouseCursor effectiveCursor = linkConfig.cursor;
+    final void Function(String url, String displayText)? effectiveOnTap = linkConfig.onTap;
     final void Function(String url, String displayText, {required bool isHovering})?
-        effectiveOnHover = state.styleResolver.resolveOnLinkHover();
+    effectiveOnHover = linkConfig.onHover;
 
     // Prepare TapGestureRecognizer
     TapGestureRecognizer? recognizer;
@@ -74,7 +73,7 @@ class LinkHandler {
 
     // Check if the link text contains any non-text tokens (markers or placeholders).
     // EscapeMarkerToken is excluded: it carries no visual formatting of its own and
-    // the else-branch already strips escape characters via regex.
+    // the else-branch strips escape characters cleanly from token output.
     final bool containsFormattingMarkers = linkTextTokens.any(
       (token) => token is! TextToken && token is! EscapeMarkerToken,
     );
@@ -87,14 +86,24 @@ class LinkHandler {
         context,
         finalLinkStyle,
         placeholders: state.placeholders,
+        palette: state.palette,
       );
       spanText = null;
     } else {
-      // Plain text content, remove escape characters
-      spanText = rawLinkText.replaceAllMapped(
-        RegExp(r'\\([*_~`\[\](){}\\])'),
-        (match) => match.group(1) ?? '',
-      );
+      // Plain text content: strip escape backslashes for all escapable characters
+      // recognized by the tokenizer.
+      final bool hasEscapes = linkTextTokens.any((token) => token is EscapeMarkerToken);
+      if (hasEscapes) {
+        final buffer = StringBuffer();
+        for (final token in linkTextTokens) {
+          if (token is TextToken) {
+            buffer.write(token.value);
+          }
+        }
+        spanText = buffer.toString();
+      } else {
+        spanText = rawLinkText;
+      }
       childrenSpans = [];
     }
 
@@ -117,7 +126,7 @@ class LinkHandler {
     state.spans.add(
       WidgetSpan(
         child: hoverableWidget,
-        alignment: state.styleResolver.resolveLinkAlignment(),
+        alignment: linkConfig.alignment,
         baseline: TextBaseline.alphabetic,
       ),
     );

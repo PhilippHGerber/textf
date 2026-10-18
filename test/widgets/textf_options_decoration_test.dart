@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
+
+import 'pump_textf_widget.dart';
 
 // Helper to find the RichText widget rendered by Textf.
 Finder _findRichText() => find.byType(RichText);
@@ -52,18 +54,16 @@ void main() {
       (tester) async {
         // ARRANGE: Set up a parent with underline and a child with strikethrough.
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: TextfOptions(
-                boldStyle: TextStyle(decoration: TextDecoration.underline),
-                child: TextfOptions(
-                  boldStyle: TextStyle(
-                    decoration: TextDecoration.lineThrough,
-                  ),
-                  child: Textf(
-                    'Some **bold** text.',
-                    style: TextStyle(color: Colors.black),
-                  ),
+          neutralTestApp(
+            child: const TextfOptions(
+              boldStyle: TextStyle(decoration: TextDecoration.underline),
+              child: TextfOptions(
+                boldStyle: TextStyle(
+                  decoration: TextDecoration.lineThrough,
+                ),
+                child: Textf(
+                  'Some **bold** text.',
+                  style: TextStyle(color: Color(0xFF000000)),
                 ),
               ),
             ),
@@ -90,19 +90,17 @@ void main() {
       (tester) async {
         // ARRANGE: Set up a parent with underline and a child that removes it.
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: TextfOptions(
-                boldStyle: TextStyle(
-                  decoration: TextDecoration.underline,
-                  decorationColor: Colors.blue,
-                ),
-                child: TextfOptions(
-                  boldStyle: TextStyle(decoration: TextDecoration.none),
-                  child: Textf(
-                    'Some **bold** text.',
-                    style: TextStyle(color: Colors.black),
-                  ),
+          neutralTestApp(
+            child: const TextfOptions(
+              boldStyle: TextStyle(
+                decoration: TextDecoration.underline,
+                decorationColor: Color(0xFF2196F3),
+              ),
+              child: TextfOptions(
+                boldStyle: TextStyle(decoration: TextDecoration.none),
+                child: Textf(
+                  'Some **bold** text.',
+                  style: TextStyle(color: Color(0xFF000000)),
                 ),
               ),
             ),
@@ -126,24 +124,22 @@ void main() {
       (tester) async {
         // ARRANGE: Parent and child both define decorations and their properties.
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: TextfOptions(
+          neutralTestApp(
+            child: const TextfOptions(
+              boldStyle: TextStyle(
+                decoration: TextDecoration.underline,
+                decorationColor: Color(0xFF2196F3),
+                decorationThickness: 2,
+                decorationStyle: TextDecorationStyle.solid,
+              ),
+              child: TextfOptions(
                 boldStyle: TextStyle(
-                  decoration: TextDecoration.underline,
-                  decorationColor: Colors.blue,
-                  decorationThickness: 2,
-                  decorationStyle: TextDecorationStyle.solid,
+                  decoration: TextDecoration.lineThrough,
+                  decorationColor: Color(0xFFF44336),
+                  decorationThickness: 4,
+                  decorationStyle: TextDecorationStyle.wavy,
                 ),
-                child: TextfOptions(
-                  boldStyle: TextStyle(
-                    decoration: TextDecoration.lineThrough,
-                    decorationColor: Colors.red,
-                    decorationThickness: 4,
-                    decorationStyle: TextDecorationStyle.wavy,
-                  ),
-                  child: Textf('Some **bold** text.'),
-                ),
+                child: Textf('Some **bold** text.'),
               ),
             ),
           ),
@@ -162,7 +158,7 @@ void main() {
         );
         expect(
           boldSpan.style?.decorationColor,
-          Colors.red,
+          const Color(0xFFF44336),
           reason: 'Child decorationColor should take precedence.',
         );
         const expectDecorationThickness = 4.0;
@@ -185,17 +181,15 @@ void main() {
         // ARRANGE: Parent defines a bold style with decoration.
         // Child defines an unrelated italic style.
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: TextfOptions(
-                boldStyle: TextStyle(
-                  decoration: TextDecoration.underline,
-                  decorationColor: Colors.green,
-                ),
-                child: TextfOptions(
-                  italicStyle: TextStyle(fontStyle: FontStyle.italic),
-                  child: Textf('Some **bold** and *italic* text.'),
-                ),
+          neutralTestApp(
+            child: const TextfOptions(
+              boldStyle: TextStyle(
+                decoration: TextDecoration.underline,
+                decorationColor: Color(0xFF4CAF50),
+              ),
+              child: TextfOptions(
+                italicStyle: TextStyle(fontStyle: FontStyle.italic),
+                child: Textf('Some **bold** and *italic* text.'),
               ),
             ),
           ),
@@ -210,7 +204,7 @@ void main() {
         );
         expect(
           boldSpan.style?.decorationColor,
-          Colors.green,
+          const Color(0xFF4CAF50),
           reason: 'Bold text should have its decoration color from the parent.',
         );
 
@@ -236,12 +230,14 @@ void main() {
       // Result should be: Underline + LineThrough (NOT just Underline)
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             // Parent establishes base decoration
             boldStyle: TextStyle(
-              decoration:
-                  TextDecoration.combine([TextDecoration.underline, TextDecoration.lineThrough]),
+              decoration: TextDecoration.combine([
+                TextDecoration.underline,
+                TextDecoration.lineThrough,
+              ]),
             ),
             child: const TextfOptions(
               // Child tries to apply Underline again
@@ -265,8 +261,8 @@ void main() {
     testWidgets('Combines distinct decorations', (tester) async {
       // Scenario: Parent=Underline, Child=LineThrough -> Result=Both
       await tester.pumpWidget(
-        const MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: const TextfOptions(
             boldStyle: TextStyle(decoration: TextDecoration.underline),
             child: TextfOptions(
               boldStyle: TextStyle(decoration: TextDecoration.lineThrough),
@@ -284,8 +280,8 @@ void main() {
     testWidgets('TextDecoration.none removes decoration', (tester) async {
       // Scenario: Parent=Underline, Child=None -> Result=None
       await tester.pumpWidget(
-        const MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: const TextfOptions(
             boldStyle: TextStyle(decoration: TextDecoration.underline),
             child: TextfOptions(
               boldStyle: TextStyle(decoration: TextDecoration.none),

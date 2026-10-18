@@ -1,10 +1,12 @@
 // ignore_for_file: avoid-late-keyword, avoid-non-null-assertion, no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
 import 'package:textf/src/widgets/textf_options.dart';
+
+import '../widgets/pump_textf_widget.dart';
 
 void main() {
   group('Script (Superscript/Subscript) Parsing Tests', () {
@@ -22,8 +24,8 @@ void main() {
       TextStyle? defaultStyle,
     }) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               mockContext = context;
               // Capture context inside options if provided
@@ -65,7 +67,7 @@ void main() {
       testWidgets('renders using Padding (Bottom) + Alignment.middle', (tester) async {
         await pumpTestApp(tester);
         // Use a known font size to verify padding calculation exists
-        const baseStyle = TextStyle(fontSize: 20, color: Colors.black);
+        const baseStyle = TextStyle(fontSize: 20, color: Color(0xFF000000));
 
         final spans = parser.parse('^super^', mockContext, baseStyle);
 
@@ -79,8 +81,7 @@ void main() {
         expect(
           widgetSpan.alignment,
           PlaceholderAlignment.middle,
-          reason:
-              'Must use Alignment.middle to keep widget anchored to line center for correct selection sorting',
+          reason: 'Must use Alignment.middle to keep widget anchored to line center for correct selection sorting',
         );
 
         // 2. Check Padding Structure
@@ -130,7 +131,7 @@ void main() {
     group('Subscript (~text~)', () {
       testWidgets('renders using Padding (Top) + Alignment.middle', (tester) async {
         await pumpTestApp(tester);
-        const baseStyle = TextStyle(fontSize: 20, color: Colors.black);
+        const baseStyle = TextStyle(fontSize: 20, color: Color(0xFF000000));
 
         final spans = parser.parse('~sub~', mockContext, baseStyle);
 
@@ -234,7 +235,7 @@ void main() {
 
     group('Customization via TextfOptions', () {
       testWidgets('Superscript uses custom style from options', (tester) async {
-        const customStyle = TextStyle(color: Colors.red);
+        const customStyle = TextStyle(color: Color(0xFFF44336));
         await pumpTestApp(
           tester,
           options: const TextfOptions(
@@ -243,13 +244,17 @@ void main() {
           ),
         );
 
-        final spans = parser.parse('^super^', mockContext, const TextStyle(color: Colors.black));
+        final spans = parser.parse(
+          '^super^',
+          mockContext,
+          const TextStyle(color: Color(0xFF000000)),
+        );
 
         final widgetSpan = spans.first as WidgetSpan;
         final padding = widgetSpan.child as Padding;
         final innerText = (padding.child! as Text).textSpan as TextSpan?;
 
-        expect(innerText?.style?.color, Colors.red);
+        expect(innerText?.style?.color, const Color(0xFFF44336));
       });
     });
   });

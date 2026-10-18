@@ -9,17 +9,17 @@ import 'textf_limits.dart';
 /// Used by both `TextfParser` (read-only widgets) and `TextfSpanBuilder`
 /// (editing controllers) to avoid duplicate caching of identical data.
 class TextfTokenCache {
-  TextfTokenCache._();
+  new _();
 
   static final TextfTokenizer _tokenizer = TextfTokenizer();
 
   /// Single shared LRU cache keyed by (text, allowNewlineCrossing).
   static final TextfCache<({String text, bool allowNewlineCrossing}), TokenCacheEntry> _cache =
       TextfCache<({String text, bool allowNewlineCrossing}), TokenCacheEntry>(
-    maxEntries: TextfLimits.maxCacheEntries,
-    maxTotalChars: TextfLimits.maxCacheTotalCharacters,
-    getCharCount: (key) => key.text.length,
-  );
+        maxEntries: TextfLimits.maxCacheEntries,
+        maxTotalChars: TextfLimits.maxCacheTotalCharacters,
+        getCharCount: (key) => key.text.length,
+      );
 
   /// Retrieves tokenized text and valid pairs, utilizing the shared LRU cache.
   ///
@@ -31,8 +31,10 @@ class TextfTokenCache {
   }) {
     if (text.length > TextfLimits.maxCacheKeyLength) {
       final tokens = _tokenizer.tokenize(text, allowNewlineCrossing: allowNewlineCrossing);
-      final validPairs =
-          PairValidator.identifyPairs(tokens, allowNewlineCrossing: allowNewlineCrossing);
+      final validPairs = PairValidator.identifyPairs(
+        tokens,
+        allowNewlineCrossing: allowNewlineCrossing,
+      );
       return TokenCacheEntry(tokens, validPairs);
     }
 
@@ -43,8 +45,10 @@ class TextfTokenCache {
     }
 
     final tokens = _tokenizer.tokenize(text, allowNewlineCrossing: allowNewlineCrossing);
-    final validPairs =
-        PairValidator.identifyPairs(tokens, allowNewlineCrossing: allowNewlineCrossing);
+    final validPairs = PairValidator.identifyPairs(
+      tokens,
+      allowNewlineCrossing: allowNewlineCrossing,
+    );
     final entry = TokenCacheEntry(tokens, validPairs);
     _cache.set(key, entry);
 
@@ -63,7 +67,7 @@ class TextfTokenCache {
 /// Cached result of tokenization and pair resolution.
 class TokenCacheEntry {
   /// Creates a new cache entry.
-  const TokenCacheEntry(this.tokens, this.validPairs);
+  const new(this.tokens, this.validPairs);
 
   /// The tokenized text.
   final List<TextfToken> tokens;

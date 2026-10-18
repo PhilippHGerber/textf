@@ -21,9 +21,12 @@
 // markers.  At that point these tests apply only to the remaining format
 // types that still use the tiny-font-size path (bold, italic, code, etc.).
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:textf/src/editing/marker_render_mode.dart';
 import 'package:textf/src/editing/textf_span_builder.dart';
+
+import '../../widgets/pump_textf_widget.dart';
 
 void main() {
   // The exact TextStyle emitted by TextfSpanBuilder._resolveInactiveMarkerStyle
@@ -130,11 +133,11 @@ void main() {
       builder = TextfSpanBuilder();
     });
 
-    /// Pumps a minimal MaterialApp and captures a BuildContext.
+    /// Pumps a minimal neutral host and captures a BuildContext.
     Future<void> pumpContext(WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               testContext = context;
               return const SizedBox.shrink();
@@ -145,13 +148,13 @@ void main() {
     }
 
     /// Builds spans with all markers in the fully-hidden inactive style
-    /// (cursor placed beyond the end of [text]).
+    /// (using [MarkerRenderMode.hidden]).
     List<InlineSpan> buildHidden(String text, TextStyle base) {
       return builder.build(
         text,
         testContext,
         base,
-        cursorPosition: text.length + 1, // beyond all content → inactive
+        renderMode: MarkerRenderMode.hidden,
       );
     }
 

@@ -1,9 +1,11 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
+
+import '../widgets/pump_textf_widget.dart';
 
 void main() {
   group('Parser Placeholder Tests', () {
@@ -20,8 +22,8 @@ void main() {
       WidgetTester tester,
       Widget Function(BuildContext) builder,
     ) {
-      return MaterialApp(
-        home: Builder(
+      return neutralTestApp(
+        child: Builder(
           builder: (context) {
             mockContext = context;
             return builder(context);
@@ -35,7 +37,7 @@ void main() {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         const baseStyle = TextStyle();
         final placeholders = {
-          'icon': const WidgetSpan(child: Icon(Icons.star)),
+          'icon': const WidgetSpan(child: SizedBox.square(dimension: 24)),
         };
 
         final result = parser.parse(
@@ -58,9 +60,12 @@ void main() {
 
       testWidgets('inserts TextSpan at {key} and preserves style', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        const baseStyle = TextStyle(color: Colors.black);
+        const baseStyle = TextStyle(color: Color(0xFF000000));
         final placeholders = {
-          'user': const TextSpan(text: 'Inserted', style: TextStyle(color: Colors.red)),
+          'user': const TextSpan(
+            text: 'Inserted',
+            style: TextStyle(color: Color(0xFFF44336)),
+          ),
         };
 
         final result = parser.parse(
@@ -78,7 +83,7 @@ void main() {
         if (children != null) {
           final insertedSpan = children.first as TextSpan;
           expect(insertedSpan.text, 'Inserted');
-          expect(insertedSpan.style?.color, Colors.red);
+          expect(insertedSpan.style?.color, const Color(0xFFF44336));
         }
       });
 
@@ -205,7 +210,7 @@ void main() {
       testWidgets('placeholder works inside link text', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         final placeholders = {
-          'icon': const WidgetSpan(child: Icon(Icons.link)),
+          'icon': const WidgetSpan(child: SizedBox.square(dimension: 24)),
         };
 
         final result = parser.parse(

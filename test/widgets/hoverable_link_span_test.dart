@@ -1,9 +1,14 @@
 // ignore_for_file: no-empty-block, prefer-match-file-name, avoid-top-level-members-in-tests
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
+
+import 'pump_textf_widget.dart';
+
+const _normalColor = Color(0xFF2196F3); // blue
+const _hoverColor = Color(0xFFF44336); // red
 
 /// A TapGestureRecognizer that tracks whether dispose() was called.
 class TrackingTapGestureRecognizer extends TapGestureRecognizer {
@@ -24,18 +29,16 @@ void main() {
 
         // Build widget with the recognizer
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: HoverableLinkSpan(
-                url: 'https://example.com',
-                rawDisplayText: 'Test Link',
-                initialChildrenSpans: const [],
-                initialPlainText: 'Test Link',
-                normalStyle: const TextStyle(color: Colors.blue),
-                hoverStyle: const TextStyle(color: Colors.red),
-                tapRecognizer: recognizer,
-                mouseCursor: SystemMouseCursors.click,
-              ),
+          neutralTestApp(
+            child: HoverableLinkSpan(
+              url: 'https://example.com',
+              rawDisplayText: 'Test Link',
+              initialChildrenSpans: const [],
+              initialPlainText: 'Test Link',
+              normalStyle: const TextStyle(color: _normalColor),
+              hoverStyle: const TextStyle(color: _hoverColor),
+              tapRecognizer: recognizer,
+              mouseCursor: SystemMouseCursors.click,
             ),
           ),
         );
@@ -46,10 +49,8 @@ void main() {
 
         // Remove the widget from tree (triggers dispose)
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SizedBox.shrink(),
-            ),
+          neutralTestApp(
+            child: const SizedBox.shrink(),
           ),
         );
 
@@ -64,18 +65,16 @@ void main() {
       testWidgets('handles null TapGestureRecognizer gracefully', (tester) async {
         // Build widget without a recognizer
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: HoverableLinkSpan(
-                url: 'https://example.com',
-                rawDisplayText: 'Test Link',
-                initialChildrenSpans: [],
-                initialPlainText: 'Test Link',
-                normalStyle: TextStyle(color: Colors.blue),
-                hoverStyle: TextStyle(color: Colors.red),
-                tapRecognizer: null,
-                mouseCursor: SystemMouseCursors.click,
-              ),
+          neutralTestApp(
+            child: const HoverableLinkSpan(
+              url: 'https://example.com',
+              rawDisplayText: 'Test Link',
+              initialChildrenSpans: [],
+              initialPlainText: 'Test Link',
+              normalStyle: TextStyle(color: _normalColor),
+              hoverStyle: TextStyle(color: _hoverColor),
+              tapRecognizer: null,
+              mouseCursor: SystemMouseCursors.click,
             ),
           ),
         );
@@ -84,36 +83,33 @@ void main() {
 
         // Remove widget - should not throw even with null recognizer
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SizedBox.shrink(),
-            ),
+          neutralTestApp(
+            child: const SizedBox.shrink(),
           ),
         );
 
         // No exception means the test passes
       });
 
-      testWidgets('disposes old recognizer when widget is rebuilt with different recognizer',
-          (tester) async {
+      testWidgets('disposes old recognizer when widget is rebuilt with different recognizer', (
+        tester,
+      ) async {
         final recognizer1 = TrackingTapGestureRecognizer()..onTap = () {};
         final recognizer2 = TrackingTapGestureRecognizer()..onTap = () {};
 
         // Build with first recognizer
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: HoverableLinkSpan(
-                key: const ValueKey('link'),
-                url: 'https://example.com',
-                rawDisplayText: 'Test Link',
-                initialChildrenSpans: const [],
-                initialPlainText: 'Test Link',
-                normalStyle: const TextStyle(color: Colors.blue),
-                hoverStyle: const TextStyle(color: Colors.red),
-                tapRecognizer: recognizer1,
-                mouseCursor: SystemMouseCursors.click,
-              ),
+          neutralTestApp(
+            child: HoverableLinkSpan(
+              key: const ValueKey('link'),
+              url: 'https://example.com',
+              rawDisplayText: 'Test Link',
+              initialChildrenSpans: const [],
+              initialPlainText: 'Test Link',
+              normalStyle: const TextStyle(color: _normalColor),
+              hoverStyle: const TextStyle(color: _hoverColor),
+              tapRecognizer: recognizer1,
+              mouseCursor: SystemMouseCursors.click,
             ),
           ),
         );
@@ -123,19 +119,17 @@ void main() {
 
         // Rebuild with second recognizer (simulates re-parse)
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: HoverableLinkSpan(
-                key: const ValueKey('link'),
-                url: 'https://example.com',
-                rawDisplayText: 'Test Link',
-                initialChildrenSpans: const [],
-                initialPlainText: 'Test Link',
-                normalStyle: const TextStyle(color: Colors.blue),
-                hoverStyle: const TextStyle(color: Colors.red),
-                tapRecognizer: recognizer2,
-                mouseCursor: SystemMouseCursors.click,
-              ),
+          neutralTestApp(
+            child: HoverableLinkSpan(
+              key: const ValueKey('link'),
+              url: 'https://example.com',
+              rawDisplayText: 'Test Link',
+              initialChildrenSpans: const [],
+              initialPlainText: 'Test Link',
+              normalStyle: const TextStyle(color: _normalColor),
+              hoverStyle: const TextStyle(color: _hoverColor),
+              tapRecognizer: recognizer2,
+              mouseCursor: SystemMouseCursors.click,
             ),
           ),
         );
@@ -160,19 +154,17 @@ void main() {
 
         // Build with recognizer
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: HoverableLinkSpan(
-                key: const ValueKey('link'),
-                url: 'https://example.com',
-                rawDisplayText: 'Test Link',
-                initialChildrenSpans: const [],
-                initialPlainText: 'Test Link',
-                normalStyle: const TextStyle(color: Colors.blue),
-                hoverStyle: const TextStyle(color: Colors.red),
-                tapRecognizer: recognizer,
-                mouseCursor: SystemMouseCursors.click,
-              ),
+          neutralTestApp(
+            child: HoverableLinkSpan(
+              key: const ValueKey('link'),
+              url: 'https://example.com',
+              rawDisplayText: 'Test Link',
+              initialChildrenSpans: const [],
+              initialPlainText: 'Test Link',
+              normalStyle: const TextStyle(color: _normalColor),
+              hoverStyle: const TextStyle(color: _hoverColor),
+              tapRecognizer: recognizer,
+              mouseCursor: SystemMouseCursors.click,
             ),
           ),
         );
@@ -181,19 +173,17 @@ void main() {
 
         // Rebuild with SAME recognizer instance (e.g., parent rebuild without re-parse)
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: HoverableLinkSpan(
-                key: const ValueKey('link'),
-                url: 'https://example.com',
-                rawDisplayText: 'Test Link',
-                initialChildrenSpans: const [],
-                initialPlainText: 'Test Link',
-                normalStyle: const TextStyle(color: Colors.blue),
-                hoverStyle: const TextStyle(color: Colors.red),
-                tapRecognizer: recognizer,
-                mouseCursor: SystemMouseCursors.click,
-              ),
+          neutralTestApp(
+            child: HoverableLinkSpan(
+              key: const ValueKey('link'),
+              url: 'https://example.com',
+              rawDisplayText: 'Test Link',
+              initialChildrenSpans: const [],
+              initialPlainText: 'Test Link',
+              normalStyle: const TextStyle(color: _normalColor),
+              hoverStyle: const TextStyle(color: _hoverColor),
+              tapRecognizer: recognizer,
+              mouseCursor: SystemMouseCursors.click,
             ),
           ),
         );
@@ -211,19 +201,17 @@ void main() {
 
         // Build with recognizer
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: HoverableLinkSpan(
-                key: const ValueKey('link'),
-                url: 'https://example.com',
-                rawDisplayText: 'Test Link',
-                initialChildrenSpans: const [],
-                initialPlainText: 'Test Link',
-                normalStyle: const TextStyle(color: Colors.blue),
-                hoverStyle: const TextStyle(color: Colors.red),
-                tapRecognizer: recognizer,
-                mouseCursor: SystemMouseCursors.click,
-              ),
+          neutralTestApp(
+            child: HoverableLinkSpan(
+              key: const ValueKey('link'),
+              url: 'https://example.com',
+              rawDisplayText: 'Test Link',
+              initialChildrenSpans: const [],
+              initialPlainText: 'Test Link',
+              normalStyle: const TextStyle(color: _normalColor),
+              hoverStyle: const TextStyle(color: _hoverColor),
+              tapRecognizer: recognizer,
+              mouseCursor: SystemMouseCursors.click,
             ),
           ),
         );
@@ -232,19 +220,17 @@ void main() {
 
         // Rebuild with null recognizer
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: HoverableLinkSpan(
-                key: ValueKey('link'),
-                url: 'https://example.com',
-                rawDisplayText: 'Test Link',
-                initialChildrenSpans: [],
-                initialPlainText: 'Test Link',
-                normalStyle: TextStyle(color: Colors.blue),
-                hoverStyle: TextStyle(color: Colors.red),
-                tapRecognizer: null, // Changed to null
-                mouseCursor: SystemMouseCursors.click,
-              ),
+          neutralTestApp(
+            child: const HoverableLinkSpan(
+              key: ValueKey('link'),
+              url: 'https://example.com',
+              rawDisplayText: 'Test Link',
+              initialChildrenSpans: [],
+              initialPlainText: 'Test Link',
+              normalStyle: TextStyle(color: _normalColor),
+              hoverStyle: TextStyle(color: _hoverColor),
+              tapRecognizer: null, // Changed to null
+              mouseCursor: SystemMouseCursors.click,
             ),
           ),
         );
@@ -261,18 +247,16 @@ void main() {
     group('Widget Functionality', () {
       testWidgets('renders plain text correctly', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: HoverableLinkSpan(
-                url: 'https://example.com',
-                rawDisplayText: 'Click Here',
-                initialChildrenSpans: [],
-                initialPlainText: 'Click Here',
-                normalStyle: TextStyle(color: Colors.blue),
-                hoverStyle: TextStyle(color: Colors.red),
-                tapRecognizer: null,
-                mouseCursor: SystemMouseCursors.click,
-              ),
+          neutralTestApp(
+            child: const HoverableLinkSpan(
+              url: 'https://example.com',
+              rawDisplayText: 'Click Here',
+              initialChildrenSpans: [],
+              initialPlainText: 'Click Here',
+              normalStyle: TextStyle(color: _normalColor),
+              hoverStyle: TextStyle(color: _hoverColor),
+              tapRecognizer: null,
+              mouseCursor: SystemMouseCursors.click,
             ),
           ),
         );
@@ -282,22 +266,20 @@ void main() {
 
       testWidgets('renders with child spans correctly', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: HoverableLinkSpan(
-                url: 'https://example.com',
-                rawDisplayText: '**Bold Link**',
-                initialChildrenSpans: [
-                  TextSpan(
-                    text: 'Bold Link',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-                normalStyle: TextStyle(color: Colors.blue),
-                hoverStyle: TextStyle(color: Colors.red),
-                tapRecognizer: null,
-                mouseCursor: SystemMouseCursors.click,
-              ),
+          neutralTestApp(
+            child: const HoverableLinkSpan(
+              url: 'https://example.com',
+              rawDisplayText: '**Bold Link**',
+              initialChildrenSpans: [
+                TextSpan(
+                  text: 'Bold Link',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+              normalStyle: TextStyle(color: _normalColor),
+              hoverStyle: TextStyle(color: _hoverColor),
+              tapRecognizer: null,
+              mouseCursor: SystemMouseCursors.click,
             ),
           ),
         );
@@ -310,23 +292,21 @@ void main() {
         String? lastUrl;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: Center(
-                child: HoverableLinkSpan(
-                  url: 'https://example.com',
-                  rawDisplayText: 'Hover Me',
-                  initialChildrenSpans: const [],
-                  initialPlainText: 'Hover Me',
-                  normalStyle: const TextStyle(color: Colors.blue),
-                  hoverStyle: const TextStyle(color: Colors.red),
-                  tapRecognizer: null,
-                  mouseCursor: SystemMouseCursors.click,
-                  onHoverCallback: (url, displayText, {required isHovering}) {
-                    lastUrl = url;
-                    lastHoverState = isHovering;
-                  },
-                ),
+          neutralTestApp(
+            child: Center(
+              child: HoverableLinkSpan(
+                url: 'https://example.com',
+                rawDisplayText: 'Hover Me',
+                initialChildrenSpans: const [],
+                initialPlainText: 'Hover Me',
+                normalStyle: const TextStyle(color: _normalColor),
+                hoverStyle: const TextStyle(color: _hoverColor),
+                tapRecognizer: null,
+                mouseCursor: SystemMouseCursors.click,
+                onHoverCallback: (url, displayText, {required isHovering}) {
+                  lastUrl = url;
+                  lastHoverState = isHovering;
+                },
               ),
             ),
           ),

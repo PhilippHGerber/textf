@@ -2,9 +2,11 @@
 
 // ignore_for_file: avoid-late-keyword, no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
+import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
+import 'package:textf/src/widgets/textf_options.dart';
 
 void main() {
   group('Parser and StyleResolver Integration', () {
@@ -17,27 +19,35 @@ void main() {
 
     tearDown(TextfParser.clearCache);
 
-    testWidgets('applies theme colors to code blocks', (tester) async {
+    /// Pumps a neutral tree (optionally under [options]) and returns a context inside it.
+    Future<BuildContext> pumpContext(
+      WidgetTester tester, {
+      TextfOptions Function(Widget child)? options,
+    }) async {
       late BuildContext capturedContext;
-
+      final Widget probe = Builder(
+        builder: (context) {
+          capturedContext = context;
+          return const SizedBox.shrink();
+        },
+      );
       await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(
-            colorScheme: const ColorScheme.light(
-              surfaceContainer: Color(0xFFE0E0E0),
-              onSurfaceVariant: Color(0xFF424242),
-            ),
-          ),
-          home: Builder(
-            builder: (context) {
-              capturedContext = context;
-              return const SizedBox.shrink();
-            },
-          ),
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: options == null ? probe : options(probe),
         ),
       );
+      return capturedContext;
+    }
 
-      final spans = parser.parse('`code`', capturedContext, const TextStyle());
+    testWidgets('applies codeBackgroundColor to code spans', (tester) async {
+      final context = await pumpContext(
+        tester,
+        options: (child) =>
+            TextfOptions(codeBackgroundColor: const Color(0xFFE0E0E0), child: child),
+      );
+
+      final spans = parser.parse('`code`', context, const TextStyle());
 
       expect(spans.length, 1);
       final codeSpan = spans.first as TextSpan;
@@ -45,52 +55,33 @@ void main() {
       expect(codeSpan.style?.backgroundColor, const Color(0xFFE0E0E0));
     });
 
-    testWidgets('applies theme colors to links', (tester) async {
-      late BuildContext capturedContext;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF1976D2),
-            ),
-          ),
-          home: Builder(
-            builder: (context) {
-              capturedContext = context;
-              return const SizedBox.shrink();
-            },
-          ),
-        ),
+    testWidgets('applies linkColor to links', (tester) async {
+      final context = await pumpContext(
+        tester,
+        options: (child) => TextfOptions(linkColor: const Color(0xFF1976D2), child: child),
       );
 
-      final spans = parser.parse('[link](url)', capturedContext, const TextStyle());
+      final spans = parser.parse('[link](url)', context, const TextStyle());
 
       expect(spans.length, 1);
       // Link creates a WidgetSpan with HoverableLinkSpan inside
       expect(spans.first, isA<WidgetSpan>());
+      final link = (spans.first as WidgetSpan).child as HoverableLinkSpan;
+      expect(link.normalStyle.color, const Color(0xFF1976D2));
+      expect(link.normalStyle.decorationColor, const Color(0xFF1976D2));
+      expect(link.normalStyle.decoration, TextDecoration.underline);
     });
 
     testWidgets('preserves base style properties through formatting', (tester) async {
-      late BuildContext capturedContext;
       const baseStyle = TextStyle(
         fontSize: 20,
         fontFamily: 'CustomFont',
         letterSpacing: 1.5,
       );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
-            builder: (context) {
-              capturedContext = context;
-              return const SizedBox.shrink();
-            },
-          ),
-        ),
-      );
+      final context = await pumpContext(tester);
 
-      final spans = parser.parse('**bold**', capturedContext, baseStyle);
+      final spans = parser.parse('**bold**', context, baseStyle);
 
       expect(spans.length, 1);
       final boldSpan = spans.first as TextSpan;

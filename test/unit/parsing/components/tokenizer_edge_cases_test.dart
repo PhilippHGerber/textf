@@ -140,8 +140,8 @@ void main() {
 
     group('Flanking flags', () {
       FormatMarkerToken markerAt(List<TextfToken> tokens, int position) => tokens.firstWhere(
-            (t) => t is FormatMarkerToken && t.position == position,
-          ) as FormatMarkerToken;
+        (t) => t is FormatMarkerToken && t.position == position,
+      ) as FormatMarkerToken;
 
       test('bullet asterisk at SOF followed by space: canOpen=false, canClose=false', () {
         final tokens = tokenizer.tokenize('* Item');

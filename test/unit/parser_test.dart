@@ -1,9 +1,11 @@
 // ignore_for_file: no-magic-number, avoid-non-null-assertion
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
 import 'package:textf/textf.dart';
+
+import '../widgets/pump_textf_widget.dart';
 
 void main() {
   group('TextfParser Tests', () {
@@ -22,8 +24,8 @@ void main() {
       WidgetTester tester,
       Widget Function(BuildContext) builder,
     ) {
-      return MaterialApp(
-        home: Builder(
+      return neutralTestApp(
+        child: Builder(
           builder: (context) {
             mockContext = context;
             return builder(context);
@@ -99,13 +101,11 @@ void main() {
       testWidgets('code text applies monospace and background', (tester) async {
         // ignore: avoid-late-keyword
         late BuildContext mockContext;
-        final lightTheme = ThemeData.light();
 
         // Setup context
         await tester.pumpWidget(
-          MaterialApp(
-            theme: lightTheme,
-            home: Builder(
+          neutralTestApp(
+            child: Builder(
               builder: (context) {
                 mockContext = context;
                 return Container();
@@ -120,30 +120,30 @@ void main() {
         expect((spans.first as TextSpan).style?.fontFamily, 'monospace');
         expect(
           (spans.first as TextSpan).style?.backgroundColor,
-          // Expect theme surfaceContainer instead of old hardcoded grey
-          lightTheme.colorScheme.surfaceContainer,
-          reason: 'Code background should come from theme',
+          // No text color set: the palette assumes black on a light surface.
+          const Color(0xFF000000).withValues(alpha: 0.05),
+          reason: 'Code background should be the neutral foreground tint',
         );
         expect((spans.first as TextSpan).text, 'code');
         expect(
           (spans.first as TextSpan).style?.color,
-          // Expect theme text color for code
-          lightTheme.colorScheme.onSurfaceVariant,
-          reason: 'Code text color should come from theme',
+          isNull,
+          reason: 'Code text keeps the (unset) segment color',
         );
       });
 
       testWidgets('base style is preserved and extended', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        const baseStyle = TextStyle(fontSize: 20, color: Colors.blue);
+        const baseStyle = TextStyle(fontSize: 20, color: Color(0xFF2196F3));
         final spans = parser.parse('**bold**', mockContext, baseStyle);
         expect((spans.first as TextSpan).style?.fontSize, 20);
-        expect((spans.first as TextSpan).style?.color, Colors.blue);
+        expect((spans.first as TextSpan).style?.color, const Color(0xFF2196F3));
         expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
       });
 
-      testWidgets('superscript text applies WidgetSpan with bottom padding (visually up)',
-          (tester) async {
+      testWidgets('superscript text applies WidgetSpan with bottom padding (visually up)', (
+        tester,
+      ) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         // Provide a font size so offset calculation is non-zero
         final spans = parser.parse('^super^', mockContext, const TextStyle(fontSize: 20));
@@ -168,8 +168,9 @@ void main() {
         expect(innerText.text, 'super');
       });
 
-      testWidgets('subscript text applies WidgetSpan with top padding (visually down)',
-          (tester) async {
+      testWidgets('subscript text applies WidgetSpan with top padding (visually down)', (
+        tester,
+      ) async {
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         // Provide a font size so offset calculation is non-zero
         final spans = parser.parse('~sub~', mockContext, const TextStyle(fontSize: 20));
@@ -456,8 +457,8 @@ void main() {
     group('Link Alignment', () {
       testWidgets('linkAlignment option works', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
-            home: TextfOptions(
+          neutralTestApp(
+            child: TextfOptions(
               linkAlignment: PlaceholderAlignment.middle,
               child: Builder(
                 builder: (context) {

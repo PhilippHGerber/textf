@@ -82,7 +82,9 @@ class PairValidator {
     var count = 0;
     for (var i = 0; i < tokens.length; i++) {
       final token = tokens[i];
-      if (token is TextToken && token.value.contains('\n')) count++;
+      if (token is TextToken && (token.value.contains('\n') || token.value.contains('\r'))) {
+        count++;
+      }
       result[i] = count;
     }
     return result;

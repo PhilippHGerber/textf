@@ -30,25 +30,24 @@ extension TextfExt on String {
     ui.TextHeightBehavior? textHeightBehavior,
     Color? selectionColor,
     Map<String, InlineSpan>? placeholders,
-  }) =>
-      Textf(
-        this,
-        key: key,
-        style: style,
-        strutStyle: strutStyle,
-        textAlign: textAlign,
-        textDirection: textDirection,
-        locale: locale,
-        softWrap: softWrap,
-        overflow: overflow,
-        textScaler: textScaler,
-        maxLines: maxLines,
-        semanticsLabel: semanticsLabel,
-        textWidthBasis: textWidthBasis,
-        textHeightBehavior: textHeightBehavior,
-        selectionColor: selectionColor,
-        placeholders: placeholders,
-      );
+  }) => Textf(
+    this,
+    key: key,
+    style: style,
+    strutStyle: strutStyle,
+    textAlign: textAlign,
+    textDirection: textDirection,
+    locale: locale,
+    softWrap: softWrap,
+    overflow: overflow,
+    textScaler: textScaler,
+    maxLines: maxLines,
+    semanticsLabel: semanticsLabel,
+    textWidthBasis: textWidthBasis,
+    textHeightBehavior: textHeightBehavior,
+    selectionColor: selectionColor,
+    placeholders: placeholders,
+  );
 }
 
 /// Convenience extension on [String] for extracting plain text.

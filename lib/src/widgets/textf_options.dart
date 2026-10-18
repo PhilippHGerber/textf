@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../core/textf_style_utils.dart';
 import 'internal/textf_options_diagnostics.dart';
@@ -6,7 +6,7 @@ import 'textf_options_data.dart';
 
 /// An internal InheritedWidget that securely passes the O(1) pre-merged data down the tree.
 class _TextfOptionsScope extends InheritedWidget {
-  const _TextfOptionsScope({
+  const new({
     required this.data,
     required super.child,
   });
@@ -26,10 +26,14 @@ class _TextfOptionsScope extends InheritedWidget {
 /// ## Inheritance Logic
 /// - **Styles** are merged (Parent styles are kept, but overridden by child properties).
 /// - **Callbacks and values** use a "nearest ancestor wins" strategy.
+/// - **Color options** ([linkColor], [codeBackgroundColor], [highlightColor],
+///   [thematicBreakColor]) also use "nearest ancestor wins". They tint the built-in
+///   defaults without replacing typography or decoration, and the matching style
+///   option (or [thematicBreakBuilder]) takes precedence over them.
 class TextfOptions extends StatelessWidget {
   /// Creates a new TextfOptions instance to provide configuration down the tree.
   /// All properties are optional and will be merged with ancestors if not null.
-  const TextfOptions({
+  const new({
     required this.child,
     super.key,
     this.onLinkTap,
@@ -51,6 +55,17 @@ class TextfOptions extends StatelessWidget {
     this.superscriptBaselineFactor,
     this.subscriptBaselineFactor,
     this.scriptFontSizeFactor,
+    this.h1Style,
+    this.h2Style,
+    this.h3Style,
+    this.h4Style,
+    this.h5Style,
+    this.h6Style,
+    this.thematicBreakBuilder,
+    this.linkColor,
+    this.codeBackgroundColor,
+    this.highlightColor,
+    this.thematicBreakColor,
   });
 
   /// The child subtree that will have access to the merged TextfOptions configuration.
@@ -146,6 +161,104 @@ class TextfOptions extends StatelessWidget {
   /// Merged onto the base style if provided.
   final TextStyle? subscriptStyle;
 
+  /// The [TextStyle] for level-1 headings (`# H1`). Merged onto the base style.
+  final TextStyle? h1Style;
+
+  /// The [TextStyle] for level-2 headings (`## H2`). Merged onto the base style.
+  final TextStyle? h2Style;
+
+  /// The [TextStyle] for level-3 headings (`### H3`). Merged onto the base style.
+  final TextStyle? h3Style;
+
+  /// The [TextStyle] for level-4 headings (`#### H4`). Merged onto the base style.
+  final TextStyle? h4Style;
+
+  /// The [TextStyle] for level-5 headings (`##### H5`). Merged onto the base style.
+  final TextStyle? h5Style;
+
+  /// The [TextStyle] for level-6 headings (`###### H6`). Merged onto the base style.
+  final TextStyle? h6Style;
+
+  /// Builds the widget rendered for a thematic break (`---`, `***`, `___`).
+  ///
+  /// Supplying a builder overrides the guarded full-width default rule. The
+  /// builder owns the widget's appearance and its own width behaviour, so —
+  /// unlike the default — it carries no unbounded-width guard.
+  ///
+  /// Resolved with a "nearest ancestor wins" strategy, like the other callbacks
+  /// and values.
+  final Widget Function(BuildContext context)? thematicBreakBuilder;
+
+  /// {@template textf.options.linkColor}
+  /// The color of link text (`[text](url)`).
+  ///
+  /// This is a color option: it tints the built-in link style instead of replacing it.
+  /// Link typography and the default underline are kept, and the underline takes on
+  /// this color too. [linkHoverStyle] is still merged on top while hovered.
+  ///
+  /// [linkStyle] takes precedence. When it is set, it replaces the built-in link style
+  /// and this color is not applied.
+  ///
+  /// The color is used verbatim, including its alpha channel. If null, links use the
+  /// built-in accessible link blue, which does not depend on the surrounding colors.
+  ///
+  /// Resolved with a "nearest ancestor wins" strategy.
+  /// {@endtemplate}
+  final Color? linkColor;
+
+  /// {@template textf.options.codeBackgroundColor}
+  /// The background color of inline code (`` `code` ``).
+  ///
+  /// This is a color option: it tints the built-in code style instead of replacing it.
+  /// The monospace font family, its fallback font list and the code text color are
+  /// kept.
+  ///
+  /// [codeStyle] takes precedence. When it is set, it replaces the built-in code style
+  /// and this color is not applied.
+  ///
+  /// The color is used verbatim, including its alpha channel. If null, code gets a
+  /// faint tint of the surrounding text color, stronger on dark surfaces than on light
+  /// ones. The surface is assumed from the text color, so set this option where that
+  /// guess is wrong, such as on mid-tone or gradient backgrounds.
+  ///
+  /// Resolved with a "nearest ancestor wins" strategy.
+  /// {@endtemplate}
+  final Color? codeBackgroundColor;
+
+  /// {@template textf.options.highlightColor}
+  /// The background color of highlighted text (`==highlight==`).
+  ///
+  /// This is a color option: it tints the built-in highlight style instead of
+  /// replacing it. Only the background changes: the built-in highlight text color and
+  /// the typography are kept.
+  ///
+  /// [highlightStyle] takes precedence. When it is set, it replaces the built-in
+  /// highlight style and this color is not applied.
+  ///
+  /// The color is used verbatim, including its alpha channel. If null, highlights get
+  /// a translucent yellow, chosen for light or dark surfaces from the surrounding text
+  /// color.
+  ///
+  /// Resolved with a "nearest ancestor wins" strategy.
+  /// {@endtemplate}
+  final Color? highlightColor;
+
+  /// {@template textf.options.thematicBreakColor}
+  /// The color of the default rule drawn for a thematic break (`---`, `***`, `___`).
+  ///
+  /// This is a color option: it recolors the built-in rule only. The rule's thickness
+  /// and full-width layout are kept.
+  ///
+  /// [thematicBreakBuilder] takes precedence. When it is set, it replaces the default
+  /// rule and this color is not applied.
+  ///
+  /// The color is used verbatim, including its alpha channel. If null, the rule uses
+  /// the surrounding text color at 20% opacity.
+  ///
+  /// Resolved with a "nearest ancestor wins" strategy.
+  /// {@endtemplate}
+  final Color? thematicBreakColor;
+
   /// Finds the nearest pre-merged [TextfOptionsData] ancestor in the widget tree.
   static TextfOptionsData? maybeOf(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<_TextfOptionsScope>()?.data;
@@ -180,12 +293,23 @@ class TextfOptions extends StatelessWidget {
       highlightStyle: highlightStyle,
       superscriptStyle: superscriptStyle,
       subscriptStyle: subscriptStyle,
+      h1Style: h1Style,
+      h2Style: h2Style,
+      h3Style: h3Style,
+      h4Style: h4Style,
+      h5Style: h5Style,
+      h6Style: h6Style,
       linkStyle: linkStyle,
       linkHoverStyle: linkHoverStyle,
       scriptFontSizeFactor: scriptFontSizeFactor,
       superscriptBaselineFactor: superscriptBaselineFactor,
       subscriptBaselineFactor: subscriptBaselineFactor,
       strikethroughThickness: strikethroughThickness,
+      thematicBreakBuilder: thematicBreakBuilder,
+      linkColor: linkColor,
+      codeBackgroundColor: codeBackgroundColor,
+      highlightColor: highlightColor,
+      thematicBreakColor: thematicBreakColor,
     );
   }
 
@@ -205,6 +329,11 @@ class TextfOptions extends StatelessWidget {
       superscriptBaselineFactor: superscriptBaselineFactor ?? parent?.superscriptBaselineFactor,
       subscriptBaselineFactor: subscriptBaselineFactor ?? parent?.subscriptBaselineFactor,
       scriptFontSizeFactor: scriptFontSizeFactor ?? parent?.scriptFontSizeFactor,
+      thematicBreakBuilder: thematicBreakBuilder ?? parent?.thematicBreakBuilder,
+      linkColor: linkColor ?? parent?.linkColor,
+      codeBackgroundColor: codeBackgroundColor ?? parent?.codeBackgroundColor,
+      highlightColor: highlightColor ?? parent?.highlightColor,
+      thematicBreakColor: thematicBreakColor ?? parent?.thematicBreakColor,
 
       // Intelligent merge for styles (Child overrides parent)
       linkStyle: _merge(parent?.linkStyle, linkStyle),
@@ -218,6 +347,12 @@ class TextfOptions extends StatelessWidget {
       highlightStyle: _merge(parent?.highlightStyle, highlightStyle),
       superscriptStyle: _merge(parent?.superscriptStyle, superscriptStyle),
       subscriptStyle: _merge(parent?.subscriptStyle, subscriptStyle),
+      h1Style: _merge(parent?.h1Style, h1Style),
+      h2Style: _merge(parent?.h2Style, h2Style),
+      h3Style: _merge(parent?.h3Style, h3Style),
+      h4Style: _merge(parent?.h4Style, h4Style),
+      h5Style: _merge(parent?.h5Style, h5Style),
+      h6Style: _merge(parent?.h6Style, h6Style),
     );
 
     // 3. Provide the pre-merged O(1) object down the tree

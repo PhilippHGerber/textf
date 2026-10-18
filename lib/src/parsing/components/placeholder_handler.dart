@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../models/parser_state.dart';
 import '../../models/textf_token.dart';

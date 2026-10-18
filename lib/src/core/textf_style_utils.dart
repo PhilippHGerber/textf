@@ -17,7 +17,7 @@ TextDecoration? combineTextDecorations(TextDecoration? a, TextDecoration? b) {
 /// 2. Duplicate decorations: It checks if the decoration is already present
 ///    before combining.
 ///
-/// - [baseStyle]: The style inherited from the parent/theme.
+/// - [baseStyle]: The style inherited from the parent span or the ambient text style.
 /// - [optionsStyle]: The style defined in the current options.
 TextStyle mergeTextStyles(TextStyle baseStyle, TextStyle optionsStyle) {
   // Use standard merge for properties like color, fontSize, fontWeight, etc.
@@ -69,8 +69,10 @@ TextStyle mergeTextStyles(TextStyle baseStyle, TextStyle optionsStyle) {
 /// (e.g., underline).
 TextStyle applyLinkStyleToSpan(TextStyle spanStyle, TextStyle linkAppearance) {
   // 1. Determine Decoration (Merge logic)
-  final TextDecoration? finalDecoration =
-      combineTextDecorations(spanStyle.decoration, linkAppearance.decoration);
+  final TextDecoration? finalDecoration = combineTextDecorations(
+    spanStyle.decoration,
+    linkAppearance.decoration,
+  );
 
   // 2. Determine Decoration Color and Thickness
   final Color? finalDecorationColor = linkAppearance.decorationColor ?? spanStyle.decorationColor;

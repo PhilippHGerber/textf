@@ -72,19 +72,42 @@ const int kNewline = 0x0A;
 /// Number of tokens in a complete link structure: `[`, text, `](`, url, `)`.
 const int kLinkTokenCount = 5;
 
-/// Token offsets within a complete link structure relative to the opening `[`.
-///
-/// A link is tokenized as: `[`(0), text(1), `](`(2), url(3), `)`(4).
-const int kLinkTextOffset = 1;
-
-/// Offset from the opening `[` token to the `](` separator token in a link.
-const int kLinkSeparatorOffset = 2;
-
-/// Offset from the opening `[` token to the URL text token in a link.
-const int kLinkUrlOffset = 3;
-
-/// Offset from the opening `[` token to the closing `)` token in a link.
-const int kLinkEndTokenOffset = 4;
-
 /// Carriage Return character \r (ASCII code 13)
 const int kCarriageReturn = 0x0D;
+
+/// Hash character # (ASCII code 35)
+///
+/// Used for ATX-style headings (`#` H1 .. `######` H6) at the start of a line.
+const int kHash = 0x23;
+
+/// Space character ' ' (ASCII code 32)
+///
+/// The separator between an ATX heading's `#` run and its content.
+const int kSpace = 0x20;
+
+/// Tab character '\t' (ASCII code 9)
+///
+/// An alternative separator between an ATX heading's `#` run and its content.
+const int kTab = 0x09;
+
+/// Maximum ATX heading level (`######`). A run of 7+ `#` is not a heading.
+const int kMaxHeadingLevel = 6;
+
+/// Maximum number of leading spaces before a `#` run that still counts as an
+/// ATX heading (CommonMark's up-to-three-space indentation rule). 4+ leading
+/// spaces disqualify the line as a heading.
+const int kMaxHeadingIndent = 3;
+
+/// Hyphen-minus character `-` (ASCII code 45)
+///
+/// One of the three CommonMark thematic-break markers (`---`, `***`, `___`).
+const int kDash = 0x2D;
+
+/// Minimum number of repeated marker characters that form a thematic break
+/// (`---`, `***`, `___`). A run of fewer than three is not a thematic break.
+const int kMinThematicBreakRun = 3;
+
+/// Maximum number of leading spaces before a thematic-break marker run that
+/// still counts as a break (CommonMark's up-to-three-space indentation rule,
+/// `spec.txt:1128`). 4+ leading spaces disqualify the line.
+const int kMaxThematicBreakIndent = 3;

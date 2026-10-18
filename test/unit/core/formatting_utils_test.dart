@@ -136,6 +136,15 @@ void main() {
         test('backslash stripped, escaped character preserved', () {
           expect(FormattingUtils.stripFormatting(r'\*not italic\*'), '*not italic*');
         });
+
+        test('escapes inside link display text are stripped', () {
+          expect(
+            FormattingUtils.stripFormatting(
+              r'Visit [\+ \= \^ \# \- \* \_ \~ \` \\ \[ \] \( \) \{ \}](url)',
+            ),
+            r'Visit + = ^ # - * _ ~ ` \ [ ] ( ) { }',
+          );
+        });
       });
 
       group('mixed content', () {

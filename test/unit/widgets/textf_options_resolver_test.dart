@@ -1,9 +1,11 @@
 // ignore_for_file: no-magic-number, avoid-non-null-assertion
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/widgets/textf_options.dart';
 import 'package:textf/src/widgets/textf_options_data.dart';
+
+import '../../widgets/pump_textf_widget.dart';
 
 void main() {
   group('TextfOptionsData hashing and equality', () {
@@ -11,8 +13,8 @@ void main() {
       TextfOptionsData? data;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
+        neutralTestApp(
+          child: Builder(
             builder: (context) {
               data = TextfOptions.maybeOf(context);
               return const SizedBox();
@@ -28,8 +30,8 @@ void main() {
       TextfOptionsData? data;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             boldStyle: const TextStyle(fontWeight: FontWeight.bold),
             child: Builder(
               builder: (context) {
@@ -50,8 +52,8 @@ void main() {
       TextfOptionsData? data2;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             boldStyle: const TextStyle(fontWeight: FontWeight.bold),
             child: Builder(
               builder: (context) {
@@ -64,8 +66,8 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             italicStyle: const TextStyle(fontStyle: FontStyle.italic),
             child: Builder(
               builder: (context) {
@@ -87,9 +89,9 @@ void main() {
       TextfOptionsData? data;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
-            boldStyle: const TextStyle(color: Colors.red),
+        neutralTestApp(
+          child: TextfOptions(
+            boldStyle: const TextStyle(color: Color(0xFFF44336)),
             child: TextfOptions(
               italicStyle: const TextStyle(fontStyle: FontStyle.italic),
               child: Builder(
@@ -105,7 +107,7 @@ void main() {
 
       expect(data, isNotNull);
       // Both parent's bold and child's italic styles should be present
-      expect(data!.boldStyle?.color, Colors.red);
+      expect(data!.boldStyle?.color, const Color(0xFFF44336));
       expect(data!.italicStyle?.fontStyle, FontStyle.italic);
     });
 
@@ -114,8 +116,8 @@ void main() {
       TextfOptionsData? data2;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             boldStyle: const TextStyle(fontWeight: FontWeight.bold),
             child: Builder(
               builder: (context) {
@@ -128,8 +130,8 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             boldStyle: const TextStyle(fontWeight: FontWeight.bold),
             child: Builder(
               builder: (context) {
@@ -153,20 +155,22 @@ void main() {
       void onHover(String url, String text, {required bool isHovering}) {}
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: TextfOptions(
+        neutralTestApp(
+          child: TextfOptions(
             boldStyle: const TextStyle(fontWeight: FontWeight.bold),
             italicStyle: const TextStyle(fontStyle: FontStyle.italic),
-            boldItalicStyle:
-                const TextStyle(fontWeight: FontWeight.bold, fontStyle: FontStyle.italic),
+            boldItalicStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontStyle: FontStyle.italic,
+            ),
             strikethroughStyle: const TextStyle(decoration: TextDecoration.lineThrough),
             codeStyle: const TextStyle(fontFamily: 'monospace'),
             underlineStyle: const TextStyle(decoration: TextDecoration.underline),
-            highlightStyle: const TextStyle(backgroundColor: Colors.yellow),
+            highlightStyle: const TextStyle(backgroundColor: Color(0xFFFFEB3B)),
             superscriptStyle: const TextStyle(fontSize: 10),
             subscriptStyle: const TextStyle(fontSize: 10),
-            linkStyle: const TextStyle(color: Colors.blue),
-            linkHoverStyle: const TextStyle(color: Colors.red),
+            linkStyle: const TextStyle(color: Color(0xFF2196F3)),
+            linkHoverStyle: const TextStyle(color: Color(0xFFF44336)),
             linkMouseCursor: SystemMouseCursors.click,
             linkAlignment: PlaceholderAlignment.middle,
             strikethroughThickness: 2,
@@ -188,7 +192,7 @@ void main() {
       expect(data, isNotNull);
       expect(data!.boldStyle?.fontWeight, FontWeight.bold);
       expect(data!.italicStyle?.fontStyle, FontStyle.italic);
-      expect(data!.linkStyle?.color, Colors.blue);
+      expect(data!.linkStyle?.color, const Color(0xFF2196F3));
       expect(data!.linkMouseCursor, SystemMouseCursors.click);
       expect(data!.linkAlignment, PlaceholderAlignment.middle);
       expect(data!.strikethroughThickness, 2.0);

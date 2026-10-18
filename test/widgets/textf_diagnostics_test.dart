@@ -1,5 +1,7 @@
+// ignore_for_file: avoid-top-level-members-in-tests
+
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
 
@@ -16,13 +18,15 @@ void _onLinkHover(String url, String displayText, {required bool isHovering}) {
   debugPrint('Hover: $url ($displayText), isHovering: $isHovering');
 }
 
+Widget _thematicBreakBuilder(BuildContext context) => const SizedBox.shrink();
+
 void main() {
   group('Textf diagnostics', () {
     test('shows configured properties when set', () {
       final description = _diagnosticsForWidget(
         const Textf(
           'Hello **world**',
-          style: TextStyle(color: Colors.red),
+          style: TextStyle(color: Color(0xFFF44336)),
           textAlign: TextAlign.center,
           textDirection: TextDirection.rtl,
           maxLines: 2,
@@ -34,7 +38,7 @@ void main() {
           strutStyle: StrutStyle(fontSize: 16),
           textWidthBasis: TextWidthBasis.longestLine,
           textHeightBehavior: TextHeightBehavior(),
-          selectionColor: Colors.yellow,
+          selectionColor: Color(0xFFFFEB3B),
           placeholders: {
             'icon': WidgetSpan(child: SizedBox.shrink()),
           },
@@ -96,15 +100,26 @@ void main() {
           strikethroughStyle: TextStyle(decoration: TextDecoration.lineThrough),
           codeStyle: TextStyle(fontFamily: 'monospace'),
           underlineStyle: TextStyle(decoration: TextDecoration.underline),
-          highlightStyle: TextStyle(backgroundColor: Colors.yellow),
+          highlightStyle: TextStyle(backgroundColor: Color(0xFFFFEB3B)),
           superscriptStyle: TextStyle(fontSize: 10),
           subscriptStyle: TextStyle(fontSize: 10),
-          linkStyle: TextStyle(color: Colors.blue),
-          linkHoverStyle: TextStyle(color: Colors.lightBlue),
+          linkStyle: TextStyle(color: Color(0xFF2196F3)),
+          linkHoverStyle: TextStyle(color: Color(0xFF03A9F4)),
           scriptFontSizeFactor: 0.7,
           superscriptBaselineFactor: 0.3,
           subscriptBaselineFactor: 0.2,
           strikethroughThickness: 1.5,
+          h1Style: TextStyle(fontSize: 32),
+          h2Style: TextStyle(fontSize: 24),
+          h3Style: TextStyle(fontSize: 20),
+          h4Style: TextStyle(fontSize: 16),
+          h5Style: TextStyle(fontSize: 14),
+          h6Style: TextStyle(fontSize: 12),
+          thematicBreakBuilder: _thematicBreakBuilder,
+          linkColor: Color(0xFF1E88E5),
+          codeBackgroundColor: Color(0xFFEEEEEE),
+          highlightColor: Color(0xFFFFF59D),
+          thematicBreakColor: Color(0xFFBDBDBD),
           child: SizedBox.shrink(),
         ),
       );
@@ -122,6 +137,17 @@ void main() {
       expect(description, contains('highlightStyle:'));
       expect(description, contains('superscriptStyle:'));
       expect(description, contains('subscriptStyle:'));
+      expect(description, contains('h1Style:'));
+      expect(description, contains('h2Style:'));
+      expect(description, contains('h3Style:'));
+      expect(description, contains('h4Style:'));
+      expect(description, contains('h5Style:'));
+      expect(description, contains('h6Style:'));
+      expect(description, contains('thematicBreakBuilder'));
+      expect(description, contains('linkColor:'));
+      expect(description, contains('codeBackgroundColor:'));
+      expect(description, contains('highlightColor:'));
+      expect(description, contains('thematicBreakColor:'));
       expect(description, contains('linkStyle:'));
       expect(description, contains('linkHoverStyle:'));
       expect(description, contains('scriptFontSizeFactor: 0.7'));
@@ -151,6 +177,17 @@ void main() {
       expect(description, isNot(contains('highlightStyle:')));
       expect(description, isNot(contains('superscriptStyle:')));
       expect(description, isNot(contains('subscriptStyle:')));
+      expect(description, isNot(contains('h1Style:')));
+      expect(description, isNot(contains('h2Style:')));
+      expect(description, isNot(contains('h3Style:')));
+      expect(description, isNot(contains('h4Style:')));
+      expect(description, isNot(contains('h5Style:')));
+      expect(description, isNot(contains('h6Style:')));
+      expect(description, isNot(contains('thematicBreakBuilder')));
+      expect(description, isNot(contains('linkColor:')));
+      expect(description, isNot(contains('codeBackgroundColor:')));
+      expect(description, isNot(contains('highlightColor:')));
+      expect(description, isNot(contains('thematicBreakColor:')));
       expect(description, isNot(contains('linkStyle:')));
       expect(description, isNot(contains('linkHoverStyle:')));
       expect(description, isNot(contains('scriptFontSizeFactor:')));

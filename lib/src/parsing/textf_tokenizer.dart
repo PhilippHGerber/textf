@@ -27,6 +27,12 @@ class TextfTokenizer {
     int textStart = 0;
     final int length = text.length;
 
+    // Index in [tokens] of a HeadingToken whose line terminator has not been
+    // passed yet. Its contentEnd/lineEndPosition are back-patched the moment we
+    // reach that terminator (or EOF), so recognition stays O(N) single-pass —
+    // no second scan, no per-heading look-ahead at render time.
+    int? pendingHeadingIndex;
+
     // Helper to add accumulated text as a token
     void addTextToken(int start, int end) {
       if (end > start) {
@@ -42,6 +48,44 @@ class TextfTokenizer {
             length: end - start,
           ),
         );
+      }
+    }
+
+    // Back-patches the pending heading at the line terminator (or EOF).
+    //
+    // The full heading line is only known now, so this is where the trailing
+    // region — trailing spaces/tabs plus an optional closing `#` run
+    // (`spec.txt:1174`, `1215`) — is resolved. The content is flushed up to the
+    // trimmed [HeadingToken.contentEnd], and the trailing region is folded into
+    // a single [HeadingSuffixToken] so every source character keeps exactly one
+    // slot (the 1:1 invariant). This stays O(N) single-pass: the trailing scan
+    // walks each line-end character at most a constant number of times.
+    void finalizePendingHeading(int lineEnd) {
+      final int? idx = pendingHeadingIndex;
+      if (idx == null) return;
+      pendingHeadingIndex = null;
+      final TextfToken token = tokens[idx];
+      if (token is! HeadingToken) return;
+
+      final int contentEnd = _headingContentEnd(text, token.contentStart, lineEnd);
+      token
+        ..contentEnd = contentEnd
+        ..lineEndPosition = lineEnd;
+
+      if (lineEnd > contentEnd) {
+        // Flush the trimmed content, then own the trailing region with one
+        // suffix marker token. `textStart` advances to the terminator so the
+        // line ending itself resumes as ordinary accumulating text.
+        addTextToken(textStart, contentEnd);
+        tokens.add(
+          HeadingSuffixToken(
+            position: contentEnd,
+            length: lineEnd - contentEnd,
+            headingStart: token.position,
+            lineEndPosition: lineEnd,
+          ),
+        );
+        textStart = lineEnd;
       }
     }
 
@@ -68,7 +112,12 @@ class TextfTokenizer {
             nextChar == kOpenParen ||
             nextChar == kCloseParen ||
             nextChar == kOpenBrace ||
-            nextChar == kCloseBrace) {
+            nextChar == kCloseBrace ||
+            nextChar == kHash ||
+            // `\-` escapes the thematic-break marker: emitting the escape marker
+            // on the `\` breaks the line-start marker run so `\---` renders as
+            // the literal text `---` rather than a rule (`spec.txt:1263`).
+            nextChar == kDash) {
           addTextToken(textStart, pos);
           tokens
             // 1. Emit the backslash as a distinct marker token
@@ -83,6 +132,32 @@ class TextfTokenizer {
             );
 
           pos += 2; // Skip escape character and the escaped character
+          textStart = pos;
+          continue;
+        }
+      }
+
+      // Whole-line thematic break (`---`, `***`, `___`) — the sole whole-line
+      // construct. Full CommonMark conformance: a line of ≥3 of a *single*
+      // marker character, optionally indented up to 3 spaces, with any amount
+      // of inner/trailing whitespace between the markers (`* * *`, `- - -`).
+      // The whole-line check *wins* over emphasis at line start, but bails at
+      // the first disqualifying character, so `***bold***` and `***Hello` fall
+      // through fail-fast to the emphasis/text branches below (total work stays
+      // O(N)). Escapes are handled natively: a `\` before the run is emitted as
+      // an EscapeMarkerToken above, breaking the line-start run so `\---` is
+      // literal text.
+      if (currentChar == kDash || currentChar == kAsterisk || currentChar == kUnderscore) {
+        final match = _tryThematicBreak(text, pos, length);
+        if (match != null) {
+          // Flush pending text up to the line start; the token then owns the
+          // whole line (indentation through trailing whitespace). The terminator
+          // is left to resume as ordinary text.
+          addTextToken(textStart, match.start);
+          tokens.add(
+            ThematicBreakToken(position: match.start, length: match.end - match.start),
+          );
+          pos = match.end;
           textStart = pos;
           continue;
         }
@@ -332,6 +407,100 @@ class TextfTokenizer {
           pos++;
           textStart = pos;
         }
+      } else if (currentChar == kHash) {
+        // ATX heading: up to 3 leading spaces (CommonMark's up-to-three-space
+        // indentation rule) are allowed before the `#` run; 4+ disqualifies.
+        // Separator is a space or a tab. Line start (before the indentation) is
+        // SOF or immediately after `\n` or `\r` (covers `\n`, lone `\r`, and
+        // `\r\n`, since the `\r` branch below back-patches and advances past
+        // itself).
+        int indent = 0;
+        int checkPos = pos - 1;
+        while (checkPos >= 0 &&
+            indent <= kMaxHeadingIndent &&
+            text.codeUnitAt(checkPos) == kSpace) {
+          indent++;
+          checkPos--;
+        }
+        final bool atLineStart =
+            indent <= kMaxHeadingIndent &&
+            (checkPos < 0 ||
+                text.codeUnitAt(checkPos) == kNewline ||
+                text.codeUnitAt(checkPos) == kCarriageReturn);
+        if (atLineStart) {
+          // Count the `#` run, capped at kMaxHeadingLevel + 1: once count
+          // exceeds the max level the heading is already invalid, so there's
+          // no need to keep scanning an arbitrarily long run (e.g. a user
+          // holding the `#` key). `afterRun`/`hasSeparator` below are only
+          // read when `validLevel` is true, so the cap never affects them.
+          int count = 1;
+          while (count <= kMaxHeadingLevel &&
+              pos + count < length &&
+              text.codeUnitAt(pos + count) == kHash) {
+            count++;
+          }
+          final int afterRun = pos + count;
+          final bool validLevel = count <= kMaxHeadingLevel;
+          final bool hasSeparator =
+              afterRun < length &&
+              (text.codeUnitAt(afterRun) == kSpace || text.codeUnitAt(afterRun) == kTab);
+          // End of line (or EOF) right after the opening run is also a valid
+          // separator: it makes the heading empty rather than disqualifying it.
+          final bool atLineEnd =
+              afterRun >= length ||
+              text.codeUnitAt(afterRun) == kNewline ||
+              text.codeUnitAt(afterRun) == kCarriageReturn;
+
+          if (validLevel && (hasSeparator || atLineEnd)) {
+            final int headingStart = pos - indent;
+            addTextToken(textStart, headingStart);
+            // Skip the single separator character only when one is actually
+            // present; at line end there is nothing to skip. Any further
+            // leading spaces/tabs fold into the consumed opening region
+            // (leading content trim, `spec.txt:1174`); the scan naturally stops
+            // at the first non-blank, at a line terminator, or at EOF.
+            int contentStart = hasSeparator ? afterRun + 1 : afterRun;
+            while (contentStart < length &&
+                (text.codeUnitAt(contentStart) == kSpace ||
+                    text.codeUnitAt(contentStart) == kTab)) {
+              contentStart++;
+            }
+            tokens.add(
+              HeadingToken(
+                level: count,
+                position: headingStart,
+                contentStart: contentStart,
+                // contentEnd / lineEndPosition are back-patched at the line
+                // terminator (or EOF); seed with the EOF value.
+                contentEnd: length,
+                lineEndPosition: length,
+              ),
+            );
+            pendingHeadingIndex = tokens.length - 1;
+            pos = contentStart;
+            textStart = pos;
+          } else {
+            // Not a heading: let the `#` run accumulate into the pending text
+            // via the shared end-of-iteration path (no ad-hoc swallow).
+            pos++;
+          }
+        } else {
+          pos++;
+        }
+      } else if (currentChar == kNewline) {
+        // A line terminator finalizes any open heading's line-end (the O(N)
+        // back-patch). The newline itself stays part of the accumulating text.
+        finalizePendingHeading(pos);
+        pos++;
+      } else if (currentChar == kCarriageReturn) {
+        // A lone `\r` or the `\r` of a `\r\n` pair both terminate the line at
+        // this index — the terminator always *starts* here, so back-patching
+        // immediately (without looking ahead for a following `\n`) is correct
+        // in both cases and keeps this single-pass. If a `\n` follows, its own
+        // branch above will run next and finalize again, but that is a no-op
+        // since `pendingHeadingIndex` is already cleared.
+        finalizePendingHeading(pos);
+        pos++;
       } else {
         pos++;
       }
@@ -341,8 +510,125 @@ class TextfTokenizer {
       }
     }
 
+    // EOF: a heading that ran to the end of input ends at text.length.
+    finalizePendingHeading(length);
+
     addTextToken(textStart, pos);
     return tokens;
+  }
+
+  /// Attempts to recognize a CommonMark whole-line thematic break whose first
+  /// marker character is at [pos].
+  ///
+  /// [pos] is the first `-`, `*`, or `_` on the line; any leading indentation
+  /// has already been accumulated into the pending text before it. Succeeds
+  /// when, per `spec.txt:1128`:
+  ///
+  ///  * the marker run begins at a line start (start of input, or immediately
+  ///    after a `\n`/`\r`) with **0–3 spaces** of indentation — 4+ spaces, or
+  ///    any non-space before the run, disqualify;
+  ///  * the rest of the line up to the terminator (`\n`, `\r`) or EOF contains
+  ///    **only** that one marker character and spaces/tabs — a different marker
+  ///    (`- * -`) or any other content (`--- foo`) disqualifies;
+  ///  * at least [kMinThematicBreakRun] marker characters are present.
+  ///
+  /// On success returns `(start, end)`, the half-open span of the whole consumed
+  /// line: `start` is the line start (the first indentation space, or [pos] when
+  /// unindented) and `end` is the line terminator index (or [length] at EOF).
+  /// The [ThematicBreakToken] is a **whole-line marker** — it owns the leading
+  /// indentation, the markers, and any inner/trailing whitespace, so the 1:1
+  /// slot-sum invariant holds and the read-only rule never has stray indentation
+  /// text beside it. Returns `null` on any miss so the caller falls back to
+  /// emphasis/text tokenization. The forward scan bails at the first
+  /// disqualifying character, and the backward indent scan bails at the first
+  /// non-space, so both are bounded by the leading marker run and total work
+  /// stays O(N).
+  ({int start, int end})? _tryThematicBreak(String text, int pos, int length) {
+    // Line start with 0–3 spaces of indentation: walk back over spaces to the
+    // line start. 4+ spaces, or a non-space before the run, disqualify.
+    // Indentation is spaces only — a leading tab counts as ≥4 columns of indent
+    // (`spec.txt:1128`) and so disqualifies, unlike the space-or-tab blanks
+    // permitted *between* markers in the forward scan below.
+    int indent = 0;
+    int back = pos - 1;
+    while (back >= 0 && text.codeUnitAt(back) == kSpace) {
+      indent++;
+      back--;
+    }
+    if (indent > kMaxThematicBreakIndent) return null;
+    if (back >= 0) {
+      final int prev = text.codeUnitAt(back);
+      if (prev != kNewline && prev != kCarriageReturn) return null;
+    }
+
+    // Forward scan: only the marker char and spaces/tabs up to the line
+    // terminator, with at least kMinThematicBreakRun markers. The scan stops at
+    // the terminator (or EOF), so trailing whitespace is consumed into the line.
+    final int marker = text.codeUnitAt(pos);
+    int markerCount = 0;
+    int scan = pos;
+    while (scan < length) {
+      final int c = text.codeUnitAt(scan);
+      if (c == kNewline || c == kCarriageReturn) break;
+      if (c == marker) {
+        markerCount++;
+        scan++;
+      } else if (_isSpaceOrTab(c)) {
+        scan++;
+      } else {
+        // A different marker character or any other content disqualifies.
+        return null;
+      }
+    }
+
+    if (markerCount < kMinThematicBreakRun) return null;
+
+    // Consume the whole line: leading indentation through the terminator.
+    return (start: pos - indent, end: scan);
+  }
+
+  /// Whether [codeUnit] is a space or a tab — the two ATX inline blanks.
+  bool _isSpaceOrTab(int codeUnit) => codeUnit == kSpace || codeUnit == kTab;
+
+  /// Resolves the end of an ATX heading's rendered content within
+  /// `[contentStart, lineEnd)`, applying CommonMark trailing-whitespace trimming
+  /// and optional closing-`#`-run removal (`spec.txt:1174`, `1215`).
+  ///
+  /// Returns the index one past the last content character. Everything in
+  /// `[contentEnd, lineEnd)` is the heading's trailing region (trailing
+  /// spaces/tabs plus an optional closing run) and is folded into a
+  /// [HeadingSuffixToken] by the caller.
+  int _headingContentEnd(String text, int contentStart, int lineEnd) {
+    // 1. Trim trailing spaces/tabs.
+    int end = lineEnd;
+    while (end > contentStart && _isSpaceOrTab(text.codeUnitAt(end - 1))) {
+      end--;
+    }
+
+    // 2. Peel back a trailing run of unescaped `#`.
+    int hashStart = end;
+    while (hashStart > contentStart && text.codeUnitAt(hashStart - 1) == kHash) {
+      hashStart--;
+    }
+
+    // A closing run only counts when it is non-empty and preceded by a space or
+    // tab (`spec.txt:1215`). That single check is also what makes it
+    // escape-aware: a `\` before the run (`### foo \###`) is not blank, so the
+    // run stays content (`spec.txt:1266`); likewise a run glued to a word
+    // (`# foo#`) is not blank-preceded and stays content (`spec.txt:1257`).
+    // Reading `hashStart - 1` is safe: a heading always has at least one opening
+    // `#`, so `hashStart >= contentStart >= 1`. The preceding blank may be the
+    // opening separator itself (e.g. `### ###`), which is correct — that still
+    // makes the heading empty.
+    if (hashStart < end && _isSpaceOrTab(text.codeUnitAt(hashStart - 1))) {
+      // Drop the closing run, then trim the spaces/tabs that preceded it.
+      end = hashStart;
+      while (end > contentStart && _isSpaceOrTab(text.codeUnitAt(end - 1))) {
+        end--;
+      }
+    }
+
+    return end;
   }
 
   /// Returns whether [codeUnit] is a whitespace character.

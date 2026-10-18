@@ -1,8 +1,10 @@
 // ignore_for_file: cascade_invocations, no-magic-number, avoid-late-keyword, prefer-match-file-name, avoid-top-level-members-in-tests
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
+
+import '../../../widgets/pump_textf_widget.dart';
 
 void main() {
   group('TextfParser Static Cache Tests', () {
@@ -13,8 +15,8 @@ void main() {
 
     /// Helper to get a BuildContext for testing.
     Widget createTestWidget(void Function(BuildContext) onContext) {
-      return MaterialApp(
-        home: Builder(
+      return neutralTestApp(
+        child: Builder(
           builder: (context) {
             onContext(context);
             return const SizedBox();
@@ -71,8 +73,8 @@ void main() {
       await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
       final parser = TextfParser();
       const text = '**Styled Text**';
-      const style1 = TextStyle(fontSize: 16, color: Colors.red);
-      const style2 = TextStyle(fontSize: 24, color: Colors.blue);
+      const style1 = TextStyle(fontSize: 16, color: Color(0xFFF44336));
+      const style2 = TextStyle(fontSize: 24, color: Color(0xFF2196F3));
 
       // 1. First parse with style1
       parser.parse(text, mockContext, style1);

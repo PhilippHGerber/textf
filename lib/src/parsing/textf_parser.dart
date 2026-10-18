@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../core/formatting_utils.dart';
 import '../core/textf_token_cache.dart';
 import '../models/parser_state.dart';
 import '../models/textf_token.dart';
+import '../styling/textf_palette.dart';
 import '../styling/textf_style_resolver.dart';
 import 'components/link_handler.dart';
 import 'components/placeholder_handler.dart';
@@ -11,11 +12,11 @@ import 'components/placeholder_handler.dart';
 /// Parser for formatted text that converts formatting markers into styled text spans.
 ///
 /// The [TextfParser] processes tokenized text, identifies matching formatting markers,
-/// handles nesting, resolves styling using `TextfStyleResolver` (considering options,
-/// theme, and defaults), and generates properly styled [InlineSpan] objects for rendering.
+/// handles nesting, resolves styling using `TextfStyleResolver` (considering options
+/// and neutral defaults), and generates properly styled [InlineSpan] objects for rendering.
 ///
 /// Key features:
-/// - Style resolution aware of TextfOptions and application Theme.
+/// - Style resolution aware of TextfOptions, with design-system-neutral defaults.
 /// - Fast paths for empty or plain unformatted text.
 /// - Handles nested formatting.
 /// - Handles malformed formatting by treating unpaired markers as plain text.
@@ -25,7 +26,7 @@ import 'components/placeholder_handler.dart';
 /// - Performance: Caches tokens and formatting pairs for frequently used text.
 class TextfParser {
   /// Creates a new [TextfParser] instance.
-  TextfParser();
+  new();
 
   /// Clears the shared token cache.
   ///
@@ -68,9 +69,15 @@ class TextfParser {
   /// 8. Returns the final list of generated [InlineSpan] objects from the `ParserState`.
   ///
   /// - [text]: The input string potentially containing formatting markers.
-  /// - [context]: The current build context, required for theme and options lookup by the `TextfStyleResolver`.
+  /// - [context]: The current build context, used for the `TextfOptions` lookup when no
+  ///   [styleResolver] is supplied.
   /// - [baseStyle]: The base text style to apply to unformatted text segments and as the foundation for styled segments.
+  ///   For a top-level parse this is the *effective root style*.
   /// - [placeholders]: Optional map of spans to substitute into placeholders like `{icon}`.
+  /// - [palette]: The [TextfPalette] the built-in color defaults derive from. Omit it for a
+  ///   top-level parse: it is then derived from [baseStyle], the effective root style. Only
+  ///   nested parses (such as a link's text) pass it, forwarding the enclosing parse's
+  ///   palette so that the surface inference is not skewed by the nested segment's own color.
   ///
   /// Returns a list of [InlineSpan] objects representing the styled text.
   List<InlineSpan> parse(
@@ -80,6 +87,7 @@ class TextfParser {
     TextScaler? textScaler,
     Map<String, InlineSpan>? placeholders,
     TextfStyleResolver? styleResolver,
+    TextfPalette? palette,
   }) {
     // Fast path for empty text
     if (text.isEmpty) {
@@ -108,6 +116,7 @@ class TextfParser {
       baseStyle: baseStyle,
       matchingPairs: validPairs,
       styleResolver: resolver,
+      palette: palette,
       textScaler: textScaler,
       placeholders: placeholders,
     );
@@ -120,6 +129,35 @@ class TextfParser {
       // Placeholder Handling
       if (token is PlaceholderToken) {
         PlaceholderHandler.processPlaceholder(state, token);
+        i++;
+        continue;
+      }
+
+      // Heading Handling (line-prefix ATX marker, scoped to end of line)
+      if (token is HeadingToken) {
+        state
+          ..flushText()
+          ..endHeading()
+          ..beginHeading(token.level);
+        i++;
+        continue;
+      }
+
+      // Heading suffix (trailing whitespace + optional closing `#` run) is a
+      // consumed region: the read-only view renders nothing for it. The still
+      // buffered content flushes at the line terminator (or final flush).
+      if (token is HeadingSuffixToken) {
+        i++;
+        continue;
+      }
+
+      // Thematic break (`---`, `***`, `___`): flush any pending text, then
+      // insert the rule as a WidgetSpan. The line terminator that followed the
+      // rule is a separate TextToken and resumes ordinary text after it.
+      if (token is ThematicBreakToken) {
+        state
+          ..flushText()
+          ..spans.add(resolver.resolveThematicBreak(state.palette));
         i++;
         continue;
       }
@@ -160,7 +198,7 @@ class TextfParser {
       // 3. Broken/Partial Link tokens
       switch (token) {
         case TextToken(:final value):
-          state.textBuffer.write(value);
+          state.appendText(value);
         case FormatMarkerToken(:final value):
           state.textBuffer.write(value);
         case LinkStartToken():
@@ -171,6 +209,15 @@ class TextfParser {
           state.textBuffer.write(')');
         case PlaceholderToken(:final key):
           state.textBuffer.write('{$key}');
+        case HeadingToken(:final position, :final contentStart):
+          // ignore: avoid-substring
+          state.textBuffer.write(text.substring(position, contentStart));
+        case HeadingSuffixToken():
+          // Handled above (consumed, renders nothing); unreachable here.
+          break;
+        case ThematicBreakToken():
+          // Handled above (emits a WidgetSpan rule); unreachable here.
+          break;
         case EscapeMarkerToken():
           // Do nothing. This effectively strips the '\' from the visual output.
           break;

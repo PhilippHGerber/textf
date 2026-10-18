@@ -1,7 +1,7 @@
 import 'dart:ui' as ui show TextHeightBehavior;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../core/textf_token_cache.dart';
 import '../../parsing/textf_parser.dart';
@@ -14,7 +14,7 @@ import '../textf_options_data.dart';
 /// the parsing and rendering logic provided by the TextfParser.
 class TextfRenderer extends StatefulWidget {
   /// Creates a new TextfRenderer widget.
-  const TextfRenderer({
+  const new({
     required this.data,
     required this.style,
     required this.parser,
@@ -38,7 +38,9 @@ class TextfRenderer extends StatefulWidget {
   final String data;
 
   /// The explicit base text style provided to the Textf widget.
-  /// If null, DefaultTextStyle will be used.
+  ///
+  /// Merged onto the ambient [DefaultTextStyle] to form the *effective root
+  /// style*, exactly as [Text] does, unless its [TextStyle.inherit] is false.
   final TextStyle? style;
 
   /// The parser instance responsible for converting the data string
@@ -96,14 +98,21 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
   /// Cached list of spans from the last parse.
   List<InlineSpan>? _cachedSpans;
 
-  /// Cached style resolver to avoid redundant Theme.of / TextfOptions.maybeOf lookups.
+  /// Cached style resolver, rebuilt only when the inherited options change.
   TextfStyleResolver? _cachedResolver;
 
-  // Cached dependencies to detect inherited changes
-  ThemeData? _lastTheme;
+  // Cached dependencies to detect inherited changes. No design-system theme is
+  // read: built-in defaults derive from the effective root style alone.
   TextfOptionsData? _lastOptions;
-  DefaultTextStyle? _lastDefaultTextStyle;
   TextScaler? _lastMediaQueryScaler;
+
+  /// The effective root style the cached spans were parsed with.
+  ///
+  /// Combines the ambient [DefaultTextStyle], [TextfRenderer.style] and the
+  /// platform bold-text setting, so a change to any of them that alters the
+  /// root style — and only such a change — invalidates the cached spans. The
+  /// parser derives the internal palette from this same style.
+  TextStyle? _lastEffectiveStyle;
 
   @override
   void initState() {
@@ -127,39 +136,28 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final theme = Theme.of(context);
     final options = TextfOptions.maybeOf(context);
-    final defaultTextStyle = DefaultTextStyle.of(context);
     final mediaQueryScaler = MediaQuery.textScalerOf(context);
 
-    // Smart Theme comparison: only invalidate if properties affecting parsing change.
-    final lastTheme = _lastTheme;
-    final bool themeMatch = lastTheme != null &&
-        lastTheme.colorScheme.primary == theme.colorScheme.primary &&
-        lastTheme.colorScheme.onSurfaceVariant == theme.colorScheme.onSurfaceVariant &&
-        lastTheme.colorScheme.surfaceContainer == theme.colorScheme.surfaceContainer &&
-        lastTheme.colorScheme.brightness == theme.colorScheme.brightness;
-
-    // O(1) equality check via TextfOptionsData's overridden == operator.
-    final bool optionsMatch = _lastOptions == options;
-
-    // DefaultTextStyle affects our baseStyle fallback.
-    final lastDefaultStyle = _lastDefaultTextStyle;
-    final bool defaultStyleMatch = lastDefaultStyle?.style == defaultTextStyle.style;
+    // The cached resolver is current when it exists and was built from equal
+    // options (O(1) via TextfOptionsData's overridden == operator).
+    final bool resolverCurrent = _cachedResolver != null && _lastOptions == options;
 
     final bool scalerMatch = _lastMediaQueryScaler == mediaQueryScaler;
 
+    // Covers DefaultTextStyle and MediaQuery.boldTextOf — and with them the
+    // palette the built-in colors derive from.
+    final bool effectiveStyleChanged = _refreshEffectiveRootStyle();
+
     // If any inherited inputs to the parser have changed, clear the cache.
-    if (!themeMatch || !optionsMatch || !defaultStyleMatch || !scalerMatch) {
+    if (!resolverCurrent || !scalerMatch || effectiveStyleChanged) {
       _cachedSpans = null;
-      _lastTheme = theme;
       _lastOptions = options;
-      _lastDefaultTextStyle = defaultTextStyle;
       _lastMediaQueryScaler = mediaQueryScaler;
 
-      // Rebuild the resolver only when theme or options change.
-      if (!themeMatch || !optionsMatch) {
-        _cachedResolver = TextfStyleResolver.withState(theme: theme, options: options);
+      // Rebuild the resolver only when the options change.
+      if (!resolverCurrent) {
+        _cachedResolver = TextfStyleResolver.withState(options: options);
       }
     }
   }
@@ -168,10 +166,14 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
   void didUpdateWidget(TextfRenderer oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    // A new style only matters if it changes the effective root style.
+    final bool effectiveStyleChanged =
+        widget.style != oldWidget.style && _refreshEffectiveRootStyle();
+
     // Only invalidate spans if parser inputs change.
     // Changing layout properties like maxLines or textAlign will NOT trigger a re-parse!
-    if (widget.data != oldWidget.data ||
-        widget.style != oldWidget.style ||
+    if (effectiveStyleChanged ||
+        widget.data != oldWidget.data ||
         widget.textScaler != oldWidget.textScaler ||
         !mapEquals(widget.placeholders, oldWidget.placeholders)) {
       _cachedSpans = null;
@@ -180,8 +182,10 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
 
   @override
   Widget build(BuildContext context) {
-    // Read directly from context or widget to guarantee non-null without '!'
-    final currentBaseStyle = widget.style ?? DefaultTextStyle.of(context).style;
+    // Always set by didChangeDependencies before the first build; the fallback
+    // only satisfies the type system.
+    final TextStyle effectiveStyle =
+        _lastEffectiveStyle ?? _effectiveRootStyleOf(context, widget.style);
     final effectiveScaler = widget.textScaler ?? MediaQuery.textScalerOf(context);
 
     // Local variable for type promotion
@@ -192,7 +196,7 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
       spans = widget.parser.parse(
         widget.data,
         context,
-        currentBaseStyle,
+        effectiveStyle,
         textScaler: effectiveScaler,
         placeholders: widget.placeholders,
         styleResolver: _cachedResolver,
@@ -212,6 +216,34 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
       textWidthBasis: widget.textWidthBasis,
       child: result,
     );
+  }
+
+  /// Recomputes the effective root style into [_lastEffectiveStyle].
+  ///
+  /// Returns whether it changed, i.e. whether the cached spans are stale.
+  bool _refreshEffectiveRootStyle() {
+    final TextStyle effectiveStyle = _effectiveRootStyleOf(context, widget.style);
+    if (effectiveStyle == _lastEffectiveStyle) return false;
+    _lastEffectiveStyle = effectiveStyle;
+
+    return true;
+  }
+
+  /// Computes the *effective root style* the way [Text] computes its
+  /// effective text style.
+  ///
+  /// [style] is merged onto the ambient [DefaultTextStyle] unless its
+  /// [TextStyle.inherit] is false, in which case it stands alone. When the
+  /// platform asks for bold text ([MediaQuery.boldTextOf]), the result is
+  /// bolded. Relative sizes (headings, scripts) and derived colors are then
+  /// computed from this one style.
+  static TextStyle _effectiveRootStyleOf(BuildContext context, TextStyle? style) {
+    final TextStyle ambient = DefaultTextStyle.of(context).style;
+    final TextStyle merged = (style == null || style.inherit) ? ambient.merge(style) : style;
+
+    return MediaQuery.boldTextOf(context)
+        ? merged.merge(const TextStyle(fontWeight: FontWeight.bold))
+        : merged;
   }
 
   /// Helper to build the actual Text.rich widget.

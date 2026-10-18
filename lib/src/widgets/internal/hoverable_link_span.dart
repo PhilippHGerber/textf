@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../core/textf_style_utils.dart';
 
@@ -10,7 +10,7 @@ import '../../core/textf_style_utils.dart';
 /// between the provided `normalStyle` and `hoverStyle`.
 class HoverableLinkSpan extends StatefulWidget {
   /// Creates an internal widget to manage hover state and interaction for a link.
-  const HoverableLinkSpan({
+  const new({
     required this.url,
     required this.rawDisplayText,
     required this.initialChildrenSpans,
@@ -50,7 +50,7 @@ class HoverableLinkSpan extends StatefulWidget {
 
   /// An optional callback function triggered when the hover state changes.
   final void Function(String url, String rawDisplayText, {required bool isHovering})?
-      onHoverCallback;
+  onHoverCallback;
 
   @override
   State<HoverableLinkSpan> createState() => HoverableLinkSpanState();
@@ -83,8 +83,10 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
       final TextStyle innerSpanOriginalStyle = span.style ?? widget.normalStyle;
       final TextStyle targetLinkAppearance = _isHovering ? widget.hoverStyle : widget.normalStyle;
 
-      final TextStyle finalSpanStyle =
-          applyLinkStyleToSpan(innerSpanOriginalStyle, targetLinkAppearance);
+      final TextStyle finalSpanStyle = applyLinkStyleToSpan(
+        innerSpanOriginalStyle,
+        targetLinkAppearance,
+      );
 
       return TextSpan(
         text: span.text,

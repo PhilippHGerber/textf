@@ -14,7 +14,8 @@
 ///   link callbacks, and script geometry for all descendant [Textf] widgets.
 ///
 /// - [TextfEditingController]: A [TextEditingController] that renders
-///   textf-formatted text inside [TextField] and [TextFormField] widgets.
+///   textf-formatted text inside any [EditableText]-based text field
+///   (`TextField`, `TextFormField`, `CupertinoTextField`, ...).
 ///
 /// ## Example
 ///
@@ -23,7 +24,7 @@
 ///
 /// Textf('Hello **bold** *italic* `code` [link](https://example.com)');
 /// ```
-/// @docImport 'package:flutter/material.dart';
+/// @docImport 'package:flutter/widgets.dart';
 /// @docImport 'textf.dart';
 library;
 

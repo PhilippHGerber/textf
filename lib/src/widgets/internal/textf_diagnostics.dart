@@ -1,7 +1,7 @@
 import 'dart:ui' as ui show TextHeightBehavior;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 /// Type alias for the diagnostics builder used by addTextfDebugProperties.
 typedef TextfDiagnosticPropertiesBuilder = DiagnosticPropertiesBuilder;

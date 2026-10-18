@@ -28,7 +28,11 @@ class FormattingUtils {
           char == kPlus ||
           char == kEscape ||
           char == kOpenBracket ||
-          char == kOpenBrace) {
+          char == kOpenBrace ||
+          char == kHash ||
+          // `-` only ever matters as a thematic-break marker (`---`), but that
+          // is enough to force the tokenizer path so a bare rule is recognized.
+          char == kDash) {
         return true;
       }
     }
@@ -95,10 +99,10 @@ class FormattingUtils {
           i++;
         }
       } else if (token is LinkStartToken) {
-        if (LinkValidator.isCompleteLink(tokens, i)) {
+        final parsedLink = LinkValidator.validate(tokens, i);
+        if (parsedLink != null) {
           // Extract the link text and recursively strip any nested formatting
-          final linkText = (tokens[i + kLinkTextOffset] as TextToken).value;
-          buffer.write(stripFormatting(linkText));
+          buffer.write(stripFormatting(parsedLink.displayText));
           i += kLinkTokenCount; // Skip the entire link token structure
         } else {
           // Broken link syntax, write literal bracket
@@ -113,6 +117,18 @@ class FormattingUtils {
         i++;
       } else if (token is PlaceholderToken) {
         buffer.write('{${token.key}}');
+        i++;
+      } else if (token is HeadingToken) {
+        // Heading markers ('#' run) are stripped; the line's text content is
+        // emitted by the following TextTokens.
+        i++;
+      } else if (token is HeadingSuffixToken) {
+        // Trailing region (closing '#' run + surrounding whitespace) is a
+        // consumed marker and is stripped along with the opening run.
+        i++;
+      } else if (token is ThematicBreakToken) {
+        // A thematic break is a whole-line marker with no textual content, so
+        // it strips away entirely (like heading markers do).
         i++;
       } else if (token is EscapeMarkerToken) {
         // Skip the backslash itself. The escaped character is always the
