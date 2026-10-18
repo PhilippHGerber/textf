@@ -19,3 +19,5 @@ llms.txt
 /example/textf_flex
 /example/textf_playground
 /example/textf_widgetbook
+/example/textf_core
+/example/widgetbook_textf

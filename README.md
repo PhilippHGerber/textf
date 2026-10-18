@@ -87,12 +87,12 @@ Both widgets share the same formatting syntax and can be configured together wit
 
 ## Limitations
 
-| Limitation                 | Reason                                                                                              |
-| -------------------------- | --------------------------------------------------------------------------------------------------- |
-| **Inline-first**           | ATX headings (`#`–`######`) are the one block-level exception — no lists, quotes, tables, or images |
-| **Max 2 nesting levels**   | `**bold _italic_**` works, deeper nesting renders as plain text                                     |
-| **Selection across links** | Links use `WidgetSpan`, so selection can't span across them (Flutter limitation)                    |
-| **Widget placeholders**    | `{key}` placeholders render as literal text in `TextfEditingController`                             |
+| Limitation                 | Reason                                                                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Inline-first**           | Line-scoped block constructs (ATX headings `#`–`######` and thematic breaks `---`, `***`, `___`) are supported; blockquotes (`>`) are planned — no lists, tables, or images |
+| **Max 2 nesting levels**   | `**bold _italic_**` works, deeper nesting renders as plain text                                                              |
+| **Selection across links** | Links use `WidgetSpan`, so selection can't span across them (Flutter limitation)                                             |
+| **Widget placeholders**    | `{key}` placeholders render as literal text in `TextfEditingController`                                                      |
 
 ---
 
@@ -107,7 +107,7 @@ Because of these constraints, Textf does not implement all of CommonMark. Featur
 
 **Legend:**
 - ✅ **Supported** — Fully implemented and tested.
-- 🚧 **Coming in 2.0** — Architecturally viable and currently on the roadmap.
+- 🚧 **Planned** — Architecturally viable line-scoped construct on the roadmap.
 - ❌ **Out of Scope** — Conflicts with single-pass parsing or `TextSpan` layout constraints.
 
 ### Inline Elements (Core)
@@ -157,7 +157,7 @@ Block elements are tightly restricted. Only elements that are forward-parsable o
 
 ## When to Use Textf
 
-Textf is **inline-first**: inline formatting plus ATX headings as the one block-level exception. It is not a full Markdown renderer.
+Textf is **inline-first**: inline formatting plus line-scoped block constructs (ATX headings and thematic breaks). It is not a full Markdown renderer.
 
 **✅ Great for:**
 
@@ -171,7 +171,7 @@ Textf is **inline-first**: inline formatting plus ATX headings as the one block-
 
 - Full Markdown documents with lists, tables, or blockquotes
 - HTML rendering
-- Block-level structure beyond ATX headings
+- Block-level structure beyond headings and thematic breaks
 
 ---
 
@@ -456,8 +456,8 @@ A style option **replaces** the built-in style for its marker (for example, a `b
 | Property                    | Description                               | Default |
 | --------------------------- | ----------------------------------------- | ------- |
 | `scriptFontSizeFactor`      | Font size multiplier for super/subscripts | `0.6`   |
-| `superscriptBaselineFactor` | Vertical offset factor for superscripts   | `-0.4`  |
-| `subscriptBaselineFactor`   | Vertical offset factor for subscripts     | `0.2`   |
+| `superscriptBaselineFactor` | Vertical offset factor for superscripts   | `0.4`   |
+| `subscriptBaselineFactor`   | Vertical offset factor for subscripts     | `0.4`   |
 
 ### How Inheritance Works
 
