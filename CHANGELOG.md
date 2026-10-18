@@ -2,44 +2,27 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
-## 2.0.0-dev.4
+## 2.0.0
 
 **Ready for Flutter's decoupled future.** In support of Flutter's [Material and Cupertino decoupling](https://flutter.dev/blog/decoupling-material-cupertino), Textf 2.0 is now completely design-system neutral. Built purely on Flutter's foundational `widgets` layer, Textf runs identically across legacy SDK Material, `material_ui`, Cupertino, `cupertino_ui`, custom design systems, or a bare `WidgetsApp`.
 
-
 ### Breaking Changes
 
-* **Design-system-neutral styling:** Built-in link, code, highlight, and thematic-break colors now derive from ambient text rather than `ThemeData` / `ColorScheme`. Links default to `#1A73E8` and code chips to a contextual tint of text color. The package no longer imports `material.dart` or `cupertino.dart`.
-  * **Migrating from 1.x:** to keep your theme's colors, pass them to `TextfOptions` once in `MaterialApp.builder`. See [Using Your App's Theme Colors](https://github.com/PhilippHGerber/textf#using-your-apps-theme-colors) in the README.
+* **Design-system-neutral styling:** Built-in link, code, highlight, and thematic-break colors now derive from ambient text rather than `ThemeData` / `ColorScheme`. Links default to `#1A73E8`, code chips to a contextual tint of text color, and thematic breaks to a 1px rule in the ambient text color at 20% opacity. The package no longer imports `material.dart` or `cupertino.dart`.
+  * **Migrating from 1.x:** To keep your theme's colors, pass them to `TextfOptions` once in `MaterialApp.builder`. See [Using Your App's Theme Colors](https://github.com/PhilippHGerber/textf#using-your-apps-theme-colors) in the README.
 * **SDK floor:** Raised to `sdk: ^3.13.0` / `flutter: ">=3.47.0"`.
 
 ### Added
 
+* **ATX headings:** `#` through `######` render as headings with per-level default and custom styles (`h1Style`–`h6Style`), consistently in both read-only and editor rendering. Full CommonMark conformance for ATX headings (up to 3 leading spaces, trailing `#` runs, tab separators, and empty headings). (#10, thanks @davidlondono)
+* **Thematic breaks (horizontal rules):** Lines of three or more `-`, `*`, or `_` render as a full-width rule in the ambient text color at 20% opacity. Fully customizable via `TextfOptions.thematicBreakColor` and `TextfOptions.thematicBreakBuilder`. In `TextfEditingController`, the raw markers stay visible as dimmed marker text (or hidden when active), preserving the 1:1 cursor invariant.
 * **Color options on `TextfOptions`:** Added `linkColor`, `codeBackgroundColor`, `highlightColor`, and `thematicBreakColor` to `TextfOptions` and `TextfOptionsData` for effortless brand adaptation without overriding typography.
+* **Extended diagnostics:** `TextfOptions.debugFillProperties` now reports `h1Style`–`h6Style`, `thematicBreakBuilder`, and all four color options for the Flutter Widget Inspector.
 
 ### Fixed
 
-* **Heading font scaling:** Headings (`#`–`######`) and super/subscripts now scale proportionally from ambient `DefaultTextStyle` font size.
-
-### Internal
-
-* Deepened link handling and marker rendering abstractions (`LinkStyleConfiguration`, `ParsedLink`, `MarkerRenderMode`).
-
-## 2.0.0-dev.3
-
-* **Thematic breaks (horizontal rules):** a line of three or more `-`, `*`, or `_` renders as a full-width divider, with full CommonMark conformance for the construct. Customizable via the new **`TextfOptions.thematicBreakBuilder`**; the default is a 1px line in the theme's divider color. In `TextfEditingController` the raw markers stay visible as dimmed marker text, preserving the 1:1 cursor invariant. Conforms to the CommonMark [thematic breaks](https://spec.commonmark.org/current/#thematic-breaks) section.
-
-## 2.0.0-dev.2
-
-* Headings now also recognize a **tab** as the separator after the `#` run (`#\tTitle`), and are recognized after **CRLF (`\r\n`)** and **lone-CR (`\r`)** line endings, in addition to `\n`. Conforms to the CommonMark [ATX headings](https://spec.commonmark.org/current/#atx-headings) and [Characters and lines](https://spec.commonmark.org/current/#characters-and-lines) sections.
-* Headings now allow **up to 3 leading spaces** of indentation before the `#` run (e.g. `   ### Title`); 4 or more leading spaces disqualify the line as a heading. Conforms to the CommonMark [ATX headings](https://spec.commonmark.org/current/#atx-headings) up-to-three-space indentation rule.
-* Headings may now be **empty**: a `#` run followed directly by end of line (or end of input), or by trailing whitespace only (e.g. `#`, `## `), is recognized as an empty heading of that level instead of falling back to plain text. Conforms to the CommonMark [ATX headings](https://spec.commonmark.org/current/#atx-headings) empty-heading rule.
-
-## 2.0.0-dev.1
-
-### Added
-
-* **Heading formatting (ATX):** `#` through `######` render as headings with per-level default and custom styles, consistently in both read-only and editor rendering. Documented the line-height strut setup for editable headings. (#10, thanks @davidlondono)
+* **Link display-text escapes:** Plain link display text strips escape backslashes for all tokenizer-recognized escapable characters (`\+`, `\=`, `\^`, `\#`, `\-`, etc.) in both `Textf` and `stripFormatting()`.
+* **Line-ending pairing rejection:** `PairValidator` with `allowNewlineCrossing: false` rejects marker pairs separated by lone-CR (`\r`) or CRLF (`\r\n`), matching CommonMark line-ending conformance.
 
 ## 1.2.4
 
