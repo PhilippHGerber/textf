@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../router/docs_routes.dart';
 
 class DocsPager extends StatelessWidget {
-  const DocsPager({required this.current, super.key});
+  const new({required this.current, super.key});
 
   final String current;
 

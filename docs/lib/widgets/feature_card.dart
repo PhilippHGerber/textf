@@ -1,13 +1,13 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 
 /// A card widget for highlighting a feature with an icon, title, and description.
 ///
 /// Both [title] and [description] support Textf inline formatting.
 class FeatureCard extends StatelessWidget {
-  const FeatureCard({
+  const new({
     required this.icon,
     required this.title,
     required this.description,

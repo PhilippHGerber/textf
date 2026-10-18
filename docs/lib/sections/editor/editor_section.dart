@@ -1,6 +1,6 @@
 // ignore_for_file: no-magic-number, avoid-late-keyword
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -8,7 +8,10 @@ import '/utils/platform_utils.dart';
 import '/widgets/section_header.dart';
 
 const String _initText = '''
-🚀 **Welcome to Textf!** 💙
+
+# 🚀 Welcome to Textf! 💙
+---
+## Headings ##
 
 Edit this text to see live formatting in action:
 • **Bold**, *Italic* text and ***both***
@@ -17,12 +20,14 @@ Edit this text to see live formatting in action:
 • Superscript x^2^ + y^2^ and Task^✅^
 • Subscript H~2~O and hot~🔥~
 
+---
+
 Check out the [Documentation](https://pub.dev/packages/textf)
 for more details.
 ''';
 
 class EditorSection extends StatefulWidget {
-  const EditorSection({super.key});
+  const new({super.key});
 
   @override
   State<EditorSection> createState() => _EditorSectionState();
@@ -161,7 +166,7 @@ class _EditorSectionState extends State<EditorSection>
 }
 
 class _FormatChips extends StatelessWidget {
-  const _FormatChips({required this.onInsert});
+  const new({required this.onInsert});
 
   final ValueChanged<String> onInsert;
 

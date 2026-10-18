@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class ThemeModeNotifier extends InheritedNotifier<ValueNotifier<ThemeMode>> {
-  const ThemeModeNotifier({
+  const new({
     required ValueNotifier<ThemeMode> notifier,
     required super.child,
     super.key,

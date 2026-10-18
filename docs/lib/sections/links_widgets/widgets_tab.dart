@@ -1,13 +1,13 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 
 import '/widgets/example_card.dart';
 import '/widgets/section_header.dart';
 
 class WidgetsTab extends StatelessWidget {
-  const WidgetsTab({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -49,8 +49,7 @@ Textf('This is a star icon: {star}. And this is a ~~cat~~ bird: {bird}'
         const SizedBox(height: 8),
         ExampleCard(
           title: 'Rich Media Support',
-          description:
-              'Support for animated GIFs and other media assets, allowing for more dynamic content.',
+          description: 'Support for animated GIFs and other media assets, allowing for more dynamic content.',
           code: '''
 Textf(
   'Witness the flight of the bird: {bird}',
@@ -75,7 +74,8 @@ Textf(
         const ExampleCard(
           title: 'Style inheritance',
           description: 'Placeholders inside formatted text',
-          code: 'Textf(\n'
+          code:
+              'Textf(\n'
               "  '**Bold {star} star**',\n"
               '  placeholders: {\n'
               "    'star': WidgetSpan(child: Icon(Icons.star, size: 16)),\n"
@@ -94,8 +94,7 @@ Textf(
         const SizedBox(height: 8),
         ExampleCard(
           title: 'Badge placeholder',
-          description:
-              'Build complex inline elements like badges, tags, or status indicators using standard Flutter widgets.',
+          description: 'Build complex inline elements like badges, tags, or status indicators using standard Flutter widgets.',
           code: '''
 Textf(
   'The user {admin} has been successfully verified.',

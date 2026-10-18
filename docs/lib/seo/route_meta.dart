@@ -40,14 +40,17 @@ abstract final class RouteMeta {
     ),
     DocsRoutes.formatting: PageMeta(
       title: 'Formatting – Textf Docs',
-      description: 'Complete reference for Textf inline formatting syntax: bold (**text**), italic '
-          '(_text_), code (`text`), strikethrough (~~text~~), underline (__text__, highlight '
-          '(==text==), superscript (^text^), subscript (~text~), and links ([label](url)).',
+      description:
+          'Complete reference for Textf formatting syntax: bold (**text**), italic '
+          '(_text_), code (`text`), strikethrough (~~text~~), underline (++text++), highlight '
+          '(==text==), superscript (^text^), subscript (~text~), links ([label](url)), '
+          'headings (# to ######), and thematic breaks (---).',
       canonicalPath: DocsRoutes.formatting,
     ),
     DocsRoutes.placeholders: PageMeta(
       title: 'Placeholders – Textf Docs',
-      description: "Embed arbitrary Flutter widgets inline inside formatted text using Textf's "
+      description:
+          "Embed arbitrary Flutter widgets inline inside formatted text using Textf's "
           '{key} placeholder syntax. Pass a map of InlineSpan builders to TextfOptions to '
           'replace placeholders with icons, images, or any widget.',
       canonicalPath: DocsRoutes.placeholders,
@@ -55,14 +58,15 @@ abstract final class RouteMeta {
     DocsRoutes.styling: PageMeta(
       title: 'Styling – Textf Docs',
       description:
-          'Customize the appearance of every Textf format token — bold, italic, code, links, '
-          'and more — using TextfOptions. Styles cascade through the widget tree and merge '
-          "with Flutter's Theme for consistent, theme-aware text formatting.",
+          'Customize the appearance of every Textf format — bold, italic, code, links, '
+          'and more — using TextfOptions. Styles cascade through the widget tree, and color '
+          'options pass your brand colors to links, code, highlights and rules.',
       canonicalPath: DocsRoutes.styling,
     ),
     DocsRoutes.textField: PageMeta(
       title: 'Text Field – Textf Docs',
-      description: 'Add live inline formatting to Flutter text fields with TextfEditingController. '
+      description:
+          'Add live inline formatting to Flutter text fields with TextfEditingController. '
           'Formatting markers are rendered with applied styles as the user types, giving '
           'a rich-text editing experience without a heavyweight editor dependency.',
       canonicalPath: DocsRoutes.textField,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '/sections/links_widgets/widgets_tab.dart';
 import '/widgets/docs_pager.dart';
@@ -6,7 +6,7 @@ import '../../router/docs_routes.dart';
 
 /// Widget placeholders documentation page — wraps the existing WidgetsTab.
 class WidgetsPage extends StatelessWidget {
-  const WidgetsPage({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {

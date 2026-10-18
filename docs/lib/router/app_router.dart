@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../sections/agent_skill_page.dart';
 import '../sections/docs/editing_controller_page.dart';
@@ -47,7 +47,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/docs',
-              redirect: (_, __) => DocsRoutes.overview,
+              redirect: (_, _) => DocsRoutes.overview,
             ),
             GoRoute(
               path: '/docs/overview',

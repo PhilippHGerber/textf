@@ -1,7 +1,7 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -10,7 +10,7 @@ import '../utils/platform_utils.dart';
 import 'app_sidebar.dart';
 
 class PlaygroundShell extends StatelessWidget {
-  const PlaygroundShell({required this.navigationShell, super.key});
+  const new({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
@@ -57,8 +57,9 @@ class PlaygroundShell extends StatelessWidget {
           icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
           tooltip: 'Toggle Theme',
           onPressed: () {
-            themeNotifier.value =
-                themeNotifier.value == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+            themeNotifier.value = themeNotifier.value == ThemeMode.light
+                ? ThemeMode.dark
+                : ThemeMode.light;
           },
         ),
         const SizedBox(width: 8),

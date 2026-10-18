@@ -1,6 +1,6 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 
 import '/widgets/docs_pager.dart';
@@ -9,7 +9,7 @@ import '../../router/docs_routes.dart';
 
 /// Overview documentation page — what Textf is and when to use it.
 class OverviewPage extends StatelessWidget {
-  const OverviewPage({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +64,7 @@ class OverviewPage extends StatelessWidget {
 }
 
 class _FeatureBullets extends StatelessWidget {
-  const _FeatureBullets();
+  const new();
 
   static const _bullets = [
     '**Bold** text with `**markers**`',
@@ -76,6 +76,8 @@ class _FeatureBullets extends StatelessWidget {
     '++Underline++ with `++markers++`',
     'x^2^ superscript and H~2~O subscript',
     'Widget placeholders with `{key}` syntax',
+    'ATX headings from `# H1` to `###### H6`',
+    'Thematic breaks with `---`, `***` or `___`',
   ];
 
   @override
@@ -111,7 +113,7 @@ class _FeatureBullets extends StatelessWidget {
 }
 
 class _TwoColumnCards extends StatelessWidget {
-  const _TwoColumnCards();
+  const new();
 
   @override
   Widget build(BuildContext context) {
@@ -120,14 +122,16 @@ class _TwoColumnCards extends StatelessWidget {
     const cardA = _InfoCard(
       icon: Icons.text_fields,
       title: '`Textf` Widget',
-      body: "A drop-in replacement for Flutter's `Text` widget. "
+      body:
+          "A drop-in replacement for Flutter's `Text` widget. "
           'Pass any string with inline markers and Textf renders it with '
           '**bold**, *italic*, `code`, ==highlights==, [links](.), and more.',
     );
     const cardB = _InfoCard(
       icon: Icons.edit_outlined,
       title: '`TextfEditingController`',
-      body: 'A drop-in replacement for `TextEditingController`. '
+      body:
+          'A drop-in replacement for `TextEditingController`. '
           'Renders formatting markers live as the user types in a `TextField` — '
           '_no extra widgets needed_.',
     );
@@ -151,7 +155,7 @@ class _TwoColumnCards extends StatelessWidget {
 }
 
 class _InfoCard extends StatelessWidget {
-  const _InfoCard({
+  const new({
     required this.icon,
     required this.title,
     required this.body,
@@ -191,12 +195,18 @@ class _InfoCard extends StatelessWidget {
 }
 
 class _LimitationsTable extends StatelessWidget {
-  const _LimitationsTable();
+  const new();
 
   static const _rows = [
-    ('No block elements', 'No headings, lists, blockquotes, or tables'),
+    (
+      'Inline-first',
+      'ATX headings and thematic breaks are the only block-level elements; no lists, blockquotes, or tables',
+    ),
     ('Max 2 nesting levels', '`**bold _italic_**` works; deeper nesting renders as plain text'),
-    ('Inline only', 'Each `Textf` renders a single paragraph / inline span tree'),
+    (
+      'Partial CommonMark',
+      'Conforms to the spec for its supported subset; no setext headings or indented code blocks',
+    ),
     ('No HTML', 'Raw HTML tags are not parsed or rendered'),
   ];
 
@@ -242,7 +252,7 @@ class _LimitationsTable extends StatelessWidget {
 }
 
 class _ComparisonTable extends StatelessWidget {
-  const _ComparisonTable();
+  const new();
 
   static const _rows = [
     ('Inline bold, italic, code', true, true),
@@ -250,8 +260,9 @@ class _ComparisonTable extends StatelessWidget {
     ('Highlight, underline, super/sub', true, false),
     ('Widget placeholders', true, false),
     ('Live editing controller', true, false),
-    ('Block elements (headings, lists)', false, true),
-    ('Tables, blockquotes', false, true),
+    ('ATX headings', true, true),
+    ('Thematic breaks', true, true),
+    ('Lists, tables, blockquotes', false, true),
     ('Zero dependencies', true, false),
     ('O(N) single-pass parser', true, false),
   ];
@@ -335,7 +346,7 @@ class _ComparisonTable extends StatelessWidget {
 }
 
 class _WhenToUse extends StatelessWidget {
-  const _WhenToUse();
+  const new();
 
   static const _greatFor = [
     'Chat messages with **bold** names',
@@ -347,7 +358,7 @@ class _WhenToUse extends StatelessWidget {
 
   static const _notFor = [
     'Full Markdown documents',
-    'Headings and list rendering',
+    'List and table rendering',
     'Complex nested block structures',
     'HTML rendering',
   ];
@@ -414,7 +425,7 @@ class _WhenToUse extends StatelessWidget {
 }
 
 class _WhenCard extends StatelessWidget {
-  const _WhenCard({
+  const new({
     required this.icon,
     required this.title,
     required this.items,

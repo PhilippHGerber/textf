@@ -1,14 +1,15 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '/sections/formats/advanced_formatting_tab.dart';
 import '/sections/formats/basic_formatting_tab.dart';
+import '/sections/formats/block_formatting_tab.dart';
 import '/sections/links_widgets/links_tab.dart';
 import '/widgets/docs_pager.dart';
 import '../../router/docs_routes.dart';
 
-/// Formatting reference page — Basic, Advanced, and Links stacked as sections.
+/// Formatting reference page — Basic, Block Elements, Advanced, and Links stacked as sections.
 class FormatPage extends StatelessWidget {
-  const FormatPage({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +25,8 @@ class FormatPage extends StatelessWidget {
             children: [
               _SectionDivider(label: 'Basic Formatting', theme: theme, cs: cs),
               const BasicFormattingTab(),
+              _SectionDivider(label: 'Block Elements', theme: theme, cs: cs),
+              const BlockFormattingTab(),
               _SectionDivider(label: 'Advanced Formatting', theme: theme, cs: cs),
               const AdvancedFormattingTab(),
               _SectionDivider(label: 'Links', theme: theme, cs: cs),
@@ -43,7 +46,7 @@ class FormatPage extends StatelessWidget {
 }
 
 class _SectionDivider extends StatelessWidget {
-  const _SectionDivider({
+  const new({
     required this.label,
     required this.theme,
     required this.cs,

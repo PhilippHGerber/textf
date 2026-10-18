@@ -1,6 +1,6 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -8,7 +8,7 @@ import '/widgets/example_card.dart';
 import '/widgets/section_header.dart';
 
 class LinksTab extends StatelessWidget {
-  const LinksTab({super.key});
+  const new({super.key});
 
   Future<void> _launchUrl(String url) async {
     await launchUrl(Uri.parse(url));
@@ -36,7 +36,8 @@ class LinksTab extends StatelessWidget {
         const ExampleCard(
           title: 'onLinkTap callback',
           description: 'Intercept taps to show a SnackBar instead',
-          code: 'TextfOptions(\n'
+          code:
+              'TextfOptions(\n'
               '  onLinkTap: (url, text) => showSnackBar(url),\n'
               "  child: Textf('[tap me](https://pub.dev)'),\n"
               ')',
@@ -59,7 +60,7 @@ class LinksTab extends StatelessWidget {
 }
 
 class _BasicLinkDemo extends StatelessWidget {
-  const _BasicLinkDemo();
+  const new();
 
   Future<void> _launchUrl(String url) async {
     await launchUrl(Uri.parse(url));
@@ -75,7 +76,7 @@ class _BasicLinkDemo extends StatelessWidget {
 }
 
 class _SnackBarLinkDemo extends StatelessWidget {
-  const _SnackBarLinkDemo();
+  const new();
 
   @override
   Widget build(BuildContext context) {

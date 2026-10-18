@@ -3,11 +3,12 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../generated/textf_version.dart';
 import '../router/docs_routes.dart';
 import '../widgets/example_carousel.dart';
 import '../widgets/feature_card.dart';
@@ -16,7 +17,7 @@ import '../widgets/title_animation.dart';
 
 /// Home section — hero + content landing page.
 class HomeSection extends StatelessWidget {
-  const HomeSection({super.key});
+  const new({super.key});
 
   Future<void> _launchUrl(String url) async {
     await launchUrl(Uri.parse(url));
@@ -73,7 +74,7 @@ class HomeSection extends StatelessWidget {
 }
 
 class _HeroSection extends StatelessWidget {
-  const _HeroSection({
+  const new({
     required this.onLaunchUrl,
   });
 
@@ -230,6 +231,21 @@ class _HeroSection extends StatelessWidget {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 36),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainer.withValues(alpha: 0.74),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Build with Textf v$textfVersion',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -255,21 +271,21 @@ class _HeroSection extends StatelessWidget {
 }
 
 class _Blob extends StatelessWidget {
-  const _Blob({required this.size, required this.color});
+  const new({required this.size, required this.color});
 
   final double size;
   final Color color;
 
   @override
   Widget build(BuildContext context) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-      );
+    width: size,
+    height: size,
+    decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+  );
 }
 
 class _Badge extends StatelessWidget {
-  const _Badge({required this.label, this.icon});
+  const new({required this.label, this.icon});
 
   final String label;
   final IconData? icon;
@@ -305,7 +321,7 @@ class _Badge extends StatelessWidget {
 }
 
 class _FeatureCardsRow extends StatelessWidget {
-  const _FeatureCardsRow();
+  const new();
 
   @override
   Widget build(BuildContext context) {
@@ -314,19 +330,22 @@ class _FeatureCardsRow extends StatelessWidget {
     const cardA = FeatureCard(
       icon: Icons.text_fields,
       title: '`Textf` Widget',
-      description: 'Replace `Text` with `Textf` — your strings render with **bold**, *italic*, '
+      description:
+          'Replace `Text` with `Textf` — your strings render with **bold**, *italic*, '
           '`code`, ==highlights==, [links](.), and more.',
     );
     const cardB = FeatureCard(
       icon: Icons.edit_outlined,
       title: '`TextfEditingController`',
-      description: 'Replace `TextEditingController` to render formatting live in `TextField` '
+      description:
+          'Replace `TextEditingController` to render formatting live in `TextField` '
           'as the user types — _no extra widgets needed_.',
     );
     const cardC = FeatureCard(
       icon: Icons.palette_outlined,
       title: '`TextfOptions`',
-      description: 'Hierarchical style configuration via `InheritedWidget`. '
+      description:
+          'Hierarchical style configuration via `InheritedWidget`. '
           'Override **bold**, *italic*, `code` styles per subtree.',
     );
 

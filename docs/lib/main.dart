@@ -1,8 +1,8 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'router/app_router.dart';
 import 'seo/meta_tags_service.dart';
@@ -24,7 +24,7 @@ void main() {
 }
 
 class TextfDocsApp extends StatefulWidget {
-  const TextfDocsApp({super.key});
+  const new({super.key});
 
   @override
   State<TextfDocsApp> createState() => _TextfDocsAppState();

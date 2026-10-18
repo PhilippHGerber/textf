@@ -2,7 +2,7 @@
 final class PageMeta {
   /// Creates a [PageMeta] with the given [title], [description], and optional
   /// [canonicalPath].
-  const PageMeta({
+  const new({
     required this.title,
     required this.description,
     this.canonicalPath,

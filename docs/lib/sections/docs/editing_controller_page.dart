@@ -1,6 +1,6 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 
 import '/utils/platform_utils.dart';
@@ -11,7 +11,7 @@ import '../../router/docs_routes.dart';
 
 /// TextfEditingController documentation page.
 class EditingControllerPage extends StatefulWidget {
-  const EditingControllerPage({super.key});
+  const new({super.key});
 
   @override
   State<EditingControllerPage> createState() => _EditingControllerPageState();
@@ -27,8 +27,7 @@ class _EditingControllerPageState extends State<EditingControllerPage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _demoController = TextfEditingController(
-      text:
-          '**Bold**, *italic*, `code`, and ~~strike~~. \n[Flutter](https://flutter.dev) is ==awesome==!',
+      text: '## Heading \n**Bold**, *italic*, `code`, and ~~strike~~. \n[Flutter](https://flutter.dev) is ==awesome==!',
     );
   }
 
@@ -70,8 +69,7 @@ class _EditingControllerPageState extends State<EditingControllerPage>
               // Basic usage
               const CodePanel(
                 title: 'Basic Usage',
-                code:
-                    'final controller = TextfEditingController();\n\nTextField(controller: controller)',
+                code: 'final controller = TextfEditingController();\n\nTextField(controller: controller)',
               ),
               const SizedBox(height: 12),
               const CodePanel(
@@ -92,8 +90,7 @@ class _EditingControllerPageState extends State<EditingControllerPage>
                 children: [
                   _VisibilityRow(
                     label: 'MarkerVisibility.always',
-                    description:
-                        'Markers always visible with dimmed styling. Predictable cursor behavior, works well on all platforms.',
+                    description: 'Markers always visible with dimmed styling. Predictable cursor behavior, works well on all platforms.',
                     isDefault: true,
                     theme: theme,
                     cs: cs,
@@ -101,8 +98,7 @@ class _EditingControllerPageState extends State<EditingControllerPage>
                   const SizedBox(height: 12),
                   _VisibilityRow(
                     label: 'MarkerVisibility.whenActive',
-                    description:
-                        'Markers hide when the cursor leaves the span, giving a clean live-preview effect.',
+                    description: 'Markers hide when the cursor leaves the span, giving a clean live-preview effect.',
                     isDefault: false,
                     theme: theme,
                     cs: cs,
@@ -150,7 +146,7 @@ class _EditingControllerPageState extends State<EditingControllerPage>
                     const SizedBox(height: 12),
                     TextField(
                       controller: _demoController,
-                      maxLines: 2,
+                      maxLines: 4,
                       decoration: InputDecoration(
                         hintText: 'Try **bold**, *italic*, `code`…',
                         border: const OutlineInputBorder(),
@@ -196,8 +192,7 @@ class _EditingControllerPageState extends State<EditingControllerPage>
               // Side-by-side comparison
               const SectionHeader(
                 title: 'Side-by-Side Comparison',
-                subtitle:
-                    'Type in the field — same text shown as editable (TextfEditingController) and read-only (Textf).',
+                subtitle: 'Type in the field — same text shown as editable (TextfEditingController) and read-only (Textf).',
               ),
               const SizedBox(height: 12),
               const _SideBySideComparison(),
@@ -227,7 +222,8 @@ class _EditingControllerPageState extends State<EditingControllerPage>
               ),
               const SizedBox(height: 12),
               const CodePanel(
-                code: 'TextfOptions(\n'
+                code:
+                    'TextfOptions(\n'
                     '  boldStyle: TextStyle(fontWeight: FontWeight.w900, color: Colors.deepOrange),\n'
                     "  codeStyle: TextStyle(fontFamily: 'monospace', color: Colors.pink),\n"
                     '  child: TextField(\n'
@@ -249,24 +245,28 @@ class _EditingControllerPageState extends State<EditingControllerPage>
                 children: [
                   _LimitationRow(
                     label: 'Widget placeholders',
-                    description:
-                        '{key} renders as literal text — no widget substitution in editable fields.',
+                    description: '{key} renders as literal text — no widget substitution in editable fields.',
                     theme: theme,
                     cs: cs,
                   ),
                   const Divider(height: 24),
                   _LimitationRow(
                     label: 'Links',
-                    description:
-                        'Display the full [text](url) syntax while editing — styled but not tappable.',
+                    description: 'Display the full [text](url) syntax while editing — styled but not tappable.',
                     theme: theme,
                     cs: cs,
                   ),
                   const Divider(height: 24),
                   _LimitationRow(
                     label: 'Cross-line markers',
-                    description:
-                        'Markers never pair across newlines — a marker on line 1 cannot format content on line 2.',
+                    description: 'Markers never pair across newlines — a marker on line 1 cannot format content on line 2.',
+                    theme: theme,
+                    cs: cs,
+                  ),
+                  const Divider(height: 24),
+                  _LimitationRow(
+                    label: 'Thematic breaks',
+                    description: '--- stays visible as dimmed marker text — no divider is drawn in editable fields.',
                     theme: theme,
                     cs: cs,
                   ),
@@ -284,7 +284,7 @@ class _EditingControllerPageState extends State<EditingControllerPage>
 }
 
 class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.children, required this.theme, required this.cs});
+  const new({required this.children, required this.theme, required this.cs});
 
   final List<Widget> children;
   final ThemeData theme;
@@ -309,7 +309,7 @@ class _InfoCard extends StatelessWidget {
 }
 
 class _VisibilityRow extends StatelessWidget {
-  const _VisibilityRow({
+  const new({
     required this.label,
     required this.description,
     required this.isDefault,
@@ -374,7 +374,7 @@ class _VisibilityRow extends StatelessWidget {
 // ── Custom Styles Demo ──────────────────────────────────────────────────────
 
 class _CustomStylesDemo extends StatelessWidget {
-  const _CustomStylesDemo({required this.theme});
+  const new({required this.theme});
 
   final ThemeData theme;
 
@@ -386,11 +386,13 @@ class _CustomStylesDemo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const CodePanel(
-          code: 'TextfOptions(\n'
-              '  boldStyle: TextStyle(fontWeight: FontWeight.w900, color: primary),\n'
-              '  italicStyle: TextStyle(fontStyle: italic, color: tertiary),\n'
-              "  codeStyle: TextStyle(fontFamily: 'RobotoMono', color: primary),\n"
-              '  highlightStyle: TextStyle(backgroundColor: amber),\n'
+          code:
+              'TextfOptions(\n'
+              '  h2Style: theme.textTheme.headlineSmall?.copyWith(color: cs.primary),\n'
+              '  boldStyle: TextStyle(fontWeight: FontWeight.w900, color: cs.primary),\n'
+              '  italicStyle: TextStyle(fontStyle: FontStyle.italic, color: cs.tertiary),\n'
+              "  codeStyle: TextStyle(fontFamily: 'RobotoMono', color: cs.primary),\n"
+              '  highlightStyle: TextStyle(backgroundColor: cs.amber),\n'
               '  child: TextField(controller: TextfEditingController()),\n'
               ')',
           borderRadius: BorderRadius.only(
@@ -409,6 +411,7 @@ class _CustomStylesDemo extends StatelessWidget {
           ),
           padding: const EdgeInsets.all(12),
           child: TextfOptions(
+            h2Style: theme.textTheme.headlineSmall?.copyWith(color: cs.primary),
             boldStyle: TextStyle(fontWeight: FontWeight.w900, color: cs.primary),
             italicStyle: TextStyle(fontStyle: FontStyle.italic, color: cs.tertiary),
             codeStyle: TextStyle(
@@ -419,9 +422,9 @@ class _CustomStylesDemo extends StatelessWidget {
             highlightStyle: const TextStyle(backgroundColor: Color(0x55FFD700)),
             child: TextField(
               controller: TextfEditingController(
-                text: '**Bold** with *italic* and `code` and ==highlight==',
+                text: '## Heading \n**Bold**, *italic*, `code`, and ~~strike~~. \n[Flutter](https://flutter.dev) is ==awesome==!',
               ),
-              maxLines: 2,
+              maxLines: 4,
               decoration: InputDecoration(
                 labelText: 'Result',
                 border: const OutlineInputBorder(),
@@ -445,7 +448,7 @@ class _CustomStylesDemo extends StatelessWidget {
 // ── TextFormField Demo ───────────────────────────────────────────────────────
 
 class _FormFieldDemo extends StatefulWidget {
-  const _FormFieldDemo();
+  const new();
 
   @override
   State<_FormFieldDemo> createState() => _FormFieldDemoState();
@@ -519,8 +522,7 @@ class _FormFieldDemoState extends State<_FormFieldDemo> {
                   onPressed: () {
                     setState(() {
                       _submitted = false;
-                      _bioController.text =
-                          'Flutter dev. Building apps with **Dart** and *Flutter* for ==any screen==.';
+                      _bioController.text = 'Flutter dev. Building apps with **Dart** and *Flutter* for ==any screen==.';
                     });
                     _formKey.currentState?.reset();
                   },
@@ -537,7 +539,7 @@ class _FormFieldDemoState extends State<_FormFieldDemo> {
 // ── Side-by-Side Comparison ──────────────────────────────────────────────────
 
 class _SideBySideComparison extends StatefulWidget {
-  const _SideBySideComparison();
+  const new();
 
   @override
   State<_SideBySideComparison> createState() => _SideBySideComparisonState();
@@ -632,7 +634,7 @@ class _SideBySideComparisonState extends State<_SideBySideComparison> {
 // ── Limitation Row ────────────────────────────────────────────────────────────
 
 class _LimitationRow extends StatelessWidget {
-  const _LimitationRow({
+  const new({
     required this.label,
     required this.description,
     required this.theme,
