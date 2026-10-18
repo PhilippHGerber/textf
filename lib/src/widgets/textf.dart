@@ -18,21 +18,25 @@ import 'internal/textf_renderer.dart';
 /// * `*italic*` or `_italic_` for *italic* text
 /// * `***bold and italic***` or `___bold and italic___` for ***bold and italic*** text
 /// * `~~strikethrough~~` for ~~strikethrough~~ text
+/// * `++underline++` for underlined text
+/// * `==highlight==` for highlighted text
 /// * `^superscript^` for superscript text
 /// * `~subscript~` for subscript text
 /// * `` `code` `` for `code` text
 /// * `[link text](url)` for [links](https://example.com)
 /// * `{key}` placeholders for inserting [InlineSpan]s (e.g., WidgetSpan) via [placeholders].
 /// * `# Heading` through `###### Heading` for ATX headings (levels 1–6)
+/// * `---`, `***`, or `___` for thematic breaks (horizontal rules)
 ///
 /// Links support nested formatting such as `[**bold** link](url)`.
 ///
-/// ATX headings are the one block-level construct [Textf] supports. Recognition
-/// follows the CommonMark ATX specification (0–3 leading spaces, a 1–6 `#` run,
-/// a space/tab/end-of-line separator, optional trailing closing run, and content
-/// trimming). Inline formatting composes inside a heading. Other CommonMark
-/// block constructs — setext headings, lists, blockquotes, tables, code blocks —
-/// are not supported, and 4-space-indented lines render as plain text.
+/// Textf admits two line-scoped block constructs: ATX headings and thematic breaks.
+/// Recognition of ATX headings follows the CommonMark ATX specification (0–3 leading spaces,
+/// a 1–6 `#` run, a space/tab/end-of-line separator, optional trailing closing run, and content
+/// trimming). Thematic breaks render as a full-width divider rule. Inline formatting
+/// composes inside a heading. Other CommonMark block constructs — setext headings, lists,
+/// tables, and code blocks — are not supported (blockquotes are planned), and 4-space-indented
+/// lines render as plain text.
 ///
 /// ## Usage example
 /// ```dart
@@ -59,8 +63,9 @@ import 'internal/textf_renderer.dart';
 /// ## Limitations
 /// - Maximum nesting depth of 2 formatting levels
 /// - When nesting, use different marker types (e.g., **bold with _italic_**)
-/// - Inline-first: ATX headings are the only block-level element supported; no
-///   lists, blockquotes, tables, or other block constructs
+/// - Inline-first: line-scoped block constructs (ATX headings and thematic
+///   breaks) are the only block elements supported; no lists, tables, or other
+///   cross-line block constructs (blockquotes are planned)
 /// - No support for images (unless inserted via {key} placeholder)
 /// - Conforms to the CommonMark spec for the subset it supports; it is not a
 ///   full Markdown renderer

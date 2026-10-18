@@ -743,6 +743,27 @@ void main() {
         );
       });
 
+      testWidgets('strips escape backslashes for all tokenizer escapable characters in link text', (
+        tester,
+      ) async {
+        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+        const baseStyle = TextStyle();
+        const text =
+            r'Visit [\+ \= \^ \# \- \* \_ \~ \` \\ \[ \] \( \) \{ \}](https://example.com)';
+
+        final spans = parser.parse(text, mockContext, baseStyle);
+        expect(spans.length, 2);
+        final widgetSpan = spans[1] as WidgetSpan;
+        final hoverableWidget = widgetSpan.child as HoverableLinkSpan;
+
+        expect(hoverableWidget.url, 'https://example.com');
+        expect(
+          hoverableWidget.initialPlainText,
+          r'+ = ^ # - * _ ~ ` \ [ ] ( ) { }',
+        );
+        expect(hoverableWidget.initialChildrenSpans, isEmpty);
+      });
+
       testWidgets('Unicode characters in link text', (tester) async {
         // Setup
         await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));

@@ -316,5 +316,12 @@ void main() {
       final richText = tester.widget<RichText>(_findRichText());
       expect(richText.selectionColor, isNotNull);
     });
+
+    testWidgets('Strips escape backslashes inside plain link display text', (tester) async {
+      const text = r'[\+ \= \^ \# \-](https://example.com)';
+      await pumpTextfWidget(tester, data: text);
+
+      expect(find.text('+ = ^ # -'), findsOneWidget);
+    });
   });
 }

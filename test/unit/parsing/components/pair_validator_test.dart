@@ -123,8 +123,29 @@ void main() {
         expect(noNewline('Hello **world\nand bold** here'), isEmpty);
       });
 
+      test('bold markers across lone CR do not pair', () {
+        expect(noNewline('Hello **world\rand bold** here'), isEmpty);
+      });
+
+      test('bold markers across CRLF do not pair', () {
+        expect(noNewline('Hello **world\r\nand bold** here'), isEmpty);
+      });
+
+      test('cross-line superscript pairing across lone CR is prevented', () {
+        expect(noNewline('x^2\rmath x^2^'), {'^ -> ^'});
+      });
+
       test('independent same-line pairs on consecutive lines both survive', () {
         expect(noNewline('x^2^ and y^3^\na^2^ and b^3^'), {'^ -> ^'});
+      });
+
+      test('independent same-line pairs on consecutive lines separated by lone CR survive', () {
+        expect(noNewline('**a**\r**b**'), {'** -> **'});
+        expect(noNewline('x^2^ and y^3^\ra^2^ and b^3^'), {'^ -> ^'});
+      });
+
+      test('independent same-line pairs on consecutive lines separated by CRLF survive', () {
+        expect(noNewline('**a**\r\n**b**'), {'** -> **'});
       });
 
       test('single-line formatting unaffected — control case', () {

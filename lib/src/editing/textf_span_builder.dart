@@ -606,11 +606,9 @@ class _SpanBuildState with HeadingRegion {
   /// Returns the index after the link structure if valid, or `null` if the
   /// tokens at [index] do not form a complete `[text](url)` link.
   ///
-  /// **Limitation:** Only plain-text link text is supported. The link text
-  /// token must be a single [TextToken]. A link like `[*italic* text](url)`
-  /// or `[text {placeholder}](url)` fails the completeness check and falls
-  /// through to individual token rendering, producing garbled output with
-  /// stray `[](` characters. Extend [LinkValidator.validate] to fix this.
+  /// Inner link display text is tokenized and styled, preserving nested
+  /// inline formatting and escapes while applying link styling and marker
+  /// dimming.
   int? processLinkAsText(int index) {
     // Verify complete link structure: [text](url)
     final parsedLink = LinkValidator.validate(tokens, index);

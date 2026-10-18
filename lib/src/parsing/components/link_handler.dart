@@ -73,7 +73,7 @@ class LinkHandler {
 
     // Check if the link text contains any non-text tokens (markers or placeholders).
     // EscapeMarkerToken is excluded: it carries no visual formatting of its own and
-    // the else-branch already strips escape characters via regex.
+    // the else-branch strips escape characters cleanly from token output.
     final bool containsFormattingMarkers = linkTextTokens.any(
       (token) => token is! TextToken && token is! EscapeMarkerToken,
     );
@@ -90,11 +90,20 @@ class LinkHandler {
       );
       spanText = null;
     } else {
-      // Plain text content, remove escape characters
-      spanText = rawLinkText.replaceAllMapped(
-        RegExp(r'\\([*_~`\[\](){}\\])'),
-        (match) => match.group(1) ?? '',
-      );
+      // Plain text content: strip escape backslashes for all escapable characters
+      // recognized by the tokenizer.
+      final bool hasEscapes = linkTextTokens.any((token) => token is EscapeMarkerToken);
+      if (hasEscapes) {
+        final buffer = StringBuffer();
+        for (final token in linkTextTokens) {
+          if (token is TextToken) {
+            buffer.write(token.value);
+          }
+        }
+        spanText = buffer.toString();
+      } else {
+        spanText = rawLinkText;
+      }
       childrenSpans = [];
     }
 

@@ -23,6 +23,12 @@ void addTextfOptionsDebugProperties({
   required TextStyle? highlightStyle,
   required TextStyle? superscriptStyle,
   required TextStyle? subscriptStyle,
+  required TextStyle? h1Style,
+  required TextStyle? h2Style,
+  required TextStyle? h3Style,
+  required TextStyle? h4Style,
+  required TextStyle? h5Style,
+  required TextStyle? h6Style,
   required TextStyle? linkStyle,
   required TextStyle? linkHoverStyle,
   required double? scriptFontSizeFactor,
@@ -113,6 +119,12 @@ void addTextfOptionsDebugProperties({
         defaultValue: null,
       ),
     )
+    ..add(DiagnosticsProperty<TextStyle?>('h1Style', h1Style, defaultValue: null))
+    ..add(DiagnosticsProperty<TextStyle?>('h2Style', h2Style, defaultValue: null))
+    ..add(DiagnosticsProperty<TextStyle?>('h3Style', h3Style, defaultValue: null))
+    ..add(DiagnosticsProperty<TextStyle?>('h4Style', h4Style, defaultValue: null))
+    ..add(DiagnosticsProperty<TextStyle?>('h5Style', h5Style, defaultValue: null))
+    ..add(DiagnosticsProperty<TextStyle?>('h6Style', h6Style, defaultValue: null))
     ..add(DiagnosticsProperty<TextStyle?>('linkStyle', linkStyle, defaultValue: null))
     ..add(
       DiagnosticsProperty<TextStyle?>(

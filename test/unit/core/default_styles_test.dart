@@ -36,28 +36,6 @@ void main() {
       });
     });
 
-    group('highlightStyle', () {
-      test('uses the light-surface highlight background and keeps the text color', () {
-        const darkText = TextStyle(color: Color(0xFF000000));
-        final newStyle = DefaultStyles.highlightStyle(darkText, Brightness.light);
-        expect(
-          newStyle.backgroundColor,
-          DefaultStyles.highlightBackgroundColor(Brightness.light),
-        );
-        expect(newStyle.color, darkText.color);
-      });
-
-      test('uses the dark-surface highlight background and keeps the text color', () {
-        const lightText = TextStyle(color: Color(0xFFFFFFFF));
-        final newStyle = DefaultStyles.highlightStyle(lightText, Brightness.dark);
-        expect(
-          newStyle.backgroundColor,
-          DefaultStyles.highlightBackgroundColor(Brightness.dark),
-        );
-        expect(newStyle.color, lightText.color);
-      });
-    });
-
     group('strikethroughStyle', () {
       test('applies strikethrough to a style with no existing decoration', () {
         final newStyle = DefaultStyles.strikethroughStyle(baseStyle);

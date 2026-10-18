@@ -244,25 +244,4 @@ class DefaultStyles {
       decorationThickness: baseStyle.decorationThickness ?? 1.0,
     );
   }
-
-  /// Applies the default highlight formatting (`==highlight==`) to a base
-  /// style: the [highlightBackgroundColor] for [surface] as the background,
-  /// keeping the base text color.
-  static TextStyle highlightStyle(TextStyle baseStyle, Brightness surface) {
-    return baseStyle.copyWith(backgroundColor: highlightBackgroundColor(surface));
-  }
-
-  /// Applies default superscript formatting (`^superscript^`) to a base style.
-  static TextStyle superscriptStyle(TextStyle baseStyle) {
-    return baseStyle.copyWith(
-      fontSize: (baseStyle.fontSize ?? defaultFontSize) * scriptFontSizeFactor,
-    );
-  }
-
-  /// Applies default subscript formatting (`~subscript~`) to a base style.
-  static TextStyle subscriptStyle(TextStyle baseStyle) {
-    return baseStyle.copyWith(
-      fontSize: (baseStyle.fontSize ?? defaultFontSize) * scriptFontSizeFactor,
-    );
-  }
 }

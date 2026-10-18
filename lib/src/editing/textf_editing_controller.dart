@@ -33,6 +33,22 @@ import 'textf_span_builder.dart';
 /// * `^superscript^` (vertical offset in preview mode; font size only when editing)
 /// * `~subscript~` (vertical offset in preview mode; font size only when editing)
 /// * `[link text](url)` (all characters visible, styled)
+/// * `# Heading` through `###### Heading` (ATX headings)
+/// * `---`, `***`, or `___` (thematic breaks)
+///
+/// ## Line-scoped block constructs
+///
+/// Like `Textf`, [TextfEditingController] admits two line-scoped block constructs:
+/// ATX headings and thematic breaks. While editing:
+/// * Headings style the line with heading font sizing. To allow the heading line
+///   to expand naturally, configure `strutStyle: StrutStyle.fromTextStyle(style, forceStrutHeight: false)`
+///   on the editable text widget.
+/// * Thematic breaks keep their markers visible as dimmed marker text in
+///   [MarkerVisibility.always] mode, preserving the 1:1 cursor-to-character invariant.
+///   In [MarkerVisibility.whenActive] mode, inactive breaks render as the divider rule.
+///
+/// Other block constructs (lists, tables, fenced code blocks) are excluded by design;
+/// blockquotes (`>`) are planned.
 ///
 /// ## Usage
 ///
