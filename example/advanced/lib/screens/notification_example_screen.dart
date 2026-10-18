@@ -7,7 +7,7 @@ import 'package:textf/textf.dart';
 import '../widgets/example_card.dart';
 
 class NotificationExampleScreen extends StatelessWidget {
-  const NotificationExampleScreen({
+  const new({
     required this.currentThemeMode,
     required this.toggleThemeMode,
     super.key,
@@ -20,8 +20,9 @@ class NotificationExampleScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Add theme icon logic
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
 
     return Scaffold(
       appBar: AppBar(
@@ -137,7 +138,7 @@ ListTile( // ... code remains the same
 }
 
 class NotificationSystem extends StatefulWidget {
-  const NotificationSystem({super.key});
+  const new({super.key});
 
   @override
   State<NotificationSystem> createState() => _NotificationSystemState();
@@ -301,8 +302,7 @@ class _NotificationSystemState extends State<NotificationSystem> {
                 NotificationItem(
                   icon: Icons.security,
                   title: 'Security Alert',
-                  message:
-                      'Your account was accessed from a **new device** in _New York_. Was this you?',
+                  message: 'Your account was accessed from a **new device** in _New York_. Was this you?',
                   time:
                       '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
                   iconColor: Colors.green, // Keep semantic color
@@ -322,7 +322,7 @@ class _NotificationSystemState extends State<NotificationSystem> {
 class NotificationItem {
   // Make optional
 
-  NotificationItem({
+  new({
     required this.icon,
     required this.title,
     required this.message,

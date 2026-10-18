@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:textf/textf.dart'; // Import TextfOptions
 
 class ScreenshotScreen extends StatefulWidget {
-  const ScreenshotScreen({
+  const new({
     required this.currentThemeMode,
     required this.toggleThemeMode,
     super.key,
@@ -26,11 +26,11 @@ class ScreenshotScreen extends StatefulWidget {
 class _ScreenshotScreenState extends State<ScreenshotScreen> {
   final TextEditingController _textController = TextEditingController(
     text: '''
-🚀 **Welcome to Textf!**
+# 🚀 Welcome to Textf!
 
 • **Bold**, *Italic* text and ***both***
 • ~~Strikethrough~~ and ++Underline++
-• ==Highlighting== and `inline code` 
+• ==Highlighting== and `inline code`
 • Superscript x^2^ + y^2^ and Task^✅^
 • Subscript H~2~O and hot~🔥~
 
@@ -101,8 +101,9 @@ for more details.
       }
 
       if (!mounted) return;
-      final ui.Image image =
-          await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
+      final ui.Image image = await boundary.toImage(
+        pixelRatio: MediaQuery.of(context).devicePixelRatio,
+      );
 
       final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       _imageBytes = byteData?.buffer.asUint8List();
@@ -175,8 +176,9 @@ for more details.
   Widget build(BuildContext context) {
     // Theme setup for AppBar icon
     final Brightness currentBrightness = Theme.of(context).brightness;
-    final IconData themeIcon =
-        currentBrightness == Brightness.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+    final IconData themeIcon = currentBrightness == Brightness.dark
+        ? Icons.light_mode_outlined
+        : Icons.dark_mode_outlined;
     final theme = Theme.of(context); // Get theme for defaults
 
     // Determine the effective background color for the preview Container
@@ -209,9 +211,11 @@ for more details.
               controller: _textController,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                hintText: 'Enter text with **bold**, *italic*, `code`, '
+                hintText:
+                    'Enter text with **bold**, *italic*, `code`, '
                     '++underline++, ==highlight==, [link](url)...',
-                helperText: 'Supports **bold**, *italic*, ~~strike~~, `code`, '
+                helperText:
+                    'Supports **bold**, *italic*, ~~strike~~, `code`, '
                     '++underline++, ==highlight==, [link](url) ^super^ ~sub~',
                 isDense: true,
               ),
@@ -550,8 +554,8 @@ for more details.
                       child: (color == Colors.white || color.computeLuminance() > 0.8) && isSelected
                           ? const Icon(Icons.check, color: Colors.black54, size: 16)
                           : isSelected
-                              ? const Icon(Icons.check, color: Colors.white70, size: 16)
-                              : null,
+                          ? const Icon(Icons.check, color: Colors.white70, size: 16)
+                          : null,
                     ),
                   ),
                 );

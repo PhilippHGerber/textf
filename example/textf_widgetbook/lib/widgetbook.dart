@@ -1,8 +1,8 @@
 // ignore_for_file: no-magic-number
 
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:textf/textf.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
@@ -12,7 +12,7 @@ import 'widgetbook.directories.g.dart';
 @widgetbook.App()
 // ignore: prefer-match-file-name
 class WidgetbookApp extends StatelessWidget {
-  const WidgetbookApp({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,7 @@ class WidgetbookApp extends StatelessWidget {
           LinuxViewports.desktop,
         ]),
         // Theme addon to switch between light and dark mode
-        MaterialThemeAddon(
+        ThemeAddon<ThemeData>(
           themes: [
             WidgetbookTheme(
               name: 'Light',
@@ -49,6 +49,26 @@ class WidgetbookApp extends StatelessWidget {
             name: 'Light',
             data: FlexThemeData.light(scheme: FlexScheme.material),
           ),
+          themeBuilder: (context, theme, child) {
+            return Theme(
+              data: theme,
+              child: ColoredBox(
+                color: theme.scaffoldBackgroundColor,
+                child: DefaultTextStyle(
+                  style: theme.textTheme.bodyMedium ?? const TextStyle(),
+                  // Textf 2.0 is design-system neutral and never reads ThemeData.
+                  // Pass the theme's colors down as color options so links, code,
+                  // highlights and rules follow the selected theme.
+                  child: TextfOptions(
+                    linkColor: theme.colorScheme.primary,
+                    codeBackgroundColor: theme.colorScheme.surfaceContainer,
+                    thematicBreakColor: theme.dividerColor,
+                    child: child,
+                  ),
+                ),
+              ),
+            );
+          },
         ),
 
         // Text scale addon to test different text sizes

@@ -6,7 +6,7 @@ void main() {
 }
 
 class _ManualDebugFillPropertiesApp extends StatelessWidget {
-  const _ManualDebugFillPropertiesApp();
+  const new();
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class _ManualDebugFillPropertiesApp extends StatelessWidget {
 }
 
 class _ManualDebugFillPropertiesScreen extends StatelessWidget {
-  const _ManualDebugFillPropertiesScreen();
+  const new();
 
   static void _onLinkTap(String url, String displayText) {
     debugPrint('Tapped: $url ($displayText)');

@@ -3,12 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 
-/// A diagnostic screen to test theme change cache invalidation.
+/// A diagnostic screen to test cache invalidation on theme changes.
 ///
-/// This screen helps verify that Textf widgets properly update
-/// when the theme changes (light <-> dark).
+/// Textf never reads the theme. This screen's `MaterialApp.builder` passes theme
+/// colors to `TextfOptions` as color options (the recipe from the README), so a
+/// light <-> dark toggle changes the options, and every Textf must update.
 class ThemeCacheTestScreen extends StatefulWidget {
-  const ThemeCacheTestScreen({super.key});
+  const new({super.key});
 
   @override
   State<ThemeCacheTestScreen> createState() => _ThemeCacheTestScreenState();
@@ -43,6 +44,15 @@ class _ThemeCacheTestScreenState extends State<ThemeCacheTestScreen> {
           brightness: Brightness.dark, // or Brightness.light
         ),
       ),
+      // The adapter recipe: theme colors become textf color options.
+      builder: (context, child) {
+        final colorScheme = Theme.of(context).colorScheme;
+        return TextfOptions(
+          linkColor: colorScheme.primary,
+          codeBackgroundColor: colorScheme.surfaceContainer,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: _ThemeCacheTestBody(
         themeMode: _themeMode,
         rebuildCount: _rebuildCount,
@@ -53,7 +63,7 @@ class _ThemeCacheTestScreenState extends State<ThemeCacheTestScreen> {
 }
 
 class _ThemeCacheTestBody extends StatelessWidget {
-  const _ThemeCacheTestBody({
+  const new({
     required this.themeMode,
     required this.rebuildCount,
     required this.onToggleTheme,
@@ -119,16 +129,16 @@ class _ThemeCacheTestBody extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     _ColorRow(
-                      label: 'Link (primary)',
+                      label: 'Link (primary, via linkColor)',
                       color: colorScheme.primary,
                     ),
                     _ColorRow(
-                      label: 'Code bg (surfaceContainer)',
+                      label: 'Code bg (surfaceContainer, via codeBackgroundColor)',
                       color: colorScheme.surfaceContainer,
                     ),
                     _ColorRow(
-                      label: 'Code text (onSurfaceVariant)',
-                      color: colorScheme.onSurfaceVariant,
+                      label: 'Code text (surrounding text, onSurface)',
+                      color: colorScheme.onSurface,
                     ),
                   ],
                 ),
@@ -140,7 +150,7 @@ class _ThemeCacheTestBody extends StatelessWidget {
             // Test Section: Links
             _TestSection(
               title: '1. Link Color Test',
-              description: 'Link should use colorScheme.primary',
+              description: 'Link should use colorScheme.primary (passed as linkColor)',
               expectedColor: colorScheme.primary,
               child: const Textf(
                 'Click this [example link](https://example.com) to test.',
@@ -152,7 +162,8 @@ class _ThemeCacheTestBody extends StatelessWidget {
             // Test Section: Code
             _TestSection(
               title: '2. Inline Code Test',
-              description: 'Code background should use surfaceContainer',
+              description:
+                  'Code background should use surfaceContainer (passed as codeBackgroundColor)',
               expectedColor: colorScheme.surfaceContainer,
               child: const Textf(
                 'Here is some `inline code` in the text.',
@@ -164,7 +175,7 @@ class _ThemeCacheTestBody extends StatelessWidget {
             // Test Section: Multiple formats
             const _TestSection(
               title: '3. Combined Formatting',
-              description: 'All theme-dependent styles should update together',
+              description: 'All color options should update together',
               child: Textf(
                 '==**Bold**, *italic*, `code`==, and [link](https://example.com).',
               ),
@@ -175,7 +186,7 @@ class _ThemeCacheTestBody extends StatelessWidget {
             // Test Section: Link inside formatting
             _TestSection(
               title: '4. Nested: Link in Bold',
-              description: 'Link color should still follow theme',
+              description: 'Link color should still follow linkColor',
               expectedColor: colorScheme.primary,
               child: const Textf(
                 '**Bold text with [bold link](https://example.com) inside.**',
@@ -187,7 +198,7 @@ class _ThemeCacheTestBody extends StatelessWidget {
             // Test Section: Code inside link
             const _TestSection(
               title: '5. Nested: Code in Link',
-              description: 'Complex nesting should handle theme change',
+              description: 'Code inside a link keeps the link color; its chip follows the theme',
               child: Textf(
                 'Visit [`code link`](https://example.com) for more.',
               ),
@@ -198,7 +209,8 @@ class _ThemeCacheTestBody extends StatelessWidget {
             // Test Section: With TextfOptions override
             const _TestSection(
               title: '6. TextfOptions Override',
-              description: 'Custom linkStyle should NOT change with theme',
+              description:
+                  'A linkStyle replaces the default and wins over linkColor, so it stays orange',
               child: TextfOptions(
                 linkStyle: TextStyle(color: Colors.orange),
                 child: Textf(
@@ -252,7 +264,7 @@ class _ThemeCacheTestBody extends StatelessWidget {
 }
 
 class _TestSection extends StatelessWidget {
-  const _TestSection({
+  const new({
     required this.title,
     required this.description,
     required this.child,
@@ -312,7 +324,7 @@ class _TestSection extends StatelessWidget {
 }
 
 class _ColorRow extends StatelessWidget {
-  const _ColorRow({
+  const new({
     required this.label,
     required this.color,
   });
@@ -349,7 +361,7 @@ class _ColorRow extends StatelessWidget {
 }
 
 class _DiagnosticSection extends StatelessWidget {
-  const _DiagnosticSection({required this.theme});
+  const new({required this.theme});
 
   final ThemeData theme;
 

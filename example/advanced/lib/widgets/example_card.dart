@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class ExampleCard extends StatelessWidget {
-  const ExampleCard({
+  const new({
     required this.title,
     required this.description,
     required this.code,

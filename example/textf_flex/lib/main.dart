@@ -1,7 +1,8 @@
 // ignore_for_file: no-magic-number
 
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:textf/textf.dart';
 
 import 'home_screen.dart';
 
@@ -10,7 +11,7 @@ void main() {
 }
 
 class FlexTextfExampleApp extends StatefulWidget {
-  const FlexTextfExampleApp({super.key});
+  const new({super.key});
 
   @override
   State<FlexTextfExampleApp> createState() => _FlexTextfExampleAppState();
@@ -69,6 +70,19 @@ class _FlexTextfExampleAppState extends State<FlexTextfExampleApp> {
         swapLegacyOnMaterial3: useMaterial3,
       ),
       themeMode: _themeMode,
+      // The textf 2.0 adapter recipe: textf never reads `Theme`, so the app hands its brand
+      // colors to every descendant `Textf` once, here. `builder` runs below the (animated)
+      // theme, so the colors follow theme-mode and scheme changes automatically.
+      builder: (context, child) {
+        final theme = Theme.of(context);
+        return TextfOptions(
+          linkColor: theme.colorScheme.primary,
+          codeBackgroundColor: theme.colorScheme.surfaceContainer,
+          highlightColor: theme.colorScheme.tertiaryContainer,
+          thematicBreakColor: theme.dividerColor,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: HomeScreen(
         selectedScheme: _selectedScheme,
         themeMode: _themeMode,
