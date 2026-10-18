@@ -59,8 +59,11 @@ class _TextfEditingControllerUseCaseState extends State<TextfEditingControllerUs
   String _plainText = '';
 
   static const _initialText =
+      '# Heading 1\n'
+      '## Heading 2\n'
       '**Bold**, *italic*, ~~strike~~, `code`, ++underline++, ==highlight==\n'
       'Links: [Flutter](https://flutter.dev)\n'
+      '---\n'
       'Combined: ***bold italic***, **bold _nested_**';
 
   @override
@@ -138,42 +141,47 @@ class _TextfEditingControllerUseCaseState extends State<TextfEditingControllerUs
       );
     }
 
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const _SectionHeader('TextField with TextfEditingController'),
-            const SizedBox(height: 8),
-            _FormattingCheatSheet(),
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: field,
-              ),
-            ),
-            if (widget.showPlainText) ...[
-              const SizedBox(height: 16),
-              const _SectionHeader('Plain text (markers stripped)'),
+    // TextField and Chip need a Material ancestor; Widgetbook renders the use
+    // case without a Scaffold.
+    return Material(
+      type: MaterialType.transparency,
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const _SectionHeader('TextField with TextfEditingController'),
               const SizedBox(height: 8),
+              _FormattingCheatSheet(),
+              const SizedBox(height: 12),
               Card(
-                color: theme.colorScheme.surfaceContainerHighest,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(
-                    _plainText.isEmpty ? '(empty)' : _plainText,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontStyle: _plainText.isEmpty ? FontStyle.italic : FontStyle.normal,
-                      color: _plainText.isEmpty ? theme.colorScheme.onSurfaceVariant : null,
+                  child: field,
+                ),
+              ),
+              if (widget.showPlainText) ...[
+                const SizedBox(height: 16),
+                const _SectionHeader('Plain text (markers stripped)'),
+                const SizedBox(height: 8),
+                Card(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      _plainText.isEmpty ? '(empty)' : _plainText,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontStyle: _plainText.isEmpty ? FontStyle.italic : FontStyle.normal,
+                        color: _plainText.isEmpty ? theme.colorScheme.onSurfaceVariant : null,
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -208,6 +216,8 @@ class _FormattingCheatSheet extends StatelessWidget {
       ('^super^', 'Superscript'),
       ('~sub~', 'Subscript'),
       ('[text](url)', 'Link'),
+      ('# heading', 'Heading'),
+      ('---', 'Thematic break'),
     ];
 
     return Wrap(

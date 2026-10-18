@@ -10,9 +10,12 @@
 // **************************************************************************
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+
 import 'package:widgetbook/widgetbook.dart' as _widgetbook;
 import 'package:widgetbook_textf/use_cases/basic_formatting_use_case.dart'
     as _widgetbook_textf_use_cases_basic_formatting_use_case;
+import 'package:widgetbook_textf/use_cases/headings_use_case.dart'
+    as _widgetbook_textf_use_cases_headings_use_case;
 import 'package:widgetbook_textf/use_cases/link_formatting_use_case.dart'
     as _widgetbook_textf_use_cases_link_formatting_use_case;
 import 'package:widgetbook_textf/use_cases/nested_formatting_use_case.dart'
@@ -29,6 +32,8 @@ import 'package:widgetbook_textf/use_cases/textf_editing_controller_use_case.dar
     as _widgetbook_textf_use_cases_textf_editing_controller_use_case;
 import 'package:widgetbook_textf/use_cases/textf_options_use_case.dart'
     as _widgetbook_textf_use_cases_textf_options_use_case;
+import 'package:widgetbook_textf/use_cases/thematic_break_use_case.dart'
+    as _widgetbook_textf_use_cases_thematic_break_use_case;
 
 final directories = <_widgetbook.WidgetbookNode>[
   _widgetbook.WidgetbookFolder(
@@ -58,6 +63,11 @@ final directories = <_widgetbook.WidgetbookNode>[
             builder: _widgetbook_textf_use_cases_basic_formatting_use_case
                 .basicFormattingUseCase,
             designLink: 'https://www.example.com',
+          ),
+          _widgetbook.WidgetbookUseCase(
+            name: 'Headings',
+            builder:
+                _widgetbook_textf_use_cases_headings_use_case.headingsUseCase,
           ),
           _widgetbook.WidgetbookUseCase(
             name: 'Link Formatting',
@@ -92,6 +102,11 @@ final directories = <_widgetbook.WidgetbookNode>[
             name: 'TextfOptions Customization',
             builder: _widgetbook_textf_use_cases_textf_options_use_case
                 .textfOptionsUseCase,
+          ),
+          _widgetbook.WidgetbookUseCase(
+            name: 'Thematic Breaks',
+            builder: _widgetbook_textf_use_cases_thematic_break_use_case
+                .thematicBreakUseCase,
           ),
         ],
       ),

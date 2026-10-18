@@ -81,4 +81,4 @@ jobs:
         run: flutter pub get
 
       - name: Publish to pub.dev (dry run)
-        run: dart pub publish --dry-run
+        run: flutter pub publish --dry-run

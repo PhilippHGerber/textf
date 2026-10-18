@@ -2,6 +2,7 @@
 
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:textf/textf.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
@@ -55,7 +56,15 @@ class WidgetbookApp extends StatelessWidget {
                 color: theme.scaffoldBackgroundColor,
                 child: DefaultTextStyle(
                   style: theme.textTheme.bodyMedium ?? const TextStyle(),
-                  child: child,
+                  // Textf 2.0 is design-system neutral and never reads ThemeData.
+                  // Pass the theme's colors down as color options so links, code,
+                  // highlights and rules follow the selected theme.
+                  child: TextfOptions(
+                    linkColor: theme.colorScheme.primary,
+                    codeBackgroundColor: theme.colorScheme.surfaceContainer,
+                    thematicBreakColor: theme.dividerColor,
+                    child: child,
+                  ),
                 ),
               ),
             );

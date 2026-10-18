@@ -12,8 +12,7 @@ import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 Widget textfOptionsUseCase(BuildContext context) {
   final text = context.knobs.string(
     label: 'Formatted Text',
-    initialValue:
-        'This is **bold**, *italic*, ~~strikethrough~~, `code`, and [link](https://example.com).',
+    initialValue: 'This is **bold**, *italic*, ~~strikethrough~~, `code`, ==highlight==, and [link](https://example.com).',
     description: 'Enter text with Markdown-like formatting',
     maxLines: 5,
   );
@@ -106,6 +105,19 @@ Widget textfOptionsUseCase(BuildContext context) {
     initialOption: (label: 'Click', value: SystemMouseCursors.click),
   );
 
+  // Color options (2.0): tint the built-in styles without replacing them.
+  final useColorOptions = context.knobs.boolean(
+    label: 'Use color options instead of styles',
+    description:
+        'Drops linkStyle/codeStyle and sets linkColor, codeBackgroundColor and '
+        'highlightColor. Styles take precedence over color options.',
+  );
+
+  final highlightColor = context.knobs.color(
+    label: 'Highlight Color (color option)',
+    initialValue: Colors.lightGreenAccent.withValues(alpha: 0.5),
+  );
+
   return Center(
     child: Padding(
       padding: const EdgeInsets.all(16),
@@ -135,15 +147,22 @@ Widget textfOptionsUseCase(BuildContext context) {
                   decorationColor: strikethroughColor,
                   decorationThickness: strikethroughThickness,
                 ),
-                codeStyle: TextStyle(
-                  fontFamily: 'monospace',
-                  backgroundColor: codeBackgroundColor,
-                  color: codeTextColor,
-                ),
-                linkStyle: TextStyle(
-                  color: linkColor,
-                  decoration: linkDecoration.value,
-                ),
+                codeStyle: useColorOptions
+                    ? null
+                    : TextStyle(
+                        fontFamily: 'monospace',
+                        backgroundColor: codeBackgroundColor,
+                        color: codeTextColor,
+                      ),
+                linkStyle: useColorOptions
+                    ? null
+                    : TextStyle(
+                        color: linkColor,
+                        decoration: linkDecoration.value,
+                      ),
+                linkColor: useColorOptions ? linkColor : null,
+                codeBackgroundColor: useColorOptions ? codeBackgroundColor : null,
+                highlightColor: useColorOptions ? highlightColor : null,
                 linkHoverStyle: TextStyle(
                   color: linkHoverColor,
                   fontWeight: FontWeight.bold,
