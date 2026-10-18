@@ -31,7 +31,7 @@ description: "textf: inline Markdown-like text formatting for Flutter. Use when 
 | Heading | `# ` through `###### ` at the start of a line |
 | Thematic break | a line of three or more `-`, `*` or `_` |
 
-Any other Markdown (lists, blockquotes, tables, images, fenced code, HTML) renders as plain text; a document that needs it calls for a full Markdown package.
+Any other Markdown (lists, tables, images, fenced code, HTML) renders as plain text (blockquotes are planned); a document that needs it calls for a full Markdown package.
 
 - **Flanking**: a marker hugs its text. `*italic*` formats, `* italic *` stays literal, so `2 * 3` and `* item` are safe.
 - **Nesting** goes two levels deep (`**bold _italic_**`); a third level renders its markers as plain text.
@@ -73,7 +73,7 @@ final controller = TextfEditingController(
 | Style options (`TextStyle?`) | `boldStyle`, `italicStyle`, `boldItalicStyle`, `strikethroughStyle`, `underlineStyle`, `highlightStyle`, `codeStyle`, `superscriptStyle`, `subscriptStyle`, `linkStyle`, `linkHoverStyle`, `h1Style`–`h6Style` |
 | Color options (`Color?`) | `linkColor`, `codeBackgroundColor`, `highlightColor`, `thematicBreakColor` |
 | Links | `onLinkTap(url, displayText)`, `onLinkHover(url, displayText, {required bool isHovering})`, `linkMouseCursor`, `linkAlignment` |
-| Scripts (`double?`) | `scriptFontSizeFactor` (0.6), `superscriptBaselineFactor`, `subscriptBaselineFactor` |
+| Scripts (`double?`) | `scriptFontSizeFactor` (0.6), `superscriptBaselineFactor` (0.4), `subscriptBaselineFactor` (0.4) |
 | Other | `strikethroughThickness` (used while `strikethroughStyle` is null), `thematicBreakBuilder(context)` (owns its own width) |
 
 A **style option replaces** the built-in style: a `boldStyle` without a `fontWeight` is not bold, and a `codeStyle` needs its own font family and background. Heading and script styles are the exception and merge onto the built-in size. A **color option tints** the built-in style and keeps its typography, so reach for it to change only a color.
