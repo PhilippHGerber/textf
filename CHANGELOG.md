@@ -2,6 +2,28 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 2.0.0
+
+**Ready for Flutter's decoupled future.** In support of Flutter's [Material and Cupertino decoupling](https://flutter.dev/blog/decoupling-material-cupertino), Textf 2.0 is now completely design-system neutral. Built purely on Flutter's foundational `widgets` layer, Textf runs identically across legacy SDK Material, `material_ui`, Cupertino, `cupertino_ui`, custom design systems, or a bare `WidgetsApp`.
+
+### Breaking Changes
+
+* **Design-system-neutral styling:** Built-in link, code, highlight, and thematic-break colors now derive from ambient text rather than `ThemeData` / `ColorScheme`. Links default to `#1A73E8`, code chips to a contextual tint of text color, and thematic breaks to a 1px rule in the ambient text color at 20% opacity. The package no longer imports `material.dart` or `cupertino.dart`.
+  * **Migrating from 1.x:** To keep your theme's colors, pass them to `TextfOptions` once in `MaterialApp.builder`. See [Using Your App's Theme Colors](https://github.com/PhilippHGerber/textf#using-your-apps-theme-colors) in the README.
+* **SDK floor:** Raised to `sdk: ^3.13.0` / `flutter: ">=3.47.0"`.
+
+### Added
+
+* **ATX headings:** `#` through `######` render as headings with per-level default and custom styles (`h1Style`–`h6Style`), consistently in both read-only and editor rendering. Full CommonMark conformance for ATX headings (up to 3 leading spaces, trailing `#` runs, tab separators, and empty headings). (#10, thanks @davidlondono)
+* **Thematic breaks (horizontal rules):** Lines of three or more `-`, `*`, or `_` render as a full-width rule in the ambient text color at 20% opacity. Fully customizable via `TextfOptions.thematicBreakColor` and `TextfOptions.thematicBreakBuilder`. In `TextfEditingController`, the raw markers stay visible as dimmed marker text (or hidden when active), preserving the 1:1 cursor invariant.
+* **Color options on `TextfOptions`:** Added `linkColor`, `codeBackgroundColor`, `highlightColor`, and `thematicBreakColor` to `TextfOptions` and `TextfOptionsData` for effortless brand adaptation without overriding typography.
+* **Extended diagnostics:** `TextfOptions.debugFillProperties` now reports `h1Style`–`h6Style`, `thematicBreakBuilder`, and all four color options for the Flutter Widget Inspector.
+
+### Fixed
+
+* **Link display-text escapes:** Plain link display text strips escape backslashes for all tokenizer-recognized escapable characters (`\+`, `\=`, `\^`, `\#`, `\-`, etc.) in both `Textf` and `stripFormatting()`.
+* **Line-ending pairing rejection:** `PairValidator` with `allowNewlineCrossing: false` rejects marker pairs separated by lone-CR (`\r`) or CRLF (`\r\n`), matching CommonMark line-ending conformance.
+
 ## 1.2.4
 
 ### Added
