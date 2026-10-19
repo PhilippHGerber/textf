@@ -12,7 +12,8 @@ on:
       - "release/**"
     paths:
       - "**.dart"
-      - "./*.yaml"
+      - "*.yaml"
+      - "**/pubspec.yaml"
       - .github/workflows/_base-dart.yaml
       - .github/workflows/_base-flutter.yaml
       - .github/workflows/package.yaml
