@@ -87,12 +87,11 @@ Both widgets share the same formatting syntax and can be configured together wit
 
 ## Limitations
 
-| Limitation                 | Reason                                                                                                                       |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| **Inline-first**           | Line-scoped block constructs (ATX headings `#`–`######` and thematic breaks `---`, `***`, `___`) are supported; blockquotes (`>`) are planned — no lists, tables, or images |
-| **Max 2 nesting levels**   | `**bold _italic_**` works, deeper nesting renders as plain text                                                              |
-| **Selection across links** | Links use `WidgetSpan`, so selection can't span across them (Flutter limitation)                                             |
-| **Widget placeholders**    | `{key}` placeholders render as literal text in `TextfEditingController`                                                      |
+| Limitation               | Reason                                                                                                                       |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Inline-first**         | Line-scoped block constructs (ATX headings `#`–`######` and thematic breaks `---`, `***`, `___`) are supported; blockquotes (`>`) are planned — no lists, tables, or images |
+| **Max 2 nesting levels** | `**bold _italic_**` works, deeper nesting renders as plain text                                                              |
+| **Widget placeholders**  | `{key}` placeholders render as literal text in `TextfEditingController`                                                      |
 
 ---
 
@@ -303,8 +302,6 @@ TextfOptions(
   child: Textf('Visit [Flutter](https://flutter.dev)'),
 )
 ```
-
-> **Note:** Because links are `WidgetSpan` elements, text selection cannot span across them. This is a Flutter platform limitation, not a Textf bug.
 
 Screen readers announce each link as a single link, in sentence order, with its visible text as the label: `[**Terms** of Service](…)` reads as "Terms of Service, link". See [Accessibility](#accessibility).
 
