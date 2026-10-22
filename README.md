@@ -306,6 +306,8 @@ TextfOptions(
 
 > **Note:** Because links are `WidgetSpan` elements, text selection cannot span across them. This is a Flutter platform limitation, not a Textf bug.
 
+Screen readers announce each link as a single link, in sentence order, with its visible text as the label: `[**Terms** of Service](…)` reads as "Terms of Service, link". See [Accessibility](#accessibility).
+
 ### SelectionArea Support
 
 ```dart
@@ -597,7 +599,8 @@ Verified recipes for each environment, with tests, live in the repository:
 - **Text Scaling** — Respects `MediaQuery.textScalerOf(context)` and system font scaling settings
 - **Bold Text** — Honors the system bold-text setting (`MediaQuery.boldTextOf`), like `Text`
 - **Link Contrast** — Default links are underlined and use `#1A73E8` (4.51:1 on white); see [Theming](#theming)
-- **Screen Readers** — Links are wrapped in `Semantics(link: true)` for TalkBack and VoiceOver
+- **Screen Readers** — TalkBack and VoiceOver read each link as one link node, in its place in the sentence, labelled with the visible link text (no formatting markers or escape backslashes). Activating it calls `onLinkTap` once. A paragraph with a link is split into one node per text run and per link; a paragraph without links stays one node
+- **Testing** — In widget tests, find a link by its visible text, for example `find.bySemanticsLabel('Terms of Service')`, and tap it with `tester.tap`
 - **RTL Support** — Bidirectional text and RTL languages work correctly throughout
 
 ---

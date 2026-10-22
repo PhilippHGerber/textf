@@ -8,6 +8,7 @@ import '../../parsing/textf_parser.dart';
 import '../../styling/textf_style_resolver.dart';
 import '../textf_options.dart';
 import '../textf_options_data.dart';
+import 'link_reading_order.dart';
 
 /// Internal StatefulWidget that handles parsing, styling resolution via the parser,
 /// and cache invalidation. It bridges the Textf widget parameters with
@@ -193,13 +194,15 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
 
     // Re-parse only if the cache was invalidated
     if (spans == null) {
-      spans = widget.parser.parse(
-        widget.data,
-        context,
-        effectiveStyle,
-        textScaler: effectiveScaler,
-        placeholders: widget.placeholders,
-        styleResolver: _cachedResolver,
+      spans = withLinkReadingOrder(
+        widget.parser.parse(
+          widget.data,
+          context,
+          effectiveStyle,
+          textScaler: effectiveScaler,
+          placeholders: widget.placeholders,
+          styleResolver: _cachedResolver,
+        ),
       );
       _cachedSpans = spans;
     }

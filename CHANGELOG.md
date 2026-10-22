@@ -2,6 +2,20 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 2.0.1
+
+### Fixed
+
+* **Link semantics for screen readers:** TalkBack and VoiceOver now read every link as exactly one link node, in its place in the sentence. (#11, #12, #16)
+  * The label is the visible link text: `[**Terms of Service**](…)` is announced as "Terms of Service", not with its asterisks, escape backslashes are removed, and placeholders and superscripts are read as the text they show. `onLinkTap` and `onLinkHover` still receive the raw display text.
+  * A link no longer has a duplicate child node, so activating it through accessibility calls `onLinkTap` once.
+  * Text around a link is read before and after it, not as one block followed by the links. A paragraph with a single link no longer turns into one sentence-long link.
+  * The semantics tree of paragraphs with links changes; see Migration.
+
+### Migration
+
+The semantics tree of a paragraph that contains a link changes: it now has one node per text run and per link instead of one node for the whole sentence. App tests that match such a sentence by its semantics label (for example `find.bySemanticsLabel('I agree to the Terms.')`) must match the individual parts instead. Paragraphs without links are unchanged.
+
 ## 2.0.0
 
 **Ready for Flutter's decoupled future.** In support of Flutter's [Material and Cupertino decoupling](https://flutter.dev/blog/decoupling-material-cupertino), Textf 2.0 is now completely design-system neutral. Built purely on Flutter's foundational `widgets` layer, Textf runs identically across legacy SDK Material, `material_ui`, Cupertino, `cupertino_ui`, custom design systems, or a bare `WidgetsApp`.

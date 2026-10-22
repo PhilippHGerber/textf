@@ -127,6 +127,7 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
 
     // 2. Apply Visual Styles
     final List<InlineSpan> styledSpans = sourceSpans.map(_applyStyleRecursive).toList();
+    final TextSpan root = TextSpan(children: styledSpans);
 
     // 3. Render
     // We use GestureDetector instead of TextSpan.recognizer.
@@ -135,7 +136,7 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
     // is effectively dead. A GestureDetector on the Text widget works perfectly
     // because WidgetSpans are treated as atomic boxes.
     Widget content = Text.rich(
-      TextSpan(children: styledSpans),
+      root,
       // This Text sits inside a WidgetSpan; the parent RichText already applies the
       // MediaQuery textScaler to WidgetSpan dimensions. Scaling here would double-scale.
       textScaler: TextScaler.noScaling,
@@ -156,11 +157,45 @@ class HoverableLinkSpanState extends State<HoverableLinkSpan> {
       onExit: _onExit,
       opaque: false,
       child: Semantics(
+        // One node per link, labelled with the text the link shows: markers and
+        // escape backslashes removed, placeholders substituted (ADR 0007). The inner
+        // text is excluded so the link is not announced, or activated, twice.
+        excludeSemantics: true,
         link: true,
-        label: widget.rawDisplayText,
+        label: _visibleText(root),
         onTap: widget.tapRecognizer?.onTap,
         child: content,
       ),
     );
   }
 }
+
+/// The text [span] shows, as a screen reader should announce it.
+///
+/// Unlike [InlineSpan.toPlainText], a widget placeholder contributes the text
+/// it displays (a superscript, a `Text` placeholder) or nothing, never the
+/// object replacement character.
+String _visibleText(InlineSpan span) {
+  final buffer = StringBuffer();
+  span.visitChildren((child) {
+    switch (child) {
+      case TextSpan(:final String text):
+        buffer.write(child.semanticsLabel ?? text);
+      case WidgetSpan(child: final Widget widget):
+        buffer.write(_widgetText(widget) ?? '');
+    }
+
+    return true;
+  });
+
+  return buffer.toString();
+}
+
+/// The text a placeholder [widget] displays when it is a [Text], possibly
+/// behind single-child wrappers such as the [Padding] around a script.
+String? _widgetText(Widget widget) => switch (widget) {
+  Text(:final String data) => data,
+  Text(:final InlineSpan textSpan) => _visibleText(textSpan),
+  SingleChildRenderObjectWidget(:final Widget child) => _widgetText(child),
+  _ => null,
+};

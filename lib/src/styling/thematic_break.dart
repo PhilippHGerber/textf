@@ -54,6 +54,12 @@ InlineSpan defaultThematicBreakSpan(Color color) {
   );
 }
 
+/// Whether [span] is a default rule from [defaultThematicBreakSpan].
+///
+/// The default rule has no semantics, so it never produces a semantics node.
+bool isDefaultThematicBreakSpan(InlineSpan span) =>
+    span is WidgetSpan && span.child is _ThematicBreakRule;
+
 /// Wraps a user-supplied [builder] as the thematic-break [InlineSpan].
 ///
 /// The builder owns the rule's appearance and its own width behaviour, so —
