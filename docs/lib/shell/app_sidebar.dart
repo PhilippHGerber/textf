@@ -126,14 +126,14 @@ class _AppSidebarState extends State<AppSidebar> {
                     icon: Icons.edit_note,
                     label: 'Live Editor',
                     selected: isEditor,
-                    trailing: _NewBadge(),
+                    // trailing: _NewBadge(),
                     onTap: () => context.go(DocsRoutes.editor),
                   ),
                   _NavItem(
                     icon: Icons.auto_awesome_outlined,
                     label: 'Agent Skill',
                     selected: isAgentSkill,
-                    trailing: _NewBadge(),
+                    // trailing: _NewBadge(),
                     onTap: () => context.go(DocsRoutes.agentSkill),
                   ),
                 ],
@@ -334,29 +334,6 @@ class _SubNavItem extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NewBadge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: cs.primaryContainer,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        'NEW',
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          color: cs.onPrimaryContainer,
         ),
       ),
     );

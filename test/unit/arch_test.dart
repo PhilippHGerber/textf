@@ -149,11 +149,17 @@ final RegExp _symbolNoise = RegExp(r'[\[\]]|[.,;:!?)]+$');
 
 String _stripBrackets(String symbol) => symbol.replaceAll(_symbolNoise, '');
 
-/// The package root: the nearest ancestor of the working directory whose `pubspec.yaml`
-/// declares `name: textf`. Keeps the scans independent of where `flutter test` runs.
+/// The package root: the nearest ancestor of the working directory (or its `public/`
+/// subdirectory) whose `pubspec.yaml` declares `name: textf`. Keeps the scans independent of
+/// whether `flutter test` runs from the repo root or inside `public/`.
 Directory _packageRoot() {
   final RegExp nameLine = RegExp(r'^name:\s*textf\s*$', multiLine: true);
   Directory dir = Directory.current.absolute;
+  final Directory publicDir = Directory('${dir.path}${Platform.pathSeparator}public');
+  final File publicPubspec = File('${publicDir.path}${Platform.pathSeparator}pubspec.yaml');
+  if (publicPubspec.existsSync() && nameLine.hasMatch(publicPubspec.readAsStringSync())) {
+    return publicDir;
+  }
   while (true) {
     final File pubspec = File('${dir.path}${Platform.pathSeparator}pubspec.yaml');
     if (pubspec.existsSync() && nameLine.hasMatch(pubspec.readAsStringSync())) return dir;

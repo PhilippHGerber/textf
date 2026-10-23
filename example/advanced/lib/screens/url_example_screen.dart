@@ -423,6 +423,26 @@ Textf(
                 'Visit [Google](google.com)',
               ),
             ),
+            const SizedBox(height: 16),
+
+            // --- SelectionArea Example ---
+            const ExampleCard(
+              key: Key('selection-area-card'),
+              title: 'SelectionArea with Links',
+              description: 'Text selection across plain and formatted links inside SelectionArea',
+              code: '''
+SelectionArea(
+  child: Textf(
+    'Before [a link](https://flutter.dev) and [**bold** link](https://dart.dev) after.',
+  ),
+)''',
+              child: SelectionArea(
+                child: Textf(
+                  'Before [a link](https://flutter.dev) and [**bold** link](https://dart.dev) after.',
+                  key: Key('selection-area-textf'),
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
           ],
         ),
