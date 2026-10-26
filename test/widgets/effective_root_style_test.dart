@@ -312,7 +312,7 @@ void main() {
       expect(
         parser.lastPalette,
         isNull,
-        reason: 'a top-level parse derives its palette from baseStyle (see ParserState tests)',
+        reason: 'a top-level parse derives its palette from baseStyle (see parser_read_path_test)',
       );
     });
   });

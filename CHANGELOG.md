@@ -2,6 +2,12 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## Unreleased
+
+### Performance
+
+* A link's display text is tokenized once instead of twice: it now goes through the shared token cache, and its nested parse reuses that entry.
+
 ## 2.0.1
 
 ### Fixed

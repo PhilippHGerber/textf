@@ -5,7 +5,7 @@ import '../models/format_stack_entry.dart';
 import '../styling/textf_palette.dart';
 import '../styling/textf_style_resolver.dart';
 
-/// Shared ATX-heading line logic for the read path (`ParserState`) and the edit
+/// Shared ATX-heading line logic for the read path (`TextfParser`'s parse run) and the edit
 /// path (the span builder's build state).
 ///
 /// Both pipelines consume the identical token stream and must end a heading

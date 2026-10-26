@@ -66,6 +66,40 @@ void main() {
     });
 
     // =========================================================================
+    // LINK TEXT GOES THROUGH THE SHARED CACHE
+    // =========================================================================
+
+    testWidgets('a plain link label is tokenized through the shared cache', (tester) async {
+      await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
+      final parser = TextfParser();
+
+      parser.parse('[plain label](example.com)', mockContext, const TextStyle());
+
+      expect(
+        TextfParser.cacheLength,
+        2,
+        reason: 'one entry for the source text, one for the link label',
+      );
+    });
+
+    testWidgets('a formatted link label shares one cache entry with its nested parse', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createTestWidget((ctx) => mockContext = ctx));
+      final parser = TextfParser();
+
+      parser.parse('[**bold** label](example.com)', mockContext, const TextStyle());
+      expect(TextfParser.cacheLength, 2, reason: 'source text + link label');
+
+      parser.parse('See [**bold** label](example.com)', mockContext, const TextStyle());
+      expect(
+        TextfParser.cacheLength,
+        3,
+        reason: 'only the new source text is added; the label entry is reused',
+      );
+    });
+
+    // =========================================================================
     // CACHE KEY BEHAVIOR (TEXT-ONLY KEYING)
     // =========================================================================
 

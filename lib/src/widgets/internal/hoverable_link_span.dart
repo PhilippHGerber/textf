@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../core/textf_style_utils.dart';
 
-/// An internal StatefulWidget used by Textf's LinkHandler to render interactive links
+/// An internal StatefulWidget used by `TextfParser` to render interactive links
 /// that can visually change style on hover.
 ///
 /// This widget manages its own hover state (`_isHovering`) and switches

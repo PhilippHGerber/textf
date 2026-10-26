@@ -342,7 +342,7 @@ void main() {
         neutralTestApp(
           child: Builder(
             builder: (context) {
-              // [text](url) is a valid link - it will be handled by LinkHandler
+              // [text](url) is a valid link - it will be handled by the parser's link handling
               // To test fallthrough, we need tokens that exist but aren't handled
               // However, as analyzed, LinkSeparator/LinkEnd are always produced
               // as part of a complete link. These branches are exhaustive-switch
