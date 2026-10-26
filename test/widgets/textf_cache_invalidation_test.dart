@@ -15,10 +15,11 @@ import 'pump_textf_widget.dart';
 
 // T-CACHE-01: renderer cache invalidation.
 //
-// The renderer re-parses only when a parser input changes: the data, placeholders, text scaler,
-// the inherited TextfOptionsData, or the effective root style (ambient DefaultTextStyle merged
-// with Textf.style, plus bold text). The effective root style is also the palette's source, so
-// no further cache key — in particular no design-system theme — is needed (CACHE-5).
+// The renderer re-parses only when a parser input changes: the data, placeholders, the inherited
+// TextfOptionsData, or the effective root style (ambient DefaultTextStyle merged with Textf.style,
+// plus bold text). The effective root style is also the palette's source, so no further cache
+// key — in particular no design-system theme — is needed (CACHE-5). The text scaler is not a
+// parser input: it only reaches Text.rich, so changing it re-lays out without re-parsing.
 
 const Color _black = Color(0xFF000000);
 const Color _white = Color(0xFFFFFFFF);
@@ -52,7 +53,12 @@ class _CountingParser extends TextfParser {
 }
 
 /// A [TextfRenderer] as `Textf` builds it, but with an injectable [parser].
-Widget _renderer(TextfParser parser, {String data = _data, TextStyle? style}) {
+Widget _renderer(
+  TextfParser parser, {
+  String data = _data,
+  TextStyle? style,
+  TextScaler? textScaler,
+}) {
   return TextfRenderer(
     data: data,
     style: style,
@@ -63,7 +69,7 @@ Widget _renderer(TextfParser parser, {String data = _data, TextStyle? style}) {
     locale: null,
     softWrap: null,
     overflow: null,
-    textScaler: null,
+    textScaler: textScaler,
     maxLines: null,
     semanticsLabel: null,
     textWidthBasis: null,
@@ -72,20 +78,37 @@ Widget _renderer(TextfParser parser, {String data = _data, TextStyle? style}) {
   );
 }
 
-/// Hosts [child] under an ambient text [color] and an optional `codeBackgroundColor` option.
-Widget _host(Widget child, {Color color = _black, Color? codeBackgroundColor}) {
+/// Hosts [child] under an ambient text [color], an optional `codeBackgroundColor` option and
+/// an optional ambient `MediaQuery` [mediaQueryScaler].
+Widget _host(
+  Widget child, {
+  Color color = _black,
+  Color? codeBackgroundColor,
+  TextScaler? mediaQueryScaler,
+}) {
   final Widget ambient = DefaultTextStyle(
     style: TextStyle(fontSize: 16, color: color),
     child: child,
   );
+  final Widget withOptions = codeBackgroundColor == null
+      ? ambient
+      : TextfOptions(codeBackgroundColor: codeBackgroundColor, child: ambient);
   return neutralTestApp(
     child: Center(
-      child: codeBackgroundColor == null
-          ? ambient
-          : TextfOptions(codeBackgroundColor: codeBackgroundColor, child: ambient),
+      child: mediaQueryScaler == null
+          ? withOptions
+          : Builder(
+              builder: (context) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(textScaler: mediaQueryScaler),
+                child: withOptions,
+              ),
+            ),
     ),
   );
 }
+
+/// The scaler on the `Text.rich` the renderer builds.
+TextScaler? _builtScaler(WidgetTester tester) => tester.widget<Text>(find.byType(Text)).textScaler;
 
 /// The rendered background of the `code` span.
 Color? _codeBackground(WidgetTester tester) => renderedSpanStyle(tester, 'code').backgroundColor;
@@ -167,6 +190,42 @@ void main() {
 
       expect(parser.parseCount, 1, reason: 'Textf reads no design-system theme');
     });
+
+    // Guard: no span depends on the text scaler (scripts and links render with
+    // TextScaler.noScaling, heading sizes derive from the effective root style), so the scaler is
+    // deliberately not a cache key. If a future span ever depends on the scaler, these tests must
+    // fail and scaler-based invalidation must be restored deliberately in the renderer.
+    testWidgets(
+      'a changed Textf.textScaler does NOT re-parse but reaches Text.rich '
+      '(a future scaler-dependent span must restore scaler-based invalidation deliberately)',
+      (tester) async {
+        final parser = _CountingParser();
+
+        await tester.pumpWidget(_host(_renderer(parser, textScaler: TextScaler.noScaling)));
+        await tester.pumpWidget(_host(_renderer(parser, textScaler: const TextScaler.linear(2))));
+
+        expect(parser.parseCount, 1);
+        expect(_builtScaler(tester), const TextScaler.linear(2));
+      },
+    );
+
+    testWidgets(
+      'a changed MediaQuery text scaler does NOT re-parse but reaches Text.rich '
+      '(a future scaler-dependent span must restore scaler-based invalidation deliberately)',
+      (tester) async {
+        final parser = _CountingParser();
+
+        await tester.pumpWidget(
+          _host(_renderer(parser), mediaQueryScaler: TextScaler.noScaling),
+        );
+        await tester.pumpWidget(
+          _host(_renderer(parser), mediaQueryScaler: const TextScaler.linear(2)),
+        );
+
+        expect(parser.parseCount, 1);
+        expect(_builtScaler(tester), const TextScaler.linear(2));
+      },
+    );
 
     testWidgets('the default thematic-break rule follows an ambient color change', (
       tester,

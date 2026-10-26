@@ -103,9 +103,12 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
   TextfStyleResolver? _cachedResolver;
 
   // Cached dependencies to detect inherited changes. No design-system theme is
-  // read: built-in defaults derive from the effective root style alone.
+  // read: built-in defaults derive from the effective root style alone. The text
+  // scaler is no cache key either: no span depends on it (scripts and links render
+  // with TextScaler.noScaling, heading sizes derive from the effective root style),
+  // and build() still passes the effective scaler to Text.rich. A future
+  // scaler-dependent span must restore scaler-based invalidation deliberately.
   TextfOptionsData? _lastOptions;
-  TextScaler? _lastMediaQueryScaler;
 
   /// The effective root style the cached spans were parsed with.
   ///
@@ -138,23 +141,19 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
     super.didChangeDependencies();
 
     final options = TextfOptions.maybeOf(context);
-    final mediaQueryScaler = MediaQuery.textScalerOf(context);
 
     // The cached resolver is current when it exists and was built from equal
     // options (O(1) via TextfOptionsData's overridden == operator).
     final bool resolverCurrent = _cachedResolver != null && _lastOptions == options;
-
-    final bool scalerMatch = _lastMediaQueryScaler == mediaQueryScaler;
 
     // Covers DefaultTextStyle and MediaQuery.boldTextOf — and with them the
     // palette the built-in colors derive from.
     final bool effectiveStyleChanged = _refreshEffectiveRootStyle();
 
     // If any inherited inputs to the parser have changed, clear the cache.
-    if (!resolverCurrent || !scalerMatch || effectiveStyleChanged) {
+    if (!resolverCurrent || effectiveStyleChanged) {
       _cachedSpans = null;
       _lastOptions = options;
-      _lastMediaQueryScaler = mediaQueryScaler;
 
       // Rebuild the resolver only when the options change.
       if (!resolverCurrent) {
@@ -175,7 +174,6 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
     // Changing layout properties like maxLines or textAlign will NOT trigger a re-parse!
     if (effectiveStyleChanged ||
         widget.data != oldWidget.data ||
-        widget.textScaler != oldWidget.textScaler ||
         !mapEquals(widget.placeholders, oldWidget.placeholders)) {
       _cachedSpans = null;
     }
