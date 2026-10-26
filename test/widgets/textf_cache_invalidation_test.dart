@@ -6,7 +6,6 @@ import 'package:flutter/material.dart' show Theme, ThemeData;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
-import 'package:textf/src/styling/textf_palette.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/internal/textf_renderer.dart';
 import 'package:textf/textf.dart';
@@ -32,23 +31,12 @@ class _CountingParser extends TextfParser {
   @override
   List<InlineSpan> parse(
     String text,
-    BuildContext context,
-    TextStyle baseStyle, {
-    TextScaler? textScaler,
+    TextStyle baseStyle,
+    TextfStyleResolver styleResolver, {
     Map<String, InlineSpan>? placeholders,
-    TextfStyleResolver? styleResolver,
-    TextfPalette? palette,
   }) {
     parseCount++;
-    return super.parse(
-      text,
-      context,
-      baseStyle,
-      textScaler: textScaler,
-      placeholders: placeholders,
-      styleResolver: styleResolver,
-      palette: palette,
-    );
+    return super.parse(text, baseStyle, styleResolver, placeholders: placeholders);
   }
 }
 

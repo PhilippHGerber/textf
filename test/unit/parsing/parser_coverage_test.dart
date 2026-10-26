@@ -3,52 +3,29 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
-
-import '../../widgets/pump_textf_widget.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
 
 void main() {
   group('TextfParser coverage', () {
     late TextfParser parser;
+    final resolver = TextfStyleResolver.withState(options: null);
 
     setUp(() {
       TextfParser.clearCache();
       parser = TextfParser();
     });
 
-    testWidgets('long text bypasses cache', (tester) async {
+    test('long text bypasses cache', () {
       // Text longer than maxCacheKeyLength (1000) should be parsed without caching
       final longText = '**bold** ${'a' * 1001}';
-      late List<InlineSpan> result;
 
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: Builder(
-            builder: (context) {
-              result = parser.parse(longText, context, const TextStyle());
-              return const SizedBox();
-            },
-          ),
-        ),
-      );
+      final result = parser.parse(longText, const TextStyle(), resolver);
 
       expect(result, isNotEmpty);
     });
 
-    testWidgets('PlaceholderToken renders as plain text when no placeholders provided', (
-      tester,
-    ) async {
-      late List<InlineSpan> result;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: Builder(
-            builder: (context) {
-              result = parser.parse('{icon}', context, const TextStyle());
-              return const SizedBox();
-            },
-          ),
-        ),
-      );
+    test('PlaceholderToken renders as plain text when no placeholders provided', () {
+      final result = parser.parse('{icon}', const TextStyle(), resolver);
 
       expect(result, isNotEmpty);
       // Without placeholders map, {icon} should be rendered as plain text
@@ -56,20 +33,9 @@ void main() {
       expect(span.text, contains('icon'));
     });
 
-    testWidgets('broken link separator renders as plain text', (tester) async {
-      late List<InlineSpan> result;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: Builder(
-            builder: (context) {
-              // A standalone [ without matching ](url) should render as plain text
-              result = parser.parse('[broken', context, const TextStyle());
-              return const SizedBox();
-            },
-          ),
-        ),
-      );
+    test('broken link separator renders as plain text', () {
+      // A standalone [ without matching ](url) should render as plain text
+      final result = parser.parse('[broken', const TextStyle(), resolver);
 
       expect(result, isNotEmpty);
       final text = (result.first as TextSpan).text;

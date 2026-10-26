@@ -333,31 +333,17 @@ void main() {
       parser = TextfParser();
     });
 
-    testWidgets('link tokens that fail validation render as plain text', (tester) async {
-      // This input has [ which triggers link parsing, but if the link handler
-      // fails, tokens should fall through to plain text
-      late List<InlineSpan> result;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: Builder(
-            builder: (context) {
-              // [text](url) is a valid link - it will be handled by the parser's link handling
-              // To test fallthrough, we need tokens that exist but aren't handled
-              // However, as analyzed, LinkSeparator/LinkEnd are always produced
-              // as part of a complete link. These branches are exhaustive-switch
-              // dead code.
-              //
-              // Instead, test that the parser handles complex nested links
-              result = parser.parse(
-                '[outer [inner](url1)](url2)',
-                context,
-                const TextStyle(),
-              );
-              return const SizedBox();
-            },
-          ),
-        ),
+    test('link tokens that fail validation render as plain text', () {
+      // [text](url) is a valid link - it will be handled by the parser's link handling.
+      // To test fallthrough, we need tokens that exist but aren't handled. However,
+      // LinkSeparator/LinkEnd are always produced as part of a complete link, so these
+      // branches are exhaustive-switch dead code.
+      //
+      // Instead, test that the parser handles complex nested links.
+      final result = parser.parse(
+        '[outer [inner](url1)](url2)',
+        const TextStyle(),
+        TextfStyleResolver.withState(options: null),
       );
 
       expect(result, isNotEmpty);

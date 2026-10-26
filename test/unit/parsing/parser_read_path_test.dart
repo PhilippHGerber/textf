@@ -1,45 +1,31 @@
-// ignore_for_file: avoid-late-keyword, no-magic-number
+// ignore_for_file: no-magic-number
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
-import 'package:textf/src/widgets/textf_options.dart';
-
-import '../../widgets/pump_textf_widget.dart';
+import 'package:textf/src/widgets/textf_options_data.dart';
 
 // Read-path behavior observed through `TextfParser.parse()`: the palette, link
 // handling and placeholder handling of a parse run.
 
 const Color _black = Color(0xFF000000);
 const Color _white = Color(0xFFFFFFFF);
+const Color _red = Color(0xFFFF0000);
 
 void main() {
-  late BuildContext context;
-
-  /// Pumps a host (optionally under [options]) and captures its context.
-  Future<void> pumpHost(WidgetTester tester, {TextfOptions Function(Widget)? options}) async {
-    final Widget capture = Builder(
-      builder: (ctx) {
-        context = ctx;
-        return const SizedBox();
-      },
-    );
-    await tester.pumpWidget(neutralTestApp(child: options?.call(capture) ?? capture));
-  }
-
   List<InlineSpan> parse(
     String text, {
     TextStyle baseStyle = const TextStyle(color: _black),
     Map<String, InlineSpan>? placeholders,
+    TextfOptionsData? options,
   }) {
     return TextfParser().parse(
       text,
-      context,
       baseStyle,
+      TextfStyleResolver.withState(options: options),
       placeholders: placeholders,
-      styleResolver: TextfStyleResolver(context),
     );
   }
 
@@ -51,38 +37,25 @@ void main() {
   }
 
   group('palette', () {
-    testWidgets('derives from the effective root style (light text: dark surface)', (
-      tester,
-    ) async {
-      await pumpHost(tester);
-
+    test('derives from the effective root style (light text: dark surface)', () {
       final spans = parse('`c`', baseStyle: const TextStyle(color: _white));
 
       final code = spans.single as TextSpan;
       expect(code.style?.backgroundColor, _white.withValues(alpha: 0.15));
     });
 
-    testWidgets('derives from the effective root style (dark text: light surface)', (
-      tester,
-    ) async {
-      await pumpHost(tester);
-
+    test('derives from the effective root style (dark text: light surface)', () {
       final spans = parse('`c`');
 
       final code = spans.single as TextSpan;
       expect(code.style?.backgroundColor, _black.withValues(alpha: 0.05));
     });
 
-    testWidgets('link text inherits the enclosing palette, not the link color', (tester) async {
-      await pumpHost(
-        tester,
-        options: (child) => TextfOptions(
-          linkStyle: const TextStyle(color: _white),
-          child: child,
-        ),
+    test('link text inherits the enclosing palette, not the link color', () {
+      final spans = parse(
+        '[`c`](example.com)',
+        options: const TextfOptionsData(linkStyle: TextStyle(color: _white)),
       );
-
-      final spans = parse('[`c`](example.com)');
 
       final link = linkOf(spans.single);
       final code = link.initialChildrenSpans.single as TextSpan;
@@ -96,9 +69,30 @@ void main() {
   });
 
   group('links', () {
-    testWidgets('an invalid link leaves the surrounding text in one span', (tester) async {
-      await pumpHost(tester);
+    test('nested formatting in a link resolves with the enclosing options', () {
+      final link = linkOf(
+        parse(
+          '[**bold** ==mark==](example.com)',
+          options: const TextfOptionsData(
+            linkStyle: TextStyle(color: _white),
+            boldStyle: TextStyle(color: _red),
+          ),
+        ).single,
+      );
 
+      final bold = link.initialChildrenSpans.first as TextSpan;
+      final mark = link.initialChildrenSpans.last as TextSpan;
+      expect(bold.style?.color, _red, reason: 'the bold style option applies inside the link');
+      final rootMark = parse('==mark==').single as TextSpan;
+      expect(mark.style?.backgroundColor, isNotNull);
+      expect(
+        mark.style?.backgroundColor,
+        rootMark.style?.backgroundColor,
+        reason: 'the highlight tint derives from the black root, not the white link color',
+      );
+    });
+
+    test('an invalid link leaves the surrounding text in one span', () {
       for (final text in ['before [text] after', 'before [text]( after', 'a [b](c d']) {
         final spans = parse(text);
 
@@ -107,11 +101,7 @@ void main() {
       }
     });
 
-    testWidgets('a valid link flushes the preceding text first and emits one widget span', (
-      tester,
-    ) async {
-      await pumpHost(tester);
-
+    test('a valid link flushes the preceding text first and emits one widget span', () {
       final spans = parse('before [link](example.com) after');
 
       expect(spans, hasLength(3));
@@ -124,9 +114,7 @@ void main() {
       expect((spans.last as TextSpan).text, ' after');
     });
 
-    testWidgets('a formatted label renders as child spans', (tester) async {
-      await pumpHost(tester);
-
+    test('a formatted label renders as child spans', () {
       final link = linkOf(parse('[**bold** label](example.com)').single);
 
       expect(link.initialPlainText, isNull);
@@ -137,9 +125,7 @@ void main() {
       );
     });
 
-    testWidgets('escapes are stripped from a plain link label', (tester) async {
-      await pumpHost(tester);
-
+    test('escapes are stripped from a plain link label', () {
       final link = linkOf(parse(r'[a\*b\_c](example.com)').single);
 
       expect(link.initialPlainText, 'a*b_c');
@@ -151,11 +137,16 @@ void main() {
   group('placeholders', () {
     const icon = WidgetSpan(child: SizedBox(width: 10));
 
-    testWidgets('a valid placeholder flushes, takes the current style and keeps its order', (
-      tester,
-    ) async {
-      await pumpHost(tester);
+    test('a placeholder inside link text is substituted', () {
+      final link = linkOf(parse('[{icon} Docs](example.com)', placeholders: {'icon': icon}).single);
 
+      expect(link.initialPlainText, isNull);
+      expect(link.initialChildrenSpans, hasLength(2));
+      expect((link.initialChildrenSpans.first as TextSpan).children, [icon]);
+      expect((link.initialChildrenSpans.last as TextSpan).text, ' Docs');
+    });
+
+    test('a valid placeholder flushes, takes the current style and keeps its order', () {
       final spans = parse('**a {icon} b**', placeholders: {'icon': icon});
 
       expect(spans, hasLength(3));
@@ -169,11 +160,7 @@ void main() {
       expect(after.text, ' b');
     });
 
-    testWidgets('an unknown placeholder renders as literal text without flushing', (
-      tester,
-    ) async {
-      await pumpHost(tester);
-
+    test('an unknown placeholder renders as literal text without flushing', () {
       final spans = parse('Hello {missing} world', placeholders: {'icon': icon});
 
       expect(spans, hasLength(1));

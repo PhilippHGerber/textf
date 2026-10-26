@@ -4,72 +4,24 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
-import 'package:textf/src/widgets/textf_options.dart';
-
-import '../widgets/pump_textf_widget.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
+import 'package:textf/src/widgets/textf_options_data.dart';
 
 void main() {
   group('Script (Superscript/Subscript) Parsing Tests', () {
     late TextfParser parser;
-    late BuildContext mockContext;
+    final resolver = TextfStyleResolver.withState(options: null);
 
     setUp(() {
       parser = TextfParser();
     });
 
-    // Helper to build a context with optional TextfOptions
-    Future<void> pumpTestApp(
-      WidgetTester tester, {
-      TextfOptions? options,
-      TextStyle? defaultStyle,
-    }) async {
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: Builder(
-            builder: (context) {
-              mockContext = context;
-              // Capture context inside options if provided
-              if (options != null) {
-                return TextfOptions(
-                  // Pass through all properties from the test options
-                  boldStyle: options.boldStyle,
-                  italicStyle: options.italicStyle,
-                  superscriptStyle: options.superscriptStyle,
-                  subscriptStyle: options.subscriptStyle,
-                  child: Builder(
-                    builder: (innerContext) {
-                      mockContext = innerContext;
-                      return const SizedBox();
-                    },
-                  ),
-                );
-              }
-              // Capture context with specific DefaultTextStyle if provided
-              if (defaultStyle != null) {
-                return DefaultTextStyle(
-                  style: defaultStyle,
-                  child: Builder(
-                    builder: (innerContext) {
-                      mockContext = innerContext;
-                      return const SizedBox();
-                    },
-                  ),
-                );
-              }
-              return const SizedBox();
-            },
-          ),
-        ),
-      );
-    }
-
     group('Superscript (^text^)', () {
-      testWidgets('renders using Padding (Bottom) + Alignment.middle', (tester) async {
-        await pumpTestApp(tester);
+      test('renders using Padding (Bottom) + Alignment.middle', () {
         // Use a known font size to verify padding calculation exists
         const baseStyle = TextStyle(fontSize: 20, color: Color(0xFF000000));
 
-        final spans = parser.parse('^super^', mockContext, baseStyle);
+        final spans = parser.parse('^super^', baseStyle, resolver);
 
         // 1. Check structure
         expect(spans.length, 1);
@@ -107,11 +59,10 @@ void main() {
         expect(innerText?.style?.fontSize, closeTo(expectedFontSize, 0.01));
       });
 
-      testWidgets('integrates with surrounding text', (tester) async {
-        await pumpTestApp(tester);
+      test('integrates with surrounding text', () {
         const baseStyle = TextStyle(fontSize: 16);
 
-        final spans = parser.parse('E = mc^2^', mockContext, baseStyle);
+        final spans = parser.parse('E = mc^2^', baseStyle, resolver);
 
         expect(spans.length, 2);
 
@@ -129,11 +80,10 @@ void main() {
     });
 
     group('Subscript (~text~)', () {
-      testWidgets('renders using Padding (Top) + Alignment.middle', (tester) async {
-        await pumpTestApp(tester);
+      test('renders using Padding (Top) + Alignment.middle', () {
         const baseStyle = TextStyle(fontSize: 20, color: Color(0xFF000000));
 
-        final spans = parser.parse('~sub~', mockContext, baseStyle);
+        final spans = parser.parse('~sub~', baseStyle, resolver);
 
         expect(spans.first, isA<WidgetSpan>());
         final widgetSpan = spans.first as WidgetSpan;
@@ -159,11 +109,10 @@ void main() {
         expect(textSpan?.style?.fontSize, closeTo(expectedFontSize, 0.01));
       });
 
-      testWidgets('H~2~O example renders correctly', (tester) async {
-        await pumpTestApp(tester);
+      test('H~2~O example renders correctly', () {
         const baseStyle = TextStyle(fontSize: 16);
 
-        final spans = parser.parse('H~2~O', mockContext, baseStyle);
+        final spans = parser.parse('H~2~O', baseStyle, resolver);
 
         // Expect 3 spans: H, 2, O
         expect(spans.length, 3);
@@ -174,11 +123,10 @@ void main() {
     });
 
     group('Complex & Nested Formatting', () {
-      testWidgets('Bold inside Superscript (^**bold**^)', (tester) async {
-        await pumpTestApp(tester);
+      test('Bold inside Superscript (^**bold**^)', () {
         const baseStyle = TextStyle(fontSize: 16);
 
-        final spans = parser.parse('^**bold**^', mockContext, baseStyle);
+        final spans = parser.parse('^**bold**^', baseStyle, resolver);
 
         expect(spans.first, isA<WidgetSpan>());
         final widgetSpan = spans.first as WidgetSpan;
@@ -195,12 +143,11 @@ void main() {
         expect(innerText?.style?.fontSize, closeTo(DefaultStyles.scriptFontSizeFactor * 16, 0.01));
       });
 
-      testWidgets('Superscript inside Bold (**^super^**)', (tester) async {
-        await pumpTestApp(tester);
+      test('Superscript inside Bold (**^super^**)', () {
         const baseStyle = TextStyle(fontSize: 16);
 
         // Input: **^super^**
-        final spans = parser.parse('**^super^**', mockContext, baseStyle);
+        final spans = parser.parse('**^super^**', baseStyle, resolver);
 
         expect(spans.first, isA<WidgetSpan>());
         final widgetSpan = spans.first as WidgetSpan;
@@ -215,10 +162,8 @@ void main() {
         );
       });
 
-      testWidgets('Adjacent Superscript and Subscript', (tester) async {
-        await pumpTestApp(tester);
-
-        final validSpans = parser.parse('^up^~down~', mockContext, const TextStyle());
+      test('Adjacent Superscript and Subscript', () {
+        final validSpans = parser.parse('^up^~down~', const TextStyle(), resolver);
         expect(validSpans.length, 2);
 
         // 1. Up (Padding Bottom)
@@ -234,20 +179,14 @@ void main() {
     });
 
     group('Customization via TextfOptions', () {
-      testWidgets('Superscript uses custom style from options', (tester) async {
+      test('Superscript uses custom style from options', () {
         const customStyle = TextStyle(color: Color(0xFFF44336));
-        await pumpTestApp(
-          tester,
-          options: const TextfOptions(
-            superscriptStyle: customStyle,
-            child: SizedBox(),
-          ),
-        );
-
         final spans = parser.parse(
           '^super^',
-          mockContext,
           const TextStyle(color: Color(0xFF000000)),
+          TextfStyleResolver.withState(
+            options: const TextfOptionsData(superscriptStyle: customStyle),
+          ),
         );
 
         final widgetSpan = spans.first as WidgetSpan;

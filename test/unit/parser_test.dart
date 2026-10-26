@@ -3,93 +3,64 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
-import 'package:textf/textf.dart';
-
-import '../widgets/pump_textf_widget.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
+import 'package:textf/src/widgets/textf_options_data.dart';
 
 void main() {
   group('TextfParser Tests', () {
     // ignore: avoid-late-keyword
     late TextfParser parser;
-    // ignore: avoid-late-keyword
-    late BuildContext mockContext;
+    final resolver = TextfStyleResolver.withState(options: null);
 
     setUp(() {
       parser = TextfParser();
-      // Use a real BuildContext in a widget test
     });
 
-    // Helper to create a test BuildContext
-    Widget buildTestWidget(
-      WidgetTester tester,
-      Widget Function(BuildContext) builder,
-    ) {
-      return neutralTestApp(
-        child: Builder(
-          builder: (context) {
-            mockContext = context;
-            return builder(context);
-          },
-        ),
-      );
-    }
-
     group('Basic Parsing', () {
-      testWidgets('empty text returns empty spans list', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse('', mockContext, const TextStyle());
+      test('empty text returns empty spans list', () {
+        final spans = parser.parse('', const TextStyle(), resolver);
         expect(spans, isEmpty);
       });
 
-      testWidgets('plain text returns single TextSpan', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse('plain text', mockContext, const TextStyle());
+      test('plain text returns single TextSpan', () {
+        final spans = parser.parse('plain text', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect(spans.first, isA<TextSpan>());
         expect((spans.first as TextSpan).text, 'plain text');
       });
 
-      testWidgets('text with no actual formatting is handled efficiently', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse(
-          'text with * single asterisk',
-          mockContext,
-          const TextStyle(),
-        );
+      test('text with no actual formatting is handled efficiently', () {
+        final spans = parser.parse('text with * single asterisk', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect((spans.first as TextSpan).text, 'text with * single asterisk');
       });
     });
 
     group('Style Application', () {
-      testWidgets('bold text applies FontWeight.bold', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse('**bold**', mockContext, const TextStyle());
+      test('bold text applies FontWeight.bold', () {
+        final spans = parser.parse('**bold**', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
         expect((spans.first as TextSpan).text, 'bold');
       });
 
-      testWidgets('italic text applies FontStyle.italic', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse('*italic*', mockContext, const TextStyle());
+      test('italic text applies FontStyle.italic', () {
+        final spans = parser.parse('*italic*', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect((spans.first as TextSpan).style?.fontStyle, FontStyle.italic);
         expect((spans.first as TextSpan).text, 'italic');
       });
 
-      testWidgets('bold-italic text applies both styles', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse('***bold-italic***', mockContext, const TextStyle());
+      test('bold-italic text applies both styles', () {
+        final spans = parser.parse('***bold-italic***', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
         expect((spans.first as TextSpan).style?.fontStyle, FontStyle.italic);
         expect((spans.first as TextSpan).text, 'bold-italic');
       });
 
-      testWidgets('strikethrough text applies line-through decoration', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse('~~strikethrough~~', mockContext, const TextStyle());
+      test('strikethrough text applies line-through decoration', () {
+        final spans = parser.parse('~~strikethrough~~', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect(
           (spans.first as TextSpan).style?.decoration,
@@ -98,24 +69,10 @@ void main() {
         expect((spans.first as TextSpan).text, 'strikethrough');
       });
 
-      testWidgets('code text applies monospace and background', (tester) async {
-        // ignore: avoid-late-keyword
-        late BuildContext mockContext;
-
-        // Setup context
-        await tester.pumpWidget(
-          neutralTestApp(
-            child: Builder(
-              builder: (context) {
-                mockContext = context;
-                return Container();
-              },
-            ),
-          ),
-        );
+      test('code text applies monospace and background', () {
         final parser = TextfParser();
 
-        final spans = parser.parse('`code`', mockContext, const TextStyle());
+        final spans = parser.parse('`code`', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect((spans.first as TextSpan).style?.fontFamily, 'monospace');
         expect(
@@ -132,21 +89,17 @@ void main() {
         );
       });
 
-      testWidgets('base style is preserved and extended', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('base style is preserved and extended', () {
         const baseStyle = TextStyle(fontSize: 20, color: Color(0xFF2196F3));
-        final spans = parser.parse('**bold**', mockContext, baseStyle);
+        final spans = parser.parse('**bold**', baseStyle, resolver);
         expect((spans.first as TextSpan).style?.fontSize, 20);
         expect((spans.first as TextSpan).style?.color, const Color(0xFF2196F3));
         expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
       });
 
-      testWidgets('superscript text applies WidgetSpan with bottom padding (visually up)', (
-        tester,
-      ) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('superscript text applies WidgetSpan with bottom padding (visually up)', () {
         // Provide a font size so offset calculation is non-zero
-        final spans = parser.parse('^super^', mockContext, const TextStyle(fontSize: 20));
+        final spans = parser.parse('^super^', const TextStyle(fontSize: 20), resolver);
 
         expect(spans.length, 1);
         expect(spans.first, isA<WidgetSpan>());
@@ -168,12 +121,9 @@ void main() {
         expect(innerText.text, 'super');
       });
 
-      testWidgets('subscript text applies WidgetSpan with top padding (visually down)', (
-        tester,
-      ) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('subscript text applies WidgetSpan with top padding (visually down)', () {
         // Provide a font size so offset calculation is non-zero
-        final spans = parser.parse('~sub~', mockContext, const TextStyle(fontSize: 20));
+        final spans = parser.parse('~sub~', const TextStyle(fontSize: 20), resolver);
 
         expect(spans.length, 1);
         expect(spans.first, isA<WidgetSpan>());
@@ -195,15 +145,14 @@ void main() {
         expect(innerText.text, 'sub');
       });
 
-      testWidgets('understcore variants apply correct styles', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final boldSpans = parser.parse('__bold__', mockContext, const TextStyle());
+      test('understcore variants apply correct styles', () {
+        final boldSpans = parser.parse('__bold__', const TextStyle(), resolver);
         expect((boldSpans.first as TextSpan).style?.fontWeight, FontWeight.bold);
 
-        final italicSpans = parser.parse('_italic_', mockContext, const TextStyle());
+        final italicSpans = parser.parse('_italic_', const TextStyle(), resolver);
         expect((italicSpans.first as TextSpan).style?.fontStyle, FontStyle.italic);
 
-        final boldItalicSpans = parser.parse('___both___', mockContext, const TextStyle());
+        final boldItalicSpans = parser.parse('___both___', const TextStyle(), resolver);
         expect(
           (boldItalicSpans.first as TextSpan).style?.fontWeight,
           FontWeight.bold,
@@ -216,13 +165,8 @@ void main() {
     });
 
     group('Nesting Tests', () {
-      testWidgets('nested formatting with different markers works', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse(
-          '**bold with _italic_ inside**',
-          mockContext,
-          const TextStyle(),
-        );
+      test('nested formatting with different markers works', () {
+        final spans = parser.parse('**bold with _italic_ inside**', const TextStyle(), resolver);
 
         expect(spans.length, 3);
         expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
@@ -236,26 +180,20 @@ void main() {
         expect((spans[2] as TextSpan).text, ' inside');
       });
 
-      testWidgets('nested formatting with same markers handles correctly', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse(
-          '**bold with *italic* inside**',
-          mockContext,
-          const TextStyle(),
-        );
+      test('nested formatting with same markers handles correctly', () {
+        final spans = parser.parse('**bold with *italic* inside**', const TextStyle(), resolver);
 
         // The parser should handle this specific case gracefully
         // We verify it doesn't crash and produces reasonable output
         expect(spans.isNotEmpty, true);
       });
 
-      testWidgets('exceeding maximum nesting depth treats as text', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('exceeding maximum nesting depth treats as text', () {
         // 3 levels of nesting (exceeds default maxDepth of 2)
         final spans = parser.parse(
           '**bold _italic ~~strike~~ text_**',
-          mockContext,
           const TextStyle(),
+          resolver,
         );
 
         // Verify that the third level is not applied
@@ -269,23 +207,17 @@ void main() {
         expect(hasStrikethrough, false);
       });
 
-      testWidgets('different nesting combinations parse correctly', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-
+      test('different nesting combinations parse correctly', () {
         // Bold with code
-        final boldWithCode = parser.parse(
-          '**bold with `code`**',
-          mockContext,
-          const TextStyle(),
-        );
+        final boldWithCode = parser.parse('**bold with `code`**', const TextStyle(), resolver);
         expect(boldWithCode.length, 2);
         expect((boldWithCode[1] as TextSpan).style?.fontFamily, 'monospace');
 
         // Italic with strike
         final italicWithStrike = parser.parse(
           '*italic with ~~strike~~*',
-          mockContext,
           const TextStyle(),
+          resolver,
         );
         expect(italicWithStrike.length, 2);
         expect(
@@ -296,40 +228,28 @@ void main() {
     });
 
     group('Error Handling', () {
-      testWidgets('unpaired opening marker treated as text', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse('**bold', mockContext, const TextStyle());
+      test('unpaired opening marker treated as text', () {
+        final spans = parser.parse('**bold', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect((spans.first as TextSpan).text, '**bold');
       });
 
-      testWidgets('unpaired closing marker treated as text', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse('bold**', mockContext, const TextStyle());
+      test('unpaired closing marker treated as text', () {
+        final spans = parser.parse('bold**', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect((spans.first as TextSpan).text, 'bold**');
       });
 
-      testWidgets('improperly nested tags handled gracefully', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('improperly nested tags handled gracefully', () {
         // opening bold, opening italic, closing bold, closing italic
-        final spans = parser.parse(
-          '**bold *italic** text*',
-          mockContext,
-          const TextStyle(),
-        );
+        final spans = parser.parse('**bold *italic** text*', const TextStyle(), resolver);
 
         // The result should not crash and should make a reasonable attempt
         expect(spans.isNotEmpty, true);
       });
 
-      testWidgets('overlapping tags handled correctly', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse(
-          '**bold *both** italic*',
-          mockContext,
-          const TextStyle(),
-        );
+      test('overlapping tags handled correctly', () {
+        final spans = parser.parse('**bold *both** italic*', const TextStyle(), resolver);
 
         // Should not crash and handle gracefully
         expect(spans.isNotEmpty, true);
@@ -337,14 +257,13 @@ void main() {
     });
 
     group('Cache Tests', () {
-      testWidgets('different styles use different cache entries', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('different styles use different cache entries', () {
         const text = 'Cache **test**';
         const style1 = TextStyle(fontSize: 16);
         const style2 = TextStyle(fontSize: 18);
 
-        final firstParse = parser.parse(text, mockContext, style1);
-        final secondParse = parser.parse(text, mockContext, style2);
+        final firstParse = parser.parse(text, style1, resolver);
+        final secondParse = parser.parse(text, style2, resolver);
 
         // Verify different instances returned
         expect(identical(firstParse, secondParse), false);
@@ -352,23 +271,17 @@ void main() {
     });
 
     group('Edge Cases', () {
-      testWidgets('very long text parses correctly', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('very long text parses correctly', () {
         final longText = '${'A' * 1000}**bold**${'B' * 1000}';
-        final spans = parser.parse(longText, mockContext, const TextStyle());
+        final spans = parser.parse(longText, const TextStyle(), resolver);
         expect(spans.length, 3);
         expect((spans.first as TextSpan).text?.length, 1000);
         expect((spans[1] as TextSpan).style?.fontWeight, FontWeight.bold);
         expect((spans[2] as TextSpan).text?.length, 1000);
       });
 
-      testWidgets('Unicode characters parse correctly', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse(
-          '**你好世界** *안녕하세요* ~~Привет~~',
-          mockContext,
-          const TextStyle(),
-        );
+      test('Unicode characters parse correctly', () {
+        final spans = parser.parse('**你好世界** *안녕하세요* ~~Привет~~', const TextStyle(), resolver);
         expect(spans.length, 5); // 3 formatted spans + 2 spaces
         expect((spans.first as TextSpan).text, '你好世界');
         expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
@@ -381,33 +294,26 @@ void main() {
         );
       });
 
-      testWidgets('emoji characters parse correctly', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse('**😀** *🌍* ~~🚫~~', mockContext, const TextStyle());
+      test('emoji characters parse correctly', () {
+        final spans = parser.parse('**😀** *🌍* ~~🚫~~', const TextStyle(), resolver);
         expect(spans.length, 5); // 3 formatted spans + 2 spaces
         expect((spans.first as TextSpan).text, '😀');
         expect((spans.first as TextSpan).style?.fontWeight, FontWeight.bold);
       });
 
-      testWidgets('escaped characters parse correctly', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-        final spans = parser.parse(
-          r'This is \*not italic\*',
-          mockContext,
-          const TextStyle(),
-        );
+      test('escaped characters parse correctly', () {
+        final spans = parser.parse(r'This is \*not italic\*', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect((spans.first as TextSpan).text, 'This is *not italic*');
       });
     });
 
     group('Mixed Formatting', () {
-      testWidgets('mixed formatting applies correct styles', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('mixed formatting applies correct styles', () {
         final spans = parser.parse(
           '**Bold** and *italic* and ~~strike~~ and `code`',
-          mockContext,
           const TextStyle(),
+          resolver,
         );
 
         expect(
@@ -425,10 +331,9 @@ void main() {
         expect((spans[6] as TextSpan).style?.fontFamily, 'monospace');
       });
 
-      testWidgets('complex formatting combinations work', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('complex formatting combinations work', () {
         const complex = 'Normal **bold _italic bold_ back to bold** normal *italic* end';
-        final spans = parser.parse(complex, mockContext, const TextStyle());
+        final spans = parser.parse(complex, const TextStyle(), resolver);
 
         // Manually verify a few key spans
         bool hasBoldItalic = false;
@@ -455,24 +360,13 @@ void main() {
       });
     });
     group('Link Alignment', () {
-      testWidgets('linkAlignment option works', (tester) async {
-        await tester.pumpWidget(
-          neutralTestApp(
-            child: TextfOptions(
-              linkAlignment: PlaceholderAlignment.middle,
-              child: Builder(
-                builder: (context) {
-                  mockContext = context;
-                  return const SizedBox.shrink();
-                },
-              ),
-            ),
-          ),
-        );
+      test('linkAlignment option works', () {
         final spans = parser.parse(
           '[link](url)',
-          mockContext,
           const TextStyle(),
+          TextfStyleResolver.withState(
+            options: const TextfOptionsData(linkAlignment: PlaceholderAlignment.middle),
+          ),
         );
 
         expect(spans, hasLength(1));

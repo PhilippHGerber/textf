@@ -3,38 +3,21 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
-
-import '../widgets/pump_textf_widget.dart';
 
 void main() {
   group('Parser Placeholder Tests', () {
     // ignore: avoid-late-keyword
     late TextfParser parser;
-    // ignore: avoid-late-keyword
-    late BuildContext mockContext;
+    final resolver = TextfStyleResolver.withState(options: null);
 
     setUp(() {
       parser = TextfParser();
     });
 
-    Widget buildTestWidget(
-      WidgetTester tester,
-      Widget Function(BuildContext) builder,
-    ) {
-      return neutralTestApp(
-        child: Builder(
-          builder: (context) {
-            mockContext = context;
-            return builder(context);
-          },
-        ),
-      );
-    }
-
     group('Basic Placeholder Insertion', () {
-      testWidgets('inserts WidgetSpan at {key}', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('inserts WidgetSpan at {key}', () {
         const baseStyle = TextStyle();
         final placeholders = {
           'icon': const WidgetSpan(child: SizedBox.square(dimension: 24)),
@@ -42,8 +25,8 @@ void main() {
 
         final result = parser.parse(
           'Prefix {icon} Suffix',
-          mockContext,
           baseStyle,
+          resolver,
           placeholders: placeholders,
         );
 
@@ -58,8 +41,7 @@ void main() {
         expect((result[2] as TextSpan).text, ' Suffix');
       });
 
-      testWidgets('inserts TextSpan at {key} and preserves style', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('inserts TextSpan at {key} and preserves style', () {
         const baseStyle = TextStyle(color: Color(0xFF000000));
         final placeholders = {
           'user': const TextSpan(
@@ -70,8 +52,8 @@ void main() {
 
         final result = parser.parse(
           'Hello {user}',
-          mockContext,
           baseStyle,
+          resolver,
           placeholders: placeholders,
         );
 
@@ -87,8 +69,7 @@ void main() {
         }
       });
 
-      testWidgets('supports numeric keys via Map strings', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('supports numeric keys via Map strings', () {
         // Migration case: user changes List to Map but keeps "0" as key
         final placeholders = {
           '0': const TextSpan(text: 'Zero'),
@@ -96,8 +77,8 @@ void main() {
 
         final result = parser.parse(
           'Index {0}',
-          mockContext,
           const TextStyle(),
+          resolver,
           placeholders: placeholders,
         );
 
@@ -108,16 +89,15 @@ void main() {
         if (children != null) expect((children.first as TextSpan).text, 'Zero');
       });
 
-      testWidgets('supports alphanumeric keys with underscores', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('supports alphanumeric keys with underscores', () {
         final placeholders = {
           'my_icon_1': const TextSpan(text: 'Complex'),
         };
 
         final result = parser.parse(
           'Val: {my_icon_1}',
-          mockContext,
           const TextStyle(),
+          resolver,
           placeholders: placeholders,
         );
 
@@ -130,28 +110,21 @@ void main() {
     });
 
     group('Bounds Checking & Error Handling', () {
-      testWidgets('renders literal {key} if placeholders map is null', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
-
-        final result = parser.parse(
-          'Hello {icon}',
-          mockContext,
-          const TextStyle(),
-        );
+      test('renders literal {key} if placeholders map is null', () {
+        final result = parser.parse('Hello {icon}', const TextStyle(), resolver);
 
         expect(result.length, 1);
         // The parser accumulates "Hello " then "{icon}" into the text buffer
         expect((result.first as TextSpan).text, 'Hello {icon}');
       });
 
-      testWidgets('renders literal {key} if key is missing from map', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('renders literal {key} if key is missing from map', () {
         final placeholders = {'other': const TextSpan(text: 'Other')};
 
         final result = parser.parse(
           'Missing: {missing}',
-          mockContext,
           const TextStyle(),
+          resolver,
           placeholders: placeholders,
         );
 
@@ -159,15 +132,9 @@ void main() {
         expect((result.first as TextSpan).text, 'Missing: {missing}');
       });
 
-      testWidgets('renders literal if malformed inside (handled by tokenizer)', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('renders literal if malformed inside (handled by tokenizer)', () {
         // Tokenizer should treat {a b} (spaces) as text, not placeholder token
-        final result = parser.parse(
-          'Val: {a b}',
-          mockContext,
-          const TextStyle(),
-          placeholders: {},
-        );
+        final result = parser.parse('Val: {a b}', const TextStyle(), resolver, placeholders: {});
 
         expect(result.length, 1);
         expect((result.first as TextSpan).text, 'Val: {a b}');
@@ -175,14 +142,13 @@ void main() {
     });
 
     group('Style Inheritance', () {
-      testWidgets('placeholder inherits surrounding bold style', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('placeholder inherits surrounding bold style', () {
         final placeholders = {'world': const TextSpan(text: 'World')};
 
         final result = parser.parse(
           '**Hello {world}**',
-          mockContext,
           const TextStyle(),
+          resolver,
           placeholders: placeholders,
         );
 
@@ -207,16 +173,15 @@ void main() {
     });
 
     group('Link Integration', () {
-      testWidgets('placeholder works inside link text', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('placeholder works inside link text', () {
         final placeholders = {
           'icon': const WidgetSpan(child: SizedBox.square(dimension: 24)),
         };
 
         final result = parser.parse(
           'Click [{icon} Here](https://url.com)',
-          mockContext,
           const TextStyle(),
+          resolver,
           placeholders: placeholders,
         );
 
@@ -238,14 +203,13 @@ void main() {
     });
 
     group('Escaping', () {
-      testWidgets('escaped brace is treated as text', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('escaped brace is treated as text', () {
         final placeholders = {'0': const TextSpan(text: 'Hidden')};
 
         final result = parser.parse(
           r'Value \{0\}',
-          mockContext,
           const TextStyle(),
+          resolver,
           placeholders: placeholders,
         );
 

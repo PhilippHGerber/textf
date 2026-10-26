@@ -66,50 +66,57 @@ class TextfParser {
   /// 4. Flushes the remaining buffered text and returns the spans.
   ///
   /// - [text]: The input string potentially containing formatting markers.
-  /// - [context]: The current build context, used for the `TextfOptions` lookup when no
-  ///   [styleResolver] is supplied, and by the nested parse of a link's text.
-  /// - [baseStyle]: The base text style to apply to unformatted text segments and as the foundation for styled segments.
-  ///   For a top-level parse this is the *effective root style*.
-  /// - [textScaler]: Unused; no span depends on the text scaler.
+  /// - [baseStyle]: The *effective root style*: the style of unformatted text, the
+  ///   foundation for styled segments, and the source of the parse's [TextfPalette].
+  /// - [styleResolver]: The resolver to style the spans with.
   /// - [placeholders]: Optional map of spans to substitute into placeholders like `{icon}`.
-  /// - [styleResolver]: The resolver to style the spans with. Built from [context] when omitted.
-  /// - [palette]: The [TextfPalette] the built-in color defaults derive from. Omit it for a
-  ///   top-level parse: it is then derived from [baseStyle], the effective root style. Only
-  ///   nested parses (such as a link's text) pass it, forwarding the enclosing parse's
-  ///   palette so that the surface inference is not skewed by the nested segment's own color.
   ///
   /// Returns a list of [InlineSpan] objects representing the styled text.
   List<InlineSpan> parse(
     String text,
-    BuildContext context,
-    TextStyle baseStyle, {
-    TextScaler? textScaler,
+    TextStyle baseStyle,
+    TextfStyleResolver styleResolver, {
     Map<String, InlineSpan>? placeholders,
-    TextfStyleResolver? styleResolver,
-    TextfPalette? palette,
   }) {
-    // Fast path for empty text
-    if (text.isEmpty) {
-      return <InlineSpan>[];
-    }
-
-    // Fast path for plain text without formatting markers
-    // Note: FormattingUtils.hasFormatting checks for *any* potential marker,
-    // including unpaired ones, link syntax characters, or braces.
-    if (!FormattingUtils.hasFormatting(text)) {
-      return <InlineSpan>[TextSpan(text: text, style: baseStyle)];
-    }
-
-    return _ParseRun(
-      source: text,
-      cacheEntry: getCachedTokensAndPairs(text),
-      context: context,
-      baseStyle: baseStyle,
-      resolver: styleResolver ?? TextfStyleResolver(context),
-      palette: palette ?? TextfPalette(baseStyle),
-      placeholders: placeholders,
-    ).run();
+    return _parseWithFastPaths(
+      text,
+      baseStyle,
+      styleResolver,
+      TextfPalette(baseStyle),
+      placeholders,
+    );
   }
+}
+
+/// Parses [text] with the empty-text and plain-text fast paths in front of a
+/// parse run. Shared by the top-level parse and the nested parse of a link's text.
+List<InlineSpan> _parseWithFastPaths(
+  String text,
+  TextStyle baseStyle,
+  TextfStyleResolver resolver,
+  TextfPalette palette,
+  Map<String, InlineSpan>? placeholders,
+) {
+  // Fast path for empty text
+  if (text.isEmpty) {
+    return <InlineSpan>[];
+  }
+
+  // Fast path for plain text without formatting markers
+  // Note: FormattingUtils.hasFormatting checks for *any* potential marker,
+  // including unpaired ones, link syntax characters, or braces.
+  if (!FormattingUtils.hasFormatting(text)) {
+    return <InlineSpan>[TextSpan(text: text, style: baseStyle)];
+  }
+
+  return _ParseRun(
+    source: text,
+    cacheEntry: TextfTokenCache.getTokensAndPairs(text),
+    baseStyle: baseStyle,
+    resolver: resolver,
+    palette: palette,
+    placeholders: placeholders,
+  ).run();
 }
 
 /// The state and handling of one read-path parse.
@@ -122,7 +129,6 @@ class _ParseRun with HeadingRegion {
   new({
     required this._source,
     required TokenCacheEntry cacheEntry,
-    required this._context,
     required this.baseStyle,
     required this._resolver,
     required this.palette,
@@ -133,7 +139,6 @@ class _ParseRun with HeadingRegion {
   final String _source;
   final List<TextfToken> _tokens;
   final Map<int, int> _matchingPairs;
-  final BuildContext _context;
   final TextfStyleResolver _resolver;
   final Map<String, InlineSpan>? _placeholders;
   final List<InlineSpan> _spans = [];
@@ -374,7 +379,7 @@ class _ParseRun with HeadingRegion {
         : (TapGestureRecognizer()..onTap = () => onTap(url, rawLinkText));
 
     // One cache entry decides between plain text and child spans, and supplies the
-    // tokens for stripping escapes. The nested parse hits the same entry.
+    // tokens for stripping escapes. The nested parse run hits the same entry.
     final List<TextfToken> labelTokens = TextfTokenCache.getTokensAndPairs(rawLinkText).tokens;
     // Escapes carry no formatting of their own, so they alone don't need child spans.
     final bool needsChildSpans = labelTokens.any(
@@ -385,13 +390,10 @@ class _ParseRun with HeadingRegion {
       url: url,
       rawDisplayText: rawLinkText,
       initialChildrenSpans: needsChildSpans
-          ? TextfParser().parse(
-              rawLinkText,
-              _context,
-              linkConfig.style,
-              placeholders: _placeholders,
-              palette: palette,
-            )
+          // A nested parse run reuses this run's resolver, palette and placeholders,
+          // so link text needs no second `TextfOptions` lookup and its colors derive
+          // from the effective root style, not from the link color.
+          ? _parseWithFastPaths(rawLinkText, linkConfig.style, _resolver, palette, _placeholders)
           : const <InlineSpan>[],
       initialPlainText: needsChildSpans ? null : _plainLabel(rawLinkText, labelTokens),
       normalStyle: linkConfig.style,

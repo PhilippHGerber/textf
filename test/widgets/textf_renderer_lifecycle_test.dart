@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
-import 'package:textf/src/styling/textf_palette.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/internal/textf_renderer.dart';
 import 'package:textf/textf.dart';
@@ -21,12 +20,9 @@ class SpyTextfParser implements TextfParser {
   @override
   List<InlineSpan> parse(
     String data,
-    BuildContext context,
-    TextStyle? baseStyle, {
-    TextScaler? textScaler,
+    TextStyle baseStyle,
+    TextfStyleResolver styleResolver, {
     Map<String, InlineSpan>? placeholders,
-    TextfStyleResolver? styleResolver,
-    TextfPalette? palette,
   }) {
     parseCallCount++;
     // Return a dummy span to allow the widget to build without errors

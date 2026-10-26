@@ -5,8 +5,10 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
 import 'package:textf/src/widgets/textf_options.dart';
+import 'package:textf/src/widgets/textf_options_data.dart';
 
 import '../widgets/pump_textf_widget.dart';
 
@@ -19,51 +21,22 @@ final Color _codeBackground = const Color(0xFF000000).withValues(alpha: 0.05);
 void main() {
   group('Link Parsing Tests', () {
     late TextfParser parser;
-    late BuildContext mockContext;
+    final resolver = TextfStyleResolver.withState(options: null);
 
     setUp(() {
       parser = TextfParser();
-      // We'll set mockContext in the test widget
     });
 
-    // Helper to create a test BuildContext
-    Widget buildTestWidget(
-      WidgetTester tester,
-      Widget Function(BuildContext) builder,
-    ) {
-      return neutralTestApp(
-        child: Builder(
-          builder: (context) {
-            mockContext = context;
-            return builder(context);
-          },
-        ),
-      );
-    }
-
     group('Basic Link Parsing', () {
-      testWidgets('simple link without formatting', (tester) async {
-        late BuildContext mockContext; // Capture context
-
-        // Setup context
-        await tester.pumpWidget(
-          neutralTestApp(
-            child: Builder(
-              builder: (context) {
-                mockContext = context;
-                return Container();
-              },
-            ),
-          ),
-        );
+      test('simple link without formatting', () {
         const baseStyle = TextStyle();
         final parser = TextfParser();
 
         // Parse
         final spans = parser.parse(
           'Visit [Flutter website](https://flutter.dev)',
-          mockContext,
           baseStyle,
+          resolver,
         );
 
         // Verify overall structure (remains the same)
@@ -136,17 +109,11 @@ void main() {
         // expect(hoverableWidget.tapRecognizer, isNotNull);
       });
 
-      testWidgets('link with URL normalization', (tester) async {
-        // Setup context
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('link with URL normalization', () {
         const baseStyle = TextStyle();
 
         // Parse
-        final spans = parser.parse(
-          'Visit [Google](google.com)', // Input text with non-normalized URL
-          mockContext,
-          baseStyle,
-        );
+        final spans = parser.parse('Visit [Google](google.com)', baseStyle, resolver);
 
         // Verify overall structure
         expect(spans.length, 2, reason: "Should have 2 spans: 'Visit ' and the link");
@@ -182,16 +149,14 @@ void main() {
         expect(hoverableWidget.initialChildrenSpans, isEmpty); // No nested formatting
       });
 
-      testWidgets('multiple links in text', (tester) async {
-        // Setup context
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('multiple links in text', () {
         const baseStyle = TextStyle();
 
         // Parse
         final spans = parser.parse(
           'Visit [Flutter](https://flutter.dev) or [Dart](https://dart.dev)',
-          mockContext,
           baseStyle,
+          resolver,
         );
 
         // Expect 4 spans: "Visit ", first link (WidgetSpan), " or ", second link (WidgetSpan)
@@ -238,14 +203,13 @@ void main() {
     });
 
     group('Formatted Link Text', () {
-      testWidgets('bold text in link', (tester) async {
+      test('bold text in link', () {
         // Setup
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         const baseStyle = TextStyle();
         const text = 'Visit [**Bold Link**](https://example.com)';
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 2);
@@ -297,14 +261,13 @@ void main() {
         );
       });
 
-      testWidgets('italic text in link', (tester) async {
+      test('italic text in link', () {
         // Setup
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         const baseStyle = TextStyle();
         const text = 'Visit [*Italic Link*](https://example.com)';
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 2);
@@ -329,14 +292,13 @@ void main() {
         expect(innerSpan.style?.decoration, hoverableWidget.normalStyle.decoration);
       });
 
-      testWidgets('strikethrough text in link', (tester) async {
+      test('strikethrough text in link', () {
         // Setup
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         const baseStyle = TextStyle();
         const text = 'Visit [~~Strikethrough Link~~](https://example.com)';
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 2);
@@ -365,26 +327,13 @@ void main() {
         expect(innerSpan.style?.color, hoverableWidget.normalStyle.color);
       });
 
-      testWidgets('code text in link', (tester) async {
-        late BuildContext mockContext;
-
-        // Setup context
-        await tester.pumpWidget(
-          neutralTestApp(
-            child: Builder(
-              builder: (context) {
-                mockContext = context;
-                return Container();
-              },
-            ),
-          ),
-        );
+      test('code text in link', () {
         const baseStyle = TextStyle();
         final parser = TextfParser();
         const text = 'Visit [`Code Link`](https://example.com)';
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 2);
@@ -438,14 +387,13 @@ void main() {
     });
 
     group('Mixed Formatting in Link Text', () {
-      testWidgets('multiple formatting styles in link', (tester) async {
+      test('multiple formatting styles in link', () {
         // Setup
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         const baseStyle = TextStyle();
         const text = 'Visit [**Bold** and *italic* text](https://example.com)';
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 2);
@@ -494,14 +442,13 @@ void main() {
         expect(plainSpan2.style?.color, hoverableWidget.normalStyle.color); // Inherited link color
       });
 
-      testWidgets('nested formatting in link text', (tester) async {
+      test('nested formatting in link text', () {
         // Setup
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         const baseStyle = TextStyle();
         const text = 'Visit [**Bold _and italic_**](https://example.com)';
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 2);
@@ -543,9 +490,7 @@ void main() {
     });
 
     group('Style Inheritance', () {
-      testWidgets('link style is properly applied to formatted text from TextfOptions', (
-        tester,
-      ) async {
+      test('link style is properly applied to formatted text from TextfOptions', () {
         // Define styles and options
         const baseStyle = TextStyle(fontSize: 16, color: Color(0xFF000000));
         const optionsLinkStyle = TextStyle(
@@ -558,36 +503,16 @@ void main() {
           decoration: TextDecoration.underline,
         ); // Add another prop to bold
 
-        // Setup widget tree with TextfOptions
-        late BuildContext testContext;
-        await tester.pumpWidget(
-          neutralTestApp(
-            child: Builder(
-              builder: (context) {
-                // Provide base style via DefaultTextStyle for context resolution
-                return DefaultTextStyle(
-                  style: baseStyle,
-                  child: TextfOptions(
-                    linkStyle: optionsLinkStyle,
-                    boldStyle: optionsBoldStyle,
-                    child: Builder(
-                      builder: (innerContext) {
-                        testContext = innerContext; // Capture context with options
-                        return Container();
-                      },
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-
-        // Parse using the captured context
+        // Parse with a resolver built from the options
         final spans = parser.parse(
           'Visit [**Bold Link**](https://example.com)',
-          testContext,
-          baseStyle, // Pass base style explicitly to parser
+          baseStyle,
+          TextfStyleResolver.withState(
+            options: const TextfOptionsData(
+              linkStyle: optionsLinkStyle,
+              boldStyle: optionsBoldStyle,
+            ),
+          ),
         );
 
         // Verify structure
@@ -636,20 +561,7 @@ void main() {
         ); // From options bold (overrides link's decoration:none)
       });
 
-      testWidgets('base style is properly inherited by links and nested formats', (tester) async {
-        late BuildContext mockContext;
-
-        // Setup context
-        await tester.pumpWidget(
-          neutralTestApp(
-            child: Builder(
-              builder: (context) {
-                mockContext = context;
-                return Container();
-              },
-            ),
-          ),
-        );
+      test('base style is properly inherited by links and nested formats', () {
         const baseStyle = TextStyle(
           // Base style is purple
           fontFamily: 'Roboto',
@@ -662,8 +574,8 @@ void main() {
         // Parse with the specific base style
         final spans = parser.parse(
           'Visit [**Bold Link**](https://example.com)',
-          mockContext,
           baseStyle,
+          resolver,
         );
 
         // Verify structure
@@ -710,14 +622,13 @@ void main() {
     });
 
     group('Edge Cases', () {
-      testWidgets('escaped formatting characters in link text', (tester) async {
+      test('escaped formatting characters in link text', () {
         // Setup
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         const baseStyle = TextStyle();
         const text = r'Visit [This is \*not formatted\*](https://example.com)';
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 2);
@@ -743,15 +654,12 @@ void main() {
         );
       });
 
-      testWidgets('strips escape backslashes for all tokenizer escapable characters in link text', (
-        tester,
-      ) async {
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
+      test('strips escape backslashes for all tokenizer escapable characters in link text', () {
         const baseStyle = TextStyle();
         const text =
             r'Visit [\+ \= \^ \# \- \* \_ \~ \` \\ \[ \] \( \) \{ \}](https://example.com)';
 
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
         expect(spans.length, 2);
         final widgetSpan = spans[1] as WidgetSpan;
         final hoverableWidget = widgetSpan.child as HoverableLinkSpan;
@@ -764,14 +672,13 @@ void main() {
         expect(hoverableWidget.initialChildrenSpans, isEmpty);
       });
 
-      testWidgets('Unicode characters in link text', (tester) async {
+      test('Unicode characters in link text', () {
         // Setup
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         const baseStyle = TextStyle();
         const text = 'Visit [**你好世界**](https://example.com)';
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 2);
@@ -793,14 +700,13 @@ void main() {
         expect(innerSpan.style?.color, hoverableWidget.normalStyle.color); // Inherited link color
       });
 
-      testWidgets('empty link text', (tester) async {
+      test('empty link text', () {
         // Setup
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         const baseStyle = TextStyle();
         const text = 'Visit [](https://example.com)';
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 2);
@@ -816,16 +722,15 @@ void main() {
         expect(hoverableWidget.initialChildrenSpans, isEmpty); // No children
       });
 
-      testWidgets('very long link text with formatting', (tester) async {
+      test('very long link text with formatting', () {
         // Added 'with formatting'
         // Setup
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         const baseStyle = TextStyle();
         final longText = 'A' * 1000;
         final text = 'Visit [**$longText**](https://example.com)'; // Make it bold
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 2);
@@ -850,14 +755,13 @@ void main() {
     });
 
     group('Complex Scenarios', () {
-      testWidgets('multiple links with different formatting', (tester) async {
+      test('multiple links with different formatting', () {
         // Setup
-        await tester.pumpWidget(buildTestWidget(tester, (context) => Container()));
         const baseStyle = TextStyle();
         const text = 'Visit [**Bold**](https://bold.com) or [*Italic*](https://italic.com)';
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 4, reason: 'Should have 4 spans total');
@@ -964,26 +868,13 @@ void main() {
         );
       });
 
-      testWidgets('links within formatted text', (tester) async {
-        late BuildContext mockContext;
-
-        // Setup context
-        await tester.pumpWidget(
-          neutralTestApp(
-            child: Builder(
-              builder: (context) {
-                mockContext = context;
-                return Container();
-              },
-            ),
-          ),
-        );
+      test('links within formatted text', () {
         const baseStyle = TextStyle(color: Color(0xFF000000)); // Base style is black
         final parser = TextfParser();
         const text = '**Bold text with [a link](https://example.com) inside**';
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 3);
@@ -1034,26 +925,13 @@ void main() {
         );
       });
 
-      testWidgets('link text with mixed and nested formatting', (tester) async {
-        late BuildContext mockContext;
-
-        // Setup context
-        await tester.pumpWidget(
-          neutralTestApp(
-            child: Builder(
-              builder: (context) {
-                mockContext = context;
-                return Container();
-              },
-            ),
-          ),
-        );
+      test('link text with mixed and nested formatting', () {
         const baseStyle = TextStyle();
         final parser = TextfParser();
         const text = 'Visit [**Bold** *Italic* ~~Strike~~ `Code` **_Both_**](https://example.com)';
 
         // Parse
-        final spans = parser.parse(text, mockContext, baseStyle);
+        final spans = parser.parse(text, baseStyle, resolver);
 
         // Verify structure
         expect(spans.length, 2);

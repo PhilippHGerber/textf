@@ -181,10 +181,11 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
 
   @override
   Widget build(BuildContext context) {
-    // Always set by didChangeDependencies before the first build; the fallback
-    // only satisfies the type system.
+    // Both are always set by didChangeDependencies before the first build; the
+    // fallbacks only satisfy the type system.
     final TextStyle effectiveStyle =
         _lastEffectiveStyle ?? _effectiveRootStyleOf(context, widget.style);
+    final TextfStyleResolver resolver = _cachedResolver ?? TextfStyleResolver(context);
     final effectiveScaler = widget.textScaler ?? MediaQuery.textScalerOf(context);
 
     // Local variable for type promotion
@@ -195,11 +196,9 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
       spans = withLinkReadingOrder(
         widget.parser.parse(
           widget.data,
-          context,
           effectiveStyle,
-          textScaler: effectiveScaler,
+          resolver,
           placeholders: widget.placeholders,
-          styleResolver: _cachedResolver,
         ),
       );
       _cachedSpans = spans;

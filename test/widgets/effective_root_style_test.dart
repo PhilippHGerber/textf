@@ -4,7 +4,6 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/core/default_styles.dart';
 import 'package:textf/src/parsing/textf_parser.dart';
-import 'package:textf/src/styling/textf_palette.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/internal/textf_renderer.dart';
 import 'package:textf/textf.dart';
@@ -22,34 +21,21 @@ const Color _red = Color(0xFFF44336);
 const Color _blue = Color(0xFF2196F3);
 const Color _white = Color(0xFFFFFFFF);
 
-/// Parser that counts parse calls and records the root style and palette it was given.
+/// Parser that counts parse calls and records the root style it was given.
 class _RecordingParser extends TextfParser {
   int parseCount = 0;
   TextStyle? lastBaseStyle;
-  TextfPalette? lastPalette;
 
   @override
   List<InlineSpan> parse(
     String text,
-    BuildContext context,
-    TextStyle baseStyle, {
-    TextScaler? textScaler,
+    TextStyle baseStyle,
+    TextfStyleResolver styleResolver, {
     Map<String, InlineSpan>? placeholders,
-    TextfStyleResolver? styleResolver,
-    TextfPalette? palette,
   }) {
     parseCount++;
     lastBaseStyle = baseStyle;
-    lastPalette = palette;
-    return super.parse(
-      text,
-      context,
-      baseStyle,
-      textScaler: textScaler,
-      placeholders: placeholders,
-      styleResolver: styleResolver,
-      palette: palette,
-    );
+    return super.parse(text, baseStyle, styleResolver, placeholders: placeholders);
   }
 }
 
@@ -309,11 +295,6 @@ void main() {
         fontWeight: FontWeight.bold,
       );
       expect(parser.lastBaseStyle, expected);
-      expect(
-        parser.lastPalette,
-        isNull,
-        reason: 'a top-level parse derives its palette from baseStyle (see parser_read_path_test)',
-      );
     });
   });
 
