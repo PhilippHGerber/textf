@@ -6,7 +6,8 @@ All notable changes to the `textf` package will be documented in this file.
 
 ### Performance
 
-* A link's display text is tokenized once instead of twice: it now goes through the shared token cache, and its nested parse reuses that entry.
+* **Link text is tokenized once:** a link's display text now goes through the shared token cache, and its nested parse reuses that entry instead of tokenizing the text a second time.
+* **Text-scale changes no longer re-parse `Textf`:** changing `Textf.textScaler` or the platform text-scale setting re-lays out the text at the new scale without re-parsing it, since no span depends on the scaler.
 
 ## 2.0.1
 
