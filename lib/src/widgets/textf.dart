@@ -1,9 +1,9 @@
 import 'dart:ui' as ui show TextHeightBehavior;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../parsing/textf_parser.dart';
-import 'internal/textf_diagnostics.dart';
 import 'internal/textf_renderer.dart';
 
 /// A lightweight text widget for simple inline formatting.
@@ -179,26 +179,71 @@ class Textf extends StatelessWidget {
   static final TextfParser _defaultParser = TextfParser();
 
   @override
-  void debugFillProperties(TextfDiagnosticPropertiesBuilder properties) {
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    addTextfDebugProperties(
-      properties: properties,
-      data: data,
-      style: style,
-      textAlign: textAlign,
-      textDirection: textDirection,
-      maxLines: maxLines,
-      overflow: overflow,
-      softWrap: softWrap,
-      textScaler: textScaler,
-      semanticsLabel: semanticsLabel,
-      locale: locale,
-      strutStyle: strutStyle,
-      textWidthBasis: textWidthBasis,
-      textHeightBehavior: textHeightBehavior,
-      selectionColor: selectionColor,
-      placeholders: placeholders,
-    );
+    properties
+      ..add(StringProperty('data', data))
+      ..add(DiagnosticsProperty<TextStyle?>('style', style, defaultValue: null))
+      ..add(EnumProperty<TextAlign?>('textAlign', textAlign, defaultValue: null))
+      ..add(
+        EnumProperty<TextDirection?>(
+          'textDirection',
+          textDirection,
+          defaultValue: null,
+        ),
+      )
+      ..add(IntProperty('maxLines', maxLines, defaultValue: null))
+      ..add(EnumProperty<TextOverflow?>('overflow', overflow, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'softWrap',
+          value: softWrap,
+          ifTrue: 'wrapping at box width',
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextScaler?>(
+          'textScaler',
+          textScaler,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<String?>(
+          'semanticsLabel',
+          semanticsLabel,
+          defaultValue: null,
+        ),
+      )
+      ..add(DiagnosticsProperty<Locale?>('locale', locale, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<StrutStyle?>(
+          'strutStyle',
+          strutStyle,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        EnumProperty<TextWidthBasis?>(
+          'textWidthBasis',
+          textWidthBasis,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<ui.TextHeightBehavior?>(
+          'textHeightBehavior',
+          textHeightBehavior,
+          defaultValue: null,
+        ),
+      )
+      ..add(ColorProperty('selectionColor', selectionColor, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<Map<String, InlineSpan>?>.has(
+          'placeholders',
+          placeholders,
+        ),
+      );
   }
 
   /// Builds the widget by parsing the formatted text into spans and

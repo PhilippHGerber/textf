@@ -1,7 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../core/textf_style_utils.dart';
-import 'internal/textf_options_diagnostics.dart';
 import 'textf_options_data.dart';
 
 /// An internal InheritedWidget that securely passes the O(1) pre-merged data down the tree.
@@ -276,41 +276,138 @@ class TextfOptions extends StatelessWidget {
   }
 
   @override
-  void debugFillProperties(TextfOptionsDiagnosticPropertiesBuilder properties) {
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    addTextfOptionsDebugProperties(
-      properties: properties,
-      onLinkTap: onLinkTap,
-      onLinkHover: onLinkHover,
-      linkMouseCursor: linkMouseCursor,
-      linkAlignment: linkAlignment,
-      boldStyle: boldStyle,
-      italicStyle: italicStyle,
-      boldItalicStyle: boldItalicStyle,
-      strikethroughStyle: strikethroughStyle,
-      codeStyle: codeStyle,
-      underlineStyle: underlineStyle,
-      highlightStyle: highlightStyle,
-      superscriptStyle: superscriptStyle,
-      subscriptStyle: subscriptStyle,
-      h1Style: h1Style,
-      h2Style: h2Style,
-      h3Style: h3Style,
-      h4Style: h4Style,
-      h5Style: h5Style,
-      h6Style: h6Style,
-      linkStyle: linkStyle,
-      linkHoverStyle: linkHoverStyle,
-      scriptFontSizeFactor: scriptFontSizeFactor,
-      superscriptBaselineFactor: superscriptBaselineFactor,
-      subscriptBaselineFactor: subscriptBaselineFactor,
-      strikethroughThickness: strikethroughThickness,
-      thematicBreakBuilder: thematicBreakBuilder,
-      linkColor: linkColor,
-      codeBackgroundColor: codeBackgroundColor,
-      highlightColor: highlightColor,
-      thematicBreakColor: thematicBreakColor,
-    );
+    properties
+      ..add(
+        ObjectFlagProperty<void Function(String, String)?>.has(
+          'onLinkTap',
+          onLinkTap,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<void Function(String, String, {required bool isHovering})?>.has(
+          'onLinkHover',
+          onLinkHover,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<MouseCursor?>(
+          'linkMouseCursor',
+          linkMouseCursor,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<PlaceholderAlignment?>(
+          'linkAlignment',
+          linkAlignment,
+          defaultValue: null,
+        ),
+      )
+      ..add(DiagnosticsProperty<TextStyle?>('boldStyle', boldStyle, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<TextStyle?>(
+          'italicStyle',
+          italicStyle,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextStyle?>(
+          'boldItalicStyle',
+          boldItalicStyle,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextStyle?>(
+          'strikethroughStyle',
+          strikethroughStyle,
+          defaultValue: null,
+        ),
+      )
+      ..add(DiagnosticsProperty<TextStyle?>('codeStyle', codeStyle, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<TextStyle?>(
+          'underlineStyle',
+          underlineStyle,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextStyle?>(
+          'highlightStyle',
+          highlightStyle,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextStyle?>(
+          'superscriptStyle',
+          superscriptStyle,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextStyle?>(
+          'subscriptStyle',
+          subscriptStyle,
+          defaultValue: null,
+        ),
+      )
+      ..add(DiagnosticsProperty<TextStyle?>('h1Style', h1Style, defaultValue: null))
+      ..add(DiagnosticsProperty<TextStyle?>('h2Style', h2Style, defaultValue: null))
+      ..add(DiagnosticsProperty<TextStyle?>('h3Style', h3Style, defaultValue: null))
+      ..add(DiagnosticsProperty<TextStyle?>('h4Style', h4Style, defaultValue: null))
+      ..add(DiagnosticsProperty<TextStyle?>('h5Style', h5Style, defaultValue: null))
+      ..add(DiagnosticsProperty<TextStyle?>('h6Style', h6Style, defaultValue: null))
+      ..add(DiagnosticsProperty<TextStyle?>('linkStyle', linkStyle, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<TextStyle?>(
+          'linkHoverStyle',
+          linkHoverStyle,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'scriptFontSizeFactor',
+          scriptFontSizeFactor,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'superscriptBaselineFactor',
+          superscriptBaselineFactor,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'subscriptBaselineFactor',
+          subscriptBaselineFactor,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'strikethroughThickness',
+          strikethroughThickness,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<Widget Function(BuildContext)?>.has(
+          'thematicBreakBuilder',
+          thematicBreakBuilder,
+        ),
+      )
+      ..add(ColorProperty('linkColor', linkColor, defaultValue: null))
+      ..add(ColorProperty('codeBackgroundColor', codeBackgroundColor, defaultValue: null))
+      ..add(ColorProperty('highlightColor', highlightColor, defaultValue: null))
+      ..add(ColorProperty('thematicBreakColor', thematicBreakColor, defaultValue: null));
   }
 
   @override
