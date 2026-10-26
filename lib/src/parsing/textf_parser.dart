@@ -9,6 +9,7 @@ import '../models/textf_token.dart';
 import '../styling/textf_palette.dart';
 import '../styling/textf_style_resolver.dart';
 import '../widgets/internal/hoverable_link_span.dart';
+import 'components/link_url.dart';
 import 'components/link_validator.dart';
 import 'heading_region.dart';
 
@@ -110,7 +111,6 @@ List<InlineSpan> _parseWithFastPaths(
   }
 
   return _ParseRun(
-    source: text,
     cacheEntry: TextfTokenCache.getTokensAndPairs(text),
     baseStyle: baseStyle,
     resolver: resolver,
@@ -127,7 +127,6 @@ List<InlineSpan> _parseWithFastPaths(
 /// depends on them. Heading regions are shared with the edit path through [HeadingRegion].
 class _ParseRun with HeadingRegion {
   new({
-    required this._source,
     required TokenCacheEntry cacheEntry,
     required this.baseStyle,
     required this._resolver,
@@ -136,7 +135,6 @@ class _ParseRun with HeadingRegion {
   }) : _tokens = cacheEntry.tokens,
        _matchingPairs = cacheEntry.validPairs;
 
-  final String _source;
   final List<TextfToken> _tokens;
   final Map<int, int> _matchingPairs;
   final TextfStyleResolver _resolver;
@@ -161,100 +159,70 @@ class _ParseRun with HeadingRegion {
   TextfStyleResolver get headingResolver => _resolver;
 
   /// Processes every token and returns the generated spans.
+  ///
+  /// One exhaustive dispatch per token. Plain text, unpaired markers and broken
+  /// link syntax accumulate in [textBuffer]; everything that emits a span of its
+  /// own flushes the buffer first.
   List<InlineSpan> run() {
     int i = 0;
     while (i < _tokens.length) {
       final token = _tokens[i];
-
-      // Placeholder Handling
-      if (token is PlaceholderToken) {
-        _processPlaceholder(token);
-        i++;
-        continue;
-      }
-
-      // Heading Handling (line-prefix ATX marker, scoped to end of line)
-      if (token is HeadingToken) {
-        flushText();
-        endHeading();
-        beginHeading(token.level);
-        i++;
-        continue;
-      }
-
-      // Heading suffix (trailing whitespace + optional closing `#` run) is a
-      // consumed region: the read-only view renders nothing for it. The still
-      // buffered content flushes at the line terminator (or final flush).
-      if (token is HeadingSuffixToken) {
-        i++;
-        continue;
-      }
-
-      // Thematic break (`---`, `***`, `___`): flush any pending text, then
-      // insert the rule as a WidgetSpan. The line terminator that followed the
-      // rule is a separate TextToken and resumes ordinary text after it.
-      if (token is ThematicBreakToken) {
-        flushText();
-        _spans.add(_resolver.resolveThematicBreak(palette));
-        i++;
-        continue;
-      }
-
-      // Link Handling
-      if (token is LinkStartToken) {
-        final int? nextIndex = _processLink(i);
-        if (nextIndex != null) {
-          i = nextIndex;
-          continue;
-        }
-        // Not a valid link. Fall through to process as plain text.
-      }
-
-      // Formatting Handling
-      if (token is FormatMarkerToken) {
-        final int? matchingIndex = _matchingPairs[i];
-        if (matchingIndex != null) {
-          flushText();
-          if (matchingIndex > i) {
-            _pushFormat(i);
-          } else {
-            _popFormat(i);
-          }
-          i++;
-          continue;
-        }
-        // Unpaired or invalidly nested marker. Fall through to process as plain text.
-      }
-
-      // Plain Text Handling
-      // Accumulate content into the buffer. This applies to:
-      // 1. TextToken
-      // 2. Unpaired/Invalid FormatMarkerTokens
-      // 3. Broken/Partial Link tokens
       switch (token) {
         case TextToken(:final value):
           appendText(value);
+
         case FormatMarkerToken(:final value):
-          textBuffer.write(value);
+          final int? matchingIndex = _matchingPairs[i];
+          if (matchingIndex == null) {
+            // Unpaired or invalidly nested marker renders as plain text.
+            textBuffer.write(value);
+          } else {
+            flushText();
+            if (matchingIndex > i) {
+              _pushFormat(i);
+            } else {
+              _popFormat(i);
+            }
+          }
+
         case LinkStartToken():
+          final int? nextIndex = _processLink(i);
+          if (nextIndex != null) {
+            i = nextIndex;
+            continue;
+          }
+          // Not a valid link: the `[` renders as plain text.
           textBuffer.write('[');
+
+        // Separators and ends outside a valid link render as plain text.
         case LinkSeparatorToken():
           textBuffer.write('](');
         case LinkEndToken():
           textBuffer.write(')');
-        case PlaceholderToken(:final key):
-          textBuffer.write('{$key}');
-        case HeadingToken(:final position, :final contentStart):
-          // ignore: avoid-substring
-          textBuffer.write(_source.substring(position, contentStart));
+
+        case PlaceholderToken():
+          _processPlaceholder(token);
+
+        // Line-prefix ATX marker, scoped to the end of its line.
+        case HeadingToken(:final level):
+          flushText();
+          endHeading();
+          beginHeading(level);
+
+        // Trailing whitespace plus optional closing `#` run is a consumed
+        // region: the read-only view renders nothing for it. The still buffered
+        // content flushes at the line terminator (or the final flush).
         case HeadingSuffixToken():
-          // Handled above (consumed, renders nothing); unreachable here.
           break;
+
+        // `---`, `***`, `___`: the rule is a WidgetSpan. The line terminator
+        // that followed it is a separate TextToken and resumes ordinary text.
         case ThematicBreakToken():
-          // Handled above (emits a WidgetSpan rule); unreachable here.
-          break;
+          flushText();
+          _spans.add(_resolver.resolveThematicBreak(palette));
+
+        // Strips the `\` from the visual output.
         case EscapeMarkerToken():
-          // Do nothing. This effectively strips the '\' from the visual output.
           break;
       }
       i++;

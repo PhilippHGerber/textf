@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:textf/src/parsing/components/link_validator.dart';
+import 'package:textf/src/parsing/components/link_url.dart';
 
 void main() {
   group('normalizeUrl', () {

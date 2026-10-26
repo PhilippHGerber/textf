@@ -157,10 +157,17 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
 
       // Rebuild the resolver only when the options change.
       if (!resolverCurrent) {
-        _cachedResolver = TextfStyleResolver.withState(options: options);
+        _rebuildResolver(options);
       }
     }
   }
+
+  /// Builds the resolver from [options] and caches it.
+  ///
+  /// The renderer only ever parses with a resolver built here, from the
+  /// inherited [TextfOptionsData], never from a [BuildContext].
+  TextfStyleResolver _rebuildResolver(TextfOptionsData? options) =>
+      _cachedResolver = TextfStyleResolver.withState(options: options);
 
   @override
   void didUpdateWidget(TextfRenderer oldWidget) {
@@ -182,10 +189,10 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
   @override
   Widget build(BuildContext context) {
     // Both are always set by didChangeDependencies before the first build; the
-    // fallbacks only satisfy the type system.
+    // fallbacks only satisfy the type system and build exactly what it would.
     final TextStyle effectiveStyle =
         _lastEffectiveStyle ?? _effectiveRootStyleOf(context, widget.style);
-    final TextfStyleResolver resolver = _cachedResolver ?? TextfStyleResolver(context);
+    final TextfStyleResolver resolver = _cachedResolver ?? _rebuildResolver(_lastOptions);
     final effectiveScaler = widget.textScaler ?? MediaQuery.textScalerOf(context);
 
     // Local variable for type promotion
