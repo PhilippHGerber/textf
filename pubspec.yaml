@@ -15,6 +15,17 @@ dependencies:
   flutter:
     sdk: flutter
 
+# The public repo is its own workspace root, so docs and examples resolve
+# `textf` locally in a standalone clone and in CI.
+workspace:
+  - docs
+  - example/advanced
+  - example/basic
+  - example/textf_bare
+  - example/textf_cupertino
+  - example/textf_flex
+  - example/textf_widgetbook
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
