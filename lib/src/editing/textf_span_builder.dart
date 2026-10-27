@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../core/constants.dart';
 import '../core/default_styles.dart';
 import '../core/formatting_utils.dart';
+import '../core/textf_style_utils.dart';
 import '../core/textf_token_cache.dart';
 import '../models/format_stack_entry.dart';
 import '../models/textf_token.dart';
@@ -148,6 +149,73 @@ class TextfSpanBuilder {
   /// Returns `true` for superscript or subscript marker types.
   static bool _isScriptType(FormatMarkerType type) =>
       type == FormatMarkerType.superscript || type == FormatMarkerType.subscript;
+
+  /// Applies the IME composing-region underline to already-built [spans].
+  ///
+  /// [composing] is measured in cursor slots of [spans]: a [TextSpan] counts
+  /// its text length, a [WidgetSpan] counts one. Text spans that overlap
+  /// [composing] are split at its boundaries. The covered part merges
+  /// [TextDecoration.underline] into its existing decoration, or gets an
+  /// underline-only style when it has none. Widget spans are passed through
+  /// without an underline.
+  ///
+  /// The cursor-slot count of the result always equals that of [spans]. An
+  /// empty, invalid or reversed [composing] range returns [spans] unchanged.
+  static List<InlineSpan> applyComposing(List<InlineSpan> spans, TextRange composing) {
+    if (!composing.isValid || !composing.isNormalized || composing.isCollapsed) {
+      return spans;
+    }
+
+    final result = <InlineSpan>[];
+    int spanStart = 0;
+
+    for (final span in spans) {
+      final int spanLength = _cursorSlotsOf(span);
+      final int spanEnd = spanStart + spanLength;
+      final bool overlaps = spanEnd > composing.start && spanStart < composing.end;
+
+      if (overlaps && span is TextSpan && (span.text?.isNotEmpty ?? false)) {
+        _addComposedParts(result, span, composing.start - spanStart, composing.end - spanStart);
+      } else {
+        result.add(span);
+      }
+      spanStart = spanEnd;
+    }
+
+    return result;
+  }
+
+  /// Cursor slots of [span]: its text length for a [TextSpan], one otherwise.
+  static int _cursorSlotsOf(InlineSpan span) => span is TextSpan ? (span.text?.length ?? 0) : 1;
+
+  /// Adds [span] to [result], split so that the code units from [start] to
+  /// [end] (relative to the span, clamped to it) carry the composing underline.
+  static void _addComposedParts(List<InlineSpan> result, TextSpan span, int start, int end) {
+    final String rawText = span.text ?? '';
+    final int startInSpan = start.clamp(0, rawText.length);
+    final int endInSpan = end.clamp(0, rawText.length);
+
+    if (startInSpan > 0) {
+      // ignore: avoid-substring, indices are based on UTF-16 code units
+      result.add(TextSpan(text: rawText.substring(0, startInSpan), style: span.style));
+    }
+
+    if (endInSpan > startInSpan) {
+      final TextStyle composedStyle = switch (span.style) {
+        final TextStyle spanStyle => spanStyle.copyWith(
+          decoration: combineTextDecorations(spanStyle.decoration, TextDecoration.underline),
+        ),
+        null => const TextStyle(decoration: TextDecoration.underline),
+      };
+      // ignore: avoid-substring, indices are based on UTF-16 code units
+      result.add(TextSpan(text: rawText.substring(startInSpan, endInSpan), style: composedStyle));
+    }
+
+    if (endInSpan < rawText.length) {
+      // ignore: avoid-substring, indices are based on UTF-16 code units
+      result.add(TextSpan(text: rawText.substring(endInSpan), style: span.style));
+    }
+  }
 }
 
 /// Mutable state object for [TextfSpanBuilder.build].

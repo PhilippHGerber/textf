@@ -4,7 +4,6 @@ import 'package:flutter/widgets.dart';
 
 import '../core/formatting_utils.dart';
 import '../core/textf_limits.dart';
-import '../core/textf_style_utils.dart';
 import '../styling/textf_style_resolver.dart';
 import '../widgets/textf_ext.dart';
 import '../widgets/textf_options.dart';
@@ -279,66 +278,10 @@ class TextfEditingController extends TextEditingController {
     // Fallback in case fullSpans couldn't be resolved
     final resolvedFullSpans = fullSpans ?? <InlineSpan>[];
 
-    // 6. APPLY COMPOSING REGION
-    final List<InlineSpan> finalChildren;
-
-    if (!withComposing || !value.composing.isValid || value.composing.isCollapsed) {
-      // No active composing region, just use the raw parsed spans.
-      finalChildren = resolvedFullSpans;
-    } else {
-      // Inject IME underline into the spans
-      final TextRange composing = value.composing;
-      finalChildren = <InlineSpan>[];
-      const TextStyle composingStyle = TextStyle(decoration: TextDecoration.underline);
-
-      int currentOffset = 0;
-
-      for (int i = 0; i < resolvedFullSpans.length; i++) {
-        final InlineSpan span = resolvedFullSpans[i];
-        final int spanLength = span is TextSpan ? (span.text?.length ?? 0) : 1;
-        final int spanStart = currentOffset;
-        final int spanEnd = currentOffset + spanLength;
-
-        if (spanEnd <= composing.start || spanStart >= composing.end) {
-          finalChildren.add(span);
-        } else if (span is TextSpan && (span.text ?? '').isNotEmpty) {
-          final String rawText = span.text ?? '';
-          final int startInSpan = (composing.start > spanStart) ? composing.start - spanStart : 0;
-          final int endInSpan = (composing.end < spanEnd) ? composing.end - spanStart : spanLength;
-
-          if (startInSpan > 0) {
-            // ignore: avoid-substring, indices are based on UTF-16 code units
-            finalChildren.add(TextSpan(text: rawText.substring(0, startInSpan), style: span.style));
-          }
-
-          if (endInSpan > startInSpan) {
-            final TextStyle mergedStyle;
-            if (span.style case final TextStyle spanStyle?) {
-              final TextDecoration? combined = combineTextDecorations(
-                spanStyle.decoration,
-                TextDecoration.underline,
-              );
-              mergedStyle = spanStyle.copyWith(decoration: combined);
-            } else {
-              mergedStyle = composingStyle;
-            }
-
-            finalChildren.add(
-              // ignore: avoid-substring, indices are based on UTF-16 code units
-              TextSpan(text: rawText.substring(startInSpan, endInSpan), style: mergedStyle),
-            );
-          }
-
-          if (endInSpan < spanLength) {
-            // ignore: avoid-substring
-            finalChildren.add(TextSpan(text: rawText.substring(endInSpan), style: span.style));
-          }
-        } else {
-          finalChildren.add(span);
-        }
-        currentOffset += spanLength;
-      }
-    }
+    // 6. APPLY COMPOSING REGION (the span builder owns cursor-slot accounting).
+    final List<InlineSpan> finalChildren = withComposing
+        ? TextfSpanBuilder.applyComposing(resolvedFullSpans, value.composing)
+        : resolvedFullSpans;
 
     _cachedFinalChildren = finalChildren;
     _lastComposing = value.composing;
