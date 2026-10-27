@@ -567,6 +567,85 @@ void main() {
       });
     });
 
+    group('Cursor slots in link text', () {
+      const baseStyle = TextStyle(fontSize: 14, color: Color(0xFF000000));
+
+      /// Returns the style of the [TextSpan] that supplies the cursor slot at
+      /// source [offset], or `null` when a [WidgetSpan] supplies it.
+      TextStyle? styleAt(List<InlineSpan> spans, int offset) {
+        var slot = 0;
+        for (final span in spans) {
+          final int width = span is TextSpan ? span.text?.length ?? 0 : 1;
+          if (offset < slot + width) return span is TextSpan ? span.style : null;
+          slot += width;
+        }
+        throw RangeError.index(offset, spans, 'offset');
+      }
+
+      /// Link style and marker style of a plain `[x](u)` link: the reference
+      /// the link-text characters below are compared against.
+      ({TextStyle link, TextStyle marker}) referenceStyles() {
+        final spans = builder.build('[x](u)', testContext, baseStyle);
+        return (link: styleAt(spans, 1)!, marker: styleAt(spans, 0)!);
+      }
+
+      void expectLinkStyledLiterals(String input, List<int> offsets) {
+        final spans = builder.build(input, testContext, baseStyle);
+        final styles = referenceStyles();
+
+        expect(totalSpanLength(spans), input.length);
+        expect(spans.map((s) => s.text ?? '').join(), input);
+        expect(spans.whereType<WidgetSpan>(), isEmpty, reason: 'no rule or script widget');
+        for (final span in spans.whereType<TextSpan>()) {
+          expect(span.style?.fontSize, 14.0, reason: 'no heading-sized span in "$input"');
+        }
+        for (final offset in offsets) {
+          expect(
+            styleAt(spans, offset),
+            styles.link,
+            reason: '"${input[offset]}" at $offset in "$input" must carry the link style',
+          );
+          expect(styleAt(spans, offset), isNot(styles.marker));
+        }
+      }
+
+      testWidgets('heading opening run in link text is link-styled text', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        // [# a](u): `#`, ` ` and `a` are link text.
+        expectLinkStyledLiterals('[# a](u)', [1, 2, 3]);
+      });
+
+      testWidgets('thematic-break run in link text is link-styled text', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        expectLinkStyledLiterals('[---](u)', [1, 2, 3]);
+      });
+
+      testWidgets('nested link syntax in link text is link-styled text', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        // [foo [bar](/uri)](/uri): the inner `[`, `](`, `)` sit at 5, 9-10, 15.
+        expectLinkStyledLiterals('[foo [bar](/uri)](/uri)', [5, 9, 10, 15]);
+      });
+
+      testWidgets('paired markers and escapes stay dimmed; text, unpaired markers and '
+          'placeholders stay link-styled', (tester) async {
+        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        // Offsets: [0 **1-2 b3 **4-5 \6 *7 {k}8-10 *11 ]12
+        const input = r'[**b**\*{k}*](u)';
+        final spans = builder.build(input, testContext, baseStyle);
+        final styles = referenceStyles();
+
+        expect(totalSpanLength(spans), input.length);
+        for (final offset in [1, 2, 4, 5, 6]) {
+          expect(styleAt(spans, offset), styles.marker, reason: 'offset $offset dimmed');
+        }
+        for (final offset in [7, 8, 9, 10, 11]) {
+          expect(styleAt(spans, offset), styles.link, reason: 'offset $offset link-styled');
+        }
+        expect(styleAt(spans, 3)?.fontWeight, FontWeight.bold);
+        expect(styleAt(spans, 3)?.decoration, TextDecoration.underline);
+      });
+    });
+
     group('Escape Characters (editing mode)', () {
       testWidgets('escaped marker preserves character-slot invariant', (tester) async {
         await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));

@@ -674,9 +674,8 @@ class _SpanBuildState with HeadingRegion {
   /// Returns the index after the link structure if valid, or `null` if the
   /// tokens at [index] do not form a complete `[text](url)` link.
   ///
-  /// Inner link display text is tokenized and styled, preserving nested
-  /// inline formatting and escapes while applying link styling and marker
-  /// dimming.
+  /// Link text is tokenized and styled, preserving nested inline formatting
+  /// and escapes while applying link styling and marker dimming.
   int? processLinkAsText(int index) {
     // Verify complete link structure: [text](url)
     final parsedLink = LinkValidator.validate(tokens, index);
@@ -710,6 +709,7 @@ class _SpanBuildState with HeadingRegion {
     final bool hasNested = innerTokens.any((t) => t is! TextToken);
     if (hasNested) {
       _processNestedLinkText(
+        linkText: linkText,
         innerTokens: innerTokens,
         validPairs: validPairsLink,
         spans: spans,
@@ -734,15 +734,21 @@ class _SpanBuildState with HeadingRegion {
   /// Emits styled [TextSpan]s for link text that contains nested format markers.
   ///
   /// Uses [linkStyle] as the base style, merging inner formatting on top.
-  /// All format marker characters are emitted with [markerStyle] (the same
-  /// dimmed/hidden style used for the outer link brackets).
+  /// Paired format markers and escape backslashes are emitted with
+  /// [markerStyle] (the same dimmed/hidden style used for the outer link
+  /// brackets). Every other token is link-styled literal text: link text is
+  /// inline content only (CommonMark), so heading runs, heading suffixes,
+  /// thematic-break runs and inner link syntax are not markers here.
   ///
-  /// Maintains the character-slot invariant: every character in [innerTokens]
-  /// appears exactly once in [spans].
+  /// Keeps one cursor slot per character: every character of [linkText]
+  /// appears exactly once in [spans]. The `switch` over the sealed
+  /// [TextfToken] type has no default branch, so a new token kind fails to
+  /// compile here instead of silently dropping cursor slots.
   ///
   /// Super/subscript inside link text is intentionally unsupported — inner
-  /// markers use [TextSpan] only (no[WidgetSpan] vertical displacement).
+  /// markers use [TextSpan] only (no [WidgetSpan] vertical displacement).
   static void _processNestedLinkText({
+    required String linkText,
     required List<TextfToken> innerTokens,
     required Map<int, int> validPairs,
     required List<InlineSpan> spans,
@@ -768,35 +774,31 @@ class _SpanBuildState with HeadingRegion {
     for (int i = 0; i < innerTokens.length; i++) {
       final token = innerTokens[i];
 
-      if (token is TextToken) {
-        nestedTextBuffer.write(token.value);
-        continue;
-      }
+      switch (token) {
+        case TextToken(:final value):
+          nestedTextBuffer.write(value);
 
-      if (token is FormatMarkerToken) {
-        if (validPairs.containsKey(i)) {
-          final int matchingIndex = validPairs[i]!;
-          if (matchingIndex > i) {
+        case FormatMarkerToken(:final value, :final markerType):
+          final int? matchingIndex = validPairs[i];
+          if (matchingIndex == null) {
+            // Unpaired marker → literal text preserving the cursor slots.
+            nestedTextBuffer.write(value);
+          } else if (matchingIndex > i) {
             // Opening marker.
             flushNestedBuffer();
-            spans.add(TextSpan(text: token.value, style: markerStyle));
-            final TextStyle prevStyle =
-                nestedFormatStack
-                    .isEmpty //
-                ? linkStyle
-                : nestedFormatStack.last.resolvedStyle;
+            spans.add(TextSpan(text: value, style: markerStyle));
             nestedFormatStack.add(
               FormatStackEntry(
                 index: i,
                 matchingIndex: matchingIndex,
-                type: token.markerType,
-                resolvedStyle: resolver.resolveStyle(token.markerType, prevStyle, palette),
+                type: markerType,
+                resolvedStyle: resolver.resolveStyle(markerType, currentNestedStyle(), palette),
               ),
             );
           } else {
             // Closing marker.
             flushNestedBuffer();
-            spans.add(TextSpan(text: token.value, style: markerStyle));
+            spans.add(TextSpan(text: value, style: markerStyle));
             assert(
               nestedFormatStack.isNotEmpty && nestedFormatStack.last.index == matchingIndex,
               'Closing marker does not match stack top — nesting validation failed',
@@ -805,27 +807,31 @@ class _SpanBuildState with HeadingRegion {
               nestedFormatStack.removeLast();
             }
           }
-        } else {
-          // Unpaired marker → literal text preserving the character slots.
-          nestedTextBuffer.write(token.value);
-        }
-        continue;
-      }
 
-      if (token is PlaceholderToken) {
-        // Placeholders inside link text are not substituted in the editing
-        // controller — render literally to preserve character slots.
-        nestedTextBuffer
-          ..write('{')
-          ..write(token.key)
-          ..write('}');
-        continue;
-      }
+        case PlaceholderToken(:final key):
+          // Placeholders inside link text are not substituted in the editing
+          // controller — render literally to preserve cursor slots.
+          nestedTextBuffer
+            ..write('{')
+            ..write(key)
+            ..write('}');
 
-      if (token is EscapeMarkerToken) {
-        flushNestedBuffer();
-        spans.add(TextSpan(text: r'\', style: markerStyle));
-        continue;
+        case EscapeMarkerToken():
+          flushNestedBuffer();
+          spans.add(TextSpan(text: r'\', style: markerStyle));
+
+        case HeadingToken() ||
+            HeadingSuffixToken() ||
+            ThematicBreakToken() ||
+            LinkStartToken() ||
+            LinkSeparatorToken() ||
+            LinkEndToken():
+          // Not markers inside link text: write the exact source characters
+          // as link-styled literal text, one cursor slot each.
+          nestedTextBuffer.write(
+            // ignore: avoid-substring
+            linkText.substring(token.position, token.position + token.length),
+          );
       }
     }
 
