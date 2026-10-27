@@ -5,7 +5,6 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/editing/marker_render_mode.dart';
 import 'package:textf/src/editing/marker_visibility.dart';
-import 'package:textf/src/editing/textf_editing_controller.dart';
 
 void main() {
   group('MarkerRenderMode', () {
@@ -158,62 +157,6 @@ void main() {
       test('returns hidden when markerVisibility is whenActive and selection is invalid', () {
         expect(
           MarkerRenderMode.fromVisibility(
-            visibility: MarkerVisibility.whenActive,
-            selection: const TextSelection.collapsed(offset: -1),
-          ),
-          equals(MarkerRenderMode.hidden),
-        );
-      });
-    });
-
-    group('TextfEditingController.computeRenderMode', () {
-      test('returns always when markerVisibility is always regardless of selection', () {
-        expect(
-          TextfEditingController.computeRenderMode(
-            visibility: MarkerVisibility.always,
-            selection: const TextSelection.collapsed(offset: 5),
-          ),
-          equals(MarkerRenderMode.always),
-        );
-        expect(
-          TextfEditingController.computeRenderMode(
-            visibility: MarkerVisibility.always,
-            selection: const TextSelection(baseOffset: 2, extentOffset: 5),
-          ),
-          equals(MarkerRenderMode.always),
-        );
-        expect(
-          TextfEditingController.computeRenderMode(
-            visibility: MarkerVisibility.always,
-            selection: const TextSelection.collapsed(offset: -1),
-          ),
-          equals(MarkerRenderMode.always),
-        );
-      });
-
-      test('returns active when markerVisibility is whenActive and selection is collapsed', () {
-        expect(
-          TextfEditingController.computeRenderMode(
-            visibility: MarkerVisibility.whenActive,
-            selection: const TextSelection.collapsed(offset: 8),
-          ),
-          equals(const MarkerRenderMode.active(8)),
-        );
-      });
-
-      test('returns hidden when markerVisibility is whenActive and selection is not collapsed', () {
-        expect(
-          TextfEditingController.computeRenderMode(
-            visibility: MarkerVisibility.whenActive,
-            selection: const TextSelection(baseOffset: 2, extentOffset: 8),
-          ),
-          equals(MarkerRenderMode.hidden),
-        );
-      });
-
-      test('returns hidden when markerVisibility is whenActive and selection is invalid', () {
-        expect(
-          TextfEditingController.computeRenderMode(
             visibility: MarkerVisibility.whenActive,
             selection: const TextSelection.collapsed(offset: -1),
           ),

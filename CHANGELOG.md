@@ -14,6 +14,10 @@ All notable changes to the `textf` package will be documented in this file.
 * **Links reuse the resolved `TextfOptions`:** a link's text is styled with the `TextfOptions` the enclosing `Textf` already resolved, instead of looking them up in the widget tree again for every link.
 * **Text-scale changes no longer re-parse `Textf`:** changing `Textf.textScaler` or the platform text-scale setting re-lays out the text at the new scale without re-parsing it, since no span depends on the scaler.
 
+### Removed
+
+* **`TextfEditingController.computeRenderMode`:** the `@visibleForTesting` static is removed; it exposed an internal type and only forwarded to internal logic.
+
 ## 2.0.1
 
 ### Fixed
