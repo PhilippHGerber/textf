@@ -8,6 +8,8 @@ import 'package:textf/src/editing/textf_span_builder.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/textf.dart';
 
+import '../../widgets/pump_textf_widget.dart';
+
 /// Extension to access [TextSpan.text] on [InlineSpan] for test assertions.
 /// Returns `null` for non-[TextSpan] spans (e.g. [WidgetSpan]).
 extension _TestTextAccess on InlineSpan {
@@ -22,24 +24,6 @@ void main() {
     setUp(() {
       builder = TextfSpanBuilder();
     });
-
-    /// Verifies that the total cursor-slot count of all spans equals the
-    /// original text length. This is the critical invariant for cursor
-    /// positioning in text fields.
-    ///
-    /// Each [TextSpan] contributes its `text.length` slots; each [WidgetSpan]
-    /// contributes exactly 1 slot.
-    int totalSpanLength(List<InlineSpan> spans) {
-      var sum = 0;
-      for (final span in spans) {
-        if (span is TextSpan) {
-          sum += span.text?.length ?? 0;
-        } else if (span is WidgetSpan) {
-          sum += 1;
-        }
-      }
-      return sum;
-    }
 
     group('Fast Paths', () {
       test('empty text returns empty list', () {
@@ -74,43 +58,43 @@ void main() {
       test('bold text preserves cursor-slot count', () {
         const input = '**bold**';
         final spans = builder.build(input, const TextStyle(), resolver);
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('italic text preserves cursor-slot count', () {
         const input = '*italic*';
         final spans = builder.build(input, const TextStyle(), resolver);
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('mixed formatting preserves cursor-slot count', () {
         const input = 'hello **bold** and *italic* `code` world';
         final spans = builder.build(input, const TextStyle(), resolver);
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('link text preserves cursor-slot count', () {
         const input = '[click here](https://example.com)';
         final spans = builder.build(input, const TextStyle(), resolver);
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('placeholder text preserves cursor-slot count', () {
         const input = 'hello {icon} world';
         final spans = builder.build(input, const TextStyle(), resolver);
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('nested formatting preserves cursor-slot count', () {
         const input = '**bold *italic* bold**';
         final spans = builder.build(input, const TextStyle(), resolver);
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('all formatting types preserve cursor-slot count', () {
         const input = '**b** *i* ~~s~~ ++u++ ==h== `c` ^sup^ ~sub~ [l](u) {p}';
         final spans = builder.build(input, const TextStyle(), resolver);
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
     });
 
@@ -434,7 +418,7 @@ void main() {
 
         final allText = spans.whereType<TextSpan>().map((s) => s.text ?? '').join();
         expect(allText, input);
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
         for (final span in spans.whereType<TextSpan>()) {
           expect(span.style?.fontWeight, isNot(FontWeight.bold));
           expect(span.style?.fontStyle, isNot(FontStyle.italic));
@@ -448,7 +432,7 @@ void main() {
         const input = '[**bold** plain](url)';
         final spans = builder.build(input, const TextStyle(), resolver);
 
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
 
         // Find 'bold' span — must have bold + underline (link inherits underline).
         final boldSpan = spans.whereType<TextSpan>().firstWhere((s) => s.text == 'bold');
@@ -488,7 +472,7 @@ void main() {
         final spans = builder.build(input, baseStyle, resolver);
         final styles = referenceStyles();
 
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
         expect(spans.map((s) => s.text ?? '').join(), input);
         expect(spans.whereType<WidgetSpan>(), isEmpty, reason: 'no rule or script widget');
         for (final span in spans.whereType<TextSpan>()) {
@@ -525,7 +509,7 @@ void main() {
         final spans = builder.build(input, baseStyle, resolver);
         final styles = referenceStyles();
 
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
         for (final offset in [1, 2, 4, 5, 6]) {
           expect(styleAt(spans, offset), styles.marker, reason: 'offset $offset dimmed');
         }
@@ -543,28 +527,28 @@ void main() {
         // The \ must occupy a slot so total equals 13.
         const input = r'\*not italic*';
         final spans = builder.build(input, const TextStyle(), resolver);
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('escaped bold marker preserves cursor-slot invariant', () {
         // Raw: a\**b** — escape stops the ** from being a bold marker opener.
         const input = r'a\**b**';
         final spans = builder.build(input, const TextStyle(), resolver);
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('escaped backslash preserves cursor-slot invariant', () {
         // Raw: \\ (2 chars) → editing mode emits \\ as a 2-char token.
         const input = r'\\';
         final spans = builder.build(input, const TextStyle(), resolver);
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('escaped marker in link text preserves cursor-slot invariant', () {
         // [a\*b](url) — the link-text portion is 4 chars (a \ * b).
         const input = r'[a\*b](url)';
         final spans = builder.build(input, const TextStyle(), resolver);
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
     });
 
@@ -678,7 +662,7 @@ void main() {
           resolver,
           renderMode: const MarkerRenderMode.active(5),
         );
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('link markers hidden when cursor outside', () {
@@ -810,7 +794,7 @@ void main() {
           resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
-        expect(totalSpanLength(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('cursor inside span: markers TextSpan (visible), content WidgetSpan', () {
@@ -866,7 +850,7 @@ void main() {
           expect(span, isA<WidgetSpan>());
         }
         // Character count must still match
-        expect(totalSpanLength(spans), '^**b**^'.length);
+        expect(cursorSlots(spans), '^**b**^'.length);
       });
 
       test('multi-char superscript content emits one WidgetSpan per char', () {
@@ -896,7 +880,7 @@ void main() {
           expect(text.data, 'abc'[idx - 2]);
         }
 
-        expect(totalSpanLength(spans), 'x^abc^y'.length);
+        expect(cursorSlots(spans), 'x^abc^y'.length);
       });
 
       test('hidden marker WidgetSpans use SizedBox.shrink', () {

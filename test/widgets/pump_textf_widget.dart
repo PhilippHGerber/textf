@@ -28,6 +28,27 @@ Widget neutralTestApp({
   );
 }
 
+/// Total cursor slots of [spans]: each [TextSpan] contributes its `text.length`
+/// plus the slots of its children, each [WidgetSpan] contributes exactly 1.
+///
+/// The editing controller's 1:1 cursor-to-character invariant holds when this
+/// equals the source text's length in UTF-16 code units.
+// ignore: avoid-top-level-members-in-tests
+int cursorSlots(Iterable<InlineSpan> spans) {
+  var sum = 0;
+  void walk(InlineSpan span) {
+    if (span is TextSpan) {
+      sum += span.text?.length ?? 0;
+      (span.children ?? const <InlineSpan>[]).forEach(walk);
+    } else if (span is WidgetSpan) {
+      sum += 1;
+    }
+  }
+
+  spans.forEach(walk);
+  return sum;
+}
+
 /// Pumps a [Textf] built from the given arguments inside [neutralTestApp].
 ///
 /// [wrap] is applied last (outermost, just inside the centering widget) and lets a test add

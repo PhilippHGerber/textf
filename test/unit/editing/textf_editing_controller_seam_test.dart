@@ -14,6 +14,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
 
+import '../../widgets/pump_textf_widget.dart';
+
 /// Dimmed-marker alpha, pinned from the spec (PRD §6 "Editing Marker").
 const double _markerAlpha = 0.4;
 
@@ -49,17 +51,6 @@ List<TextSpan> _textChildren(TextSpan span) => span.children!.whereType<TextSpan
 
 TextSpan _spanWithText(TextSpan root, String text) =>
     _textChildren(root).firstWhere((s) => s.text == text);
-
-int _slotCount(TextSpan root) {
-  final children = root.children;
-  if (children == null) return root.text?.length ?? 0;
-  var slots = 0;
-  for (final child in children) {
-    if (child is TextSpan) slots += child.text?.length ?? 0;
-    if (child is WidgetSpan) slots += 1;
-  }
-  return slots;
-}
 
 void main() {
   group('Editing seam: dimmed marker color', () {
@@ -132,7 +123,7 @@ void main() {
       final dimmed = const Color(0xFF334455).withValues(alpha: _markerAlpha);
       expect(_spanWithText(result, '[').style!.color, dimmed);
       expect(_spanWithText(result, 'a').style!.color, const Color(0xFF1A73E8));
-      expect(_slotCount(result), '[a](b)'.length);
+      expect(cursorSlots([result]), '[a](b)'.length);
     });
   });
 
@@ -155,12 +146,12 @@ void main() {
       expect(activeMarker.text, '# ');
       expect(activeMarker.style!.color, const Color(0xFF222222).withValues(alpha: _markerAlpha));
       expect(activeMarker.style!.fontSize, 20, reason: 'h1 = 2.0 x the 10px base');
-      expect(_slotCount(onLine), text.length);
+      expect(cursorSlots([onLine]), text.length);
 
       controller.selection = const TextSelection.collapsed(offset: text.length);
       final offLine = _build(controller, context, style: style);
       expect(_textChildren(offLine).first.style!.color!.a, 0);
-      expect(_slotCount(offLine), text.length);
+      expect(cursorSlots([offLine]), text.length);
     });
 
     testWidgets('slot count equals text length in every marker mode', (tester) async {
@@ -176,7 +167,7 @@ void main() {
           final controller = TextfEditingController(text: text, markerVisibility: visibility)
             ..selection = selection;
           final result = _build(controller, context, style: const TextStyle(fontSize: 14));
-          expect(_slotCount(result), text.length, reason: '$visibility / $selection');
+          expect(cursorSlots([result]), text.length, reason: '$visibility / $selection');
           controller.dispose();
         }
       }
@@ -252,7 +243,7 @@ void main() {
 
       expect(identical(first.children, second.children), isFalse);
       expect(_textChildren(second).first.style!.color!.a, 0, reason: 'first pair now inactive');
-      expect(_slotCount(second), text.length);
+      expect(cursorSlots([second]), text.length);
     });
 
     testWidgets('a collapsed-to-range selection change re-parses and hides all markers', (

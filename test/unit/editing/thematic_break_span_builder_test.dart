@@ -6,6 +6,8 @@ import 'package:textf/src/editing/marker_render_mode.dart';
 import 'package:textf/src/editing/textf_span_builder.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 
+import '../../widgets/pump_textf_widget.dart';
+
 /// Editor-seam specification for thematic-break rendering in the span builder
 /// (ticket 4). A thematic break (`---`/`***`/`___`) is the sole whole-line
 /// construct; in the editing pipeline its raw characters show as **dimmed
@@ -40,23 +42,6 @@ void main() {
     String jsonish(String s) => "'${s.replaceAll('\n', r'\n')}'";
 
     // -- Helpers ------------------------------------------------------------
-
-    /// Total cursor slots: each [TextSpan] contributes `text.length`, each
-    /// [WidgetSpan] contributes exactly 1. Recurses into children.
-    int totalSlots(List<InlineSpan> spans) {
-      var sum = 0;
-      void walk(InlineSpan span) {
-        if (span is TextSpan) {
-          sum += span.text?.length ?? 0;
-          (span.children ?? const <InlineSpan>[]).forEach(walk);
-        } else if (span is WidgetSpan) {
-          sum += 1;
-        }
-      }
-
-      spans.forEach(walk);
-      return sum;
-    }
 
     /// The marker span whose text is exactly [marker].
     TextSpan markerSpan(List<InlineSpan> spans, String marker) =>
@@ -100,14 +85,14 @@ void main() {
             resolver,
             renderMode: const MarkerRenderMode.active(0),
           );
-          expect(totalSlots(spans), input.length);
+          expect(cursorSlots(spans), input.length);
         });
       }
 
       test('null-cursor (all markers dimmed) also preserves slot count', () {
         const input = 'above\n- - -\nbelow';
         final spans = builder.build(input, baseStyle, resolver);
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('hide-all-markers mode preserves slot count', () {
@@ -118,7 +103,7 @@ void main() {
           resolver,
           renderMode: MarkerRenderMode.hidden,
         );
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
     });
 
@@ -138,7 +123,7 @@ void main() {
 
         final marker = markerSpan(spans, '---');
         expect(marker.text, '---');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('spaced `* * *` keeps its inner whitespace verbatim', () {
@@ -152,7 +137,7 @@ void main() {
 
         final marker = markerSpan(spans, '* * *');
         expect(marker.text, '* * *');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('indented `   ---` keeps the leading spaces in the marker span', () {
@@ -166,7 +151,7 @@ void main() {
 
         final marker = markerSpan(spans, '   ---');
         expect(marker.text, '   ---');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('no WidgetSpan is emitted while the rule markers are shown', () {
@@ -220,7 +205,7 @@ void main() {
         );
 
         expectDrawnRule(spans, marker: '---', slots: 3);
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('spaced rule with trailing whitespace fills every slot', () {
@@ -233,7 +218,7 @@ void main() {
         );
 
         expectDrawnRule(spans, marker: '- - -  ', slots: 7);
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('hide-all-markers path draws the rule', () {
@@ -246,7 +231,7 @@ void main() {
         );
 
         expectDrawnRule(spans, marker: '---', slots: 3);
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('null cursor shows the marker (dimmed but present)', () {
@@ -255,7 +240,7 @@ void main() {
 
         final marker = markerSpan(spans, '---');
         expect(marker.style!.color!.a, greaterThan(0));
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
     });
 
@@ -275,7 +260,7 @@ void main() {
             resolver,
             renderMode: MarkerRenderMode.active(input.length),
           );
-          expect(totalSlots(spans), input.length, reason: 'slot mismatch at "$input"');
+          expect(cursorSlots(spans), input.length, reason: 'slot mismatch at "$input"');
         }
       });
 
@@ -289,7 +274,7 @@ void main() {
             resolver,
             renderMode: MarkerRenderMode.active(input.length),
           );
-          expect(totalSlots(spans), input.length, reason: 'slot mismatch at "$input"');
+          expect(cursorSlots(spans), input.length, reason: 'slot mismatch at "$input"');
         }
       });
     });

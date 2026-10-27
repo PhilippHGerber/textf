@@ -430,19 +430,12 @@ class _SpanBuildState with HeadingRegion {
           textBuffer.write(')');
         case PlaceholderToken(:final key):
           textBuffer.write('{$key}');
-        case HeadingToken(:final position, :final contentStart):
-          // ignore: avoid-substring
-          textBuffer.write(text.substring(position, contentStart));
-        case HeadingSuffixToken(:final position, :final length):
-          // Handled above (emitted as a dimmed marker); this defensive branch
-          // keeps the slot count correct if ever reached.
-          // ignore: avoid-substring
-          textBuffer.write(text.substring(position, position + length));
-        case ThematicBreakToken(:final position, :final length):
+        case HeadingToken():
+          textBuffer.write(_sourceOf(token, text));
+        case HeadingSuffixToken() || ThematicBreakToken():
           // Handled above (emitted as a dimmed marker span); this defensive
           // branch keeps the slot count correct if ever reached.
-          // ignore: avoid-substring
-          textBuffer.write(text.substring(position, position + length));
+          textBuffer.write(_sourceOf(token, text));
         case EscapeMarkerToken():
           flushText();
           final TextStyle style = _markerStyleForRange(token.position, token.position + 1);
@@ -702,15 +695,12 @@ class _SpanBuildState with HeadingRegion {
 
     // Process link text: fetch cached tokens and pairs to detect nested formatting markers.
     final entry = TextfTokenCache.getTokensAndPairs(linkText);
-    final innerTokens = entry.tokens;
-    final validPairsLink = entry.validPairs;
 
-    final bool hasNested = innerTokens.any((t) => t is! TextToken);
+    final bool hasNested = entry.tokens.any((t) => t is! TextToken);
     if (hasNested) {
       _processNestedLinkText(
         linkText: linkText,
-        innerTokens: innerTokens,
-        validPairs: validPairsLink,
+        entry: entry,
         spans: spans,
         linkStyle: linkStyle,
         markerStyle: markerStyle,
@@ -730,7 +720,16 @@ class _SpanBuildState with HeadingRegion {
     return index + kLinkTokenCount;
   }
 
+  /// The exact source characters [token] covers in [source], one per cursor
+  /// slot.
+  static String _sourceOf(TextfToken token, String source) =>
+      // ignore: avoid-substring
+      source.substring(token.position, token.position + token.length);
+
   /// Emits styled [TextSpan]s for link text that contains nested format markers.
+  ///
+  /// [entry] is the cached tokenization of [linkText] (its tokens and valid
+  /// marker pairs).
   ///
   /// Uses [linkStyle] as the base style, merging inner formatting on top.
   /// Paired format markers and escape backslashes are emitted with
@@ -748,14 +747,14 @@ class _SpanBuildState with HeadingRegion {
   /// markers use [TextSpan] only (no [WidgetSpan] vertical displacement).
   static void _processNestedLinkText({
     required String linkText,
-    required List<TextfToken> innerTokens,
-    required Map<int, int> validPairs,
+    required TokenCacheEntry entry,
     required List<InlineSpan> spans,
     required TextStyle linkStyle,
     required TextStyle markerStyle,
     required TextfStyleResolver resolver,
     required TextfPalette palette,
   }) {
+    final TokenCacheEntry(tokens: innerTokens, :validPairs) = entry;
     final nestedFormatStack = <FormatStackEntry>[];
     final nestedTextBuffer = StringBuffer();
 
@@ -827,10 +826,7 @@ class _SpanBuildState with HeadingRegion {
             LinkEndToken():
           // Not markers inside link text: write the exact source characters
           // as link-styled literal text, one cursor slot each.
-          nestedTextBuffer.write(
-            // ignore: avoid-substring
-            linkText.substring(token.position, token.position + token.length),
-          );
+          nestedTextBuffer.write(_sourceOf(token, linkText));
       }
     }
 

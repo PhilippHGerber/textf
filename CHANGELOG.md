@@ -7,6 +7,7 @@ All notable changes to the `textf` package will be documented in this file.
 ### Fixed
 
 * **Cursor slots in link text in the editor:** in a `TextfEditingController` field, every character of link text now keeps exactly one cursor slot, so the cursor no longer drifts from the text in links like `[# a](u)`, `[---](u)` or `[foo [bar](/uri)](/uri)`. As in CommonMark, `#`, `---` and nested link brackets inside link text render as plain link-styled text, not as a heading, a rule or dimmed markers. Inline markers inside link text (`**`, `` ` ``, `\`) stay dimmed as before.
+* **Reversed composing range in the editor:** a composing range on `TextfEditingController` whose start lies after its end is now ignored instead of duplicating text in the field.
 
 ### Performance
 

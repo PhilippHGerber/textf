@@ -4,24 +4,15 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/editing/textf_span_builder.dart';
 
-const TextDecoration _underline = TextDecoration.underline;
+import '../../widgets/pump_textf_widget.dart';
 
-/// Cursor slots of [spans]: a [TextSpan] counts its text length, a
-/// [WidgetSpan] counts one.
-int _slotCount(List<InlineSpan> spans) {
-  var slots = 0;
-  for (final span in spans) {
-    if (span is TextSpan) slots += span.text?.length ?? 0;
-    if (span is WidgetSpan) slots += 1;
-  }
-  return slots;
-}
+const TextDecoration _underline = TextDecoration.underline;
 
 List<InlineSpan> _compose(List<InlineSpan> spans, TextRange composing) {
   final result = TextfSpanBuilder.applyComposing(spans, composing);
   expect(
-    _slotCount(result),
-    _slotCount(spans),
+    cursorSlots(result),
+    cursorSlots(spans),
     reason: 'composing must not change the cursor-slot count',
   );
   return result;
@@ -96,8 +87,8 @@ void main() {
 
       final decoration = _decorationOf(result.single);
       expect(decoration, isNotNull);
-      expect(decoration!.contains(TextDecoration.lineThrough), isTrue);
-      expect(decoration.contains(_underline), isTrue);
+      expect(decoration?.contains(TextDecoration.lineThrough) ?? false, isTrue);
+      expect(decoration?.contains(_underline) ?? false, isTrue);
     });
 
     test('a range over widget slots passes the widgets through without underline', () {

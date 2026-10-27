@@ -6,6 +6,8 @@ import 'package:textf/src/editing/marker_render_mode.dart';
 import 'package:textf/src/editing/textf_span_builder.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 
+import '../../widgets/pump_textf_widget.dart';
+
 /// Test-first specification for heading rendering in the editor span builder
 /// (cases A5, A6, B2, B3, B4, B7, B8).
 ///
@@ -40,23 +42,6 @@ void main() {
     });
 
     // -- Helpers ------------------------------------------------------------
-
-    /// Total cursor slots: each [TextSpan] contributes `text.length`, each
-    /// [WidgetSpan] contributes exactly 1. Recurses into children.
-    int totalSlots(List<InlineSpan> spans) {
-      var sum = 0;
-      void walk(InlineSpan span) {
-        if (span is TextSpan) {
-          sum += span.text?.length ?? 0;
-          (span.children ?? const <InlineSpan>[]).forEach(walk);
-        } else if (span is WidgetSpan) {
-          sum += 1;
-        }
-      }
-
-      spans.forEach(walk);
-      return sum;
-    }
 
     /// Flattens the span tree into leaf text runs with their effective
     /// (ancestor-merged) style.
@@ -105,7 +90,7 @@ void main() {
         );
 
         // 🚀 is two UTF-16 code units; the invariant counts code units.
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('B2 — heading with bold and italic keeps slot count', () {
@@ -116,7 +101,7 @@ void main() {
           resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('B8 — heading with a link keeps slot count', () {
@@ -127,7 +112,7 @@ void main() {
           resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('A5 — open inline marker on a heading line keeps slot count', () {
@@ -139,7 +124,7 @@ void main() {
           resolver,
           renderMode: const MarkerRenderMode.active(input.length),
         );
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('A6 — two headings with an open marker keep slot count', () {
@@ -150,7 +135,7 @@ void main() {
           resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('all-markers-hidden mode also preserves slot count', () {
@@ -161,7 +146,7 @@ void main() {
           resolver,
           renderMode: MarkerRenderMode.hidden,
         );
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
     });
 
@@ -182,7 +167,7 @@ void main() {
         final paragraph = styleOf(spans, 'Normal text afterwards');
         expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no enlarged heading size leak');
         expect(paragraph.fontWeight, baseStyle.fontWeight, reason: 'no bold heading weight leak');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('B4 — every paragraph between headings stays at base style', () {
@@ -199,7 +184,7 @@ void main() {
           expect(style.fontSize, baseStyle.fontSize, reason: '$needle keeps base size');
           expect(style.fontWeight, baseStyle.fontWeight, reason: '$needle keeps base weight');
         }
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('A5/A6 — an open `**` on a heading line does not bold the next paragraph', () {
@@ -216,7 +201,7 @@ void main() {
         final paragraph = styleOf(spans, 'Normal paragraph here');
         expect(paragraph.fontWeight, baseStyle.fontWeight, reason: 'no bold bleed from open **');
         expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no heading size bleed');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
     });
 
@@ -258,7 +243,7 @@ void main() {
         );
 
         final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '#\t');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
         expect(marker.text, '#\t');
       });
 
@@ -273,7 +258,7 @@ void main() {
 
         final paragraph = styleOf(spans, 'Normal text afterwards');
         expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no enlarged heading size leak');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('lone-CR heading keeps slot count and terminates style at the paragraph', () {
@@ -287,7 +272,7 @@ void main() {
 
         final paragraph = styleOf(spans, 'Normal text afterwards');
         expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no enlarged heading size leak');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
     });
 
@@ -307,7 +292,7 @@ void main() {
 
         final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '   # ');
         expect(marker.text, '   # ');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('4-space indent is plain text, not a dimmed heading marker', () {
@@ -321,7 +306,7 @@ void main() {
 
         final title = styleOf(spans, 'Title');
         expect(title.fontSize, baseStyle.fontSize, reason: '4 spaces disqualifies the heading');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
     });
 
@@ -341,7 +326,7 @@ void main() {
 
         final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '#');
         expect(marker.text, '#');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('`## ` (trailing space only) preserves the marker + trailing-space slots', () {
@@ -355,7 +340,7 @@ void main() {
 
         final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '## ');
         expect(marker.text, '## ');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('empty heading followed by a paragraph does not leak heading style', () {
@@ -369,7 +354,7 @@ void main() {
 
         final paragraph = styleOf(spans, 'Normal paragraph here');
         expect(paragraph.fontSize, baseStyle.fontSize, reason: 'no heading size bleed');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('indented lone `#` at EOF preserves indentation + hash slots', () {
@@ -383,7 +368,7 @@ void main() {
 
         final marker = spans.whereType<TextSpan>().firstWhere((s) => s.text == '  #');
         expect(marker.text, '  #');
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
     });
 
@@ -439,7 +424,7 @@ void main() {
 
         final marker = markerSpan(spans);
         expect(marker.style!.color!.a, 0);
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('null cursor shows the marker (dimmed but present)', () {
@@ -448,7 +433,7 @@ void main() {
 
         final marker = markerSpan(spans);
         expect(marker.style!.color!.a, greaterThan(0));
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
     });
 
@@ -480,7 +465,7 @@ void main() {
         );
         stopwatch.stop();
 
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
         expect(stopwatch.elapsedMilliseconds, lessThan(2000));
       });
     });
@@ -495,7 +480,7 @@ void main() {
         // Null cursor shows all markers with the dimmed-but-present style.
         final spans = builder.build(input, baseStyle, resolver);
 
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
         // Opening run and the ` ##` suffix are both present as marker spans.
         final texts = spans.whereType<TextSpan>().map((s) => s.text).toList();
         expect(texts, containsAll(<String>['## ', ' ##']));
@@ -516,7 +501,7 @@ void main() {
         final suffix = spans.whereType<TextSpan>().firstWhere((s) => s.text == ' ##');
         // Inactive/hidden marker style collapses the font size.
         expect(suffix.style!.fontSize, lessThan(baseStyle.fontSize!));
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
 
       test('leading + trailing whitespace slots are preserved (`#   foo   `)', () {
@@ -528,7 +513,7 @@ void main() {
           renderMode: const MarkerRenderMode.active(0),
         );
 
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
         final texts = spans.whereType<TextSpan>().map((s) => s.text).toList();
         // Leading `#   ` is the opening marker; the three trailing spaces are
         // the suffix region.
@@ -544,7 +529,7 @@ void main() {
           renderMode: const MarkerRenderMode.active(0),
         );
 
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
         final texts = spans.whereType<TextSpan>().map((s) => s.text).toList();
         expect(texts, containsAll(<String>['### ', '###']));
       });
@@ -558,7 +543,7 @@ void main() {
           renderMode: const MarkerRenderMode.active(0),
         );
 
-        expect(totalSlots(spans), input.length);
+        expect(cursorSlots(spans), input.length);
       });
     });
   });
