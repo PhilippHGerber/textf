@@ -184,16 +184,6 @@ class TextfEditingController extends TextEditingController {
     notifyListeners();
   }
 
-  /// Computes the [MarkerRenderMode] for the given [visibility] and [selection].
-  @visibleForTesting
-  static MarkerRenderMode computeRenderMode({
-    required MarkerVisibility visibility,
-    required TextSelection selection,
-  }) => MarkerRenderMode.fromVisibility(
-    visibility: visibility,
-    selection: selection,
-  );
-
   /// Builds a [TextSpan] tree with live formatting applied.
   ///
   /// Parses the current [text] for formatting markers and returns styled
