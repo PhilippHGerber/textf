@@ -5,9 +5,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/editing/marker_render_mode.dart';
 import 'package:textf/src/editing/textf_span_builder.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/textf.dart';
-
-import '../../widgets/pump_textf_widget.dart';
 
 /// Extension to access [TextSpan.text] on [InlineSpan] for test assertions.
 /// Returns `null` for non-[TextSpan] spans (e.g. [WidgetSpan]).
@@ -18,27 +17,13 @@ extension _TestTextAccess on InlineSpan {
 void main() {
   group('TextfSpanBuilder', () {
     late TextfSpanBuilder builder;
-    late BuildContext testContext;
+    final resolver = TextfStyleResolver.withState(options: null);
 
     setUp(() {
       builder = TextfSpanBuilder();
     });
 
-    Widget buildTestWidget(
-      WidgetTester tester,
-      Widget Function(BuildContext) widgetBuilder,
-    ) {
-      return neutralTestApp(
-        child: Builder(
-          builder: (context) {
-            testContext = context;
-            return widgetBuilder(context);
-          },
-        ),
-      );
-    }
-
-    /// Verifies that the total character-slot count of all spans equals the
+    /// Verifies that the total cursor-slot count of all spans equals the
     /// original text length. This is the critical invariant for cursor
     /// positioning in text fields.
     ///
@@ -57,97 +42,81 @@ void main() {
     }
 
     group('Fast Paths', () {
-      testWidgets('empty text returns empty list', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build('', testContext, const TextStyle());
+      test('empty text returns empty list', () {
+        final spans = builder.build('', const TextStyle(), resolver);
         expect(spans, isEmpty);
       });
 
-      testWidgets('plain text returns single TextSpan', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          'hello world',
-          testContext,
-          const TextStyle(),
-        );
+      test('plain text returns single TextSpan', () {
+        final spans = builder.build('hello world', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect(spans.first.text, 'hello world');
       });
     });
 
-    testWidgets('nested formatting keeps heading style', (tester) async {
-      await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-      final spans = builder.build('# **Title**', testContext, const TextStyle(fontSize: 14));
+    test('nested formatting keeps heading style', () {
+      final spans = builder.build('# **Title**', const TextStyle(fontSize: 14), resolver);
 
       final titleSpan = spans.whereType<TextSpan>().firstWhere((s) => s.text!.contains('Title'));
       expect(titleSpan.style!.fontSize, 28.0);
       expect(titleSpan.style!.fontWeight, FontWeight.bold);
     });
 
-    testWidgets('heading marker uses heading size', (tester) async {
-      await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-      final spans = builder.build('# Title', testContext, const TextStyle(fontSize: 14));
+    test('heading marker uses heading size', () {
+      final spans = builder.build('# Title', const TextStyle(fontSize: 14), resolver);
 
       final markerSpan = spans.whereType<TextSpan>().first;
       expect(markerSpan.text, '# ');
       expect(markerSpan.style!.fontSize, 28.0);
     });
 
-    group('Character Count Invariant', () {
-      testWidgets('bold text preserves character count', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+    group('Cursor-Slot Count Invariant', () {
+      test('bold text preserves cursor-slot count', () {
         const input = '**bold**';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
         expect(totalSpanLength(spans), input.length);
       });
 
-      testWidgets('italic text preserves character count', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('italic text preserves cursor-slot count', () {
         const input = '*italic*';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
         expect(totalSpanLength(spans), input.length);
       });
 
-      testWidgets('mixed formatting preserves character count', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('mixed formatting preserves cursor-slot count', () {
         const input = 'hello **bold** and *italic* `code` world';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
         expect(totalSpanLength(spans), input.length);
       });
 
-      testWidgets('link text preserves character count', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('link text preserves cursor-slot count', () {
         const input = '[click here](https://example.com)';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
         expect(totalSpanLength(spans), input.length);
       });
 
-      testWidgets('placeholder text preserves character count', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('placeholder text preserves cursor-slot count', () {
         const input = 'hello {icon} world';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
         expect(totalSpanLength(spans), input.length);
       });
 
-      testWidgets('nested formatting preserves character count', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('nested formatting preserves cursor-slot count', () {
         const input = '**bold *italic* bold**';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
         expect(totalSpanLength(spans), input.length);
       });
 
-      testWidgets('all formatting types preserve character count', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('all formatting types preserve cursor-slot count', () {
         const input = '**b** *i* ~~s~~ ++u++ ==h== `c` ^sup^ ~sub~ [l](u) {p}';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
         expect(totalSpanLength(spans), input.length);
       });
     });
 
     group('Bold Formatting', () {
-      testWidgets('renders markers dimmed and content bold', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build('**bold**', testContext, const TextStyle());
+      test('renders markers dimmed and content bold', () {
+        final spans = builder.build('**bold**', const TextStyle(), resolver);
         // 3 spans: ** (dimmed) + bold (styled) + ** (dimmed)
         expect(spans.length, 3);
         expect(spans.first.text, '**');
@@ -156,13 +125,8 @@ void main() {
         expect(spans[2].text, '**');
       });
 
-      testWidgets('mixed bold and plain text', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          'hello **bold** world',
-          testContext,
-          const TextStyle(),
-        );
+      test('mixed bold and plain text', () {
+        final spans = builder.build('hello **bold** world', const TextStyle(), resolver);
         // 5 spans: hello  + ** + bold + ** + world
         expect(spans.length, 5);
         expect(spans.first.text, 'hello ');
@@ -175,13 +139,8 @@ void main() {
     });
 
     group('Italic Formatting', () {
-      testWidgets('renders markers dimmed and content italic', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          '*italic*',
-          testContext,
-          const TextStyle(),
-        );
+      test('renders markers dimmed and content italic', () {
+        final spans = builder.build('*italic*', const TextStyle(), resolver);
         expect(spans.length, 3);
         expect(spans.first.text, '*');
         expect(spans[1].text, 'italic');
@@ -191,13 +150,8 @@ void main() {
     });
 
     group('Bold-Italic Formatting', () {
-      testWidgets('applies both bold and italic', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          '***both***',
-          testContext,
-          const TextStyle(),
-        );
+      test('applies both bold and italic', () {
+        final spans = builder.build('***both***', const TextStyle(), resolver);
         expect(spans.length, 3);
         expect(spans.first.text, '***');
         expect(spans[1].text, 'both');
@@ -208,13 +162,8 @@ void main() {
     });
 
     group('Strikethrough Formatting', () {
-      testWidgets('applies line-through decoration', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          '~~strike~~',
-          testContext,
-          const TextStyle(),
-        );
+      test('applies line-through decoration', () {
+        final spans = builder.build('~~strike~~', const TextStyle(), resolver);
         expect(spans.length, 3);
         expect(spans.first.text, '~~');
         expect(spans[1].text, 'strike');
@@ -227,13 +176,8 @@ void main() {
     });
 
     group('Underline Formatting', () {
-      testWidgets('applies underline decoration', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          '++underline++',
-          testContext,
-          const TextStyle(),
-        );
+      test('applies underline decoration', () {
+        final spans = builder.build('++underline++', const TextStyle(), resolver);
         expect(spans.length, 3);
         expect(spans.first.text, '++');
         expect(spans[1].text, 'underline');
@@ -246,13 +190,8 @@ void main() {
     });
 
     group('Highlight Formatting', () {
-      testWidgets('applies highlight background', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          '==highlight==',
-          testContext,
-          const TextStyle(),
-        );
+      test('applies highlight background', () {
+        final spans = builder.build('==highlight==', const TextStyle(), resolver);
         expect(spans.length, 3);
         expect(spans.first.text, '==');
         expect(spans[1].text, 'highlight');
@@ -262,13 +201,8 @@ void main() {
     });
 
     group('Code Formatting', () {
-      testWidgets('applies monospace font', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          '`code`',
-          testContext,
-          const TextStyle(),
-        );
+      test('applies monospace font', () {
+        final spans = builder.build('`code`', const TextStyle(), resolver);
         expect(spans.length, 3);
         expect(spans.first.text, '`');
         expect(spans[1].text, 'code');
@@ -278,12 +212,11 @@ void main() {
     });
 
     group('Superscript Formatting', () {
-      testWidgets('always emits per-character WidgetSpan with vertical offset', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('always emits per-character WidgetSpan with vertical offset', () {
         const baseStyle = TextStyle(fontSize: 16);
         // Default always mode; content still uses WidgetSpan
         // for vertical displacement. "super" = 5 chars → 5 WidgetSpans.
-        final spans = builder.build('^super^', testContext, baseStyle);
+        final spans = builder.build('^super^', baseStyle, resolver);
         // ^ (TextSpan) + 5 × WidgetSpan + ^ (TextSpan) = 7 spans
         expect(spans.length, 7);
         expect(spans.first, isA<TextSpan>());
@@ -304,11 +237,10 @@ void main() {
     });
 
     group('Subscript Formatting', () {
-      testWidgets('always emits per-character WidgetSpan with vertical offset', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('always emits per-character WidgetSpan with vertical offset', () {
         const baseStyle = TextStyle(fontSize: 16);
         // "sub" = 3 chars → ^ + 3 WidgetSpans + ~ = 5 spans
-        final spans = builder.build('~sub~', testContext, baseStyle);
+        final spans = builder.build('~sub~', baseStyle, resolver);
         expect(spans.length, 5);
         expect(spans.first, isA<TextSpan>());
         expect(spans.first.text, '~');
@@ -325,12 +257,11 @@ void main() {
     });
 
     group('Link Handling', () {
-      testWidgets('renders link with all characters visible', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('renders link with all characters visible', () {
         final spans = builder.build(
           '[click here](https://example.com)',
-          testContext,
           const TextStyle(),
+          resolver,
         );
         // Should produce 5 spans: [ , link text, ]( , url, )
         expect(spans.length, 5);
@@ -341,13 +272,8 @@ void main() {
         expect(spans[4].text, ')');
       });
 
-      testWidgets('link text gets link styling', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          '[link](url)',
-          testContext,
-          const TextStyle(),
-        );
+      test('link text gets link styling', () {
+        final spans = builder.build('[link](url)', const TextStyle(), resolver);
         // The link text span should have underline decoration (link style)
         expect(
           spans[1].style?.decoration,
@@ -355,31 +281,24 @@ void main() {
         );
       });
 
-      testWidgets('incomplete link renders as plain text', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          '[not a link',
-          testContext,
-          const TextStyle(),
-        );
+      test('incomplete link renders as plain text', () {
+        final spans = builder.build('[not a link', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect(spans.first.text, '[not a link');
       });
 
-      testWidgets('plain text link still renders as single content span', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build('[click here](url)', testContext, const TextStyle());
+      test('plain text link still renders as single content span', () {
+        final spans = builder.build('[click here](url)', const TextStyle(), resolver);
         // Simple link: [ + text + ]( + url + ) — 5 spans
         expect(spans.length, 5);
         expect(spans[1].text, 'click here');
       });
 
       group('Nested formatting in link text', () {
-        testWidgets('nested bold renders correctly with link+bold style', (tester) async {
-          await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        test('nested bold renders correctly with link+bold style', () {
           // [**bold**](url) = 15 chars
           // Spans: [ | ** | bold | ** | ]( | url | )
-          final spans = builder.build('[**bold**](url)', testContext, const TextStyle());
+          final spans = builder.build('[**bold**](url)', const TextStyle(), resolver);
 
           final totalChars = spans.whereType<TextSpan>().fold(
             0,
@@ -396,10 +315,9 @@ void main() {
           expect(boldSpan.style?.decoration, TextDecoration.underline);
         });
 
-        testWidgets('nested italic renders correctly with link+italic style', (tester) async {
-          await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        test('nested italic renders correctly with link+italic style', () {
           // [_italic_](url) = 15 chars
-          final spans = builder.build('[_italic_](url)', testContext, const TextStyle());
+          final spans = builder.build('[_italic_](url)', const TextStyle(), resolver);
 
           final totalChars = spans.whereType<TextSpan>().fold(
             0,
@@ -414,10 +332,9 @@ void main() {
           expect(italicSpan.style?.decoration, TextDecoration.underline);
         });
 
-        testWidgets('mixed nested formatting maintains character-slot invariant', (tester) async {
-          await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        test('mixed nested formatting maintains cursor-slot invariant', () {
           const input = '[**bold** plain](url)';
-          final spans = builder.build(input, testContext, const TextStyle());
+          final spans = builder.build(input, const TextStyle(), resolver);
 
           final totalChars = spans.whereType<TextSpan>().fold(
             0,
@@ -438,11 +355,10 @@ void main() {
           expect(plainSpan.style?.decoration, TextDecoration.underline);
         });
 
-        testWidgets('unpaired markers in link text render as literal text', (tester) async {
-          await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+        test('unpaired markers in link text render as literal text', () {
           // [**unpaired](url) — ** is not closed inside link text
           const input = '[**unpaired](url)';
-          final spans = builder.build(input, testContext, const TextStyle());
+          final spans = builder.build(input, const TextStyle(), resolver);
 
           final totalChars = spans.whereType<TextSpan>().fold(
             0,
@@ -458,13 +374,8 @@ void main() {
     });
 
     group('Placeholder Handling', () {
-      testWidgets('renders placeholder as literal text', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          'hello {icon} world',
-          testContext,
-          const TextStyle(),
-        );
+      test('renders placeholder as literal text', () {
+        final spans = builder.build('hello {icon} world', const TextStyle(), resolver);
         // The {icon} should be rendered as plain text
         final allText = spans.whereType<TextSpan>().map((s) => s.text ?? '').join();
         expect(allText, 'hello {icon} world');
@@ -472,13 +383,8 @@ void main() {
     });
 
     group('Nested Formatting', () {
-      testWidgets('bold with nested italic', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          '**bold *italic* bold**',
-          testContext,
-          const TextStyle(),
-        );
+      test('bold with nested italic', () {
+        final spans = builder.build('**bold *italic* bold**', const TextStyle(), resolver);
         // ** + bold  + * + italic + * +  bold + **
         expect(spans.length, 7);
         expect(spans.first.text, '**'); // opening bold marker
@@ -494,17 +400,10 @@ void main() {
         expect(spans[6].text, '**'); // closing bold marker
       });
 
-      testWidgets('italic outer with nested bold — outer style persists after inner closes', (
-        tester,
-      ) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('italic outer with nested bold — outer style persists after inner closes', () {
         // Stack trace: push italic → push bold → removeLast (bold) → removeLast (italic).
         // After ** closes, only italic remains on the stack so ' italic' is italic-only.
-        final spans = builder.build(
-          '_italic **bold** italic_',
-          testContext,
-          const TextStyle(),
-        );
+        final spans = builder.build('_italic **bold** italic_', const TextStyle(), resolver);
         // _ + 'italic ' + ** + 'bold' + ** + ' italic' + _
         expect(spans.length, 7);
 
@@ -526,15 +425,12 @@ void main() {
         expect(spans[6].text, '_'); // closing italic marker
       });
 
-      testWidgets('overlapping markers (cross-nesting) render as unpaired plain text', (
-        tester,
-      ) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('overlapping markers (cross-nesting) render as unpaired plain text', () {
         // **_text**_ — ** wants to pair at [0,3], _ wants to pair at [1,4].
         // These overlap; pair validation rejects both pairs.
         // All markers are unpaired → rendered as literal characters.
         const input = '**_text**_';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
 
         final allText = spans.whereType<TextSpan>().map((s) => s.text ?? '').join();
         expect(allText, input);
@@ -545,13 +441,12 @@ void main() {
         }
       });
 
-      testWidgets('nested bold+italic inside link text — stack pop order correct', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('nested bold+italic inside link text — stack pop order correct', () {
         // [**bold** plain](url): the link re-tokenizer sees ** as a valid pair.
         // Stack inside _processNestedLinkText: push bold → removeLast (bold).
         // 'plain' after ** closes should have link style only (no bold).
         const input = '[**bold** plain](url)';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
 
         expect(totalSpanLength(spans), input.length);
 
@@ -585,12 +480,12 @@ void main() {
       /// Link style and marker style of a plain `[x](u)` link: the reference
       /// the link-text characters below are compared against.
       ({TextStyle link, TextStyle marker}) referenceStyles() {
-        final spans = builder.build('[x](u)', testContext, baseStyle);
+        final spans = builder.build('[x](u)', baseStyle, resolver);
         return (link: styleAt(spans, 1)!, marker: styleAt(spans, 0)!);
       }
 
       void expectLinkStyledLiterals(String input, List<int> offsets) {
-        final spans = builder.build(input, testContext, baseStyle);
+        final spans = builder.build(input, baseStyle, resolver);
         final styles = referenceStyles();
 
         expect(totalSpanLength(spans), input.length);
@@ -609,29 +504,25 @@ void main() {
         }
       }
 
-      testWidgets('heading opening run in link text is link-styled text', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('heading opening run in link text is link-styled text', () {
         // [# a](u): `#`, ` ` and `a` are link text.
         expectLinkStyledLiterals('[# a](u)', [1, 2, 3]);
       });
 
-      testWidgets('thematic-break run in link text is link-styled text', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('thematic-break run in link text is link-styled text', () {
         expectLinkStyledLiterals('[---](u)', [1, 2, 3]);
       });
 
-      testWidgets('nested link syntax in link text is link-styled text', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('nested link syntax in link text is link-styled text', () {
         // [foo [bar](/uri)](/uri): the inner `[`, `](`, `)` sit at 5, 9-10, 15.
         expectLinkStyledLiterals('[foo [bar](/uri)](/uri)', [5, 9, 10, 15]);
       });
 
-      testWidgets('paired markers and escapes stay dimmed; text, unpaired markers and '
-          'placeholders stay link-styled', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('paired markers and escapes stay dimmed; text, unpaired markers and '
+          'placeholders stay link-styled', () {
         // Offsets: [0 **1-2 b3 **4-5 \6 *7 {k}8-10 *11 ]12
         const input = r'[**b**\*{k}*](u)';
-        final spans = builder.build(input, testContext, baseStyle);
+        final spans = builder.build(input, baseStyle, resolver);
         final styles = referenceStyles();
 
         expect(totalSpanLength(spans), input.length);
@@ -647,62 +538,48 @@ void main() {
     });
 
     group('Escape Characters (editing mode)', () {
-      testWidgets('escaped marker preserves character-slot invariant', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('escaped marker preserves cursor-slot invariant', () {
         // Raw text: \*not italic* (13 chars)
         // The \ must occupy a slot so total equals 13.
         const input = r'\*not italic*';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
         expect(totalSpanLength(spans), input.length);
       });
 
-      testWidgets('escaped bold marker preserves character-slot invariant', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('escaped bold marker preserves cursor-slot invariant', () {
         // Raw: a\**b** — escape stops the ** from being a bold marker opener.
         const input = r'a\**b**';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
         expect(totalSpanLength(spans), input.length);
       });
 
-      testWidgets('escaped backslash preserves character-slot invariant', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('escaped backslash preserves cursor-slot invariant', () {
         // Raw: \\ (2 chars) → editing mode emits \\ as a 2-char token.
         const input = r'\\';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
         expect(totalSpanLength(spans), input.length);
       });
 
-      testWidgets('escaped marker in link text preserves character-slot invariant', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('escaped marker in link text preserves cursor-slot invariant', () {
         // [a\*b](url) — the link-text portion is 4 chars (a \ * b).
         const input = r'[a\*b](url)';
-        final spans = builder.build(input, testContext, const TextStyle());
+        final spans = builder.build(input, const TextStyle(), resolver);
         expect(totalSpanLength(spans), input.length);
       });
     });
 
     group('Unpaired Markers', () {
-      testWidgets('single asterisk renders as plain text', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
-        final spans = builder.build(
-          'hello * world',
-          testContext,
-          const TextStyle(),
-        );
+      test('single asterisk renders as plain text', () {
+        final spans = builder.build('hello * world', const TextStyle(), resolver);
         expect(spans.length, 1);
         expect(spans.first.text, 'hello * world');
       });
     });
 
     group('Marker Style', () {
-      testWidgets('markers have dimmed opacity', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('markers have dimmed opacity', () {
         const baseColor = Color(0xFF000000);
-        final spans = builder.build(
-          '**bold**',
-          testContext,
-          const TextStyle(color: baseColor),
-        );
+        final spans = builder.build('**bold**', const TextStyle(color: baseColor), resolver);
         // The marker spans should have reduced opacity
         final markerColor = spans.first.style?.color;
         expect(markerColor, isNotNull);
@@ -711,28 +588,16 @@ void main() {
     });
 
     group('TextfOptions Integration', () {
-      testWidgets('respects TextfOptions bold style', (tester) async {
-        await tester.pumpWidget(
-          neutralTestApp(
-            child: TextfOptions(
-              boldStyle: const TextStyle(
-                fontWeight: FontWeight.w900,
-                color: Color(0xFFF44336),
-              ),
-              child: Builder(
-                builder: (context) {
-                  testContext = context;
-                  return Container();
-                },
-              ),
+      test('respects TextfOptions bold style', () {
+        final optionsResolver = TextfStyleResolver.withState(
+          options: const TextfOptionsData(
+            boldStyle: TextStyle(
+              fontWeight: FontWeight.w900,
+              color: Color(0xFFF44336),
             ),
           ),
         );
-        final spans = builder.build(
-          '**bold**',
-          testContext,
-          const TextStyle(),
-        );
+        final spans = builder.build('**bold**', const TextStyle(), optionsResolver);
         // spans[1] is the content span (between markers)
         expect(spans[1].style?.fontWeight, FontWeight.w900);
         expect(spans[1].style?.color, const Color(0xFFF44336));
@@ -745,14 +610,13 @@ void main() {
       // Content "bold" at positions 2-5
       // Closing marker ** at positions 6-7
 
-      testWidgets('cursor inside span shows active markers', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('cursor inside span shows active markers', () {
         const baseStyle = TextStyle(color: Color(0xFF000000));
         // Cursor at position 3 (inside "bold")
         final spans = builder.build(
           '**bold**',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(3),
         );
         expect(spans.length, 3);
@@ -763,14 +627,13 @@ void main() {
         expect(openMarkerColor.a, lessThan(1.0));
       });
 
-      testWidgets('cursor outside span hides inactive markers', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('cursor outside span hides inactive markers', () {
         const baseStyle = TextStyle(color: Color(0xFF000000));
         // Input: "hi **bold** bye" — cursor at position 0 ("h")
         final spans = builder.build(
           'hi **bold** bye',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
         // Find the opening ** marker (should be hidden)
@@ -780,14 +643,13 @@ void main() {
         expect(openMarker.style?.fontSize, lessThan(1));
       });
 
-      testWidgets('cursor on opening marker shows markers', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('cursor on opening marker shows markers', () {
         const baseStyle = TextStyle(color: Color(0xFF000000));
         // Cursor at position 0 (on the opening **)
         final spans = builder.build(
           '**bold**',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
         // Cursor is on the opening marker itself — should be active
@@ -795,40 +657,37 @@ void main() {
         expect(openMarkerColor!.a, greaterThan(0));
       });
 
-      testWidgets('cursor on closing marker shows markers', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('cursor on closing marker shows markers', () {
         const baseStyle = TextStyle(color: Color(0xFF000000));
         // Cursor at position 7 (end of closing **)
         final spans = builder.build(
           '**bold**',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(7),
         );
         final closeMarkerColor = spans[2].style?.color;
         expect(closeMarkerColor!.a, greaterThan(0));
       });
 
-      testWidgets('preserves character count with MarkerRenderMode.active', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('preserves cursor-slot count with MarkerRenderMode.active', () {
         const input = 'hi **bold** and *italic* bye';
         final spans = builder.build(
           input,
-          testContext,
           const TextStyle(),
+          resolver,
           renderMode: const MarkerRenderMode.active(5),
         );
         expect(totalSpanLength(spans), input.length);
       });
 
-      testWidgets('link markers hidden when cursor outside', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('link markers hidden when cursor outside', () {
         const baseStyle = TextStyle(color: Color(0xFF000000));
         // Input: "hi [link](url) bye" — cursor at position 0
         final spans = builder.build(
           'hi [link](url) bye',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
         // Find the "[" marker (should be hidden)
@@ -837,14 +696,13 @@ void main() {
         expect(bracketSpan.style?.color?.a, 0);
       });
 
-      testWidgets('link markers visible when cursor inside', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('link markers visible when cursor inside', () {
         const baseStyle = TextStyle(color: Color(0xFF000000));
         // Input: "[link](url)" — cursor at position 2 (inside "link")
         final spans = builder.build(
           '[link](url)',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(2),
         );
         // "[" marker should be active (dimmed, not hidden)
@@ -852,13 +710,12 @@ void main() {
         expect(bracketColor!.a, greaterThan(0));
       });
 
-      testWidgets('heading marker hidden when cursor outside heading line', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('heading marker hidden when cursor outside heading line', () {
         const baseStyle = TextStyle(color: Color(0xFF000000), fontSize: 14);
         final spans = builder.build(
           '# Title\nbody',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(10),
         );
 
@@ -879,16 +736,13 @@ void main() {
     // instead of TextSpans.
     // -----------------------------------------------------------------
     group('Superscript/Subscript Preview Mode', () {
-      testWidgets('superscript emits per-character WidgetSpans when cursor outside', (
-        tester,
-      ) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('superscript emits per-character WidgetSpans when cursor outside', () {
         const baseStyle = TextStyle(fontSize: 16);
         // Input: "E=mc^2^" — cursor at 0 (outside the ^2^ span)
         final spans = builder.build(
           'E=mc^2^',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
         // "E=mc" (TextSpan) + ^ (WidgetSpan shrink) + 2 (WidgetSpan with padding)
@@ -910,14 +764,13 @@ void main() {
         expect(contentWidget.alignment, PlaceholderAlignment.middle);
       });
 
-      testWidgets('subscript emits per-character WidgetSpans when cursor outside', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('subscript emits per-character WidgetSpans when cursor outside', () {
         const baseStyle = TextStyle(fontSize: 16);
         // Input: "H~2~O" — cursor at 0 (outside the ~2~ span)
         final spans = builder.build(
           'H~2~O',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
         final widgetSpans = spans.whereType<WidgetSpan>().toList();
@@ -932,13 +785,12 @@ void main() {
         expect(edgeInsets.bottom, 0);
       });
 
-      testWidgets('superscript uses bottom padding (pushes up)', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('superscript uses bottom padding (pushes up)', () {
         const baseStyle = TextStyle(fontSize: 16);
         final spans = builder.build(
           'E=mc^2^',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
         final widgetSpans = spans.whereType<WidgetSpan>().toList();
@@ -949,30 +801,26 @@ void main() {
         expect(edgeInsets.top, 0);
       });
 
-      testWidgets('character count invariant preserved in preview mode', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('cursor-slot count invariant preserved in preview mode', () {
         const baseStyle = TextStyle(fontSize: 16);
         const input = 'E=mc^2^';
         final spans = builder.build(
           input,
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
         expect(totalSpanLength(spans), input.length);
       });
 
-      testWidgets('cursor inside span: markers TextSpan (visible), content WidgetSpan', (
-        tester,
-      ) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('cursor inside span: markers TextSpan (visible), content WidgetSpan', () {
         const baseStyle = TextStyle(fontSize: 16);
         // "^super^" — cursor at 3 (inside). Markers are active (visible TextSpan),
         // content is always WidgetSpan for vertical displacement.
         final spans = builder.build(
           '^super^',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(3),
         );
         // ^ (TextSpan) + 5 WidgetSpan content + ^ (TextSpan) = 7
@@ -986,16 +834,13 @@ void main() {
         expect(spans.last.text, '^');
       });
 
-      testWidgets('cursor outside: markers instantly hidden WidgetSpan, content WidgetSpan', (
-        tester,
-      ) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('cursor outside: markers instantly hidden WidgetSpan, content WidgetSpan', () {
         const baseStyle = TextStyle(fontSize: 16);
         // Cursor outside: markers become hidden SizedBox.shrink WidgetSpans.
         final spans = builder.build(
           '^super^',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(100),
         );
         // ^ (shrink WS) + 5 content WS + ^ (shrink WS) = 7 WidgetSpans
@@ -1005,14 +850,13 @@ void main() {
         }
       });
 
-      testWidgets('nested ^**bold**^ in preview mode uses all WidgetSpans', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('nested ^**bold**^ in preview mode uses all WidgetSpans', () {
         const baseStyle = TextStyle(fontSize: 16);
         // Input: "^**b**^" — cursor at 100 (outside [0,7]), opacity 0 → preview mode
         final spans = builder.build(
           '^**b**^',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(100),
         );
         // ^ (shrink) + ** (shrink×2) + b (WidgetSpan content) + ** (shrink×2) + ^ (shrink)
@@ -1025,14 +869,13 @@ void main() {
         expect(totalSpanLength(spans), '^**b**^'.length);
       });
 
-      testWidgets('multi-char superscript content emits one WidgetSpan per char', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('multi-char superscript content emits one WidgetSpan per char', () {
         const baseStyle = TextStyle(fontSize: 16);
         // Input: "x^abc^y" — 3 content chars → 3 content WidgetSpans
         final spans = builder.build(
           'x^abc^y',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
         // x (TextSpan) + ^ (shrink) + a (WS) + b (WS) + c (WS) + ^ (shrink) + y (TextSpan)
@@ -1056,13 +899,12 @@ void main() {
         expect(totalSpanLength(spans), 'x^abc^y'.length);
       });
 
-      testWidgets('hidden marker WidgetSpans use SizedBox.shrink', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('hidden marker WidgetSpans use SizedBox.shrink', () {
         const baseStyle = TextStyle(fontSize: 16);
         final spans = builder.build(
           '^x^',
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(100),
         );
         // ^ (shrink) + x (content WS) + ^ (shrink) = 3 WidgetSpans
@@ -1075,16 +917,11 @@ void main() {
         expect(sizedBox.height, 0);
       });
 
-      testWidgets('no renderMode: markers TextSpan, content WidgetSpan', (tester) async {
-        await tester.pumpWidget(buildTestWidget(tester, (_) => Container()));
+      test('no renderMode: markers TextSpan, content WidgetSpan', () {
         const baseStyle = TextStyle(fontSize: 16);
         // No renderMode → always-visible mode; content still uses WidgetSpan
         // for vertical displacement; markers are visible TextSpan.
-        final spans = builder.build(
-          '^super^',
-          testContext,
-          baseStyle,
-        );
+        final spans = builder.build('^super^', baseStyle, resolver);
         // ^ (TextSpan) + 5 WidgetSpan + ^ (TextSpan) = 7
         expect(spans.length, 7);
         expect(spans.first, isA<TextSpan>());

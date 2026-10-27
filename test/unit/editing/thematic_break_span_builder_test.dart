@@ -4,8 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/editing/marker_render_mode.dart';
 import 'package:textf/src/editing/textf_span_builder.dart';
-
-import '../../widgets/pump_textf_widget.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
 
 /// Editor-seam specification for thematic-break rendering in the span builder
 /// (ticket 4). A thematic break (`---`/`***`/`___`) is the sole whole-line
@@ -14,7 +13,7 @@ import '../../widgets/pump_textf_widget.dart';
 /// their place while they are hidden.
 ///
 /// The span builder must, for thematic-break lines:
-///  * Keep every character present (1:1 invariant): the total character-slot
+///  * Keep every character present (1:1 invariant): the total cursor-slot
 ///    count of all spans equals `text.length` in UTF-16 code units.
 ///  * While the markers are shown (cursor on the rule's line, or all markers
 ///    visible), emit the rule's `-`/`*`/`_` (and any inner/leading/trailing
@@ -25,7 +24,7 @@ import '../../widgets/pump_textf_widget.dart';
 void main() {
   group('TextfSpanBuilder — thematic breaks', () {
     late TextfSpanBuilder builder;
-    late BuildContext testContext;
+    final resolver = TextfStyleResolver.withState(options: null);
 
     const baseStyle = TextStyle(
       fontSize: 14,
@@ -40,20 +39,9 @@ void main() {
     /// Compact, newline-safe label for a test description.
     String jsonish(String s) => "'${s.replaceAll('\n', r'\n')}'";
 
-    Widget hostWidget(Widget Function(BuildContext) child) {
-      return neutralTestApp(
-        child: Builder(
-          builder: (context) {
-            testContext = context;
-            return child(context);
-          },
-        ),
-      );
-    }
-
     // -- Helpers ------------------------------------------------------------
 
-    /// Total character slots: each [TextSpan] contributes `text.length`, each
+    /// Total cursor slots: each [TextSpan] contributes `text.length`, each
     /// [WidgetSpan] contributes exactly 1. Recurses into children.
     int totalSlots(List<InlineSpan> spans) {
       var sum = 0;
@@ -74,7 +62,7 @@ void main() {
     TextSpan markerSpan(List<InlineSpan> spans, String marker) =>
         spans.whereType<TextSpan>().firstWhere((s) => s.text == marker);
 
-    /// Asserts [spans] holds a drawn rule filling [slots] character slots: one
+    /// Asserts [spans] holds a drawn rule filling [slots] cursor slots: one
     /// rule `WidgetSpan` plus a zero-size filler for each remaining slot, and
     /// no marker `TextSpan` carrying the raw [marker] characters.
     void expectDrawnRule(List<InlineSpan> spans, {required String marker, required int slots}) {
@@ -88,10 +76,10 @@ void main() {
     }
 
     // ========================================================================
-    // 1:1 character invariant across every recognized rule shape
+    // 1:1 cursor-to-character invariant across every recognized rule shape
     // ========================================================================
 
-    group('1:1 character invariant', () {
+    group('1:1 cursor-to-character invariant', () {
       const cases = <String>[
         '---',
         '***',
@@ -105,32 +93,29 @@ void main() {
       ];
 
       for (final input in cases) {
-        testWidgets('slot count == text.length for ${jsonish(input)}', (tester) async {
-          await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+        test('slot count == text.length for ${jsonish(input)}', () {
           final spans = builder.build(
             input,
-            testContext,
             baseStyle,
+            resolver,
             renderMode: const MarkerRenderMode.active(0),
           );
           expect(totalSlots(spans), input.length);
         });
       }
 
-      testWidgets('null-cursor (all markers dimmed) also preserves slot count', (tester) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('null-cursor (all markers dimmed) also preserves slot count', () {
         const input = 'above\n- - -\nbelow';
-        final spans = builder.build(input, testContext, baseStyle);
+        final spans = builder.build(input, baseStyle, resolver);
         expect(totalSlots(spans), input.length);
       });
 
-      testWidgets('hide-all-markers mode preserves slot count', (tester) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('hide-all-markers mode preserves slot count', () {
         const input = 'above\n___\nbelow';
         final spans = builder.build(
           input,
-          testContext,
           baseStyle,
+          resolver,
           renderMode: MarkerRenderMode.hidden,
         );
         expect(totalSlots(spans), input.length);
@@ -142,13 +127,12 @@ void main() {
     // ========================================================================
 
     group('rule characters render as dimmed marker text', () {
-      testWidgets('bare `---` is a single marker TextSpan with the raw chars', (tester) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('bare `---` is a single marker TextSpan with the raw chars', () {
         const input = '---';
         final spans = builder.build(
           input,
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
 
@@ -157,13 +141,12 @@ void main() {
         expect(totalSlots(spans), input.length);
       });
 
-      testWidgets('spaced `* * *` keeps its inner whitespace verbatim', (tester) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('spaced `* * *` keeps its inner whitespace verbatim', () {
         const input = '* * *';
         final spans = builder.build(
           input,
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
 
@@ -172,13 +155,12 @@ void main() {
         expect(totalSlots(spans), input.length);
       });
 
-      testWidgets('indented `   ---` keeps the leading spaces in the marker span', (tester) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('indented `   ---` keeps the leading spaces in the marker span', () {
         const input = '   ---';
         final spans = builder.build(
           input,
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
 
@@ -187,14 +169,13 @@ void main() {
         expect(totalSlots(spans), input.length);
       });
 
-      testWidgets('no WidgetSpan is emitted while the rule markers are shown', (tester) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('no WidgetSpan is emitted while the rule markers are shown', () {
         const input = 'above\n---\nbelow';
         // Cursor at index 7 — inside the rule line.
         final spans = builder.build(
           input,
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(7),
         );
 
@@ -214,14 +195,13 @@ void main() {
     // ========================================================================
 
     group('cursor-aware rendering', () {
-      testWidgets('active (visible) when the cursor is on the rule line', (tester) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('active (visible) when the cursor is on the rule line', () {
         const input = '---\nbody';
         // Cursor at index 1 — inside the rule line.
         final spans = builder.build(
           input,
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(1),
         );
 
@@ -229,14 +209,13 @@ void main() {
         expect(marker.style!.color!.a, greaterThan(0), reason: 'marker visible on-line');
       });
 
-      testWidgets('drawn as a rule when the cursor is on another line', (tester) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('drawn as a rule when the cursor is on another line', () {
         const input = '---\nbody';
         // Cursor at index 5 — inside "body", past the rule line's terminator.
         final spans = builder.build(
           input,
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(5),
         );
 
@@ -244,13 +223,12 @@ void main() {
         expect(totalSlots(spans), input.length);
       });
 
-      testWidgets('spaced rule with trailing whitespace fills every slot', (tester) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('spaced rule with trailing whitespace fills every slot', () {
         const input = 'above\n- - -  \nbelow';
         final spans = builder.build(
           input,
-          testContext,
           baseStyle,
+          resolver,
           renderMode: const MarkerRenderMode.active(0),
         );
 
@@ -258,13 +236,12 @@ void main() {
         expect(totalSlots(spans), input.length);
       });
 
-      testWidgets('hide-all-markers path draws the rule', (tester) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('hide-all-markers path draws the rule', () {
         const input = '---\nbody';
         final spans = builder.build(
           input,
-          testContext,
           baseStyle,
+          resolver,
           renderMode: MarkerRenderMode.hidden,
         );
 
@@ -272,10 +249,9 @@ void main() {
         expect(totalSlots(spans), input.length);
       });
 
-      testWidgets('null cursor shows the marker (dimmed but present)', (tester) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('null cursor shows the marker (dimmed but present)', () {
         const input = '---';
-        final spans = builder.build(input, testContext, baseStyle);
+        final spans = builder.build(input, baseStyle, resolver);
 
         final marker = markerSpan(spans, '---');
         expect(marker.style!.color!.a, greaterThan(0));
@@ -288,33 +264,29 @@ void main() {
     // ========================================================================
 
     group('typing / deleting keeps the cursor 1:1', () {
-      testWidgets('slot count tracks text.length as a rule is typed one char at a time', (
-        tester,
-      ) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('slot count tracks text.length as a rule is typed one char at a time', () {
         // Simulate the keystroke sequence a-*-*-*-* (partial runs are inline
         // text; the third `*` promotes the line to a rule) and back down.
         const keystrokes = <String>['*', '**', '***', '****', '***', '**', '*', ''];
         for (final input in keystrokes) {
           final spans = builder.build(
             input,
-            testContext,
             baseStyle,
+            resolver,
             renderMode: MarkerRenderMode.active(input.length),
           );
           expect(totalSlots(spans), input.length, reason: 'slot mismatch at "$input"');
         }
       });
 
-      testWidgets('deleting into the preceding line keeps every slot', (tester) async {
-        await tester.pumpWidget(hostWidget((_) => const SizedBox()));
+      test('deleting into the preceding line keeps every slot', () {
         // Backspacing the newline that separates a paragraph from the rule.
         const steps = <String>['a\n---', 'a---', 'a--', 'a-', 'a'];
         for (final input in steps) {
           final spans = builder.build(
             input,
-            testContext,
             baseStyle,
+            resolver,
             renderMode: MarkerRenderMode.active(input.length),
           );
           expect(totalSlots(spans), input.length, reason: 'slot mismatch at "$input"');

@@ -25,8 +25,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/editing/marker_render_mode.dart';
 import 'package:textf/src/editing/textf_span_builder.dart';
-
-import '../../widgets/pump_textf_widget.dart';
+import 'package:textf/src/styling/textf_style_resolver.dart';
 
 void main() {
   // The exact TextStyle emitted by TextfSpanBuilder._resolveInactiveMarkerStyle
@@ -127,39 +126,24 @@ void main() {
   // ---------------------------------------------------------------------------
   group('TextfSpanBuilder — hidden marker width vs visible content width', () {
     late TextfSpanBuilder builder;
-    late BuildContext testContext;
+    final resolver = TextfStyleResolver.withState(options: null);
 
     setUp(() {
       builder = TextfSpanBuilder();
     });
-
-    /// Pumps a minimal neutral host and captures a BuildContext.
-    Future<void> pumpContext(WidgetTester tester) async {
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: Builder(
-            builder: (context) {
-              testContext = context;
-              return const SizedBox.shrink();
-            },
-          ),
-        ),
-      );
-    }
 
     /// Builds spans with all markers in the fully-hidden inactive style
     /// (using [MarkerRenderMode.hidden]).
     List<InlineSpan> buildHidden(String text, TextStyle base) {
       return builder.build(
         text,
-        testContext,
         base,
+        resolver,
         renderMode: MarkerRenderMode.hidden,
       );
     }
 
     testWidgets('**bold** — hidden markers add negligible width over bold text', (tester) async {
-      await pumpContext(tester);
       const base = TextStyle(fontSize: 14);
       const text = '**bold**';
 
@@ -181,7 +165,6 @@ void main() {
     });
 
     testWidgets('`code` — hidden markers add negligible width over code text', (tester) async {
-      await pumpContext(tester);
       const base = TextStyle(fontSize: 14);
       const text = '`code`';
 
@@ -201,7 +184,6 @@ void main() {
     });
 
     testWidgets('~~strike~~ — hidden markers add negligible width over plain text', (tester) async {
-      await pumpContext(tester);
       const base = TextStyle(fontSize: 14);
       const text = '~~strike~~';
 

@@ -244,16 +244,16 @@ class TextfEditingController extends TextEditingController {
       if (text.length > _maxLiveFormattingLength) {
         fullSpans = <InlineSpan>[TextSpan(text: text)];
       } else {
-        if (_cachedResolver == null || !optionsMatch) {
-          _cachedResolver = TextfStyleResolver.withState(options: currentOptionsData);
-        }
+        final TextfStyleResolver resolver =
+            (optionsMatch ? _cachedResolver : null) ??
+            TextfStyleResolver.withState(options: currentOptionsData);
+        _cachedResolver = resolver;
 
         fullSpans = _spanBuilder.build(
           text,
-          context,
           style ?? const TextStyle(),
+          resolver,
           renderMode: renderMode,
-          styleResolver: _cachedResolver,
         );
       }
 

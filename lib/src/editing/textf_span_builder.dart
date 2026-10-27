@@ -21,11 +21,14 @@ import 'marker_render_mode.dart';
 /// (cursor outside the formatted span with markers fully hidden). This makes
 /// it suitable for use inside [TextEditingController.buildTextSpan].
 ///
-/// **Critical invariant:** The total character-slot count of all returned
+/// **Critical invariant:** The total cursor-slot count of all returned
 /// spans always equals the length of the input text. Each [TextSpan]
-/// contributes its `text.length` slots; each [WidgetSpan] contributes
-/// exactly 1 slot. This ensures 1:1 cursor-to-character mapping in text
+/// contributes its `text.length` cursor slots; each [WidgetSpan] contributes
+/// exactly one. This ensures 1:1 cursor-to-character mapping in text
 /// fields.
+///
+/// The builder needs no [BuildContext]: the caller passes a
+/// [TextfStyleResolver], which carries the ambient options.
 ///
 /// All characters — including formatting markers — are present in the output.
 /// Markers are rendered with a dimmed style, while the content between them
@@ -58,26 +61,24 @@ class TextfSpanBuilder {
 
   /// Builds a list of [InlineSpan] from formatted text.
   ///
-  /// Every character in the input [text] appears in the output spans,
-  /// ensuring 1:1 cursor-to-character mapping. Formatting markers are
+  /// Every character in the input [text] keeps one cursor slot in the output
+  /// spans, ensuring 1:1 cursor-to-character mapping. Formatting markers are
   /// rendered with a dimmed style; content between markers is styled
   /// according to the formatting type.
   ///
   /// - [text]: Input string with formatting markers.
-  /// - [context]: BuildContext for style resolution via [TextfStyleResolver].
   /// - [baseStyle]: Base style for unformatted text segments.
+  /// - [resolver]: Resolves format, link and heading styles. Callers cache
+  ///   it to avoid re-creating it on every frame.
   /// - [renderMode]: Controls formatting marker visibility. Defaults to
   ///   [MarkerRenderMode.always].
-  /// - [styleResolver]: Optional cached [TextfStyleResolver] to prevent
-  ///   expensive re-creation on every frame.
   ///
   /// Returns a list of [InlineSpan] objects ([TextSpan] and [WidgetSpan]).
   List<InlineSpan> build(
     String text,
-    BuildContext context,
-    TextStyle baseStyle, {
+    TextStyle baseStyle,
+    TextfStyleResolver resolver, {
     MarkerRenderMode renderMode = MarkerRenderMode.always,
-    TextfStyleResolver? styleResolver,
   }) {
     // Fast path for empty text
     if (text.isEmpty) {
@@ -92,8 +93,6 @@ class TextfSpanBuilder {
     final cacheEntry = TextfTokenCache.getTokensAndPairs(text, allowNewlineCrossing: false);
     final tokens = cacheEntry.tokens;
     final validPairs = cacheEntry.validPairs;
-
-    final resolver = styleResolver ?? TextfStyleResolver(context);
 
     final palette = TextfPalette(baseStyle);
     final activeMarkerStyle = _resolveMarkerStyle(baseStyle, palette);
