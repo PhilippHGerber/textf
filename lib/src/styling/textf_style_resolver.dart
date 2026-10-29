@@ -260,14 +260,14 @@ class TextfStyleResolver {
   /// default; its widget is placed in a middle-aligned [WidgetSpan]. Absent a
   /// builder, the guarded full-width 1px default rule renders, colored by the
   /// `thematicBreakColor` option or, failing that, by the [palette]'s
-  /// foreground at [DefaultStyles.thematicBreakAlpha].
+  /// neutral default [TextfPalette.thematicBreak].
   InlineSpan resolveThematicBreak(TextfPalette palette) {
     final Widget Function(BuildContext context)? builder = _options?.thematicBreakBuilder;
     if (builder != null) {
       return customThematicBreakSpan(builder);
     }
     return defaultThematicBreakSpan(
-      _options?.thematicBreakColor ?? DefaultStyles.thematicBreakColor(palette.foreground),
+      _options?.thematicBreakColor ?? palette.thematicBreak,
     );
   }
 
@@ -299,15 +299,14 @@ class TextfStyleResolver {
   }
 
   /// The default code style: monospace family and fallbacks on the base style,
-  /// on the `codeBackgroundColor` option or the palette-derived tint. The code
+  /// on the `codeBackgroundColor` option or the palette's neutral default
+  /// [TextfPalette.codeBackground]. The code
   /// text keeps the segment's color.
   TextStyle _defaultCodeStyle(TextStyle baseStyle, TextfPalette palette) {
     return baseStyle.copyWith(
       fontFamily: DefaultStyles.defaultCodeFontFamily,
       fontFamilyFallback: DefaultStyles.defaultCodeFontFamilyFallback,
-      backgroundColor:
-          _options?.codeBackgroundColor ??
-          DefaultStyles.codeBackgroundColor(palette.foreground, palette.surface),
+      backgroundColor: _options?.codeBackgroundColor ?? palette.codeBackground,
       letterSpacing: baseStyle.letterSpacing ?? 0,
     );
   }
@@ -327,13 +326,13 @@ class TextfStyleResolver {
   }
 
   /// The default highlight style: the `highlightColor` option or the
-  /// palette-derived tint as the background. The text keeps the segment's
-  /// color, or takes a surface-appropriate one when the segment has none.
+  /// palette's neutral default [TextfPalette.highlightBackground] as the
+  /// background. The text keeps the segment's color, or takes the palette's
+  /// [TextfPalette.highlightText] when the segment has none.
   TextStyle _defaultHighlightStyle(TextStyle baseStyle, TextfPalette palette) {
     return baseStyle.copyWith(
-      backgroundColor:
-          _options?.highlightColor ?? DefaultStyles.highlightBackgroundColor(palette.surface),
-      color: baseStyle.color ?? DefaultStyles.highlightTextColor(palette.surface),
+      backgroundColor: _options?.highlightColor ?? palette.highlightBackground,
+      color: baseStyle.color ?? palette.highlightText,
     );
   }
 }

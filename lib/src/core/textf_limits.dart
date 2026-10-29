@@ -25,6 +25,7 @@ final class TextfLimits {
   ///
   /// Texts exceeding this length are rendered as plain (unformatted) text
   /// to prevent UI freezes on extreme inputs.
+  // Repeated in the `TextfEditingController.maxLiveFormattingLength` docs.
   static const int maxLiveFormattingLength = 5000;
 
   /// Padding multiplier for script (superscript/subscript) alignment.

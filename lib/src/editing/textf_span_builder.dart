@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
 
 import '../core/constants.dart';
-import '../core/default_styles.dart';
 import '../core/formatting_utils.dart';
 import '../core/textf_style_utils.dart';
 import '../core/textf_token_cache.dart';
@@ -118,8 +117,8 @@ class TextfSpanBuilder {
 
   /// Creates a dimmed style for formatting markers.
   ///
-  /// The color is [palette]'s foreground at [DefaultStyles.editingMarkerAlpha].
-  /// [palette] is built from [baseStyle], so that foreground is
+  /// The color is [palette]'s [TextfPalette.editingMarker]. [palette] is
+  /// built from [baseStyle], so its foreground is
   /// `baseStyle.color`, or opaque black when the style sets no color. Markers
   /// therefore depend on the text style alone, never on a design-system theme.
   TextStyle _resolveMarkerStyle(TextStyle baseStyle, TextfPalette palette) {
@@ -127,7 +126,7 @@ class TextfSpanBuilder {
     // and other typographic properties are intentionally reset so that markers
     // always appear as lightweight dim metadata, regardless of ambient style.
     return TextStyle(
-      color: DefaultStyles.editingMarkerColor(palette.foreground),
+      color: palette.editingMarker,
       fontSize: baseStyle.fontSize,
     );
   }
