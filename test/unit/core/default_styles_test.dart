@@ -123,73 +123,11 @@ void main() {
     });
 
     // Expected values are the literals from the PRD's defaults table (§6),
-    // not re-derived from DefaultStyles.
+    // not re-derived from DefaultStyles. The palette colors (T-DEF-02 to
+    // T-DEF-04 and the editing marker) are tested in textf_palette_test.dart.
     group('T-DEF neutral defaults', () {
       test('T-DEF-01: the default link color is #1A73E8', () {
         expect(DefaultStyles.defaultLinkColor, const Color(0xFF1A73E8));
-      });
-
-      group('T-DEF-02: code chip background', () {
-        test('alphas are 0.05 on light surfaces and 0.15 on dark surfaces', () {
-          expect(DefaultStyles.codeBackgroundAlphaLight, 0.05);
-          expect(DefaultStyles.codeBackgroundAlphaDark, 0.15);
-        });
-
-        test('tints the foreground at 0.05 on a light surface', () {
-          final bg = DefaultStyles.codeBackgroundColor(const Color(0xFF000000), Brightness.light);
-          expect(bg, const Color(0xFF000000).withValues(alpha: 0.05));
-        });
-
-        test('tints the foreground at 0.15 on a dark surface', () {
-          final bg = DefaultStyles.codeBackgroundColor(const Color(0xFFE6E0E9), Brightness.dark);
-          expect(bg, const Color(0xFFE6E0E9).withValues(alpha: 0.15));
-        });
-
-        test('replaces rather than compounds a translucent foreground alpha', () {
-          final bg = DefaultStyles.codeBackgroundColor(const Color(0x80FFFFFF), Brightness.dark);
-          expect(bg.a, closeTo(0.15, 1e-9));
-        });
-      });
-
-      group('T-DEF-03: highlight tint', () {
-        test('is yellow #FFEB3B at 0.5 on a light surface', () {
-          expect(DefaultStyles.highlightColorLight, const Color(0xFFFFEB3B));
-          expect(DefaultStyles.highlightAlphaLight, 0.5);
-          expect(
-            DefaultStyles.highlightBackgroundColor(Brightness.light),
-            const Color(0xFFFFEB3B).withValues(alpha: 0.5),
-          );
-        });
-
-        test('is dark yellow #FBC02D at 0.4 on a dark surface', () {
-          expect(DefaultStyles.highlightColorDark, const Color(0xFFFBC02D));
-          expect(DefaultStyles.highlightAlphaDark, 0.4);
-          expect(
-            DefaultStyles.highlightBackgroundColor(Brightness.dark),
-            const Color(0xFFFBC02D).withValues(alpha: 0.4),
-          );
-        });
-      });
-
-      test('T-DEF-04: the thematic break alpha is 0.20', () {
-        expect(DefaultStyles.thematicBreakAlpha, 0.20);
-      });
-
-      group('editing marker', () {
-        test('dims the foreground to alpha 0.4', () {
-          expect(DefaultStyles.editingMarkerAlpha, 0.4);
-          expect(
-            DefaultStyles.editingMarkerColor(const Color(0xFF123456)),
-            const Color(0x66123456),
-          );
-        });
-
-        test('replaces rather than compounds a translucent foreground alpha', () {
-          expect(
-            DefaultStyles.editingMarkerColor(const Color(0x33FFFFFF)),
-            const Color(0x66FFFFFF),
-          );
-        });
       });
 
       group('T-DEF-05: link color meets WCAG AA without surface inference', () {

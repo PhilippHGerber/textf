@@ -55,6 +55,87 @@ void main() {
       });
     });
 
+    // Expected values are literals from the neutral-defaults table, not
+    // re-derived from the palette's constants.
+    group('T-DEF-02: codeBackground', () {
+      test('tints the foreground at 0.05 on a light surface', () {
+        final palette = TextfPalette(const TextStyle(color: Color(0xFF000000)));
+
+        expect(palette.codeBackground, const Color(0xFF000000).withValues(alpha: 0.05));
+      });
+
+      test('tints the foreground at 0.15 on a dark surface', () {
+        final palette = TextfPalette(const TextStyle(color: Color(0xFFE6E0E9)));
+
+        expect(palette.codeBackground, const Color(0xFFE6E0E9).withValues(alpha: 0.15));
+      });
+
+      test('tints opaque black at 0.05 when the style has no color', () {
+        expect(TextfPalette(null).codeBackground, const Color(0xFF000000).withValues(alpha: 0.05));
+      });
+
+      test('replaces rather than compounds a translucent foreground alpha', () {
+        final palette = TextfPalette(const TextStyle(color: Color(0x80FFFFFF)));
+
+        expect(palette.codeBackground.a, closeTo(0.15, 1e-9));
+      });
+    });
+
+    group('T-DEF-03: highlight tint', () {
+      final light = TextfPalette(const TextStyle(color: Color(0xFF000000)));
+      final dark = TextfPalette(const TextStyle(color: Color(0xFFFFFFFF)));
+
+      test('the background is yellow #FFEB3B at 0.5 on a light surface', () {
+        expect(light.highlightBackground, const Color(0xFFFFEB3B).withValues(alpha: 0.5));
+      });
+
+      test('the background is dark yellow #FBC02D at 0.4 on a dark surface', () {
+        expect(dark.highlightBackground, const Color(0xFFFBC02D).withValues(alpha: 0.4));
+      });
+
+      test('the background ignores the foreground hue', () {
+        final navy = TextfPalette(const TextStyle(color: Color(0xFF000080)));
+
+        expect(navy.highlightBackground, light.highlightBackground);
+      });
+
+      test('the text is black at 87% opacity on a light surface', () {
+        expect(light.highlightText, const Color(0xDD000000));
+      });
+
+      test('the text is opaque white on a dark surface', () {
+        expect(dark.highlightText, const Color(0xFFFFFFFF));
+      });
+    });
+
+    group('T-DEF-04: thematicBreak', () {
+      test('is the foreground at alpha 0.20', () {
+        final palette = TextfPalette(const TextStyle(color: Color(0xFF336699)));
+
+        expect(palette.thematicBreak, const Color(0xFF336699).withValues(alpha: 0.20));
+      });
+
+      test('replaces rather than compounds a translucent foreground alpha', () {
+        final palette = TextfPalette(const TextStyle(color: Color(0x80FFFFFF)));
+
+        expect(palette.thematicBreak.a, closeTo(0.20, 1e-9));
+      });
+    });
+
+    group('editingMarker', () {
+      test('dims the foreground to alpha 0.4', () {
+        final palette = TextfPalette(const TextStyle(color: Color(0xFF123456)));
+
+        expect(palette.editingMarker, const Color(0x66123456));
+      });
+
+      test('replaces rather than compounds a translucent foreground alpha', () {
+        final palette = TextfPalette(const TextStyle(color: Color(0x33FFFFFF)));
+
+        expect(palette.editingMarker, const Color(0x66FFFFFF));
+      });
+    });
+
     group('equality', () {
       test('palettes from styles with the same color are equal, whatever else differs', () {
         final a = TextfPalette(const TextStyle(color: Color(0xFF336699), fontSize: 12));
