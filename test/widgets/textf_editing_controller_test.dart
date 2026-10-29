@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:textf/src/core/textf_limits.dart';
 import 'package:textf/textf.dart';
 
 import 'pump_textf_widget.dart';
@@ -522,9 +521,9 @@ void main() {
     });
 
     group('maxLiveFormattingLength', () {
-      test('defaults to TextfLimits.maxLiveFormattingLength', () {
+      test('defaults to the documented 5000', () {
         controller = TextfEditingController();
-        expect(controller.maxLiveFormattingLength, TextfLimits.maxLiveFormattingLength);
+        expect(controller.maxLiveFormattingLength, 5000);
       });
 
       test('accepts custom value in constructor', () {
