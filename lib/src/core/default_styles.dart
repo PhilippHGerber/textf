@@ -9,8 +9,8 @@ import 'package:flutter/widgets.dart';
 /// palette (see `TextfPalette`).
 class DefaultStyles {
   /// Default mouse cursor for links.
-  /// Used as a fallback by TextfStyleResolver when no cursor is specified
-  /// via TextfOptions in the widget tree.
+  /// The neutral default TextfStyleResolver applies when no TextfOptions in
+  /// the widget tree specifies a cursor.
   static const MouseCursor linkMouseCursor = SystemMouseCursors.click;
 
   /// Default link color: `#1A73E8`, a single fixed blue for every surface.

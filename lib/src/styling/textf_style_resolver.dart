@@ -315,11 +315,10 @@ class TextfStyleResolver {
   /// [DefaultStyles.defaultStrikethroughThickness], colored by the base
   /// decoration color or, failing that, the base color.
   TextStyle _defaultStrikethroughStyle(TextStyle baseStyle) {
-    return baseStyle.copyWith(
-      decoration: combineTextDecorations(baseStyle.decoration, TextDecoration.lineThrough),
-      decorationColor: baseStyle.decorationColor ?? baseStyle.color,
-      decorationThickness:
-          _options?.strikethroughThickness ?? DefaultStyles.defaultStrikethroughThickness,
+    return _withAddedDecoration(
+      baseStyle,
+      TextDecoration.lineThrough,
+      _options?.strikethroughThickness ?? DefaultStyles.defaultStrikethroughThickness,
     );
   }
 
@@ -328,10 +327,24 @@ class TextfStyleResolver {
   /// [_defaultUnderlineThickness]), colored by the base decoration color or,
   /// failing that, the base color.
   TextStyle _defaultUnderlineStyle(TextStyle baseStyle) {
+    return _withAddedDecoration(
+      baseStyle,
+      TextDecoration.underline,
+      baseStyle.decorationThickness ?? _defaultUnderlineThickness,
+    );
+  }
+
+  /// [baseStyle] with [decoration] added to its decoration at [thickness],
+  /// colored by the base decoration color or, failing that, the base color.
+  TextStyle _withAddedDecoration(
+    TextStyle baseStyle,
+    TextDecoration decoration,
+    double thickness,
+  ) {
     return baseStyle.copyWith(
-      decoration: combineTextDecorations(baseStyle.decoration, TextDecoration.underline),
+      decoration: combineTextDecorations(baseStyle.decoration, decoration),
       decorationColor: baseStyle.decorationColor ?? baseStyle.color,
-      decorationThickness: baseStyle.decorationThickness ?? _defaultUnderlineThickness,
+      decorationThickness: thickness,
     );
   }
 

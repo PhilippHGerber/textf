@@ -62,8 +62,9 @@ class TextfPalette {
   /// Alpha of the code-chip background tint on a dark surface.
   static const double _codeBackgroundAlphaDark = 0.15;
 
-  /// The neutral default inline-code background: [foreground] at 0.05 alpha
-  /// on a light [surface], or 0.15 on a dark one.
+  /// The neutral default inline-code background: [foreground] at
+  /// [_codeBackgroundAlphaLight] on a light [surface], or at
+  /// [_codeBackgroundAlphaDark] on a dark one.
   ///
   /// The alpha replaces any alpha [foreground] already carries.
   Color get codeBackground => foreground.withValues(
@@ -82,20 +83,22 @@ class TextfPalette {
   /// Alpha applied to [_highlightColorDark].
   static const double _highlightAlphaDark = 0.4;
 
-  /// Highlight text on a light surface: black at 87% opacity.
+  /// Highlight text color on a light surface.
   static const Color _highlightTextLight = Color(0xDD000000);
 
-  /// Highlight text on a dark surface: opaque white.
+  /// Highlight text color on a dark surface.
   static const Color _highlightTextDark = Color(0xFFFFFFFF);
 
-  /// The neutral default highlight (`==text==`) background: `#FFEB3B` at 0.5
-  /// alpha on a light [surface], or `#FBC02D` at 0.4 on a dark one.
+  /// The neutral default highlight (`==text==`) background:
+  /// [_highlightColorLight] at [_highlightAlphaLight] on a light [surface], or
+  /// [_highlightColorDark] at [_highlightAlphaDark] on a dark one.
   Color get highlightBackground => surface == Brightness.light
       ? _highlightColorLight.withValues(alpha: _highlightAlphaLight)
       : _highlightColorDark.withValues(alpha: _highlightAlphaDark);
 
-  /// The neutral default highlight (`==text==`) text color: black at 87%
-  /// opacity on a light [surface], or opaque white on a dark one.
+  /// The neutral default highlight (`==text==`) text color:
+  /// [_highlightTextLight] on a light [surface], or [_highlightTextDark] on a
+  /// dark one.
   ///
   /// The style resolver uses it only when the segment sets no color of its
   /// own.
@@ -107,14 +110,14 @@ class TextfPalette {
   /// Alpha of the dimmed formatting markers in `TextfEditingController`.
   static const double _editingMarkerAlpha = 0.4;
 
-  /// The neutral default thematic-break rule color: [foreground] at 0.20
-  /// alpha.
+  /// The neutral default thematic-break rule color: [foreground] at
+  /// [_thematicBreakAlpha].
   ///
   /// The alpha replaces any alpha [foreground] already carries.
   Color get thematicBreak => foreground.withValues(alpha: _thematicBreakAlpha);
 
   /// The dimmed formatting-marker color in `TextfEditingController`:
-  /// [foreground] at 0.4 alpha.
+  /// [foreground] at [_editingMarkerAlpha].
   ///
   /// The alpha replaces any alpha [foreground] already carries.
   Color get editingMarker => foreground.withValues(alpha: _editingMarkerAlpha);
