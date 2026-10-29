@@ -24,8 +24,9 @@ import 'thematic_break.dart';
 /// 3. Neutral defaults derived from the [TextfPalette] (code background,
 ///    highlight tint, thematic-break rule) or fixed in `DefaultStyles` (link
 ///    blue).
-/// 4. Relative defaults from `DefaultStyles` (bold, italic, strikethrough,
-///    underline, script and heading sizes).
+/// 4. Relative defaults applied to the base style by this resolver (bold,
+///    italic, strikethrough, underline, script and heading sizes), using the
+///    plain values in `DefaultStyles`.
 ///
 /// The resolved style is always merged with the provided `baseStyle`.
 class TextfStyleResolver {
@@ -42,6 +43,10 @@ class TextfStyleResolver {
   new withState({required this._options});
 
   final TextfOptionsData? _options;
+
+  /// Underline thickness of the relative default underline when the base
+  /// style sets none.
+  static const double _defaultUnderlineThickness = 1;
 
   /// Resolves the final TextStyle for a given format marker type and base style.
   ///
@@ -80,26 +85,17 @@ class TextfStyleResolver {
       // Precedence 2–4: no style option; color option, neutral or relative default
       switch (type) {
         case FormatMarkerType.bold:
-          return DefaultStyles.boldStyle(effectiveBaseStyle); // Relative default
+          return _defaultBoldStyle(effectiveBaseStyle); // Relative default
         case FormatMarkerType.italic:
-          return DefaultStyles.italicStyle(effectiveBaseStyle); // Relative default
+          return _defaultItalicStyle(effectiveBaseStyle); // Relative default
         case FormatMarkerType.boldItalic:
-          return DefaultStyles.boldItalicStyle(effectiveBaseStyle); // Relative default
+          return _defaultBoldItalicStyle(effectiveBaseStyle); // Relative default
         case FormatMarkerType.strikethrough:
-          // No full style override from options, use default effect.
-          // Check if a specific thickness is provided via options.
-          final double finalThickness =
-              _options?.strikethroughThickness ?? DefaultStyles.defaultStrikethroughThickness;
-
-          // Apply the default strikethrough effect with the resolved thickness.
-          return DefaultStyles.strikethroughStyle(
-            effectiveBaseStyle,
-            thickness: finalThickness,
-          );
+          return _defaultStrikethroughStyle(effectiveBaseStyle); // Relative default
         case FormatMarkerType.code:
           return _defaultCodeStyle(effectiveBaseStyle, palette); // Color option or neutral
         case FormatMarkerType.underline:
-          return DefaultStyles.underlineStyle(effectiveBaseStyle); // Relative default
+          return _defaultUnderlineStyle(effectiveBaseStyle); // Relative default
         case FormatMarkerType.highlight:
           return _defaultHighlightStyle(effectiveBaseStyle, palette); // Color option or neutral
         case FormatMarkerType.superscript:
@@ -217,13 +213,13 @@ class TextfStyleResolver {
 
   /// Resolves the final TextStyle for an ATX heading of [level] (1–6).
   ///
-  /// The default heading style ([DefaultStyles.headingStyle]) — the scaled size,
+  /// The relative default heading style — the scaled size,
   /// bold weight and line height for [level] — is computed first. A matching
   /// `h{n}Style` override from the [TextfOptionsData] hierarchy is then merged
   /// on top of it, so a delta-only override (e.g. color alone) still inherits
   /// the default size and weight. The whole result sits on [baseStyle].
   TextStyle resolveHeadingStyle(int level, TextStyle baseStyle) {
-    final TextStyle headingBase = DefaultStyles.headingStyle(level, baseStyle);
+    final TextStyle headingBase = _defaultHeadingStyle(level, baseStyle);
     final TextStyle? optionsStyle = _headingStyleFromOptions(level);
     if (optionsStyle != null) {
       return mergeTextStyles(headingBase, optionsStyle);
@@ -299,6 +295,62 @@ class TextfStyleResolver {
       case FormatMarkerType.subscript:
         return _options?.subscriptStyle;
     }
+  }
+
+  /// The relative default bold style: bold weight on the base style.
+  TextStyle _defaultBoldStyle(TextStyle baseStyle) {
+    return baseStyle.copyWith(fontWeight: FontWeight.bold);
+  }
+
+  /// The relative default italic style: italic on the base style.
+  TextStyle _defaultItalicStyle(TextStyle baseStyle) {
+    return baseStyle.copyWith(fontStyle: FontStyle.italic);
+  }
+
+  /// The relative default bold-italic style: bold weight and italic on the
+  /// base style.
+  TextStyle _defaultBoldItalicStyle(TextStyle baseStyle) {
+    return baseStyle.copyWith(fontWeight: FontWeight.bold, fontStyle: FontStyle.italic);
+  }
+
+  /// The relative default strikethrough style: a line-through added to the
+  /// base decoration, as thick as the `strikethroughThickness` option or
+  /// [DefaultStyles.defaultStrikethroughThickness], colored by the base
+  /// decoration color or, failing that, the base color.
+  TextStyle _defaultStrikethroughStyle(TextStyle baseStyle) {
+    return baseStyle.copyWith(
+      decoration: combineTextDecorations(baseStyle.decoration, TextDecoration.lineThrough),
+      decorationColor: baseStyle.decorationColor ?? baseStyle.color,
+      decorationThickness:
+          _options?.strikethroughThickness ?? DefaultStyles.defaultStrikethroughThickness,
+    );
+  }
+
+  /// The relative default underline style: an underline added to the base
+  /// decoration, keeping the base decoration thickness (or
+  /// [_defaultUnderlineThickness]), colored by the base decoration color or,
+  /// failing that, the base color.
+  TextStyle _defaultUnderlineStyle(TextStyle baseStyle) {
+    return baseStyle.copyWith(
+      decoration: combineTextDecorations(baseStyle.decoration, TextDecoration.underline),
+      decorationColor: baseStyle.decorationColor ?? baseStyle.color,
+      decorationThickness: baseStyle.decorationThickness ?? _defaultUnderlineThickness,
+    );
+  }
+
+  /// The relative default heading style for [level] (1–6): the base font size
+  /// (or [DefaultStyles.defaultFontSize]) scaled by
+  /// [DefaultStyles.headingFontSizeFactors], bold unless the base sets a
+  /// weight, at [DefaultStyles.headingLineHeight].
+  TextStyle _defaultHeadingStyle(int level, TextStyle baseStyle) {
+    final int index = (level - 1).clamp(0, DefaultStyles.headingFontSizeFactors.length - 1);
+    final double factor = DefaultStyles.headingFontSizeFactors[index];
+    final double baseSize = baseStyle.fontSize ?? DefaultStyles.defaultFontSize;
+    return baseStyle.copyWith(
+      fontSize: baseSize * factor,
+      fontWeight: baseStyle.fontWeight ?? FontWeight.bold,
+      height: DefaultStyles.headingLineHeight,
+    );
   }
 
   /// The default code style: monospace family and fallbacks on the base style,
