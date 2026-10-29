@@ -26,7 +26,7 @@ import '../../widgets/pump_textf_widget.dart';
 void main() {
   group('TextfSpanBuilder — thematic breaks', () {
     late TextfSpanBuilder builder;
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     const baseStyle = TextStyle(
       fontSize: 14,

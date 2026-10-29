@@ -10,7 +10,7 @@ void main() {
   group('TextfParser Tests', () {
     // ignore: avoid-late-keyword
     late TextfParser parser;
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     setUp(() {
       parser = TextfParser();
@@ -364,7 +364,7 @@ void main() {
         final spans = parser.parse(
           '[link](url)',
           const TextStyle(),
-          TextfStyleResolver.withState(
+          TextfStyleResolver(
             options: const TextfOptionsData(linkAlignment: PlaceholderAlignment.middle),
           ),
         );

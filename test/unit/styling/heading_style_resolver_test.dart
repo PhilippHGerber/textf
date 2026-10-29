@@ -35,7 +35,7 @@ void main() {
     );
 
     TextfStyleResolver resolverWith({TextfOptionsData? options}) {
-      return TextfStyleResolver.withState(options: options);
+      return TextfStyleResolver(options: options);
     }
 
     group('default scale', () {

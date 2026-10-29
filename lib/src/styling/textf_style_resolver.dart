@@ -30,17 +30,14 @@ import 'thematic_break.dart';
 ///
 /// The resolved style is always merged with the provided `baseStyle`.
 class TextfStyleResolver {
-  /// Creates a style resolver from the [TextfOptionsData] in scope at [context].
+  /// Creates a style resolver from the pre-merged [TextfOptionsData] in `options`.
   ///
-  /// Only the pre-merged options are read; no [BuildContext] is retained in
-  /// the instance, preventing memory leaks when the resolver is cached by
-  /// controllers that outlive the widget tree.
-  factory(BuildContext context) {
-    return TextfStyleResolver.withState(options: TextfOptions.maybeOf(context));
-  }
-
-  /// Creates a style resolver directly from already-extracted options.
-  new withState({required this._options});
+  /// Pass `null` when no `TextfOptions` is in scope; every style then falls
+  /// back to the neutral and relative defaults. Callers inside the widget tree
+  /// look the options up themselves with `TextfOptions.maybeOf(context)`. The
+  /// resolver holds no [BuildContext], so controllers that outlive the widget
+  /// tree can cache it safely.
+  new({required this._options});
 
   final TextfOptionsData? _options;
 

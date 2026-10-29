@@ -10,7 +10,7 @@ import 'package:textf/src/widgets/textf_options_data.dart';
 void main() {
   group('Script (Superscript/Subscript) Parsing Tests', () {
     late TextfParser parser;
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     setUp(() {
       parser = TextfParser();
@@ -184,7 +184,7 @@ void main() {
         final spans = parser.parse(
           '^super^',
           const TextStyle(color: Color(0xFF000000)),
-          TextfStyleResolver.withState(
+          TextfStyleResolver(
             options: const TextfOptionsData(superscriptStyle: customStyle),
           ),
         );

@@ -246,7 +246,7 @@ class TextfEditingController extends TextEditingController {
       } else {
         final TextfStyleResolver resolver =
             (optionsMatch ? _cachedResolver : null) ??
-            TextfStyleResolver.withState(options: currentOptionsData);
+            TextfStyleResolver(options: currentOptionsData);
         _cachedResolver = resolver;
 
         fullSpans = _spanBuilder.build(

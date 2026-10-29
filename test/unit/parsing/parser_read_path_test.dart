@@ -24,7 +24,7 @@ void main() {
     return TextfParser().parse(
       text,
       baseStyle,
-      TextfStyleResolver.withState(options: options),
+      TextfStyleResolver(options: options),
       placeholders: placeholders,
     );
   }

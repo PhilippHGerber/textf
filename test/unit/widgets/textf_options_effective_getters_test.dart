@@ -3,7 +3,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/models/textf_token.dart';
-import 'package:textf/src/styling/link_style_configuration.dart';
 import 'package:textf/src/styling/textf_palette.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/textf_options.dart';
@@ -16,92 +15,46 @@ void main() {
   final palette = TextfPalette(baseStyle);
 
   group('TextfStyleResolver resolves styles from TextfOptionsData', () {
-    testWidgets('resolves underline style', (tester) async {
-      TextStyle? result;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: TextfOptions(
-            underlineStyle: const TextStyle(color: Color(0xFF4CAF50)),
-            child: Builder(
-              builder: (context) {
-                final resolver = TextfStyleResolver(context);
-                result = resolver.resolveStyle(FormatMarkerType.underline, baseStyle, palette);
-                return const SizedBox();
-              },
-            ),
-          ),
-        ),
+    test('resolves underline style', () {
+      final resolver = TextfStyleResolver(
+        options: const TextfOptionsData(underlineStyle: TextStyle(color: Color(0xFF4CAF50))),
       );
 
-      expect(result, isNotNull);
-      expect(result!.color, const Color(0xFF4CAF50));
+      final result = resolver.resolveStyle(FormatMarkerType.underline, baseStyle, palette);
+
+      expect(result.color, const Color(0xFF4CAF50));
     });
 
-    testWidgets('resolves highlight style', (tester) async {
-      TextStyle? result;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: TextfOptions(
-            highlightStyle: const TextStyle(backgroundColor: Color(0xFFFFEB3B)),
-            child: Builder(
-              builder: (context) {
-                final resolver = TextfStyleResolver(context);
-                result = resolver.resolveStyle(FormatMarkerType.highlight, baseStyle, palette);
-                return const SizedBox();
-              },
-            ),
-          ),
+    test('resolves highlight style', () {
+      final resolver = TextfStyleResolver(
+        options: const TextfOptionsData(
+          highlightStyle: TextStyle(backgroundColor: Color(0xFFFFEB3B)),
         ),
       );
 
-      expect(result, isNotNull);
-      expect(result!.backgroundColor, const Color(0xFFFFEB3B));
+      final result = resolver.resolveStyle(FormatMarkerType.highlight, baseStyle, palette);
+
+      expect(result.backgroundColor, const Color(0xFFFFEB3B));
     });
 
-    testWidgets('resolves superscript style', (tester) async {
-      TextStyle? result;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: TextfOptions(
-            superscriptStyle: const TextStyle(fontSize: 10),
-            child: Builder(
-              builder: (context) {
-                final resolver = TextfStyleResolver(context);
-                result = resolver.resolveStyle(FormatMarkerType.superscript, baseStyle, palette);
-                return const SizedBox();
-              },
-            ),
-          ),
-        ),
+    test('resolves superscript style', () {
+      final resolver = TextfStyleResolver(
+        options: const TextfOptionsData(superscriptStyle: TextStyle(fontSize: 10)),
       );
 
-      expect(result, isNotNull);
-      expect(result!.fontSize, 10);
+      final result = resolver.resolveStyle(FormatMarkerType.superscript, baseStyle, palette);
+
+      expect(result.fontSize, 10);
     });
 
-    testWidgets('resolves subscript style', (tester) async {
-      TextStyle? result;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: TextfOptions(
-            subscriptStyle: const TextStyle(fontSize: 10),
-            child: Builder(
-              builder: (context) {
-                final resolver = TextfStyleResolver(context);
-                result = resolver.resolveStyle(FormatMarkerType.subscript, baseStyle, palette);
-                return const SizedBox();
-              },
-            ),
-          ),
-        ),
+    test('resolves subscript style', () {
+      final resolver = TextfStyleResolver(
+        options: const TextfOptionsData(subscriptStyle: TextStyle(fontSize: 10)),
       );
 
-      expect(result, isNotNull);
-      expect(result!.fontSize, 10);
+      final result = resolver.resolveStyle(FormatMarkerType.subscript, baseStyle, palette);
+
+      expect(result.fontSize, 10);
     });
 
     testWidgets('reads superscriptBaselineFactor from data', (tester) async {
@@ -164,48 +117,23 @@ void main() {
       expect(data!.scriptFontSizeFactor, 0.5);
     });
 
-    testWidgets('resolves link configuration with hover style', (tester) async {
-      TextStyle? result;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: TextfOptions(
-            linkHoverStyle: const TextStyle(color: Color(0xFFF44336)),
-            child: Builder(
-              builder: (context) {
-                final resolver = TextfStyleResolver(context);
-                result = resolver.resolveLinkConfiguration(baseStyle).hoverStyle;
-                return const SizedBox();
-              },
-            ),
-          ),
-        ),
+    test('resolves link configuration with hover style', () {
+      final resolver = TextfStyleResolver(
+        options: const TextfOptionsData(linkHoverStyle: TextStyle(color: Color(0xFFF44336))),
       );
 
-      expect(result, isNotNull);
-      expect(result!.color, const Color(0xFFF44336));
+      final result = resolver.resolveLinkConfiguration(baseStyle).hoverStyle;
+
+      expect(result.color, const Color(0xFFF44336));
     });
 
-    testWidgets('returns normal link style for hoverStyle when hover not set', (tester) async {
-      LinkStyleConfiguration? config;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: TextfOptions(
-            child: Builder(
-              builder: (context) {
-                final resolver = TextfStyleResolver(context);
-                config = resolver.resolveLinkConfiguration(baseStyle);
-                return const SizedBox();
-              },
-            ),
-          ),
-        ),
-      );
+    test('returns normal link style for hoverStyle when hover not set', () {
+      final config = TextfStyleResolver(
+        options: const TextfOptionsData(),
+      ).resolveLinkConfiguration(baseStyle);
 
       // Without a linkHoverStyle, hover falls back to normal link style
-      expect(config, isNotNull);
-      expect(config!.hoverStyle, config!.style);
+      expect(config.hoverStyle, config.style);
     });
   });
 
