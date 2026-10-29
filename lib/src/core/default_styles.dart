@@ -1,11 +1,12 @@
 import 'package:flutter/widgets.dart';
 
-/// Provides default styling behaviours used as fallbacks by TextfStyleResolver.
+/// Plain default values read by TextfStyleResolver.
 ///
-/// This class centralizes the design-system-neutral constants and relative
-/// default styles for the formatting types. Nothing here reads a
-/// design-system theme. The only color here is the fixed link color; the
-/// neutral default colors come from the palette (see `TextfPalette`).
+/// This class centralizes the design-system-neutral constants behind the
+/// neutral and relative defaults of the formatting types; the resolver
+/// applies them. Nothing here reads a design-system theme. The only color
+/// here is the fixed link color; the neutral default colors come from the
+/// palette (see `TextfPalette`).
 class DefaultStyles {
   /// Default mouse cursor for links.
   /// Used as a fallback by TextfStyleResolver when no cursor is specified
@@ -67,100 +68,4 @@ class DefaultStyles {
     1.07, // h5
     1.00, // h6
   ];
-
-  /// Default heading style for ATX headings (`# H1` .. `###### H6`).
-  ///
-  /// Scales the base font size by [headingFontSizeFactors] and applies bold
-  /// weight. Used as a fallback when no
-  /// `h{n}Style` is provided via TextfOptions.
-  static TextStyle headingStyle(int level, TextStyle baseStyle) {
-    final int index = (level - 1).clamp(0, headingFontSizeFactors.length - 1);
-    final double factor = headingFontSizeFactors[index];
-    final double baseSize = baseStyle.fontSize ?? defaultFontSize;
-    return baseStyle.copyWith(
-      fontSize: baseSize * factor,
-      fontWeight: baseStyle.fontWeight ?? FontWeight.bold,
-      height: headingLineHeight,
-    );
-  }
-
-  /// Applies default bold formatting (`**bold**` or `__bold__`) to a base style.
-  /// Used as a fallback by TextfStyleResolver if no `boldStyle` is found via TextfOptions.
-  static TextStyle boldStyle(TextStyle baseStyle) {
-    return baseStyle.copyWith(fontWeight: FontWeight.bold);
-  }
-
-  /// Applies default italic formatting (`*italic*` or `_italic_`) to a base style.
-  /// Used as a fallback by TextfStyleResolver if no `italicStyle` is found via TextfOptions.
-  static TextStyle italicStyle(TextStyle baseStyle) {
-    return baseStyle.copyWith(fontStyle: FontStyle.italic);
-  }
-
-  /// Applies default bold and italic formatting (`***both***` or `___both___`) to a base style.
-  /// Used as a fallback by TextfStyleResolver if no `boldItalicStyle` is found via TextfOptions.
-  static TextStyle boldItalicStyle(TextStyle baseStyle) {
-    return baseStyle.copyWith(
-      fontWeight: FontWeight.bold,
-      fontStyle: FontStyle.italic,
-    );
-  }
-
-  /// Applies default strikethrough formatting (`~~strikethrough~~`) to a base style,
-  /// using the specified line thickness.
-  /// Used as a fallback by TextfStyleResolver if no `strikethroughStyle` is found
-  /// via TextfOptions. The thickness resolved by the resolver (considering TextfOptions
-  /// or the default) is passed in here.
-  static TextStyle strikethroughStyle(
-    TextStyle baseStyle, {
-    double thickness = defaultStrikethroughThickness,
-  }) {
-    TextDecoration newDecoration = TextDecoration.lineThrough;
-    // Combine with existing decoration if present
-    if (baseStyle.decoration != null) {
-      // Prevent combining with itself if somehow applied twice (defensive)
-      final decoration = baseStyle.decoration;
-      if (decoration != null && decoration.contains(TextDecoration.lineThrough)) {
-        newDecoration = decoration;
-      } else if (decoration != null) {
-        newDecoration = TextDecoration.combine([decoration, TextDecoration.lineThrough]);
-      }
-    }
-
-    // Use the base color for the line if available, otherwise let Flutter decide.
-    // If combining decorations, the original decorationColor might be for a different part.
-    // It's safer to let Flutter pick or for the user to specify a combined decorationColor
-    // via TextfOptions.
-    // For simplicity here, we might just use baseStyle.color if no decorationColor is set.
-    final Color? decorationColorToApply = baseStyle.decorationColor ?? baseStyle.color;
-
-    return baseStyle.copyWith(
-      decoration: newDecoration,
-      decorationColor: decorationColorToApply,
-      decorationThickness: thickness,
-    );
-  }
-
-  /// Applies default underline formatting (`++underline++`) to a base style.
-  /// Used as a fallback by TextfStyleResolver if no `underlineStyle` is found via TextfOptions.
-  static TextStyle underlineStyle(TextStyle baseStyle) {
-    TextDecoration newDecoration = TextDecoration.underline;
-    // Combine with existing decoration if present
-    final TextDecoration? decoration = baseStyle.decoration;
-    if (decoration != null) {
-      // Prevent combining with itself (defensive)
-      newDecoration = decoration.contains(TextDecoration.underline)
-          ? decoration
-          : TextDecoration.combine([decoration, TextDecoration.underline]);
-    }
-
-    final Color? decorationColorToApply = baseStyle.decorationColor ?? baseStyle.color;
-
-    return baseStyle.copyWith(
-      decoration: newDecoration,
-      decorationColor: decorationColorToApply,
-      // Use baseStyle.decorationThickness if available, otherwise a sensible default or null.
-      // This thickness applies to the new underline part.
-      decorationThickness: baseStyle.decorationThickness ?? 1.0,
-    );
-  }
 }

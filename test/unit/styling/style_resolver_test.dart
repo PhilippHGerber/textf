@@ -107,7 +107,7 @@ void main() {
         expect(resolver, isNotNull);
       });
 
-      testWidgets('resolveStyle for bold uses DefaultStyles.boldStyle', (tester) async {
+      testWidgets('resolveStyle for bold applies the relative default', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
         final resolved = resolver.resolveStyle(FormatMarkerType.bold, baseStyle, palette);
@@ -116,25 +116,27 @@ void main() {
         expect(resolved.color, baseStyle.color);
       });
 
-      testWidgets('resolveStyle for italic uses DefaultStyles.italicStyle', (tester) async {
+      testWidgets('resolveStyle for italic applies the relative default', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
         final resolved = resolver.resolveStyle(FormatMarkerType.italic, baseStyle, palette);
         expect(resolved.fontStyle, FontStyle.italic);
         expect(resolved.fontSize, baseStyle.fontSize);
+        expect(resolved.color, baseStyle.color);
       });
 
-      testWidgets('resolveStyle for boldItalic uses DefaultStyles.boldItalicStyle', (tester) async {
+      testWidgets('resolveStyle for boldItalic applies the relative default', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
         final resolved = resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle, palette);
         expect(resolved.fontWeight, FontWeight.bold);
         expect(resolved.fontStyle, FontStyle.italic);
         expect(resolved.fontSize, baseStyle.fontSize);
+        expect(resolved.color, baseStyle.color);
       });
 
       testWidgets(
-        'resolveStyle for strikethrough uses DefaultStyles.strikethroughStyle with default thickness',
+        'resolveStyle for strikethrough applies the relative default with default thickness',
         (tester) async {
           testContext = await pumpWithContext(tester);
           resolver = TextfStyleResolver(testContext);
@@ -161,13 +163,143 @@ void main() {
         expect(resolved.fontSize, baseStyle.fontSize); // Base font size
       });
 
-      testWidgets('resolveStyle for underline uses DefaultStyles.underlineStyle', (tester) async {
+      testWidgets('resolveStyle for underline applies the relative default', (tester) async {
         testContext = await pumpWithContext(tester);
         resolver = TextfStyleResolver(testContext);
         final resolved = resolver.resolveStyle(FormatMarkerType.underline, baseStyle, palette);
         expect(resolved.decoration, TextDecoration.underline);
         expect(resolved.decorationColor, baseStyle.color);
         expect(resolved.fontSize, baseStyle.fontSize);
+      });
+
+      // Decoration edge cases of the strikethrough and underline relative
+      // defaults. The base style above already covers `TextDecoration.none`.
+      group('relative decoration defaults', () {
+        final resolver = TextfStyleResolver.withState(options: null);
+
+        TextStyle resolve(FormatMarkerType type, TextStyle base) =>
+            resolver.resolveStyle(type, base, palette);
+
+        group('strikethrough', () {
+          test('adds lineThrough to a base style with a null decoration', () {
+            final resolved = resolve(FormatMarkerType.strikethrough, const TextStyle());
+            expect(resolved.decoration, TextDecoration.lineThrough);
+          });
+
+          test('combines lineThrough with an existing different decoration', () {
+            final resolved = resolve(
+              FormatMarkerType.strikethrough,
+              const TextStyle(decoration: TextDecoration.underline),
+            );
+            expect(
+              resolved.decoration,
+              TextDecoration.combine([TextDecoration.underline, TextDecoration.lineThrough]),
+            );
+          });
+
+          test('does not re-add lineThrough when the base already has it', () {
+            final resolved = resolve(
+              FormatMarkerType.strikethrough,
+              TextStyle(
+                decoration: TextDecoration.combine([
+                  TextDecoration.lineThrough,
+                  TextDecoration.overline,
+                ]),
+              ),
+            );
+            expect(
+              resolved.decoration,
+              TextDecoration.combine([TextDecoration.lineThrough, TextDecoration.overline]),
+            );
+          });
+
+          test('takes the decoration color from the base decoration color', () {
+            final resolved = resolve(
+              FormatMarkerType.strikethrough,
+              const TextStyle(color: Color(0xFF4CAF50), decorationColor: Color(0xFFF44336)),
+            );
+            expect(resolved.decorationColor, const Color(0xFFF44336));
+          });
+
+          test('falls back to the base color for the decoration color', () {
+            final resolved = resolve(
+              FormatMarkerType.strikethrough,
+              const TextStyle(color: Color(0xFF4CAF50)),
+            );
+            expect(resolved.decorationColor, const Color(0xFF4CAF50));
+          });
+
+          test('uses thickness 1.5 even when the base sets its own thickness', () {
+            final resolved = resolve(
+              FormatMarkerType.strikethrough,
+              const TextStyle(decorationThickness: 2.5),
+            );
+            expect(resolved.decorationThickness, 1.5);
+          });
+        });
+
+        group('underline', () {
+          test('adds underline to a base style with a null decoration', () {
+            final resolved = resolve(FormatMarkerType.underline, const TextStyle());
+            expect(resolved.decoration, TextDecoration.underline);
+          });
+
+          test('combines underline with an existing different decoration', () {
+            final resolved = resolve(
+              FormatMarkerType.underline,
+              const TextStyle(decoration: TextDecoration.lineThrough),
+            );
+            expect(
+              resolved.decoration,
+              TextDecoration.combine([TextDecoration.lineThrough, TextDecoration.underline]),
+            );
+          });
+
+          test('does not re-add underline when the base already has it', () {
+            final resolved = resolve(
+              FormatMarkerType.underline,
+              TextStyle(
+                decoration: TextDecoration.combine([
+                  TextDecoration.underline,
+                  TextDecoration.overline,
+                ]),
+              ),
+            );
+            expect(
+              resolved.decoration,
+              TextDecoration.combine([TextDecoration.underline, TextDecoration.overline]),
+            );
+          });
+
+          test('takes the decoration color from the base decoration color', () {
+            final resolved = resolve(
+              FormatMarkerType.underline,
+              const TextStyle(color: Color(0xFF4CAF50), decorationColor: Color(0xFFF44336)),
+            );
+            expect(resolved.decorationColor, const Color(0xFFF44336));
+          });
+
+          test('falls back to the base color for the decoration color', () {
+            final resolved = resolve(
+              FormatMarkerType.underline,
+              const TextStyle(color: Color(0xFF4CAF50)),
+            );
+            expect(resolved.decorationColor, const Color(0xFF4CAF50));
+          });
+
+          test('keeps the base decoration thickness', () {
+            final resolved = resolve(
+              FormatMarkerType.underline,
+              const TextStyle(decorationThickness: 2.5),
+            );
+            expect(resolved.decorationThickness, 2.5);
+          });
+
+          test('uses thickness 1.0 when the base sets none', () {
+            final resolved = resolve(FormatMarkerType.underline, const TextStyle());
+            expect(resolved.decorationThickness, 1.0);
+          });
+        });
       });
 
       testWidgets('resolveStyle for highlight uses the neutral default', (tester) async {

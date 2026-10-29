@@ -182,7 +182,7 @@ void main() {
       );
       expect(
         resolved!.boldStyle?.fontWeight,
-        DefaultStyles.boldStyle(capturedDefaultStyle!).fontWeight,
+        FontWeight.bold,
       );
 
       expect(
@@ -192,7 +192,7 @@ void main() {
       );
       expect(
         resolved!.italicStyle?.fontStyle,
-        DefaultStyles.italicStyle(capturedDefaultStyle!).fontStyle,
+        FontStyle.italic,
       );
 
       // Code Style: Check against the neutral defaults merged with base
@@ -252,7 +252,7 @@ void main() {
       // Check unspecified (falls back to default effect on base)
       expect(
         resolved!.italicStyle?.fontStyle,
-        DefaultStyles.italicStyle(baseStyle).fontStyle,
+        FontStyle.italic,
       ); // Default italic
       expect(resolved!.italicStyle?.color, baseStyle.color); // Base color
       // Check unspecified callback
