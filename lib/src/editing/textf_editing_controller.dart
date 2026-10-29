@@ -161,7 +161,7 @@ class TextfEditingController extends TextEditingController {
   ///
   /// When [text] exceeds this length, [buildTextSpan] returns a plain
   /// [TextSpan] with no formatting applied. This prevents UI freezes on
-  /// very large inputs. Defaults to [TextfLimits.maxLiveFormattingLength].
+  /// very large inputs. Defaults to 5000.
   ///
   /// Setting this property calls [notifyListeners] automatically.
   int get maxLiveFormattingLength => _maxLiveFormattingLength;
