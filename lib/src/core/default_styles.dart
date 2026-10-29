@@ -128,12 +128,15 @@ class DefaultStyles {
   static const double defaultFontSize = 14;
 
   /// Default font size factor for superscript and subscript.
+  // Repeated in the `scriptFontSizeFactor` docs of TextfOptions and TextfOptionsData.
   static const double scriptFontSizeFactor = 0.6;
 
   /// Default baseline offset factor for superscript (relative to font size).
+  // Repeated in the `superscriptBaselineFactor` docs of TextfOptions and TextfOptionsData.
   static const double superscriptBaselineFactor = 0.4; // Move up
 
   /// Default baseline offset factor for subscript (relative to font size).
+  // Repeated in the `subscriptBaselineFactor` docs of TextfOptions and TextfOptionsData.
   static const double subscriptBaselineFactor = 0.4; // Move down
 
   /// Default line-height multiplier applied to ATX headings.

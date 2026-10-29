@@ -62,7 +62,7 @@ class TextfOptionsData {
   /// Determines the vertical offset magnitude relative to the font size.
   /// The value is treated as an absolute offset; superscript is always raised.
   ///
-  /// If null, defaults to `DefaultStyles.superscriptBaselineFactor`.
+  /// If null, defaults to 0.4.
   final double? superscriptBaselineFactor;
 
   /// Custom baseline offset factor for subscript text.
@@ -70,7 +70,7 @@ class TextfOptionsData {
   /// Determines the vertical offset magnitude relative to the font size.
   /// The value is treated as an absolute offset; subscript is always lowered.
   ///
-  /// If null, defaults to `DefaultStyles.subscriptBaselineFactor`.
+  /// If null, defaults to 0.4.
   final double? subscriptBaselineFactor;
 
   /// Custom font size scaling factor for both superscript and subscript text.
@@ -78,7 +78,7 @@ class TextfOptionsData {
   /// Multiplies the base font size by this factor.
   /// For example, `0.6` means the script text will be 60% the size of the body text.
   ///
-  /// If null, defaults to `DefaultStyles.scriptFontSizeFactor` (0.6).
+  /// If null, defaults to 0.6.
   final double? scriptFontSizeFactor;
 
   // Styles (Merged down the tree)
