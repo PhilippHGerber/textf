@@ -17,7 +17,7 @@ Future<Color> _pumpRuleColor(WidgetTester tester, InlineSpan span) async {
 
 void main() {
   group('Default thematic-break span reuse (T-PERF-01)', () {
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     test('the same resolved color yields the identical span across parses', () {
       final palette = TextfPalette(const TextStyle(color: Color(0xFF000000)));

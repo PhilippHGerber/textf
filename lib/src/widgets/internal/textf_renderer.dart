@@ -167,7 +167,7 @@ class TextfRendererState extends State<TextfRenderer> with WidgetsBindingObserve
   /// The renderer only ever parses with a resolver built here, from the
   /// inherited [TextfOptionsData], never from a [BuildContext].
   TextfStyleResolver _rebuildResolver(TextfOptionsData? options) =>
-      _cachedResolver = TextfStyleResolver.withState(options: options);
+      _cachedResolver = TextfStyleResolver(options: options);
 
   @override
   void didUpdateWidget(TextfRenderer oldWidget) {

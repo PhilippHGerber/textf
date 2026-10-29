@@ -14,7 +14,7 @@ void main() {
     final palette = TextfPalette(baseStyle);
 
     // No options and no BuildContext: the resolver is context-free.
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     test('resolves bold using DefaultStyles fallback', () {
       final result = resolver.resolveStyle(FormatMarkerType.bold, baseStyle, palette);

@@ -16,7 +16,7 @@ void main() {
       parser = TextfParser();
     });
 
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     List<InlineSpan> parse(String text) =>
         parser.parse(text, const TextStyle(fontSize: 14), resolver);

@@ -21,7 +21,7 @@ final Color _codeBackground = const Color(0xFF000000).withValues(alpha: 0.05);
 void main() {
   group('Link Parsing Tests', () {
     late TextfParser parser;
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     setUp(() {
       parser = TextfParser();
@@ -507,7 +507,7 @@ void main() {
         final spans = parser.parse(
           'Visit [**Bold Link**](https://example.com)',
           baseStyle,
-          TextfStyleResolver.withState(
+          TextfStyleResolver(
             options: const TextfOptionsData(
               linkStyle: optionsLinkStyle,
               boldStyle: optionsBoldStyle,

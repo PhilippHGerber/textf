@@ -126,7 +126,7 @@ void main() {
   // ---------------------------------------------------------------------------
   group('TextfSpanBuilder — hidden marker width vs visible content width', () {
     late TextfSpanBuilder builder;
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     setUp(() {
       builder = TextfSpanBuilder();

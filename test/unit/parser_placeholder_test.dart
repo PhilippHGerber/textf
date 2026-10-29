@@ -10,7 +10,7 @@ void main() {
   group('Parser Placeholder Tests', () {
     // ignore: avoid-late-keyword
     late TextfParser parser;
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     setUp(() {
       parser = TextfParser();

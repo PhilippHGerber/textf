@@ -27,7 +27,7 @@ import '../../widgets/pump_textf_widget.dart';
 void main() {
   group('TextfSpanBuilder — headings', () {
     late TextfSpanBuilder builder;
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     // A base style with a distinct, explicit size/weight so we can detect when
     // heading styling has (incorrectly) leaked into a following paragraph.

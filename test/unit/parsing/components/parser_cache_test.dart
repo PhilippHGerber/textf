@@ -8,7 +8,7 @@ import 'package:textf/src/widgets/textf_options_data.dart';
 
 void main() {
   group('TextfParser Static Cache Tests', () {
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     setUp(TextfParser.clearCache);
     tearDown(TextfParser.clearCache);
@@ -116,7 +116,7 @@ void main() {
       parser.parse(
         text,
         const TextStyle(),
-        TextfStyleResolver.withState(
+        TextfStyleResolver(
           options: const TextfOptionsData(boldStyle: TextStyle(fontSize: 20)),
         ),
       );

@@ -8,7 +8,7 @@ import 'package:textf/src/styling/textf_style_resolver.dart';
 void main() {
   group('TextfParser coverage', () {
     late TextfParser parser;
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     setUp(() {
       TextfParser.clearCache();

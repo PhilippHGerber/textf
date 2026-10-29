@@ -15,103 +15,53 @@ void main() {
     const baseStyle = TextStyle(fontSize: 14, color: Color(0xFF000000));
     final palette = TextfPalette(baseStyle);
 
-    testWidgets('resolves boldItalic style from TextfOptions', (tester) async {
-      late TextStyle? result;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: TextfOptions(
-            boldItalicStyle: const TextStyle(
-              fontWeight: FontWeight.w900,
-              fontStyle: FontStyle.italic,
-            ),
-            child: Builder(
-              builder: (context) {
-                final resolver = TextfStyleResolver(context);
-                result = resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle, palette);
-                return const SizedBox();
-              },
-            ),
-          ),
+    test('resolves boldItalic style from TextfOptions', () {
+      final resolver = TextfStyleResolver(
+        options: const TextfOptionsData(
+          boldItalicStyle: TextStyle(fontWeight: FontWeight.w900, fontStyle: FontStyle.italic),
         ),
       );
 
-      expect(result, isNotNull);
-      expect(result!.fontWeight, FontWeight.w900);
+      final result = resolver.resolveStyle(FormatMarkerType.boldItalic, baseStyle, palette);
+
+      expect(result.fontWeight, FontWeight.w900);
     });
 
-    testWidgets('resolves underline style from TextfOptions', (tester) async {
-      late TextStyle? result;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: TextfOptions(
-            underlineStyle: const TextStyle(
-              decoration: TextDecoration.underline,
-              color: Color(0xFF4CAF50),
-            ),
-            child: Builder(
-              builder: (context) {
-                final resolver = TextfStyleResolver(context);
-                result = resolver.resolveStyle(FormatMarkerType.underline, baseStyle, palette);
-                return const SizedBox();
-              },
-            ),
-          ),
+    test('resolves underline style from TextfOptions', () {
+      final resolver = TextfStyleResolver(
+        options: const TextfOptionsData(
+          underlineStyle: TextStyle(decoration: TextDecoration.underline, color: Color(0xFF4CAF50)),
         ),
       );
 
-      expect(result, isNotNull);
-      expect(result!.color, const Color(0xFF4CAF50));
+      final result = resolver.resolveStyle(FormatMarkerType.underline, baseStyle, palette);
+
+      expect(result.color, const Color(0xFF4CAF50));
     });
 
-    testWidgets('resolves superscript style from TextfOptions', (tester) async {
-      late TextStyle? result;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: TextfOptions(
-            superscriptStyle: const TextStyle(fontSize: 10),
-            child: Builder(
-              builder: (context) {
-                final resolver = TextfStyleResolver(context);
-                result = resolver.resolveStyle(FormatMarkerType.superscript, baseStyle, palette);
-                return const SizedBox();
-              },
-            ),
-          ),
-        ),
+    test('resolves superscript style from TextfOptions', () {
+      final resolver = TextfStyleResolver(
+        options: const TextfOptionsData(superscriptStyle: TextStyle(fontSize: 10)),
       );
 
-      expect(result, isNotNull);
-      expect(result!.fontSize, 10);
+      final result = resolver.resolveStyle(FormatMarkerType.superscript, baseStyle, palette);
+
+      expect(result.fontSize, 10);
     });
 
-    testWidgets('resolves subscript style from TextfOptions', (tester) async {
-      late TextStyle? result;
-
-      await tester.pumpWidget(
-        neutralTestApp(
-          child: TextfOptions(
-            subscriptStyle: const TextStyle(fontSize: 10),
-            child: Builder(
-              builder: (context) {
-                final resolver = TextfStyleResolver(context);
-                result = resolver.resolveStyle(FormatMarkerType.subscript, baseStyle, palette);
-                return const SizedBox();
-              },
-            ),
-          ),
-        ),
+    test('resolves subscript style from TextfOptions', () {
+      final resolver = TextfStyleResolver(
+        options: const TextfOptionsData(subscriptStyle: TextStyle(fontSize: 10)),
       );
 
-      expect(result, isNotNull);
-      expect(result!.fontSize, 10);
+      final result = resolver.resolveStyle(FormatMarkerType.subscript, baseStyle, palette);
+
+      expect(result.fontSize, 10);
     });
 
     test('resolves highlight style on a dark surface (light text)', () {
       final darkSurface = TextfPalette(const TextStyle(color: Color(0xFFFFFFFF)));
-      final resolver = TextfStyleResolver.withState(options: null);
+      final resolver = TextfStyleResolver(options: null);
 
       final result = resolver.resolveStyle(FormatMarkerType.highlight, baseStyle, darkSurface);
 
@@ -343,7 +293,7 @@ void main() {
       final result = parser.parse(
         '[outer [inner](url1)](url2)',
         const TextStyle(),
-        TextfStyleResolver.withState(options: null),
+        TextfStyleResolver(options: null),
       );
 
       expect(result, isNotEmpty);

@@ -28,7 +28,7 @@ class _ResolvedOptions {
 
   // Factory to create from context using TextfStyleResolver
   factory fromContext(BuildContext context, TextStyle baseStyle) {
-    final resolver = TextfStyleResolver(context);
+    final resolver = TextfStyleResolver(options: TextfOptions.maybeOf(context));
     final palette = TextfPalette(baseStyle);
 
     final linkConfig = resolver.resolveLinkConfiguration(baseStyle);
@@ -296,7 +296,7 @@ void main() {
 
       // ARRANGE: Get context and create the resolver
       final BuildContext context = tester.element(find.byType(SizedBox));
-      final resolver = TextfStyleResolver(context);
+      final resolver = TextfStyleResolver(options: TextfOptions.maybeOf(context));
 
       // --- ASSERT MERGED Link STYLE ---
       final linkConfig = resolver.resolveLinkConfiguration(baseStyle);
@@ -381,7 +381,7 @@ void main() {
 
       // ARRANGE
       final BuildContext context = tester.element(find.byType(SizedBox));
-      final resolver = TextfStyleResolver(context);
+      final resolver = TextfStyleResolver(options: TextfOptions.maybeOf(context));
 
       // --- 1. Assert properties specified ONLY in Child ---
       final resolvedItalic = resolver.resolveStyle(

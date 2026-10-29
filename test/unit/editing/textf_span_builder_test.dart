@@ -19,7 +19,7 @@ extension _TestTextAccess on InlineSpan {
 void main() {
   group('TextfSpanBuilder', () {
     late TextfSpanBuilder builder;
-    final resolver = TextfStyleResolver.withState(options: null);
+    final resolver = TextfStyleResolver(options: null);
 
     setUp(() {
       builder = TextfSpanBuilder();
@@ -573,7 +573,7 @@ void main() {
 
     group('TextfOptions Integration', () {
       test('respects TextfOptions bold style', () {
-        final optionsResolver = TextfStyleResolver.withState(
+        final optionsResolver = TextfStyleResolver(
           options: const TextfOptionsData(
             boldStyle: TextStyle(
               fontWeight: FontWeight.w900,
