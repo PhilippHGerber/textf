@@ -2,7 +2,7 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
-## Unreleased
+## 2.0.2
 
 ### Fixed
 
@@ -18,6 +18,10 @@ All notable changes to the `textf` package will be documented in this file.
 ### Removed
 
 * **`TextfEditingController.computeRenderMode`:** the `@visibleForTesting` static is removed; it exposed an internal type and only forwarded to internal logic.
+
+### Chore
+
+* **Flutter 3.50:** examples and tests use `material_ui`/`cupertino_ui` instead of the deprecated SDK libraries.
 
 ## 2.0.1
 
