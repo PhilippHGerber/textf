@@ -1,7 +1,16 @@
 // ignore_for_file: no-magic-number, avoid-non-null-assertion, avoid-late-keyword
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart'
+    show
+        ColorScheme,
+        DefaultMaterialLocalizations,
+        Material,
+        TextField,
+        TextFormField,
+        Theme,
+        ThemeData;
 import 'package:textf/textf.dart';
 
 import 'pump_textf_widget.dart';

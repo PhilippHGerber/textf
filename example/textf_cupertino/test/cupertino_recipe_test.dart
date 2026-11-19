@@ -1,7 +1,6 @@
-// The `as sdk` import is deliberate SDK-host coverage (ADR 0004).
-// ignore_for_file: deprecated_member_use
-
 import 'package:cupertino_ui/cupertino_ui.dart';
+// Deliberate SDK-host coverage (ADR 0004): keeps the deprecated SDK library for hosts that still use it.
+// ignore: deprecated_member_use
 import 'package:flutter/cupertino.dart' as sdk;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';

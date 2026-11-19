@@ -12,7 +12,7 @@ dependencies:
   cupertino_ui: ^1.0.0
   flutter:
     sdk: flutter
-  material_ui: ^1.0.0
+  material_ui: ^1.3.0
   textf: any
 
 dev_dependencies:
