@@ -2,9 +2,9 @@
 
 // `Theme` is imported only for the negative test: an ancestor design-system theme must not
 // invalidate Textf's cache, because Textf no longer reads it.
-import 'package:flutter/material.dart' show Theme, ThemeData;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' show Theme, ThemeData;
 import 'package:textf/src/parsing/textf_parser.dart';
 import 'package:textf/src/styling/textf_style_resolver.dart';
 import 'package:textf/src/widgets/internal/textf_renderer.dart';

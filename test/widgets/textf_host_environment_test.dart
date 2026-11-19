@@ -1,9 +1,11 @@
 // ignore_for_file: no-magic-number
+// Deliberate SDK-host coverage (ADR 0004): hosts still use the deprecated SDK libraries.
+// ignore_for_file: deprecated_member_use
 
 // This file deliberately imports the SDK's Material and Cupertino libraries: it verifies that
-// Textf renders the same way inside each of them as in a bare WidgetsApp. The standalone
-// `material_ui` / `cupertino_ui` packages are not dependencies of this package; their hosts are
-// verified in the example apps.
+// Textf renders the same way inside each of them as in a bare WidgetsApp. `material_ui` is a
+// dev dependency used by the other widget tests; the standalone `material_ui` / `cupertino_ui`
+// hosts are verified in the example apps.
 import 'package:flutter/cupertino.dart' show CupertinoApp, CupertinoPageScaffold;
 import 'package:flutter/material.dart' show ColorScheme, MaterialApp, Scaffold, ThemeData;
 import 'package:flutter/widgets.dart';

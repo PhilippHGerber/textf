@@ -1,3 +1,6 @@
+// Deliberate SDK-host coverage (ADR 0004): hosts still use the deprecated SDK library.
+// ignore_for_file: deprecated_member_use
+
 // The same recipe as `main.dart`, on the SDK's `package:flutter/cupertino.dart` instead of
 // `package:cupertino_ui`. Run it with `flutter run -t lib/sdk_cupertino_textf_app.dart`.
 import 'package:flutter/cupertino.dart';
