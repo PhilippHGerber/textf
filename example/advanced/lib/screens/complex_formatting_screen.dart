@@ -1,7 +1,7 @@
 // example/textf_core/lib/screens/complex_formatting_screen.dart
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 
 import '../widgets/example_card.dart';

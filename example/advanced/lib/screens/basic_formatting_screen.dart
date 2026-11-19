@@ -1,5 +1,5 @@
 // example/textf_core/lib/screens/basic_formatting_screen.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 
 import '../widgets/example_card.dart';

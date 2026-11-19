@@ -1,7 +1,7 @@
 // ignore_for_file: no-magic-number, avoid-late-keyword, no-empty-block
 
 // example/lib/screens/editing_controller_screen.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 
 class EditingControllerScreen extends StatefulWidget {
