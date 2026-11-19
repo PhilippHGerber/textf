@@ -1,7 +1,7 @@
 // example/lib/screens/screenshot_screen.dart
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 extension TextStyleCopyWithExtension on TextStyle? {
   TextStyle copyWithNullable({

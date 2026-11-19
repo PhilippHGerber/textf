@@ -12,6 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   marionette_flutter: ^0.7.0
+  material_ui: ^1.3.0
   share_plus: ^13.1.0
   textf: any
   url_launcher: ^6.3.2

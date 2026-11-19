@@ -1,7 +1,7 @@
 // ignore_for_file: no-magic-number
 
-import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:textf/textf.dart';
 
 void main() {
