@@ -1,16 +1,15 @@
 import 'package:flutter/widgets.dart';
 
-// Content shared by the `cupertino_ui` app (`main.dart`) and the SDK Cupertino app
-// (`sdk_cupertino_textf_app.dart`). It uses only the widgets layer, so both can import it.
+// Demo content for the `cupertino_ui` app (`main.dart`). It uses only the widgets layer.
 
-/// Key of the demo `Textf` in both apps.
+/// Key of the demo `Textf`.
 const Key demoTextfKey = ValueKey<String>('demo-textf');
 
 /// Opacity applied to the resolved `systemYellow` for `TextfOptions.highlightColor`, so
 /// highlighted text stays readable in light and dark mode.
 const double highlightAlpha = 0.35;
 
-/// Markdown rendered by both apps: every construct the recipe colors, plus a heading.
+/// Markdown rendered by the app: every construct the recipe colors, plus a heading.
 const String demoMarkdown = '''
 ## Textf on Cupertino
 **Bold**, *italic*, ~~strike~~, ++underline++ and x^2^ need no setup.

@@ -1,17 +1,11 @@
 // ignore_for_file: no-magic-number
 
-// This file deliberately imports the SDK's Material and Cupertino libraries: it verifies that
-// Textf renders the same way inside each of them as in a bare WidgetsApp. `material_ui` is a
-// dev dependency used by the other widget tests; the standalone `material_ui` / `cupertino_ui`
-// hosts are verified in the example apps.
-// Deliberate SDK-host coverage (ADR 0004): keeps the deprecated SDK library for hosts that still use it.
-// ignore: deprecated_member_use
-import 'package:flutter/cupertino.dart' show CupertinoApp, CupertinoPageScaffold;
-// Deliberate SDK-host coverage (ADR 0004): keeps the deprecated SDK library for hosts that still use it.
-// ignore: deprecated_member_use
-import 'package:flutter/material.dart' show ColorScheme, MaterialApp, Scaffold, ThemeData;
+// This file verifies that Textf renders the same way inside a `material_ui` and a
+// `cupertino_ui` app as in a bare WidgetsApp. Both packages are dev dependencies only.
+import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoApp, CupertinoPageScaffold;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' show ColorScheme, MaterialApp, Scaffold, ThemeData;
 import 'package:textf/src/widgets/internal/hoverable_link_span.dart';
 import 'package:textf/textf.dart';
 
@@ -71,7 +65,7 @@ void main() {
       expect(linkColor, _defaultLinkColor);
     });
 
-    testWidgets('SDK MaterialApp: a custom theme does not leak into the defaults', (
+    testWidgets('material_ui MaterialApp: a custom theme does not leak into the defaults', (
       tester,
     ) async {
       final linkColor = await _pumpAndCheck(
@@ -87,7 +81,7 @@ void main() {
       expect(linkColor, _defaultLinkColor, reason: 'no Theme.of lookup feeds the link color');
     });
 
-    testWidgets('SDK MaterialApp in dark mode', (tester) async {
+    testWidgets('material_ui MaterialApp in dark mode', (tester) async {
       final linkColor = await _pumpAndCheck(
         tester,
         MaterialApp(
@@ -99,7 +93,7 @@ void main() {
       expect(linkColor, _defaultLinkColor);
     });
 
-    testWidgets('SDK CupertinoApp', (tester) async {
+    testWidgets('cupertino_ui CupertinoApp', (tester) async {
       final linkColor = await _pumpAndCheck(
         tester,
         CupertinoApp(

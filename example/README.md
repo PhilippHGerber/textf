@@ -231,7 +231,7 @@ The [repository](https://github.com/PhilippHGerber/textf/tree/main/example) hold
 - [`basic`](https://github.com/PhilippHGerber/textf/tree/main/example/basic): every feature in one file, as a code reference
 - [`advanced`](https://github.com/PhilippHGerber/textf/tree/main/example/advanced): chat, notifications, links, placeholders and the editing controller
 - [`textf_flex`](https://github.com/PhilippHGerber/textf/tree/main/example/textf_flex): `material_ui` with `flex_color_scheme`
-- [`textf_cupertino`](https://github.com/PhilippHGerber/textf/tree/main/example/textf_cupertino): `cupertino_ui` and SDK Cupertino
+- [`textf_cupertino`](https://github.com/PhilippHGerber/textf/tree/main/example/textf_cupertino): `cupertino_ui`
 - [`textf_bare`](https://github.com/PhilippHGerber/textf/tree/main/example/textf_bare): a bare `WidgetsApp`
 
 See [pub.dev](https://pub.dev/packages/textf) for full documentation.

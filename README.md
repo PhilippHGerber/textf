@@ -584,7 +584,7 @@ class MyApp extends StatelessWidget {
 Verified recipes for each environment, with tests, live in the repository:
 
 - [`example/textf_flex`](https://github.com/PhilippHGerber/textf/tree/main/example/textf_flex): `material_ui` + `flex_color_scheme` 9 (the recipe above)
-- [`example/textf_cupertino`](https://github.com/PhilippHGerber/textf/tree/main/example/textf_cupertino): `cupertino_ui` and SDK Cupertino, using `CupertinoTheme` and `CupertinoColors` in `CupertinoApp.builder`
+- [`example/textf_cupertino`](https://github.com/PhilippHGerber/textf/tree/main/example/textf_cupertino): `cupertino_ui`, using `CupertinoTheme` and `CupertinoColors` in `CupertinoApp.builder`
 - [`example/textf_bare`](https://github.com/PhilippHGerber/textf/tree/main/example/textf_bare): a bare `WidgetsApp` with only a brand `linkColor`
 
 **Coming from 1.x?** The one remaining difference is code text: 1.x drew it in `colorScheme.onSurfaceVariant`, and 2.0 always uses the surrounding text color. To restore it, set a full `codeStyle` instead of `codeBackgroundColor` (a style option replaces the whole default, so include the font family and background).

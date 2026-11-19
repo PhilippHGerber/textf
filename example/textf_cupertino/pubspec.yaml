@@ -1,5 +1,5 @@
 name: textf_cupertino
-description: "Workspace-only example: textf in a Cupertino app, on cupertino_ui and on SDK Cupertino."
+description: "Workspace-only example: textf in a cupertino_ui app."
 publish_to: "none"
 version: 1.0.0
 resolution: workspace

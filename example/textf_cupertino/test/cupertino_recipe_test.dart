@@ -1,12 +1,8 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
-// Deliberate SDK-host coverage (ADR 0004): keeps the deprecated SDK library for hosts that still use it.
-// ignore: deprecated_member_use
-import 'package:flutter/cupertino.dart' as sdk;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/textf.dart';
 import 'package:textf_cupertino/demo_content.dart';
 import 'package:textf_cupertino/main.dart';
-import 'package:textf_cupertino/sdk_cupertino_textf_app.dart';
 
 void main() {
   group('T-ENV-01 (cupertino_ui host, lib/main.dart)', () {
@@ -42,33 +38,6 @@ void main() {
       _expectRecipeColors(tester, dark);
     });
   });
-
-  group('T-ENV-01 (SDK Cupertino host, lib/sdk_cupertino_textf_app.dart)', () {
-    for (final brightness in Brightness.values) {
-      testWidgets('the same recipe gives the same colors ($brightness)', (tester) async {
-        await tester.pumpWidget(SdkCupertinoTextfApp(brightness: brightness));
-        await tester.pumpAndSettle();
-
-        expect(tester.takeException(), isNull);
-        // Colors resolved by package:cupertino_ui ...
-        final expected = _expectedColors(brightness);
-        _expectRecipeColors(tester, expected);
-        // ... equal the ones SDK Cupertino resolves, so the recipe is portable between them.
-        expect(
-          expected.primary,
-          isSameColorAs(_sdkResolved(sdk.CupertinoColors.systemIndigo, brightness)),
-        );
-        expect(
-          expected.codeBackground,
-          isSameColorAs(_sdkResolved(sdk.CupertinoColors.tertiarySystemFill, brightness)),
-        );
-        expect(
-          expected.separator,
-          isSameColorAs(_sdkResolved(sdk.CupertinoColors.separator, brightness)),
-        );
-      });
-    }
-  });
 }
 
 /// The colors the recipe should produce.
@@ -85,9 +54,6 @@ _RecipeColors _expectedColors(Brightness brightness) {
     separator: resolve(CupertinoColors.separator),
   );
 }
-
-Color _sdkResolved(sdk.CupertinoDynamicColor color, Brightness brightness) =>
-    brightness == Brightness.light ? color.color : color.darkColor;
 
 void _expectRecipeColors(WidgetTester tester, _RecipeColors expected) {
   final link = _spanStyle(tester, 'a link');

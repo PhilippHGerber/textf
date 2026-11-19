@@ -34,9 +34,8 @@ takes `Color`s, which both share.
 
 - `lib/main.dart`: the `cupertino_ui` app (`CupertinoPageScaffold`, a dark-mode switch, and a
   `CupertinoTextField` driven by `TextfEditingController`).
-- `lib/sdk_cupertino_textf_app.dart`: the same recipe on SDK Cupertino.
-- `test/cupertino_recipe_test.dart`: checks that both apps render the recipe colors, that the
-  `cupertino_ui` app follows a brightness switch, and that both packages resolve the same colors.
+- `test/cupertino_recipe_test.dart`: checks that the app renders the recipe colors and follows a
+  brightness switch.
 
 ## Running
 
@@ -44,8 +43,7 @@ takes `Color`s, which both share.
 cd example/textf_cupertino
 flutter test
 flutter create --platforms=ios,macos .   # platform folders are not checked in
-flutter run                               # cupertino_ui
-flutter run -t lib/sdk_cupertino_textf_app.dart
+flutter run
 ```
 
 `textf` resolves from the repository root through the pub workspace declared in the root
