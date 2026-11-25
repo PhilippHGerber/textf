@@ -1,4 +1,4 @@
-// ignore_for_file: avoid-top-level-members-in-tests, prefer-match-file-name
+// ignore_for_file: avoid-top-level-members-in-tests, prefer-match-file-name, no-magic-number
 
 /// Architectural & static enforcement seam (PRD "Testing Seams" §3, §8).
 ///
@@ -185,6 +185,8 @@ Map<String, String> _dartSources(String relativeDir) {
         ..sort((a, b) => a.path.compareTo(b.path));
   return {
     for (final File file in files)
+      // Paths are ASCII here, so code-unit slicing is safe.
+      // ignore: avoid-substring
       file.path.substring(root.length + 1).replaceAll(Platform.pathSeparator, '/'): file
           .readAsStringSync(),
   };

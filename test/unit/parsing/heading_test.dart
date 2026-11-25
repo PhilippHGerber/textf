@@ -1,4 +1,4 @@
-// ignore_for_file: no-magic-number, avoid-non-null-assertion
+// ignore_for_file: no-magic-number, avoid-non-null-assertion, avoid-late-keyword
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';

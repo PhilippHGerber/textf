@@ -105,7 +105,7 @@ class TextfPalette {
   Color get highlightText => surface == Brightness.light ? _highlightTextLight : _highlightTextDark;
 
   /// Alpha of the neutral default thematic-break rule.
-  static const double _thematicBreakAlpha = 0.20;
+  static const double _thematicBreakAlpha = 0.2;
 
   /// Alpha of the dimmed formatting markers in `TextfEditingController`.
   static const double _editingMarkerAlpha = 0.4;

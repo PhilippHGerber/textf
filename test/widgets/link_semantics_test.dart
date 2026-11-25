@@ -1,4 +1,4 @@
-// ignore_for_file: no-empty-block, avoid-top-level-members-in-tests
+// ignore_for_file: no-empty-block, avoid-top-level-members-in-tests, no-magic-number
 
 import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';

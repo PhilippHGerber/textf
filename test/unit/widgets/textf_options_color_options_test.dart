@@ -1,3 +1,5 @@
+// ignore_for_file: no-magic-number
+
 // T-COLOPT-03: color options on TextfOptions / TextfOptionsData — equality, hashing,
 // child ?? parent merging and diagnostics.
 

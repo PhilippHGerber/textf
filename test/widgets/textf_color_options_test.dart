@@ -125,7 +125,7 @@ void main() {
     testWidgets('thematic break: 1px rule at the ambient text color @ 0.20', (tester) async {
       await _pump(tester, '---', ambient: const TextStyle(color: _red));
 
-      expect(_ruleColor(tester), _red.withValues(alpha: 0.20));
+      expect(_ruleColor(tester), _red.withValues(alpha: 0.2));
       final box = tester.renderObject<RenderBox>(defaultThematicBreakRule);
       expect(box.size.height, 1);
       expect(box.size.width, 300);
@@ -134,13 +134,13 @@ void main() {
     testWidgets('thematic break: follows the effective root style color', (tester) async {
       await _pump(tester, '---', style: const TextStyle(color: _white));
 
-      expect(_ruleColor(tester), _white.withValues(alpha: 0.20));
+      expect(_ruleColor(tester), _white.withValues(alpha: 0.2));
     });
 
     testWidgets('thematic break: black @ 0.20 when no text color is set', (tester) async {
       await _pump(tester, '---', ambient: const TextStyle(fontSize: 16));
 
-      expect(_ruleColor(tester), _black.withValues(alpha: 0.20));
+      expect(_ruleColor(tester), _black.withValues(alpha: 0.2));
     });
   });
 

@@ -1,4 +1,4 @@
-// ignore_for_file: no-magic-number, avoid-top-level-members-in-tests
+// ignore_for_file: no-magic-number
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -34,7 +34,7 @@ void main() {
       expect(result.map(_textOf), ['ab', 'cd', 'ef']);
       expect(result.map(_decorationOf), [null, _underline, null]);
       expect((result[1] as TextSpan).style?.fontSize, 14);
-      expect((result[0] as TextSpan).style, style);
+      expect((result.first as TextSpan).style, style);
       expect((result[2] as TextSpan).style, style);
     });
 
@@ -74,7 +74,7 @@ void main() {
 
       expect(result.map(_textOf), ['ab', 'cd', 'ef']);
       expect(result.map(_decorationOf), [null, _underline, null]);
-      expect(result[0], same(spans[0]));
+      expect(result.first, same(spans.first));
       expect(result[2], same(spans[2]));
     });
 

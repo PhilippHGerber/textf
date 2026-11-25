@@ -112,13 +112,13 @@ void main() {
       test('is the foreground at alpha 0.20', () {
         final palette = TextfPalette(const TextStyle(color: Color(0xFF336699)));
 
-        expect(palette.thematicBreak, const Color(0xFF336699).withValues(alpha: 0.20));
+        expect(palette.thematicBreak, const Color(0xFF336699).withValues(alpha: 0.2));
       });
 
       test('replaces rather than compounds a translucent foreground alpha', () {
         final palette = TextfPalette(const TextStyle(color: Color(0x80FFFFFF)));
 
-        expect(palette.thematicBreak.a, closeTo(0.20, 1e-9));
+        expect(palette.thematicBreak.a, closeTo(0.2, 1e-9));
       });
     });
 

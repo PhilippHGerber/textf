@@ -61,11 +61,11 @@ class DefaultStyles {
 
   /// Relative font-size multipliers for H1–H6.
   static const List<double> headingFontSizeFactors = [
-    2.00, // h1
-    1.50, // h2
+    2.0, // h1
+    1.5, // h2
     1.33, // h3
     1.14, // h4
     1.07, // h5
-    1.00, // h6
+    1.0, // h6
   ];
 }

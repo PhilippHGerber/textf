@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../core/constants.dart';
 import '../core/default_styles.dart';
 import '../core/textf_limits.dart';
 import '../core/textf_style_utils.dart';
@@ -229,20 +230,26 @@ class TextfStyleResolver {
   /// Uses a `switch` (no per-call list allocation) and inherits through the
   /// [TextfOptions] hierarchy via the pre-merged [_options].
   TextStyle? _headingStyleFromOptions(int level) {
+    const h1 = 1;
+    const h2 = 2;
+    const h3 = 3;
+    const h4 = 4;
+    const h5 = 5;
+    const h6 = kMaxHeadingLevel;
     final opts = _options;
     if (opts == null) return null;
     switch (level) {
-      case 1:
+      case h1:
         return opts.h1Style;
-      case 2:
+      case h2:
         return opts.h2Style;
-      case 3:
+      case h3:
         return opts.h3Style;
-      case 4:
+      case h4:
         return opts.h4Style;
-      case 5:
+      case h5:
         return opts.h5Style;
-      case 6:
+      case h6:
         return opts.h6Style;
       default:
         return null;

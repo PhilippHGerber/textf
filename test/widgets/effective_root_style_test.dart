@@ -1,4 +1,4 @@
-// ignore_for_file: no-magic-number
+// ignore_for_file: no-magic-number, prefer-match-file-name
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -125,7 +125,7 @@ void main() {
       for (int i = 0; i < labels.length; i++) {
         expect(
           _styleOf(tester, labels[i])?.fontSize,
-          closeTo(40 * DefaultStyles.headingFontSizeFactors[i], 0.001),
+          closeTo(DefaultStyles.headingFontSizeFactors[i] * 40, 0.001),
           reason: 'h${i + 1}',
         );
       }
@@ -139,7 +139,7 @@ void main() {
         ),
       );
 
-      const double scriptSize = 30 * DefaultStyles.scriptFontSizeFactor;
+      const double scriptSize = DefaultStyles.scriptFontSizeFactor * 30;
       for (final text in ['sup', 'sub']) {
         final style = _styleOf(tester, text);
         expect(style?.fontSize, closeTo(scriptSize, 0.001), reason: text);

@@ -1,4 +1,4 @@
-// ignore_for_file: no-magic-number
+// ignore_for_file: no-magic-number, prefer-match-file-name
 
 // `Theme` is imported only for the negative test: an ancestor design-system theme must not
 // invalidate Textf's cache, because Textf no longer reads it.
@@ -222,10 +222,10 @@ void main() {
       Color ruleColor() => tester.widget<ColoredBox>(defaultThematicBreakRule).color;
 
       await tester.pumpWidget(_host(const SizedBox(width: 200, child: textf)));
-      expect(ruleColor(), _black.withValues(alpha: 0.20));
+      expect(ruleColor(), _black.withValues(alpha: 0.2));
 
       await tester.pumpWidget(_host(const SizedBox(width: 200, child: textf), color: _white));
-      expect(ruleColor(), _white.withValues(alpha: 0.20));
+      expect(ruleColor(), _white.withValues(alpha: 0.2));
     });
   });
 }

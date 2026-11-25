@@ -57,6 +57,8 @@ bool _containsLink(List<InlineSpan> spans) {
 /// Mirrors how `RenderParagraph` splits text into runs (`combineSemanticsInfo`):
 /// consecutive text merges into one run, and a placeholder or a span with a
 /// recognizer or `semanticsIdentifier` ends the run. Empty runs get no key.
+// The file is named for its entry point, the function `withLinkReadingOrder`.
+// ignore: prefer-match-file-name
 final class _PlaceholderSortKeys {
   /// Text runs closed so far; the next run gets this key.
   int _runs = 0;

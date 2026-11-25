@@ -1,3 +1,5 @@
+// ignore_for_file: no-empty-block
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:textf/src/styling/link_style_configuration.dart';
