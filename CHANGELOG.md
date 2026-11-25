@@ -12,7 +12,9 @@ Flanking now follows CommonMark's punctuation and intraword rules, so markers in
   * `Price*, shipping* and discount` stays literal (was: `, shipping` in italic). (#13)
   * `Price~~, cost~~`, `Price^, cost^` and `a==(b)==` stay literal.
   * `a*"foo"*`, `a**"foo"**`, `*(*foo)` and `*$*alpha.` stay literal, as in CommonMark.
-  * `*(*foo*)*` renders as italic `(foo)` (was: italic `(` and `)` around a plain `foo`).
+  * `*(*foo*)*` and `_(_foo_)_` render as italic `(foo)` (was: italic `(` and `)` around a plain `foo`).
+  * `*_foo_*` and `_*foo*_` render as italic `foo` (was: plain `foo` with the markers removed).
+  * Long marker runs pair differently: `******foo******` renders as bold italic `foo` (was: plain `foo`), and `foo******bar*********baz` as `foo***`, bold italic `bar`, `******baz` (was: `foobar***baz`).
   * `**重要。**です` stays literal: the closer follows `。` and precedes a letter. Move the punctuation outside the markers or escape them.
 * **Underscores inside words:** `_`, `__` and `___` no longer open or close inside a word. `*`, `~` and `^` are unchanged. (#14)
   * `a_b_c and file_name_x` keeps its underscores (was: `b` and `name` in italic).
