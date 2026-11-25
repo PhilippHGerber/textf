@@ -71,6 +71,16 @@ void main() {
         }
       });
     }
+
+    testWidgets('underscores at word boundaries still format', (tester) async {
+      final controller = TextfEditingController(text: 'an _italic_ word');
+      addTearDown(controller.dispose);
+      final context = await _pumpHost(tester);
+
+      final result = _build(controller, context, style: const TextStyle());
+
+      expect(_spanWithText(result, 'italic').style?.fontStyle, FontStyle.italic);
+    });
   });
 
   group('Editing seam: dimmed marker color', () {

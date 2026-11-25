@@ -10,11 +10,13 @@ Flanking now follows CommonMark's punctuation and intraword rules, so markers in
 
 * **Markers next to punctuation:** a marker followed by punctuation can open only after whitespace or punctuation, and a marker preceded by punctuation can close only before whitespace or punctuation. This applies to `*`, `_`, `~~`, `~`, `^`, `++` and `==`. Punctuation includes Unicode punctuation and symbols.
   * `Price*, shipping* and discount` stays literal (was: `, shipping` in italic). (#13)
+  * `Price~~, cost~~`, `Price^, cost^` and `a==(b)==` stay literal.
   * `a*"foo"*`, `a**"foo"**`, `*(*foo)` and `*$*alpha.` stay literal, as in CommonMark.
+  * `*(*foo*)*` renders as italic `(foo)` (was: italic `(` and `)` around a plain `foo`).
   * `**重要。**です` stays literal: the closer follows `。` and precedes a letter. Move the punctuation outside the markers or escape them.
 * **Underscores inside words:** `_`, `__` and `___` no longer open or close inside a word. `*`, `~` and `^` are unchanged. (#14)
   * `a_b_c and file_name_x` keeps its underscores (was: `b` and `name` in italic).
-  * `foo__bar__`, `5_6_78` and `_foo_bar` stay literal; `_foo_bar_baz_` renders as italic `foo_bar_baz`.
+  * `foo__bar__`, `5_6_78` and `_foo_bar` stay literal; `_foo_bar_baz_` renders as italic `foo_bar_baz` and `__foo__bar__baz__` as bold `foo__bar__baz`.
 
 `TextfEditingController` follows the same rules.
 

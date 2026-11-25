@@ -1,4 +1,4 @@
-// ignore_for_file: no-magic-number
+// ignore_for_file: no-magic-number, avoid-top-level-members-in-tests
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,13 +33,11 @@ String _render(String text) {
     if (style?.backgroundColor != null) piece = '<mark>$piece</mark>';
     out.write(piece);
   }
-  return out
-      .toString()
-      .replaceAll('</em><em>', '')
-      .replaceAll('</strong><strong>', '')
-      .replaceAll('</del><del>', '')
-      .replaceAll('</u><u>', '')
-      .replaceAll('</mark><mark>', '');
+  var rendered = out.toString();
+  for (final tag in ['em', 'strong', 'del', 'u', 'mark']) {
+    rendered = rendered.replaceAll('</$tag><$tag>', '');
+  }
+  return rendered;
 }
 
 void main() {
@@ -59,6 +57,13 @@ void main() {
       expect(_render('Price~~, cost~~ and fee'), 'Price~~, cost~~ and fee');
       expect(_render('Price==, cost== and fee'), 'Price==, cost== and fee');
       expect(_render('Price++, cost++ and fee'), 'Price++, cost++ and fee');
+      expect(_render('Price~, cost~ and fee'), 'Price~, cost~ and fee');
+      expect(_render('Price^, cost^ and fee'), 'Price^, cost^ and fee');
+    });
+
+    test('nested emphasis inside punctuation pairs as CommonMark does', () {
+      // Example 371 in shape: was <em>(</em>foo<em>)</em>.
+      expect(_render('*(*foo*)*'), '<em>(foo)</em>');
     });
 
     test('markers wrapping punctuated text at word boundaries still format', () {
@@ -92,7 +97,7 @@ void main() {
   });
 
   // Delimiter runs longer than one token diverge from CommonMark until
-  // issues/maximal-delimiter-runs lands. These pin today's behavior, so that
+  // maximal delimiter runs are supported. These pin today's behavior, so that
   // change shows up as a deliberate edit here.
   group('known divergences: runs split into several tokens', () {
     test('****foo**** (CommonMark: <strong><strong>foo</strong></strong>)', () {
@@ -104,15 +109,22 @@ void main() {
     });
   });
 
+  group('known divergences: pairing across marker characters', () {
+    test('_foo* (CommonMark example 367: stays literal)', () {
+      // `_` and `*` are both italic markers and pair with each other.
+      expect(_render('_foo*'), '<em>foo</em>');
+    });
+  });
+
   // CommonMark 0.31 §6.2 examples, by spec example number. Only examples with
   // single-level emphasis are transcribed; excluded and why:
   // - nested emphasis the flat rendering can't express: 371, 375, 391,
   //   395-397, 401, 408-421, 426-435, 463, 465, 471-474
   // - links: 406, 424, 475, 476; raw HTML and autolinks: 477-479, 482, 483
   // - runs of four or more, the rule of 3 and unbalanced runs
-  //   (issues/maximal-delimiter-runs): 423, 437, 439-461, 466-468, 470
+  //   (not yet supported): 423, 437, 439-461, 466-468, 470
   // - code spans inside emphasis: 480, 481
-  // - `_` pairing with `*` (both italic), a pairing defect outside flanking: 367
+  // - `_` pairing with `*`, pinned above as a known divergence: 367
   group('CommonMark §6.2 conformance', () {
     const cases = <(int, String, String)>[
       (352, '*foo bar*', '<em>foo bar</em>'),
