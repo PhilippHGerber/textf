@@ -2,6 +2,26 @@
 
 All notable changes to the `textf` package will be documented in this file.
 
+## 2.1.0
+
+### Behavior change
+
+Flanking now follows CommonMark's punctuation and intraword rules, so markers in ordinary text no longer format by accident. Strings that relied on the old behavior render differently:
+
+* **Markers next to punctuation:** a marker followed by punctuation can open only after whitespace or punctuation, and a marker preceded by punctuation can close only before whitespace or punctuation. This applies to `*`, `_`, `~~`, `~`, `^`, `++` and `==`. Punctuation includes Unicode punctuation and symbols.
+  * `Price*, shipping* and discount` stays literal (was: `, shipping` in italic). (#13)
+  * `a*"foo"*`, `a**"foo"**`, `*(*foo)` and `*$*alpha.` stay literal, as in CommonMark.
+  * `**重要。**です` stays literal: the closer follows `。` and precedes a letter. Move the punctuation outside the markers or escape them.
+* **Underscores inside words:** `_`, `__` and `___` no longer open or close inside a word. `*`, `~` and `^` are unchanged. (#14)
+  * `a_b_c and file_name_x` keeps its underscores (was: `b` and `name` in italic).
+  * `foo__bar__`, `5_6_78` and `_foo_bar` stay literal; `_foo_bar_baz_` renders as italic `foo_bar_baz`.
+
+`TextfEditingController` follows the same rules.
+
+### Documentation
+
+* **Escaping for translated strings:** the README lists the characters translators may need to escape (`*`, `_`, `[`, `#`) and how to write the backslash in `.arb` files.
+
 ## 2.0.2
 
 ### Fixed

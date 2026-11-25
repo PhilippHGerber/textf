@@ -111,3 +111,50 @@ const int kMinThematicBreakRun = 3;
 /// still counts as a break (CommonMark's up-to-three-space indentation rule,
 /// `spec.txt:1128`). 4+ leading spaces disqualify the line.
 const int kMaxThematicBreakIndent = 3;
+
+/// Bounds of the four ASCII punctuation ranges CommonMark counts as
+/// punctuation for flanking: `!`..`/`, `:`..`@`, `[`..`` ` ``, `{`..`~`.
+const int kAsciiPunctuationStart1 = 0x21;
+
+/// End of the first ASCII punctuation range (`/`).
+const int kAsciiPunctuationEnd1 = 0x2F;
+
+/// Start of the second ASCII punctuation range (`:`).
+const int kAsciiPunctuationStart2 = 0x3A;
+
+/// End of the second ASCII punctuation range (`@`).
+const int kAsciiPunctuationEnd2 = 0x40;
+
+/// Start of the third ASCII punctuation range (`[`).
+const int kAsciiPunctuationStart3 = 0x5B;
+
+/// End of the third ASCII punctuation range (`` ` ``).
+const int kAsciiPunctuationEnd3 = 0x60;
+
+/// Start of the fourth ASCII punctuation range (`{`).
+const int kAsciiPunctuationStart4 = 0x7B;
+
+/// End of the fourth ASCII punctuation range (`~`).
+const int kAsciiPunctuationEnd4 = 0x7E;
+
+/// First code point outside ASCII. Neighbours below it take the fast
+/// punctuation path during flanking.
+const int kFirstNonAsciiCodePoint = 0x80;
+
+/// First UTF-16 high (leading) surrogate code unit.
+const int kHighSurrogateStart = 0xD800;
+
+/// First UTF-16 low (trailing) surrogate code unit.
+const int kLowSurrogateStart = 0xDC00;
+
+/// Last UTF-16 low (trailing) surrogate code unit.
+const int kLowSurrogateEnd = 0xDFFF;
+
+/// First code point outside the Basic Multilingual Plane.
+const int kSupplementaryPlaneStart = 0x10000;
+
+/// Number of payload bits each surrogate carries.
+const int kSurrogateBits = 10;
+
+/// Number of UTF-16 code units in a surrogate pair.
+const int kSurrogatePairLength = 2;

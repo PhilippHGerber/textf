@@ -280,6 +280,67 @@ void main() {
           );
         }
       });
+
+      test('marker after a word and before punctuation cannot open', () {
+        // 'Price*,' — '*' at 5: 'e' precedes, ',' follows. Followed by
+        // punctuation, so it opens only after whitespace or punctuation.
+        final marker = markerAt(tokenizer.tokenize('Price*, shipping'), 5);
+        expect(marker.canOpen, isFalse);
+        expect(marker.canClose, isTrue);
+      });
+
+      test('Unicode punctuation and symbols count as punctuation', () {
+        // U+3002 ideographic full stop (Po), U+00A7 section sign (Po),
+        // U+20AC euro sign (Sc).
+        for (final punct in ['。', '§', '€']) {
+          final marker = markerAt(tokenizer.tokenize('word*$punct'), 4);
+          expect(marker.canOpen, isFalse, reason: 'U+${punct.codeUnitAt(0).toRadixString(16)}');
+        }
+      });
+
+      test('punctuation outside the BMP is read as one code point', () {
+        // U+1D11E musical symbol G clef (So), a surrogate pair. Before the
+        // marker: '𝄞*word' — '*' at 2 is right after punctuation, so it can
+        // open but, followed by a letter, not close.
+        final before = markerAt(tokenizer.tokenize('\u{1D11E}*word'), 2);
+        expect(before.canOpen, isTrue);
+        expect(before.canClose, isFalse);
+
+        final after = markerAt(tokenizer.tokenize('word*\u{1D11E}'), 4);
+        expect(after.canOpen, isFalse);
+        expect(after.canClose, isTrue);
+      });
+
+      test('underscore family never opens or closes inside a word', () {
+        for (final marker in ['_', '__', '___']) {
+          final token = markerAt(tokenizer.tokenize('file${marker}name'), 4);
+          expect(token.canOpen, isFalse, reason: marker);
+          expect(token.canClose, isFalse, reason: marker);
+        }
+      });
+
+      test('underscore between a word and punctuation follows punctuation', () {
+        // 'foo_.' — right-flanking only, and preceded by a letter: can close.
+        final closer = markerAt(tokenizer.tokenize('foo_.'), 3);
+        expect(closer.canOpen, isFalse);
+        expect(closer.canClose, isTrue);
+        // '._foo' — both-flanking after punctuation: can open.
+        final opener = markerAt(tokenizer.tokenize('._foo'), 1);
+        expect(opener.canOpen, isTrue);
+      });
+
+      test('asterisk keeps intraword emphasis', () {
+        final marker = markerAt(tokenizer.tokenize('un*frigging'), 2);
+        expect(marker.canOpen, isTrue);
+        expect(marker.canClose, isTrue);
+      });
+
+      test('a letter outside the BMP is not punctuation', () {
+        // U+1D400 mathematical bold capital A (Lu).
+        final marker = markerAt(tokenizer.tokenize('word*\u{1D400}'), 4);
+        expect(marker.canOpen, isTrue);
+        expect(marker.canClose, isTrue);
+      });
     });
   });
 }

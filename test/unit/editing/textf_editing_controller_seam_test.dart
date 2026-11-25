@@ -53,6 +53,26 @@ TextSpan _spanWithText(TextSpan root, String text) =>
     _textChildren(root).firstWhere((s) => s.text == text);
 
 void main() {
+  group('Editing seam: flanking (ADR 0009)', () {
+    for (final text in ['a_b_c and file_name_x', 'Price*, shipping* and discount']) {
+      testWidgets('"$text" gets no formatting and no dimmed markers', (tester) async {
+        final controller = TextfEditingController(text: text);
+        addTearDown(controller.dispose);
+        final context = await _pumpHost(tester);
+        const color = Color(0xFF123456);
+
+        final result = _build(controller, context, style: const TextStyle(color: color));
+
+        final spans = _textChildren(result);
+        expect(spans.map((s) => s.text).join(), text);
+        for (final span in spans) {
+          expect(span.style?.fontStyle, isNot(FontStyle.italic), reason: span.text);
+          expect(span.style?.color ?? color, color, reason: span.text);
+        }
+      });
+    }
+  });
+
   group('Editing seam: dimmed marker color', () {
     testWidgets('marker uses the style color at alpha 0.4', (tester) async {
       final controller = TextfEditingController(text: '**bold**');

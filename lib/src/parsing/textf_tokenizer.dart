@@ -224,7 +224,7 @@ class TextfTokenizer {
             text.codeUnitAt(pos + 1) == kUnderscore &&
             text.codeUnitAt(pos + 2) == kUnderscore) {
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(text, pos, 3, length);
+          final flags = _flankingFlags(text, pos, 3, length, underscore: true);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.boldItalic,
@@ -241,7 +241,7 @@ class TextfTokenizer {
         // Check for bold (__)
         else if (pos + 1 < length && text.codeUnitAt(pos + 1) == kUnderscore) {
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(text, pos, 2, length);
+          final flags = _flankingFlags(text, pos, 2, length, underscore: true);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.bold,
@@ -258,7 +258,7 @@ class TextfTokenizer {
         // Italic (_)
         else {
           addTextToken(textStart, pos);
-          final flags = _flankingFlags(text, pos, 1, length);
+          final flags = _flankingFlags(text, pos, 1, length, underscore: true);
           tokens.add(
             FormatMarkerToken(
               FormatMarkerType.italic,
@@ -678,26 +678,90 @@ class TextfTokenizer {
     return false;
   }
 
-  /// Computes left- and right-flanking flags for a marker run.
+  /// Unicode punctuation (P) and symbol (S) categories, which CommonMark
+  /// counts as punctuation for flanking. Used only for non-ASCII neighbours.
+  static final RegExp _unicodePunctuation = RegExp(r'[\p{P}\p{S}]', unicode: true);
+
+  /// Returns whether [codePoint] is punctuation as CommonMark defines it for
+  /// flanking: Unicode categories P and S.
+  bool _isPunctuation(int codePoint) {
+    if (codePoint < kFirstNonAsciiCodePoint) {
+      return (codePoint >= kAsciiPunctuationStart1 && codePoint <= kAsciiPunctuationEnd1) ||
+          (codePoint >= kAsciiPunctuationStart2 && codePoint <= kAsciiPunctuationEnd2) ||
+          (codePoint >= kAsciiPunctuationStart3 && codePoint <= kAsciiPunctuationEnd3) ||
+          (codePoint >= kAsciiPunctuationStart4 && codePoint <= kAsciiPunctuationEnd4);
+    }
+    return _unicodePunctuation.hasMatch(String.fromCharCode(codePoint));
+  }
+
+  /// Returns the code point that ends just before [index], combining a
+  /// surrogate pair. [index] must be greater than zero.
+  int _codePointBefore(String text, int index) {
+    final low = text.codeUnitAt(index - 1);
+    if (index >= kSurrogatePairLength && _isLowSurrogate(low)) {
+      final high = text.codeUnitAt(index - kSurrogatePairLength);
+      if (_isHighSurrogate(high)) return _combineSurrogates(high, low);
+    }
+    return low;
+  }
+
+  /// Returns the code point that starts at [index], combining a surrogate
+  /// pair. [index] must be less than [totalLength].
+  int _codePointAt(String text, int index, int totalLength) {
+    final high = text.codeUnitAt(index);
+    if (index + 1 < totalLength && _isHighSurrogate(high)) {
+      final low = text.codeUnitAt(index + 1);
+      if (_isLowSurrogate(low)) return _combineSurrogates(high, low);
+    }
+    return high;
+  }
+
+  bool _isHighSurrogate(int codeUnit) =>
+      codeUnit >= kHighSurrogateStart && codeUnit < kLowSurrogateStart;
+
+  bool _isLowSurrogate(int codeUnit) =>
+      codeUnit >= kLowSurrogateStart && codeUnit <= kLowSurrogateEnd;
+
+  int _combineSurrogates(int high, int low) =>
+      kSupplementaryPlaneStart +
+      ((high - kHighSurrogateStart) << kSurrogateBits) +
+      (low - kLowSurrogateStart);
+
+  /// Computes left- and right-flanking flags for a marker (ADR 0009).
   ///
   /// * [pos] — start of the marker in the string.
-  /// * [tokenLength] — number of characters in the marker run.
+  /// * [tokenLength] — number of characters in the marker.
   /// * [totalLength] — total length of the source string.
   ///
-  /// `canOpen` is true when the first character after the run is not
-  /// whitespace (and the run does not end at EOF).
-  /// `canClose` is true when the character immediately before the run is not
-  /// whitespace (and the run does not start at SOF).
+  /// The start and end of the text count as whitespace. A marker is
+  /// left-flanking (`canOpen`) when the next character is not whitespace and,
+  /// if it is punctuation, the previous character is whitespace or
+  /// punctuation. Right-flanking (`canClose`) mirrors this.
+  ///
+  /// With [underscore] set, the marker also never opens or closes inside a
+  /// word: it opens only if it is not right-flanking or follows punctuation,
+  /// and closes only if it is not left-flanking or precedes punctuation.
   ({bool canOpen, bool canClose}) _flankingFlags(
     String text,
     int pos,
     int tokenLength,
-    int totalLength,
-  ) {
-    final canOpen =
-        (pos + tokenLength < totalLength) && !_isWhitespace(text.codeUnitAt(pos + tokenLength));
-    final canClose = (pos > 0) && !_isWhitespace(text.codeUnitAt(pos - 1));
-    return (canOpen: canOpen, canClose: canClose);
+    int totalLength, {
+    bool underscore = false,
+  }) {
+    final after = pos + tokenLength;
+    final nextIsSpace = after >= totalLength || _isWhitespace(text.codeUnitAt(after));
+    final prevIsSpace = pos == 0 || _isWhitespace(text.codeUnitAt(pos - 1));
+    final nextIsPunct = !nextIsSpace && _isPunctuation(_codePointAt(text, after, totalLength));
+    final prevIsPunct = !prevIsSpace && _isPunctuation(_codePointBefore(text, pos));
+
+    final leftFlanking = !nextIsSpace && (!nextIsPunct || prevIsSpace || prevIsPunct);
+    final rightFlanking = !prevIsSpace && (!prevIsPunct || nextIsSpace || nextIsPunct);
+    if (!underscore) return (canOpen: leftFlanking, canClose: rightFlanking);
+
+    return (
+      canOpen: leftFlanking && (!rightFlanking || prevIsPunct),
+      canClose: rightFlanking && (!leftFlanking || nextIsPunct),
+    );
   }
 
   /// Attempts to parse a Markdown-style link `[text](url)`.

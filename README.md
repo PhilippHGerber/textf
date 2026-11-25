@@ -195,14 +195,22 @@ Both `Textf` and `TextfEditingController` use the same syntax:
 
 ### Flanking Rules
 
-Formatting markers follow CommonMark-style flanking rules. Openers must not be followed by whitespace, and closers must not be preceded by whitespace:
+Formatting markers follow CommonMark's flanking rules:
+
+- An opener must not be followed by whitespace, and a closer must not be preceded by whitespace.
+- A marker next to punctuation counts only if the character on its other side is whitespace or punctuation. Two footnote asterisks such as `Price*, shipping*` therefore stay literal.
+- Underscores (`_`, `__`, `___`) never format inside a word, so `file_name_x` and `snake_case` keep their underscores. `*`, `~` and `^` still work inside words: `un*frigging*believable`, `H~2~O`, `x^2^`.
 
 ```
-*italic*    ✅    * italic *   ❌
-**bold**    ✅    ** bold **   ❌
+*italic*      ✅    * italic *          ❌
+**bold**      ✅    ** bold **          ❌
+(**bold**)    ✅    Price*, shipping*   ❌ stays literal
+_italic_      ✅    file_name_x         ❌ stays literal
 ```
 
-This prevents accidental formatting of bullet points (`* Item`) and math expressions (`2 * 3`).
+This prevents accidental formatting of bullet points (`* Item`), math expressions (`2 * 3`), footnotes and identifiers.
+
+> **CJK text:** a closer directly after punctuation and directly before a letter does not close, so `**重要。**です` stays literal. Every CommonMark renderer does the same. Move the punctuation outside (`**重要**。です`) or escape the markers.
 
 ### Nesting
 
@@ -230,6 +238,16 @@ Use a backslash to render any marker literally. You can escape formatting marker
 Textf(r'\**not bold\** and \{not_a_placeholder}')
 // renders: **not bold** and {not_a_placeholder}
 ```
+
+**Translated and user-facing strings.** Translators often write characters that textf reads as syntax. Escape them when they should stay literal:
+
+| Character | Escape | Why |
+|---|---|---|
+| `*`, `_`, `~`, `^`, `=`, `+` | `\*`, `\_`, … | Formatting markers that can still pair up, e.g. `*Note*` |
+| `[` | `\[` | Starts a link `[label](url)` |
+| `#` at the start of a line | `\#` | Starts a heading |
+
+In `.arb` and other JSON files the backslash itself must be escaped: write `"Price\\*"` to get `Price\*` in Dart, which renders as `Price*`.
 
 ---
 
